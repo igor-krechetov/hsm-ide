@@ -1,0 +1,27 @@
+---
+Language:        Cpp
+BasedOnStyle:    Google
+
+AccessModifierOffset: -4
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Inline
+BinPackArguments: false
+BinPackParameters: false
+ColumnLimit: 128
+DerivePointerAlignment: true
+IndentWidth: 4
+IndentPPDirectives: BeforeHash
+PPIndentWidth: 2
+AlwaysBreakAfterReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 130
+AlwaysBreakTemplateDeclarations: Yes
+PointerAlignment: Left
+PackConstructorInitializers: Never
+AlignOperands: Align
+BreakConstructorInitializers: BeforeComma
+...
