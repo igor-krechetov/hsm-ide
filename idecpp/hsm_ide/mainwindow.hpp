@@ -17,5 +17,14 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    // QSettingsDialog mSettings;
+    // HsmGraphicsView* mMainView;
+    // HsmElementsList* mListHsmElements;
+    // QLabel* mStatusBarFrame;
+    // QLabel* mStatusBarLog;
+    // QWidget* mWindow;
+    QString mLastDirectory;
+    QString mAppTitle;
+    QString mConfigPath;
 };
 #endif // MAINWINDOW_H

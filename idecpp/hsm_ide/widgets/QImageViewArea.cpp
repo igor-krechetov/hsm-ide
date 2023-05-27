@@ -1,7 +1,9 @@
 #include "QImageViewArea.hpp"
+#include <QMouseEvent>
+#include <QCursor>
 
 QImageViewArea::QImageViewArea(QWidget* parent)
-    : QScrollArea(parent), mIsDragging(false)
+    : QScrollArea(parent)
 {
 }
 
@@ -35,9 +37,11 @@ void QImageViewArea::mouseReleaseEvent(QMouseEvent* event)
 void QImageViewArea::mouseMoveEvent(QMouseEvent* event)
 {
     QScrollArea::mouseMoveEvent(event);
-    if (mIsDragging)
+
+    if (true == mIsDragging)
     {
-        QPoint delta = event->pos() - mPrevMousePosition;
+        const QPoint delta = event->pos() - mPrevMousePosition;
+
         mPrevMousePosition = event->pos();
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
         verticalScrollBar()->setValue(verticalScrollBar()->value() - delta.y());

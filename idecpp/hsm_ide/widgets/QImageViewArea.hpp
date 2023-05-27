@@ -2,8 +2,9 @@
 #define QIMAGEVIEWAREA_HPP
 
 #include <QScrollArea>
-#include <QMouseEvent>
-#include <QCursor>
+#include <QPoint>
+
+class QMouseEvent;
 
 class QImageViewArea : public QScrollArea
 {
@@ -12,12 +13,12 @@ public:
     virtual ~QImageViewArea() = default;
 
 protected:
-    virtual void mousePressEvent(QMouseEvent* event) override;
-    virtual void mouseReleaseEvent(QMouseEvent* event) override;
-    virtual void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
 
 private:
-    bool mIsDragging;
+    bool mIsDragging = false;
     QPoint mPrevMousePosition;
 };
 

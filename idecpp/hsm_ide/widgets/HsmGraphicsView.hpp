@@ -3,11 +3,20 @@
 
 #include <QGraphicsView>
 
-class HsmGraphicsView : public QGraphicsView
-{
-    Q_OBJECT
+class QDragEnterEvent;
+class QDragMoveEvent;
+class QDropEvent;
+
+class HsmGraphicsView : public QGraphicsView {
 public:
-    HsmGraphicsView(QWidget *parent = nullptr);
+    HsmGraphicsView(QWidget* parent);
+    virtual ~HsmGraphicsView() = default;
+
+protected:
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+    // void mousePressEvent(QMouseEvent* event) override;
 };
 
 #endif // HSMGRAPHICSVIEW_HPP

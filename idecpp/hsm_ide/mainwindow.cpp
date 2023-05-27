@@ -7,32 +7,40 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    scene = QGraphicsScene()
-    self.window.mainView.setScene(scene)
-    self.window.mainView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    self.window.mainView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    if (QString::compare(QSysInfo::productType(), "win32", Qt::CaseInsensitive) != 0)
+    {
+        mLastDirectory = "~/";
+    }
+
+    QGraphicsScene* scene = new QGraphicsScene();
+
+    ui->mainView.setScene(scene)
+    ui->mainView.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn)
+    ui->mainView.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn)
 
     // initialize list of HSM elements
-    items = HsmElementsFactory.createElementsList()
-    for i in items:
-        self.window.listHsmElements.addItem(i)
+    auto items = HsmElementsFactory.createElementsList();
+
+    for (const HsmElement* newItem: items) {
+        ui->listHsmElements.addItem(i);
+    }
 
     // ---------------------
     // TODO: debug
-    e1 = HsmStateElement()
-    e1.setPos(10, 10)
-    scene.addItem(e1)
-    e2 = HsmStateElement()
-    e2.setPos(175, 120)
-    scene.addItem(e2)
-    e3 = HsmStateElement()
-    e3.setPos(-100, 120)
-    scene.addItem(e3)
+    HsmStateElement* e1 = new HsmStateElement();
+    e1->setPos(10, 10);
+    scene->addItem(e1);
 
-    t = HsmTransition()
-    # scene.addItem(t)
-    # t.connectElements(e1, e2)
-    e1.addTransition(t, e2)
+    HsmStateElement* e2 = new HsmStateElement();
+    e2->setPos(175, 120);
+    scene->addItem(e2);
+
+    HsmStateElement* e3 = new HsmStateElement();
+    e3->setPos(-100, 120);
+    scene->addItem(e3);
+
+    HsmTransition* t = new HsmTransition();
+    e1->addTransition(t, e2);
     // ---------------------
 }
 

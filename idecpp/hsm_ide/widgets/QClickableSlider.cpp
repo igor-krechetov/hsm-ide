@@ -1,4 +1,6 @@
 #include "QClickableSlider.hpp"
+#include <QStyleOptionSlider>
+#include <QStyle>
 
 QClickableSlider::QClickableSlider(QWidget* parent)
     : QSlider(parent)
@@ -9,8 +11,7 @@ void QClickableSlider::mouseReleaseEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        int val = pixelPosToRangeValue(event->pos());
-        setValue(val);
+        setValue(pixelPosToRangeValue(event->pos()));
     }
     else
     {
@@ -20,12 +21,16 @@ void QClickableSlider::mouseReleaseEvent(QMouseEvent* event)
 
 int QClickableSlider::pixelPosToRangeValue(const QPoint& pos) const
 {
+    int sliderLength = 0;
+    int sliderMin = 0;
+    int sliderMax = 0;
     QStyleOptionSlider opt;
-    initStyleOption(&opt);
-    QRect gr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
-    QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
 
-    int sliderLength, sliderMin, sliderMax;
+    initStyleOption(&opt);
+
+    const QRect gr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
+    const QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
+
     if (orientation() == Qt::Horizontal)
     {
         sliderLength = sr.width();
@@ -39,8 +44,8 @@ int QClickableSlider::pixelPosToRangeValue(const QPoint& pos) const
         sliderMax = gr.bottom() - sliderLength + 1;
     }
 
-    QPoint pr = pos - sr.center() + sr.topLeft();
-    int p = orientation() == Qt::Horizontal ? pr.x() : pr.y();
+    const QPoint pr = pos - sr.center() + sr.topLeft();
+    const int p = (orientation() == Qt::Horizontal ? pr.x() : pr.y());
 
     return QStyle::sliderValueFromPosition(minimum(), maximum(), p - sliderMin, sliderMax - sliderMin, opt.upsideDown);
 }

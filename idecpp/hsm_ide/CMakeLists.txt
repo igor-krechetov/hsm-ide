@@ -17,14 +17,19 @@ set(TS_FILES ts/hsm_ide_en_001.ts)
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
-        mainwindow.h
-        widgets/HsmElementsList.hpp
-        widgets/HsmElementsList.cpp
-        widgets/HsmGraphicsView.hpp
-        widgets/HsmGraphicsView.cpp
+        mainwindow.hpp
 
-        # elements/HsmElementsFactory.cpp
-        # elements/HsmElementsFactory.hpp
+        widgets/HsmElementsList.cpp
+        widgets/HsmElementsList.hpp
+        widgets/HsmGraphicsView.cpp
+        widgets/HsmGraphicsView.hpp
+        widgets/QClickableSlider.cpp
+        widgets/QClickableSlider.hpp
+        widgets/QImageViewArea.cpp
+        widgets/QImageViewArea.hpp
+
+        elements/HsmElementsFactory.cpp
+        elements/HsmElementsFactory.hpp
         elements/HsmEntryPointElement.cpp
         elements/HsmEntryPointElement.hpp
         elements/HsmExitPointElement.cpp
@@ -40,10 +45,12 @@ set(PROJECT_SOURCES
         elements/HsmTransition.cpp
         elements/HsmTransition.hpp
 
-        # elements/private/ElementBoundaryGripItem.cpp
-        # elements/private/ElementBoundaryGripItem.hpp
+        elements/private/ElementBoundaryGripItem.cpp
+        elements/private/ElementBoundaryGripItem.hpp
         elements/private/ElementConnectionArrow.cpp
         elements/private/ElementConnectionArrow.hpp
+        elements/private/ElementGripItem.cpp
+        elements/private/ElementGripItem.hpp
         elements/private/HsmConnectableElement.cpp
         elements/private/HsmConnectableElement.hpp
         elements/private/HsmElement.cpp
