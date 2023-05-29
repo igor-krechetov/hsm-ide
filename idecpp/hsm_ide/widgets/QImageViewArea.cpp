@@ -1,6 +1,7 @@
 #include "QImageViewArea.hpp"
 #include <QMouseEvent>
 #include <QCursor>
+#include <QScrollBar>
 
 QImageViewArea::QImageViewArea(QWidget* parent)
     : QScrollArea(parent)

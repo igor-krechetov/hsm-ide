@@ -16,10 +16,12 @@ public:
     enum class Direction { North = 1, East = 3, South = 5, West = 7 };
 
 public:
-    ElementConnectionArrow(const QGraphicsObject* annotationElement, Direction direction);
+    ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction);
     virtual ~ElementConnectionArrow() = default;
 
-    void setPos(const QPointF& pos) override;
+    // TODO: check if it's ok to overload setPos
+    void setPos(const QPointF& pos);
+
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
@@ -39,9 +41,9 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
 public:
-    constexpr qreal mA = 10.0;
-    constexpr qreal mB = 16.0;
-    constexpr qreal mW = 3 * mA;
+    static constexpr qreal mA = 10.0;
+    static constexpr qreal mB = 16.0;
+    static constexpr qreal mW = 3 * mA;
 
 private:
     QPointF mPos;

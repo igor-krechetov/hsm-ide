@@ -3,7 +3,7 @@
 
 #include <QRectF>
 
-#include "HsmConnectableElement.hpp"
+#include "private/HsmConnectableElement.hpp"
 
 class HsmExitPointElement : public HsmConnectableElement {
 public:

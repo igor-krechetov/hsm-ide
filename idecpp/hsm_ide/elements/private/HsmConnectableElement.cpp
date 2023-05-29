@@ -1,8 +1,14 @@
 #include "HsmConnectableElement.hpp"
+#include "ElementBoundaryGripItem.hpp"
+#include <QGraphicsScene>
 
 HsmConnectableElement::HsmConnectableElement()
     : HsmResizableElement()
 {
+}
+
+void HsmConnectableElement::init() {
+    HsmResizableElement::init();
     updateHoverRect(false);
     setAcceptHoverEvents(true);
 }
@@ -12,6 +18,7 @@ void HsmConnectableElement::addTransition(HsmTransition* transition, HsmConnecta
     if (transition->parentItem() == nullptr) {
         scene()->addItem(transition);
     }
+
     transition->connectElements(this, target);
     mTransitions.append(transition);
 }
@@ -32,10 +39,10 @@ void HsmConnectableElement::updateHoverRect(bool expendArea)
         arrowOffset = ElementConnectionArrow::mW;
     }
 
-    mHoverRect = QRectF(outerRect().left() - arrowOffset,
-                        outerRect().top() - arrowOffset,
-                        outerRect().width() + 2 * arrowOffset,
-                        outerRect().height() + 2 * arrowOffset);
+    mHoverRect = QRectF(mOuterRect.left() - arrowOffset,
+                        mOuterRect.top() - arrowOffset,
+                        mOuterRect.width() + 2 * arrowOffset,
+                        mOuterRect.height() + 2 * arrowOffset);
 }
 
 void HsmConnectableElement::createConnectionArrows()
@@ -50,12 +57,12 @@ void HsmConnectableElement::createConnectionArrows()
             ElementConnectionArrow* newArrow = new ElementConnectionArrow(this, direction);
 
             newArrow->setPos(getArrowPos(direction));
-            connect(newArrow, &ElementConnectionArrow::connectionPositionChanged,
-                    this, &HsmConnectableElement::updateConnectionLine);
-            connect(newArrow, &ElementConnectionArrow::connectionStarted,
-                    this, &HsmConnectableElement::beginConnection);
-            connect(newArrow, &ElementConnectionArrow::connectionFinished,
-                    this, &HsmConnectableElement::finishConnectionLine);
+            connect(newArrow, SIGNAL(connectionPositionChanged(ElementConnectionArrow*,QPointF)),
+                    this, SLOT(updateConnectionLine(ElementConnectionArrow*,QPointF)));
+            connect(newArrow, SIGNAL(connectionStarted(ElementConnectionArrow*,QPointF)),
+                    this, SLOT(beginConnection(ElementConnectionArrow*,QPointF)));
+            connect(newArrow, SIGNAL(connectionFinished(ElementConnectionArrow*,QPointF)),
+                    this, SLOT(finishConnectionLine(ElementConnectionArrow*,QPointF)));
             mArrows[direction] = newArrow;
         }
     }
@@ -64,7 +71,8 @@ void HsmConnectableElement::createConnectionArrows()
 void HsmConnectableElement::removeConnectionArrows()
 {
     if (false == mArrows.isEmpty()) {
-        for (const auto direction : mArrows.keys()) {
+        // TODO: replace QMap with map
+        for (const auto& direction : mArrows.keys()) {
             // TODO: find then use
             mArrows[direction]->setParentItem(nullptr);
             delete mArrows[direction];
@@ -77,28 +85,31 @@ void HsmConnectableElement::removeConnectionArrows()
 
 void HsmConnectableElement::updateConnectionArrowsPos()
 {
-    for (const auto direction : mArrows.keys()) {
+    for (const auto& direction : mArrows.keys()) {
         mArrows[direction]->setPos(getArrowPos(direction));
     }
 }
 
-void HsmConnectableElement::onGripMoved(GripPosition selectedGrip, const QPointF& pos)
+bool HsmConnectableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos)
 {
     HsmResizableElement::onGripMoved(selectedGrip, pos);
     updateHoverRect(true);
     updateConnectionArrowsPos();
+
+    // TODO: check result
+    return true;
 }
 
 QPointF HsmConnectableElement::getArrowPos(ElementConnectionArrow::Direction arrowDirection)
 {
-    const qreal xCenter = outerRect().center().x();
-    const qreal yCenter = outerRect().center().y();
+    const qreal xCenter = mOuterRect.center().x();
+    const qreal yCenter = mOuterRect.center().y();
     // TODO: no need to create a map with all items
     QMap<ElementConnectionArrow::Direction, QPointF> positions {
-        {ElementConnectionArrow::Direction::North, QPointF(xCenter, outerRect().top())},
-        {ElementConnectionArrow::Direction::East, QPointF(outerRect().right(), yCenter)},
-        {ElementConnectionArrow::Direction::South, QPointF(xCenter, outerRect().bottom())},
-        {ElementConnectionArrow::Direction::West, QPointF(outerRect().left(), yCenter)}
+        {ElementConnectionArrow::Direction::North, QPointF(xCenter, mOuterRect.top())},
+        {ElementConnectionArrow::Direction::East, QPointF(mOuterRect.right(), yCenter)},
+        {ElementConnectionArrow::Direction::South, QPointF(xCenter, mOuterRect.bottom())},
+        {ElementConnectionArrow::Direction::West, QPointF(mOuterRect.left(), yCenter)}
     };
     return positions[arrowDirection];
 }
@@ -106,7 +117,7 @@ QPointF HsmConnectableElement::getArrowPos(ElementConnectionArrow::Direction arr
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 {
     if (mArrows.isEmpty()) {
-        const QRectF sceneRect = mapRectToScene(outerRect());
+        const QRectF sceneRect = mapRectToScene(mOuterRect);
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {
@@ -137,6 +148,7 @@ void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const
 {
     mDrawConnectionLine = false;
     mConnection = new HsmTransition();
+    mConnection->init();
     mConnection->beginConnection(this, pos);
     scene()->addItem(mConnection);
 }

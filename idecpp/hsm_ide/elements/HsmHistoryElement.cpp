@@ -9,7 +9,7 @@ HsmHistoryElement::HsmHistoryElement()
 void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);
     painter->setBrush(QColor("#b36a59"));
-    mItemRect = QRectF(outerRect());
+    mItemRect = QRectF(mOuterRect);
     painter->drawRoundedRect(mItemRect, 5, 5);
 
     HsmConnectableElement::paint(painter, option, widget);

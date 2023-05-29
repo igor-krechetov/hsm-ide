@@ -11,7 +11,7 @@ public:
 
 protected:
     QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QList<QListWidgetItem*> items) const override;
+    QMimeData* mimeData(const QList<QListWidgetItem*>& items) const override;
 };
 
 #endif // HSMELEMENTSLIST_HPP

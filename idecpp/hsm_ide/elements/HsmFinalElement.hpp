@@ -3,7 +3,7 @@
 
 #include <QRectF>
 
-#include "HsmConnectableElement.hpp"
+#include "private/HsmConnectableElement.hpp"
 
 class QPainter;
 class QWidget;

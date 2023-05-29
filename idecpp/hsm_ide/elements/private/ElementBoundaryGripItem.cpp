@@ -1,8 +1,9 @@
 #include "ElementBoundaryGripItem.hpp"
+#include "HsmResizableElement.hpp"
 // #include <QGraphicsSceneMouseEvent>
 // #include <QPainter>
 
-ElementBoundaryGripItem::ElementBoundaryGripItem(AnnotationElement* annotationElement, GripDirection direction)
+ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction)
     : ElementGripItem(annotationElement)
     , mGripDirection(direction) {
     if ((GripDirection::North == mGripDirection) || (GripDirection::South == mGripDirection)) {
@@ -15,41 +16,49 @@ ElementBoundaryGripItem::ElementBoundaryGripItem(AnnotationElement* annotationEl
     }
 }
 
-ElementBoundaryGripItem::GripDirection ElementBoundaryGripItem::direction() const {
+HsmResizableElement* ElementBoundaryGripItem::annotationElement() const {
+    return dynamic_cast<HsmResizableElement*>(parentItem());
+}
+
+GripDirection ElementBoundaryGripItem::direction() const {
     return mGripDirection;
 }
 
-ElementBoundaryGripItem::GripDirectionType ElementBoundaryGripItem::directionType() const {
+GripDirectionType ElementBoundaryGripItem::directionType() const {
     return mGripDirectionType;
 }
 
-QPointF ElementBoundaryGripItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QPointF& value) {
+QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
+    const QPointF newPos = value.toPointF();
+    QVariant res;
     QPointF p;
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
         p = QPointF(pos());
 
         if (GripDirectionType::Horizontal == mGripDirectionType) {
-            p.setX(value.x());
+            p.setX(newPos.x());
         } else if (GripDirectionType::Vertical == mGripDirectionType) {
-            p.setY(value.y());
+            p.setY(newPos.y());
         } else {
-            p.setX(value.x());
-            p.setY(value.y());
+            p.setX(newPos.x());
+            p.setY(newPos.y());
         }
 
-        if (false == parent()->onGripMoved(this, p)) {
+        if (false == annotationElement()->onGripMoved(this, p)) {
             p = pos();
         }
+
+        res = p;
     } else {
-        p = ElementGripItem::itemChange(change, value);
+        res = ElementGripItem::itemChange(change, value);
     }
 
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
         if (false == isSelected()) {
-            parent()->onGripLostFocus(this);
+            annotationElement()->onGripLostFocus(this);
         }
     }
 
-    return p;
+    return res;
 }

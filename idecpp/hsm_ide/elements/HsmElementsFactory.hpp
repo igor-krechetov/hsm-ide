@@ -5,8 +5,9 @@
 #include <map>
 #include <tuple>
 #include <QString>
+#include "private/HsmElement.hpp"
 
-class HsmElement;
+class QListWidgetItem;
 
 class HsmElementsFactory {
 public:
@@ -22,7 +23,7 @@ private:
     static HsmElement* _createElementHistory();
 
 private:
-    static std::map<QString, std::tuple<QString, QString, std::function<HsmElement*>()>> mItemsCatalog;
+    static std::map<QString, std::tuple<QString, QString, std::function<HsmElement* ()>>> mItemsCatalog;
 };
 
 #endif // HSMELEMENTSFACTORY_HPP

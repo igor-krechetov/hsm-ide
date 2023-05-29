@@ -1,11 +1,10 @@
 #include "HsmResizableElement.hpp"
-
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QGraphicsScene>
 
-HsmResizableElement::HsmResizableElement(QObject* parent)
-    : QObject(parent)
-    , QGraphicsItem()
-    , mPenSelectedBorder(QColor("lightblue"));
+HsmResizableElement::HsmResizableElement()
+    : HsmElement()
 {
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     createBoundaryGrips();
@@ -14,26 +13,23 @@ HsmResizableElement::HsmResizableElement(QObject* parent)
 }
 
 void HsmResizableElement::createBoundaryGrips() {
-    for (const auto& direction : {ElementBoundaryGripDirection::North,
-                                  ElementBoundaryGripDirection::NorthEast,
-                                  ElementBoundaryGripDirection::East,
-                                  ElementBoundaryGripDirection::SouthEast,
-                                  ElementBoundaryGripDirection::South,
-                                  ElementBoundaryGripDirection::SouthWest,
-                                  ElementBoundaryGripDirection::West,
-                                  ElementBoundaryGripDirection::NorthWest}) {
-        QGraphicsEllipseItem* newGrip = createGrip(direction);  // TODO: smart pointers
+    for (const auto& direction : {GripDirection::North,
+                                  GripDirection::NorthEast,
+                                  GripDirection::East,
+                                  GripDirection::SouthEast,
+                                  GripDirection::South,
+                                  GripDirection::SouthWest,
+                                  GripDirection::West,
+                                  GripDirection::NorthWest}) {
+        ElementBoundaryGripItem* newGrip = createGrip(direction);  // TODO: smart pointers
 
-        newGrip->setEnabled(false);
-        newGrip->setPos(gripPoint(direction));
-        newGrip->setEnabled(true);
         mGrips[direction] = newGrip;
     }
 }
 
-void HsmResizableElement::updateGripsPosition(const QList<ElementBoundaryGripDirection>& directionsList) {
+void HsmResizableElement::updateGripsPosition(const QList<GripDirection>& directionsList) {
     for (const auto& direction : directionsList) {
-        QGraphicsEllipseItem* g = mGrips[direction];  // TODO: add safety logic
+        ElementBoundaryGripItem* g = mGrips[direction];  // TODO: add safety logic
 
         g->setEnabled(false);
         g->setPos(gripPoint(direction));
@@ -44,19 +40,19 @@ void HsmResizableElement::updateGripsPosition(const QList<ElementBoundaryGripDir
 void HsmResizableElement::setGripVisibility(bool visible) {
     mResizeMode = visible;
 
-    for (QGraphicsEllipseItem* grip : mGrips) {
-        grip->setVisible(visible);
+    for (const auto& grip : mGrips) {
+        grip.second->setVisible(visible);
     }
 
     update();
 }
 
-void HsmResizableElement::onGripLostFocus(QGraphicsEllipseItem* grip) {
+void HsmResizableElement::onGripLostFocus(ElementBoundaryGripItem* grip) {
     mGripSelected = isSelected();
 
     if (false == mGripSelected) {
-        for (QGraphicsEllipseItem* direction : mGrips) {
-            if (direction->isUnderMouse()) {
+        for (const auto& curGrip : mGrips) {
+            if (curGrip.second->isUnderMouse()) {
                 mGripSelected = true;
                 break;
             }
@@ -66,58 +62,61 @@ void HsmResizableElement::onGripLostFocus(QGraphicsEllipseItem* grip) {
     setGripVisibility(isSelected() || mGripSelected);
 }
 
-bool HsmResizableElement::onGripMoved(ElementBoundaryGripItem* selectedGrip, const QPointF& pos) {
+bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
     QRectF newOuterRect = mOuterRect;
-    QList<ElementBoundaryGripDirection> updateGrips = {ElementBoundaryGripDirection::North,
-                                                       ElementBoundaryGripDirection::NorthEast,
-                                                       ElementBoundaryGripDirection::East,
-                                                       ElementBoundaryGripDirection::SouthEast,
-                                                       ElementBoundaryGripDirection::South,
-                                                       ElementBoundaryGripDirection::SouthWest,
-                                                       ElementBoundaryGripDirection::West,
-                                                       ElementBoundaryGripDirection::NorthWest};
-    updateGrips.removeOne(selectedGrip->direction());
+    QList<GripDirection> updateGrips = {GripDirection::North,
+                                                       GripDirection::NorthEast,
+                                                       GripDirection::East,
+                                                       GripDirection::SouthEast,
+                                                       GripDirection::South,
+                                                       GripDirection::SouthWest,
+                                                       GripDirection::West,
+                                                       GripDirection::NorthWest};
+    // TODO: is there a better option instead of casting?
+    const GripDirection gripDirection = reinterpret_cast<const ElementBoundaryGripItem*>(selectedGrip)->direction();
 
-    switch (selectedGrip->direction()) {
-        case ElementBoundaryGripDirection::North:
+    updateGrips.removeOne(gripDirection);
+
+    switch (gripDirection) {
+        case GripDirection::North:
             newOuterRect.setTop(pos.y());
-            updateGrips.removeOne(ElementBoundaryGripDirection::South);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthEast);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthWest);
+            updateGrips.removeOne(GripDirection::South);
+            updateGrips.removeOne(GripDirection::SouthEast);
+            updateGrips.removeOne(GripDirection::SouthWest);
             break;
-        case ElementBoundaryGripDirection::NorthEast:
+        case GripDirection::NorthEast:
             newOuterRect.setTopRight(pos);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthWest);
+            updateGrips.removeOne(GripDirection::SouthWest);
             break;
-        case ElementBoundaryGripDirection::East:
+        case GripDirection::East:
             newOuterRect.setRight(pos.x());
-            updateGrips.removeOne(ElementBoundaryGripDirection::West);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthWest);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthWest);
+            updateGrips.removeOne(GripDirection::West);
+            updateGrips.removeOne(GripDirection::NorthWest);
+            updateGrips.removeOne(GripDirection::SouthWest);
             break;
-        case ElementBoundaryGripDirection::SouthEast:
+        case GripDirection::SouthEast:
             newOuterRect.setBottomRight(pos);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthWest);
+            updateGrips.removeOne(GripDirection::NorthWest);
             break;
-        case ElementBoundaryGripDirection::South:
+        case GripDirection::South:
             newOuterRect.setBottom(pos.y());
-            updateGrips.removeOne(ElementBoundaryGripDirection::North);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthWest);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthEast);
+            updateGrips.removeOne(GripDirection::North);
+            updateGrips.removeOne(GripDirection::NorthWest);
+            updateGrips.removeOne(GripDirection::NorthEast);
             break;
-        case ElementBoundaryGripDirection::SouthWest:
+        case GripDirection::SouthWest:
             newOuterRect.setBottomLeft(pos);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthEast);
+            updateGrips.removeOne(GripDirection::NorthEast);
             break;
-        case ElementBoundaryGripDirection::West:
+        case GripDirection::West:
             newOuterRect.setLeft(pos.x());
-            updateGrips.removeOne(ElementBoundaryGripDirection::East);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthEast);
-            updateGrips.removeOne(ElementBoundaryGripDirection::NorthEast);
+            updateGrips.removeOne(GripDirection::East);
+            updateGrips.removeOne(GripDirection::SouthEast);
+            updateGrips.removeOne(GripDirection::NorthEast);
             break;
-        case ElementBoundaryGripDirection::NorthWest:
+        case GripDirection::NorthWest:
             newOuterRect.setTopLeft(pos);
-            updateGrips.removeOne(ElementBoundaryGripDirection::SouthEast);
+            updateGrips.removeOne(GripDirection::SouthEast);
             break;
         default:
             // do nothing
@@ -142,28 +141,28 @@ bool HsmResizableElement::onGripMoved(ElementBoundaryGripItem* selectedGrip, con
 }
 
 // TODO: check
-int HsmResizableElement::indexOf(const QPointF& p) {
-    for (int i = 0; i < 4; ++i) {
-        if (p == point(i)) {
-            return i;
-        }
-    }
+// int HsmResizableElement::indexOf(const QPointF& p) {
+//     for (int i = 0; i < 4; ++i) {
+//         if (p == point(i)) {
+//             return i;
+//         }
+//     }
 
-    return -1;
-}
+//     return -1;
+// }
 
-QPointF HsmResizableElement::gripPoint(ElementBoundaryGripDirection gripDirection) {
+QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
     qreal xCenter = mOuterRect.center().x();
     qreal yCenter = mOuterRect.center().y();
-    QMap<ElementBoundaryGripDirection, QPointF> positions = {
-        {ElementBoundaryGripDirection::North, QPointF(xCenter, mOuterRect.top())},
-        {ElementBoundaryGripDirection::NorthEast, mOuterRect.topRight()},
-        {ElementBoundaryGripDirection::East, QPointF(mOuterRect.right(), yCenter)},
-        {ElementBoundaryGripDirection::SouthEast, mOuterRect.bottomRight()},
-        {ElementBoundaryGripDirection::South, QPointF(xCenter, mOuterRect.bottom())},
-        {ElementBoundaryGripDirection::SouthWest, mOuterRect.bottomLeft()},
-        {ElementBoundaryGripDirection::West, QPointF(mOuterRect.left(), yCenter)},
-        {ElementBoundaryGripDirection::NorthWest, mOuterRect.topLeft()}};
+    QMap<GripDirection, QPointF> positions = {
+        {GripDirection::North, QPointF(xCenter, mOuterRect.top())},
+        {GripDirection::NorthEast, mOuterRect.topRight()},
+        {GripDirection::East, QPointF(mOuterRect.right(), yCenter)},
+        {GripDirection::SouthEast, mOuterRect.bottomRight()},
+        {GripDirection::South, QPointF(xCenter, mOuterRect.bottom())},
+        {GripDirection::SouthWest, mOuterRect.bottomLeft()},
+        {GripDirection::West, QPointF(mOuterRect.left(), yCenter)},
+        {GripDirection::NorthWest, mOuterRect.topLeft()}};
     return positions[gripDirection];
 }
 
@@ -189,8 +188,8 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
         mGripSelected = isSelected();
 
         if (false == mGripSelected) {
-            for (QGraphicsEllipseItem* grip : mGrips) {
-                if (grip->isUnderMouse()) {
+            for (const auto& curGrip : mGrips) {
+                if (curGrip.second->isUnderMouse()) {
                     mGripSelected = true;
                     break;
                 }
@@ -205,12 +204,18 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
     return QGraphicsItem::itemChange(change, value);
 }
 
-QGraphicsEllipseItem* HsmResizableElement::createGrip(ElementBoundaryGripDirection direction) {
+// TODO: remove function?
+ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction) {
     // TODO: use smart pointers
-    QGraphicsEllipseItem* grip = new QGraphicsEllipseItem(this);
+    ElementBoundaryGripItem* grip = new ElementBoundaryGripItem(this, direction);
 
-    grip->setRect(-2.5, -2.5, 5, 5);
-    grip->setData(0, QVariant(static_cast<int>(direction)));
+    // grip->setRect(-2.5, -2.5, 5, 5);
+    // grip->setData(0, QVariant(static_cast<int>(direction)));
+
+    grip->init();
+    grip->setEnabled(false);
+    grip->setPos(gripPoint(direction));
+    grip->setEnabled(true);
 
     return grip;
 }

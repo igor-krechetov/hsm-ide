@@ -3,10 +3,12 @@
 
 #include "HsmResizableElement.hpp"
 #include "ElementConnectionArrow.hpp"
-#include "HsmTransition.hpp"
+#include "elements/HsmTransition.hpp"
 
 #include <QGraphicsSceneMouseEvent>
 #include <QMap>
+
+class ElementBoundaryGripItem;
 
 class HsmConnectableElement : public HsmResizableElement {
     Q_OBJECT
@@ -14,6 +16,8 @@ class HsmConnectableElement : public HsmResizableElement {
 public:
     HsmConnectableElement();
     virtual ~HsmConnectableElement() = default;
+
+    void init() override;
 
     void addTransition(HsmTransition* transition, HsmConnectableElement* target);
 
@@ -24,13 +28,15 @@ public:
     void updateConnectionArrowsPos();
 
 protected:
-    void onGripMoved(GripPosition selectedGrip, const QPointF& pos) override;
+    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private:
     QPointF getArrowPos(ElementConnectionArrow::Direction arrowDirection);
+
+private slots:
     void beginConnection(ElementConnectionArrow* arrow, const QPointF& pos);
     void finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos);
     void updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos);

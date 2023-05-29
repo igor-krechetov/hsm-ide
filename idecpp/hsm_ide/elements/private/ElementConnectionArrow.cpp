@@ -1,9 +1,9 @@
 #include "ElementConnectionArrow.hpp"
-// #include <QCursor>
-// #include <QTransform>
-// #include <QGraphicsSceneMouseEvent>
+#include <QCursor>
+#include <QTransform>
+#include <QGraphicsSceneMouseEvent>
 
-ElementConnectionArrow::ElementConnectionArrow(const QGraphicsObject* annotationElement, Direction direction)
+ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction)
     : QGraphicsObject(annotationElement)
     , mDirection(direction)
     , mOuterRect(-mW / 2, -mW / 2, mW, mW)
@@ -11,7 +11,7 @@ ElementConnectionArrow::ElementConnectionArrow(const QGraphicsObject* annotation
     , mArrowColor("green") {
     setAcceptHoverEvents(true);
     setZValue(11);
-    setCursor(Qt::PointingHandCursor);
+    setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 void ElementConnectionArrow::setPos(const QPointF& pos) {

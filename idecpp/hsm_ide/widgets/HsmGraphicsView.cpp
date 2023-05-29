@@ -5,6 +5,7 @@
 #include <QDropEvent>
 #include <QMouseEvent>
 #include <QDebug>
+#include <QMimeData>
 
 HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     : QGraphicsView(parent)
@@ -30,13 +31,15 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event)
 
 void HsmGraphicsView::dropEvent(QDropEvent* event)
 {
-    qDebug() << "dropEvent:" << event->pos();
+    qDebug() << "dropEvent:" << event->position();
     event->setDropAction(Qt::CopyAction);
     event->accept();
 
-    // TODO: remove local var scenePos
-    QPointF scenePos = mapToScene(event->pos().toPoint());
-    HsmElement* e1 = HsmElementsFactory::createElement(event->mimeData()->data("hsm/element").data().decode());
+    // TODO: remove local var scenePos and check mapping
+    // QPointF scenePos = mapToScene(event->position());
+    // QPointF scenePos = mapToScene(event->position());
+    QPointF scenePos = event->position();
+    HsmElement* e1 = HsmElementsFactory::createElement(event->mimeData()->data("hsm/element").data());
 
     e1->setPos(scenePos);
     scene()->addItem(e1);

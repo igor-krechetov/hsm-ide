@@ -1,6 +1,9 @@
 #include "HsmElementsFactory.hpp"
 
 #include <QListWidgetItem>
+#include <QCoreApplication>
+
+#include "private/HsmElement.hpp"
 #include "HsmStateElement.hpp"
 #include "HsmStartElement.hpp"
 #include "HsmFinalElement.hpp"
@@ -10,8 +13,9 @@
 
 #include <QDir>
 #include <QIcon>
+#include <functional>
 
-std::map<QString, std::tuple<QString, QString, std::function<HsmElement*>()>> HsmElementsFactory::mItemsCatalog = {
+std::map<QString, std::tuple<QString, QString, std::function<HsmElement* ()>>> HsmElementsFactory::mItemsCatalog = {
         {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
         {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
         {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::_createElementState}},
@@ -27,11 +31,11 @@ std::list<QListWidgetItem*> HsmElementsFactory::createElementsList()
     QString appDir = QCoreApplication::applicationDirPath();
 
     for (const auto& itemInfo : mItemsCatalog) {
-        QIcon icon(appDir + std::get<1>(itemInfo));
-        QString itemName = std::get<0>(itemInfo);
+        QIcon icon(appDir + std::get<1>(itemInfo.second));
+        QString itemName = std::get<0>(itemInfo.second);
         QListWidgetItem* newItem = new QListWidgetItem(icon, itemName);
 
-        newItem->setData(Qt::UserRole, id);
+        newItem->setData(Qt::UserRole, itemInfo.first);
         elements.push_back(newItem);
     }
 
@@ -43,7 +47,7 @@ HsmElement* HsmElementsFactory::createElement(const QString& id)
     HsmElement* element = nullptr;
     auto itItem = mItemsCatalog.find(id);
 
-    if (mItemscatalog.end() != itItem) {
+    if (mItemsCatalog.end() != itItem) {
         const auto& callback = std::get<2>(itItem->second);
 
         element = callback();
@@ -73,30 +77,48 @@ HsmElement* HsmElementsFactory::createElement(const QString& id)
 
 HsmElement* HsmElementsFactory::_createElementState()
 {
-    return new HsmStateElement();
+    HsmElement* elem = new HsmStateElement();
+
+    elem->init();
+    return elem;
 }
 
 HsmElement* HsmElementsFactory::_createElementStart()
 {
-    return new HsmStartElement();
+    HsmElement* elem = new HsmStartElement();
+
+    elem->init();
+    return elem;
 }
 
 HsmElement* HsmElementsFactory::_createElementFinal()
 {
-    return new HsmFinalElement();
+    HsmElement* elem = new HsmFinalElement();
+
+    elem->init();
+    return elem;
 }
 
 HsmElement* HsmElementsFactory::_createElementEntryPoint()
 {
-    return new HsmEntryPointElement();
+    HsmElement* elem = new HsmEntryPointElement();
+
+    elem->init();
+    return elem;
 }
 
 HsmElement* HsmElementsFactory::_createElementExitPoint()
 {
-    return new HsmExitPointElement();
+    HsmElement* elem = new HsmExitPointElement();
+
+    elem->init();
+    return elem;
 }
 
 HsmElement* HsmElementsFactory::_createElementHistory()
 {
-    return new HsmHistoryElement();
+    HsmElement* elem = new HsmHistoryElement();
+
+    elem->init();
+    return elem;
 }

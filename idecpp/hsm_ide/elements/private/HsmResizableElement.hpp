@@ -1,42 +1,34 @@
 #ifndef HSMHSMRESIZABLEELEMENT_HPP
 #define HSMHSMRESIZABLEELEMENT_HPP
 
+#include "HsmElement.hpp"
+#include "ElementBoundaryGripItem.hpp"
 #include <QObject>
-#include <QGraphicsItem>
-#include <QGraphicsScene>
-#include <QGraphicsEllipseItem>
-#include <QGraphicsSceneMouseEvent>
-#include <QPainter>
+#include <QPen>
+#include <map>
 
-enum class ElementBoundaryGripDirection {
-    North,
-    NorthEast,
-    East,
-    SouthEast,
-    South,
-    SouthWest,
-    West,
-    NorthWest
-};
-
-class HsmResizableElement : public QObject, public QGraphicsItem
+class QPainter;
+class HsmResizableElement : public HsmElement
 {
     Q_OBJECT
 
 public:
-    explicit HsmResizableElement(QObject* parent = nullptr);
+    explicit HsmResizableElement();
     virtual ~HsmResizableElement() = default;
 
     void createBoundaryGrips();
-    void updateGripsPosition(const QList<ElementBoundaryGripDirection>& directionsList);
+    void updateGripsPosition(const QList<GripDirection>& directionsList);
     void setGripVisibility(bool visible);
-    void onGripLostFocus(QGraphicsEllipseItem* grip);
-    bool onGripMoved(ElementBoundaryGripItem* selectedGrip, const QPointF& pos);
-    int indexOf(const QPointF& p);
-    QPointF gripPoint(ElementBoundaryGripDirection gripDirection);
+    // int indexOf(const QPointF& p);
+    QPointF gripPoint(GripDirection gripDirection);
+
+    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+public slots:
+    virtual void onGripLostFocus(ElementBoundaryGripItem* grip);
 
 signals:
     void geometryChanged(HsmResizableElement* element);
@@ -45,12 +37,11 @@ protected:
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
 
 private:
-    QGraphicsEllipseItem* createGrip(ElementBoundaryGripDirection direction);
+    ElementBoundaryGripItem* createGrip(GripDirection direction);
 
 private:
-    QRectF mOuterRect;
-    QMap<ElementBoundaryGripDirection, ElementBoundaryGripItem*> mGrips;
-    QPen mPenSelectedBorder;
+    std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
+    QPen mPenSelectedBorder = QColor("lightblue");
     bool mResizeMode = false;
     bool mGripSelected = false;
 };

@@ -1,6 +1,7 @@
 #include "QClickableSlider.hpp"
 #include <QStyleOptionSlider>
 #include <QStyle>
+#include <QMouseEvent>
 
 QClickableSlider::QClickableSlider(QWidget* parent)
     : QSlider(parent)

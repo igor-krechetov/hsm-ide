@@ -1,56 +1,56 @@
 #ifndef HSMTRANSITION_HPP
 #define HSMTRANSITION_HPP
 
-#include <QGraphicsItem>
-#include <QLineF>
-#include <QPainterPath>
-#include <QPen>
-#include <QPointF>
-#include <QPolygonF>
-#include <cmath>
+#include "private/HsmElement.hpp"
 
-#include "HsmElement.hpp"
+#include <QLineF>
+#include <QPen>
 
 class QPainter;
 class QWidget;
+class QGraphicsSceneMouseEvent;
+class ElementGripItem;
 
 class HsmTransition : public HsmElement {
+    Q_OBJECT
+
 public:
-    enum class Consts { SELECTION_DISTANCE = 2 };
-
     HsmTransition();
-
     virtual ~HsmTransition() = default;
 
-protected:
-    QPainterPath shape() const override;
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-    virtual void geometryChangedEvent() override;
-
-protected:
-    void updateBoundingRect() override;
-
-    QPolygonF calculateLinePolygon(int selectionOffset, const QLineF& line);
-    void updateSelectionPolygon();
     void beginConnection(HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;
     void moveConnectionTo(const QPointF& pos);
     void connectElements(HsmElement* fromElement, HsmElement* toElement);
-
     void removeConnection();
+
+protected:
+    QPainterPath shape() const override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+protected:
+    void updateBoundingRect(const QRectF& newRect = QRectF()) override;
+
+    QPolygonF calculateLinePolygon(int selectionOffset, const QLineF& line);
+    void updateSelectionPolygon();
+
     QPointF findStartingPointFromPoint(const QRectF& rectFrom, const QPointF& pointTo);
     QPointF findStartingPointFromRect(const QRectF& rectFrom, const QRectF& rectTo);
-    void recalculateLine(QObject* element = nullptr);
-    bool onGripMoved(QObject* grip, const QPointF& pos);
-    void onGripDoubleClick(QObject* grip);
-    int findGripIndex(QObject* grip);
-    void mouseDoubleClickEvent(QMouseEvent* event);
+    int findGripIndex(const ElementGripItem* grip);
+
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     std::tuple<bool, QPointF, int> isPointOnTheLine(const QPointF& pos);
 
+    bool onGripMoved(const ElementGripItem* grip, const QPointF& pos) override;
+
+protected slots:
+    void onGripDoubleClick(ElementGripItem* grip);
+
+protected slots:
     void recalculateLine();
 
 private:
-    constexpr qreal SELECTION_DISTANCE = 5.0;
+    static constexpr qreal SELECTION_DISTANCE = 2.0;
 
     bool mDebugShowSelectionPolygon = false;
 
@@ -59,9 +59,11 @@ private:
     HsmElement* mToElement = nullptr;
     QPainterPath mSelectionPath;
     QPolygonF mLinePath;
-    QPolygonF mLineGrips;
-    QVector<QPointF> mLinePath;
-    QVector<QObject*> mLineGrips;
+    // QPolygonF mLineGrips;
+    // QVector<QPointF> mLinePath;
+    // TODO: use smart pointers
+    // TODO: use list ??
+    std::vector<ElementGripItem*> mLineGrips = {nullptr, nullptr};
     QPointF mCurrentMovePos;
 };
 

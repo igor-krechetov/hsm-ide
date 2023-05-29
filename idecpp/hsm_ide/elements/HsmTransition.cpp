@@ -1,5 +1,12 @@
-
 #include "HsmTransition.hpp"
+#include "private/ElementGripItem.hpp"
+
+#include <QPainter>
+#include <QPainterPath>
+#include <QPointF>
+#include <QPolygonF>
+#include <cmath>
+#include <QGraphicsSceneMouseEvent>
 
 HsmTransition::HsmTransition()
     : mFromElement(nullptr)
@@ -12,17 +19,16 @@ HsmTransition::HsmTransition()
     setFlag(QGraphicsItem::ItemIsMovable, false);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setZValue(0);
-    updateBoundingRect();
 }
 
-void HsmTransition::updateBoundingRect() {
+void HsmTransition::updateBoundingRect(const QRectF& newRect) {
     prepareGeometryChange();
     updateSelectionPolygon();
 
-    mOuterRect = mLinePath.boundingRect().normalized().adjusted(-static_cast<int>(Consts::SELECTION_DISTANCE),
-                                                                -static_cast<int>(Consts::SELECTION_DISTANCE),
-                                                                static_cast<int>(Consts::SELECTION_DISTANCE),
-                                                                static_cast<int>(Consts::SELECTION_DISTANCE));
+    mOuterRect = mLinePath.boundingRect().normalized().adjusted(-static_cast<int>(SELECTION_DISTANCE),
+                                                                -static_cast<int>(SELECTION_DISTANCE),
+                                                                static_cast<int>(SELECTION_DISTANCE),
+                                                                static_cast<int>(SELECTION_DISTANCE));
 }
 
 QPolygonF HsmTransition::calculateLinePolygon(int selectionOffset, const QLineF& line) {
@@ -103,29 +109,21 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
     mFromElement = fromElement;
     mToElement = toElement;
     recalculateLine();
-    connect(mFromElement, &HsmElement::geometryChangedEvent, this, &HsmTransition::recalculateLine);
-    connect(mToElement, &HsmElement::geometryChangedEvent, this, &HsmTransition::recalculateLine);
-}
-
-void HsmTransition::recalculateLine() {
-    // TODO: Recalculate start and end positions when related items were moved
-}
-
-void HsmTransition::geometryChangedEvent() {
-    recalculateLine();
+    connect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
+    connect(mToElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
 }
 
 void HsmTransition::removeConnection() {
     if (mFromElement != nullptr) {
         try {
-            QObject::disconnect(mFromElement, &HsmElement::geometryChanged, this, &HsmTransition::recalculateLine);
+            QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
         } catch (...) {
             qDebug() << "from not connected";
         }
     }
     if (mToElement != nullptr) {
         try {
-            QObject::disconnect(mToElement, &HsmElement::geometryChanged, this, &HsmTransition::recalculateLine);
+            QObject::disconnect(mToElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
         } catch (...) {
             qDebug() << "to not connected";
         }
@@ -214,7 +212,7 @@ QPointF HsmTransition::findStartingPointFromRect(const QRectF& rectFrom, const Q
     return pointFrom;
 }
 
-void HsmTransition::recalculateLine(QObject* element) {
+void HsmTransition::recalculateLine() {
     // TODO: decide how to snap transition to items
     if ((nullptr != mFromElement) && (nullptr != mToElement)) {
         // posFrom = self.fromElement.mapToScene(self.fromElement.pos())
@@ -276,7 +274,7 @@ void HsmTransition::recalculateLine(QObject* element) {
 
 // =================================================================================================================
 // Grip notifications
-bool HsmTransition::onGripMoved(HsmTransitionGripItem* grip, const QPointF& pos) {
+bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
     const int gripIndex = findGripIndex(grip);
 
     if (gripIndex >= 0) {
@@ -288,13 +286,18 @@ bool HsmTransition::onGripMoved(HsmTransitionGripItem* grip, const QPointF& pos)
     return true;
 }
 
-void HsmTransition::onGripDoubleClick(HsmTransitionGripItem* grip) {
-    const int gripIndex = findGripIndex(grip);
+void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
+    // const int gripIndex = findGripIndex(grip);
+    auto it = std::find(mLineGrips.begin(), mLineGrips.end(), grip);
 
-    if (gripIndex >= 0) {
+    if (it != mLineGrips.end()) {
         grip->setParentItem(nullptr);
-        mLinePath.removeAt(gripIndex);
-        delete mLineGrips.takeAt(gripIndex);
+        // TODO:validate
+        mLinePath.removeAt(it - mLineGrips.begin());
+        // TODO: check for memory leaks
+        // delete mLineGrips.takeAt(gripIndex);
+        delete grip;
+        mLineGrips.erase(it);
         updateBoundingRect();
     }
 }
@@ -303,7 +306,7 @@ void HsmTransition::onGripDoubleClick(HsmTransitionGripItem* grip) {
 // #     # TODO
 // #     return True
 
-int HsmTransition::findGripIndex(HsmTransitionGripItem* grip) {
+int HsmTransition::findGripIndex(const ElementGripItem* grip) {
     int gripIndex = -1;
 
     // TODO: use foreach or std::find
@@ -318,64 +321,44 @@ int HsmTransition::findGripIndex(HsmTransitionGripItem* grip) {
 }
 
 void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
-    // TODO: replace with tuple
-    QPair<bool, QPointF> result = isPointOnTheLine(event->pos());
+    std::tuple<bool, QPointF, int> result = isPointOnTheLine(event->pos());
 
-    if (result.first) {
+    if (true == std::get<0>(result)) {
         // TODO: use smart pointer
-        HsmTransitionGripItem* grip = new HsmTransitionGripItem(this);
+        ElementGripItem* grip = new ElementGripItem(this);
 
-        grip->setPos(result.second);
-        mLinePath.insert(result.third + 1, result.second);
-        mLineGrips.insert(result.third + 1, grip);
+        grip->init();
+        grip->setPos(std::get<1>(result));
+        mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
+        // TODO: validate
+        mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
     }
 
     QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
-// -----------------------------------
+// =================================================================================================================
 // Utils
-// TODO: replace with tuple
-QPair<bool, QPointF> HsmTransition::isPointOnTheLine(const QPointF& pos) {
+std::tuple<bool, QPointF, int> HsmTransition::isPointOnTheLine(const QPointF& pos) {
     bool intersects = false;
     QPointF linePoint;
     int prevPointIndex = -1;
     const int cornersCount = mLinePath.size();
 
     for (int i = 0; i < cornersCount; ++i) {
-        // QPointF point1 = mLinePath[i];
-        // QPointF point2 = mLinePath[(i + 1) % cornersCount];
-        // QPainterPath path;
-
-        // path.moveTo(point1);
-        // path.lineTo(point2);
-
-        // if (path.length() > SELECTION_DISTANCE) {
-        //     QRectF rect = QRectF(point1, point2)
-        //                       .normalized()
-        //                       .adjusted(-SELECTION_DISTANCE, -SELECTION_DISTANCE, SELECTION_DISTANCE, SELECTION_DISTANCE);
-
-        //     if (rect.contains(pos.toPoint())) {
-        //         intersects = true;
-        //         linePoint = QPointF((point1.x() + point2.x()) / 2, (point1.y() + point2.y()) / 2);
-        //         prevPointIndex = i;
-        //         break;
-        //     }
-        // }
-        if (QLineF(self.linePath[i], pos).length() <= SELECTION_DISTANCE) {
+        if (QLineF(mLinePath[i], pos).length() <= SELECTION_DISTANCE) {
             // Is pressed point close enough of the grip-point
             intersects = true;
-            break
+            break;
         }
         else {
-            if (i < self.linePath.count() - 1) {
-                QLineF line(self.linePath[i], self.linePath[i + 1]);
+            if (i < mLinePath.count() - 1) {
+                QLineF line(mLinePath[i], mLinePath[i + 1]);
                 // Is pressed point close enough of the line
-                QLine line2(pos, pos + QPointF(self.SELECTION_DISTANCE, self.SELECTION_DISTANCE));
+                QLineF line2(pos, pos + QPointF(SELECTION_DISTANCE, SELECTION_DISTANCE));
 
                 line2.setAngle(line.angle() + 90);
 
-                QPointF linePoint;
                 QLineF::IntersectionType intersection = line.intersects(line2, &linePoint);
 
                 if (QLineF::BoundedIntersection == intersection) {
@@ -395,6 +378,5 @@ QPair<bool, QPointF> HsmTransition::isPointOnTheLine(const QPointF& pos) {
         }
     }
 
-    // TODO: make tuple
-    return qMakePair(intersects, linePoint, prevPointIndex);
+    return std::make_tuple(intersects, linePoint, prevPointIndex);
 }

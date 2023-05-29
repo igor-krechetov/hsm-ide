@@ -3,6 +3,8 @@
 
 #include "ElementGripItem.hpp"
 
+class HsmResizableElement;
+
 enum class GripDirection {
     North = 1,
     NorthEast = 2,
@@ -20,8 +22,10 @@ enum class GripDirectionType { Horizontal = 1, Vertical = 2, Diagonal = 3 };
 class ElementBoundaryGripItem : public ElementGripItem {
     // Q_OBJECT
 public:
-    ElementBoundaryGripItem(const QGraphicsObject* annotationElement, const GripDirection direction);
+    ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction);
     virtual ~ElementBoundaryGripItem() = default;
+
+    HsmResizableElement* annotationElement() const;
 
     GripDirection direction() const;
     GripDirectionType directionType() const;

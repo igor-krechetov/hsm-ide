@@ -1,13 +1,23 @@
 #include "ElementGripItem.hpp"
+#include "HsmElement.hpp"
+#include <QCursor>
+#include <QPainter>
+#include <QMetaMethod>
 
-ElementGripItem::ElementGripItem(const QGraphicsObject* annotationElement)
-    : QGraphicsObject(annotationElement)
+ElementGripItem::ElementGripItem(HsmElement* annotationElement)
+    : QGraphicsObject(dynamic_cast<QGraphicsItem*>(annotationElement))
     , mGripRect(-4, -4, 8, 8)
-    , mGripColor("green");
+    , mGripColor("green")
 {
-    tryConnectSignal(&onGripDoubleClick, parent(), "onGripDoubleClick");
+}
+
+void ElementGripItem::init() {
+//    tryConnectSignal(SIGNAL(onGripDoubleClick(ElementGripItem*)), parentObject(), SLOT(onGripDoubleClick(ElementGripItem*)));
     // # self.tryConnectSignal(self.onGripMoved, annotation_element, "onGripMoved")
-    tryConnectSignal(&onGripLostFocus, parent(), "onGripLostFocus");
+//    tryConnectSignal(SIGNAL(onGripLostFocus(ElementGripItem*)), parentObject(), SLOT(onGripLostFocus(ElementGripItem*)));
+
+    tryConnectSignal("onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
+    tryConnectSignal("onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
 
     // setFlag(ItemIgnoresTransformations, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -15,14 +25,18 @@ ElementGripItem::ElementGripItem(const QGraphicsObject* annotationElement)
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     setAcceptHoverEvents(true);
     setZValue(11);
-    setCursor(Qt::PointingHandCursor);
+    setCursor(QCursor(Qt::PointingHandCursor));
 }
 
-QRectF ElementGripItem::boundingRect() const override {
+HsmElement* ElementGripItem::annotationElement() const {
+    return dynamic_cast<HsmElement*>(parentItem());
+}
+
+QRectF ElementGripItem::boundingRect() const {
     return mGripRect;
 }
 
-void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override {
+void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
@@ -31,28 +45,28 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     painter->drawRect(mGripRect);
 }
 
-void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) override {
+void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
     mGripColor = QColor("red");
     QGraphicsObject::hoverEnterEvent(event);
 }
 
-void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override {
+void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     mGripColor = QColor("green");
     QGraphicsObject::hoverLeaveEvent(event);
 }
 
-void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override {
+void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
     emit onGripDoubleClick(this);
     QGraphicsObject::mouseDoubleClickEvent(event);
 }
 
-QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& value) override {
+QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
     QPointF p;
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
         p = value.toPointF();
 
-        if (false == parent()->onGripMoved(this, p)) {
+        if (false == annotationElement()->onGripMoved(this, p)) {
             p = pos();
         }
     } else {
@@ -68,10 +82,21 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
     return p;
 }
 
-void ElementGripItem::tryConnectSignal(PointerToMemberFunction signal, QObject* object, const char* functionName) {
-    auto functionObject = object->metaObject()->method(object->metaObject()->indexOfMethod(functionName));
+void ElementGripItem::tryConnectSignal(const char *signalName, QObject* object, const char* slotName) {
+    auto signalMethod = metaObject()->method(metaObject()->indexOfSignal(signalName));
+    auto meta = object->metaObject();
+    int index = object->metaObject()->indexOfSlot(slotName);
+    auto slotMethod = object->metaObject()->method(object->metaObject()->indexOfSlot(slotName));
 
-    if (functionObject.isValid()) {
-        QObject::connect(this, signal, functionObject);
+    qDebug() << index;
+
+    qDebug() << signalMethod.name();
+    qDebug() << signalMethod.methodSignature();
+
+    qDebug() << slotMethod.name();
+    qDebug() << slotMethod.methodSignature();
+
+    if (slotMethod.isValid()) {
+        QObject::connect(this, signalMethod, object, slotMethod);
     }
 }

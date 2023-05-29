@@ -3,14 +3,19 @@
 
 #include <QGraphicsObject>
 
+class HsmElement;
+
 class ElementGripItem : public QGraphicsObject {
     Q_OBJECT
 
 public:
-    explicit ElementGripItem(const QGraphicsObject* annotationElement);
+    explicit ElementGripItem(HsmElement* annotationElement);
     virtual ~ElementGripItem() = default;
 
-    QRectF boundingRect();
+    virtual void init();
+
+    HsmElement* annotationElement() const;
+    QRectF boundingRect() const override;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
@@ -23,7 +28,7 @@ signals:
     void onGripLostFocus(ElementGripItem* gripItem);
 
 private:
-    void tryConnectSignal(PointerToMemberFunction signal, QObject* object, const char* functionName);
+    void tryConnectSignal(const char* signal, QObject* object, const char* functionName);
 
 private:
     QRectF mGripRect;

@@ -14,7 +14,7 @@ QStringList HsmElementsList::mimeTypes() const
     return {"hsm/element"};
 }
 
-QMimeData* HsmElementsList::mimeData(const QList<QListWidgetItem*> items) const
+QMimeData* HsmElementsList::mimeData(const QList<QListWidgetItem*>& items) const
 {
     qDebug() << "mimeData:" << items.length();
     QMimeData* data = nullptr;
