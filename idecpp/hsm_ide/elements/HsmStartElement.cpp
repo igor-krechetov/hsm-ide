@@ -4,7 +4,7 @@
 #include <QPainter>
 
 HsmStartElement::HsmStartElement()
-    : HsmConnectableElement() {}
+    : HsmConnectableElement(HsmElementType::START) {}
 
 void HsmStartElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);

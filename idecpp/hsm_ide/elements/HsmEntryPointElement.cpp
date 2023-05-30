@@ -4,7 +4,7 @@
 #include <QPainter>
 
 HsmEntryPointElement::HsmEntryPointElement()
-    : HsmConnectableElement() {}
+    : HsmConnectableElement(HsmElementType::ENTRY_POINT) {}
 
 void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);

@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     e3->setPos(-100, 120);
     scene->addItem(e3);
 
+
     HsmTransition* t = new HsmTransition();
     t->init();
     e1->addTransition(t, e2);

@@ -4,7 +4,7 @@
 #include <QPainter>
 
 HsmHistoryElement::HsmHistoryElement()
-    : HsmConnectableElement() {}
+    : HsmConnectableElement(HsmElementType::HISTORY) {}
 
 void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);

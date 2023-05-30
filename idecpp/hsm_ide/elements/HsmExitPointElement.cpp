@@ -3,7 +3,7 @@
 #include <QColor>
 
 HsmExitPointElement::HsmExitPointElement()
-    : HsmConnectableElement() {}
+    : HsmConnectableElement(HsmElementType::EXIT_POINT) {}
 
 void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);

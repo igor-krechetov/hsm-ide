@@ -1,15 +1,17 @@
 #include "HsmTransition.hpp"
-#include "private/ElementGripItem.hpp"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPointF>
 #include <QPolygonF>
 #include <cmath>
-#include <QGraphicsSceneMouseEvent>
+
+#include "private/ElementGripItem.hpp"
 
 HsmTransition::HsmTransition()
-    : mFromElement(nullptr)
+    : HsmElement(HsmElementType::TRANSITION)
+    , mFromElement(nullptr)
     , mToElement(nullptr)
     , mDebugShowSelectionPolygon(false) {
     // NOTE: there are no grips at the beginning and and of the poly-line
@@ -350,8 +352,7 @@ std::tuple<bool, QPointF, int> HsmTransition::isPointOnTheLine(const QPointF& po
             // Is pressed point close enough of the grip-point
             intersects = true;
             break;
-        }
-        else {
+        } else {
             if (i < mLinePath.count() - 1) {
                 QLineF line(mLinePath[i], mLinePath[i + 1]);
                 // Is pressed point close enough of the line
@@ -363,14 +364,13 @@ std::tuple<bool, QPointF, int> HsmTransition::isPointOnTheLine(const QPointF& po
 
                 if (QLineF::BoundedIntersection == intersection) {
                     intersects = true;
-                }
-                else {
+                } else {
                     line2.setAngle(line.angle() - 90);
                     intersection = line.intersects(line2, &linePoint);
                     intersects = (QLineF::BoundedIntersection == intersection);
                 }
 
-                if (true ==intersects) {
+                if (true == intersects) {
                     prevPointIndex = i;
                     break;
                 }

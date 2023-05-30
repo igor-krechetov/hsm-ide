@@ -14,7 +14,7 @@ class HsmConnectableElement : public HsmResizableElement {
     Q_OBJECT
 
 public:
-    HsmConnectableElement();
+    explicit HsmConnectableElement(const HsmElementType elementType);
     virtual ~HsmConnectableElement() = default;
 
     void init() override;

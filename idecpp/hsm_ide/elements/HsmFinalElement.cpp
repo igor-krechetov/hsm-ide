@@ -4,7 +4,7 @@
 #include <QPainter>
 
 HsmFinalElement::HsmFinalElement()
-    : HsmConnectableElement() {}
+    : HsmConnectableElement(HsmElementType::FINAL) {}
 
 void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     painter->setPen(Qt::SolidLine);

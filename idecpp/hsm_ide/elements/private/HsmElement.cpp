@@ -1,11 +1,15 @@
 #include "HsmElement.hpp"
+
 #include <QGraphicsSceneDragDropEvent>
 #include <QMimeData>
 
-HsmElement::HsmElement()
-    : mSize(200.0, 40.0) {
+HsmElement::HsmElement(const HsmElementType elementType)
+    : QGraphicsObject()
+    , mSize(200.0, 40.0)
+    , mType(elementType) {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
     setZValue(3);
+    setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
 
 HsmElementType HsmElement::elementType() const {
@@ -20,7 +24,7 @@ void HsmElement::init() {
     updateBoundingRect();
 }
 
-bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
+bool HsmElement::onGripMoved(const ElementGripItem *selectedGrip, const QPointF &pos) {
     // TODO: impl
     return true;
 }

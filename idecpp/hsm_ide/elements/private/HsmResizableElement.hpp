@@ -13,8 +13,10 @@ class HsmResizableElement : public HsmElement
     Q_OBJECT
 
 public:
-    explicit HsmResizableElement();
+    explicit HsmResizableElement(const HsmElementType elementType);
     virtual ~HsmResizableElement() = default;
+
+    void init() override;
 
     void createBoundaryGrips();
     void updateGripsPosition(const QList<GripDirection>& directionsList);
@@ -39,7 +41,8 @@ protected:
 private:
     ElementBoundaryGripItem* createGrip(GripDirection direction);
 
-private:
+//private:
+public:
     std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
     QPen mPenSelectedBorder = QColor("lightblue");
     bool mResizeMode = false;

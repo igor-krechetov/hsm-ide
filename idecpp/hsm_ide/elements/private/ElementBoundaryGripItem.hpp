@@ -20,7 +20,7 @@ enum class GripDirection {
 enum class GripDirectionType { Horizontal = 1, Vertical = 2, Diagonal = 3 };
 
 class ElementBoundaryGripItem : public ElementGripItem {
-    // Q_OBJECT
+    Q_OBJECT
 public:
     ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction);
     virtual ~ElementBoundaryGripItem() = default;

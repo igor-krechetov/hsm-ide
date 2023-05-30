@@ -2,8 +2,8 @@
 #include "ElementBoundaryGripItem.hpp"
 #include <QGraphicsScene>
 
-HsmConnectableElement::HsmConnectableElement()
-    : HsmResizableElement()
+HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
+    : HsmResizableElement(elementType)
 {
 }
 
@@ -15,7 +15,7 @@ void HsmConnectableElement::init() {
 
 void HsmConnectableElement::addTransition(HsmTransition* transition, HsmConnectableElement* target)
 {
-    if (transition->parentItem() == nullptr) {
+    if (transition->scene() == nullptr) {
         scene()->addItem(transition);
     }
 
@@ -151,6 +151,9 @@ void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const
     mConnection->init();
     mConnection->beginConnection(this, pos);
     scene()->addItem(mConnection);
+    if (mConnection->parent()) {
+        qDebug() << "ERROR: parent is null";
+    }
 }
 
 void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos)
@@ -166,19 +169,46 @@ void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, 
     qDebug() << "FINISH - arrow. Target" << targetItem << pos;
 
     // TODO: fix
-    // if (this == targetItem) {
-    //     qDebug() << "TODO: target-self";
-    //     mConnection->setParentItem(nullptr);
-    // } else if (dynamic_cast<HsmConnectableElement*>(targetItem)) {
-    //     qDebug() << "TODO: target-state";
-    //     addTransition(mConnection, dynamic_cast<HsmConnectableElement*>(targetItem));
-    // } else {
-        qDebug() << "TODO: cancel connection";
-        mConnection->setParentItem(nullptr);
-    // }
-    // TODO: target - child object
-    delete mConnection;
-    mConnection = nullptr;
+    if (nullptr != targetItem) {
+        if (this == targetItem) {
+            qDebug() << "TODO: target-self";
+        } else {
+            QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
+
+            if (true == elementType.isValid()) {
+                // TODO: target - child object
+
+                switch(static_cast<HsmElementType>(elementType.toInt())) {
+                    case HsmElementType::STATE:
+                        qDebug() << "TODO: target-state";
+                        addTransition(mConnection, dynamic_cast<HsmConnectableElement*>(targetItem));
+                        mConnection = nullptr;
+                        break;
+                    // case HsmElementType::START:
+                    //     break;
+                    // case HsmElementType::FINAL:
+                    //     break;
+                    // case HsmElementType::ENTRY_POINT:
+                    //     break;
+                    // case HsmElementType::EXIT_POINT:
+                    //     break;
+                    // case HsmElementType::TRANSITION:
+                    //     break;
+                    // case HsmElementType::HISTORY:
+                    //     break;
+                    default:
+                        qDebug() << "TODO: cancel connection";
+                        break;
+                }
+            }
+        }
+    }
+
+    if (nullptr != mConnection) {
+        scene()->removeItem(mConnection);
+        delete mConnection;
+        mConnection = nullptr;
+    }
 }
 
 void HsmConnectableElement::updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos)

@@ -18,12 +18,14 @@ enum class HsmElementType {
     HISTORY
 };
 
+constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
+
 class HsmElement : public QGraphicsObject
 {
     Q_OBJECT
 
 public:
-    HsmElement();
+    HsmElement(const HsmElementType elementType);
 
     HsmElementType elementType() const;
     QRectF elementRect() const;

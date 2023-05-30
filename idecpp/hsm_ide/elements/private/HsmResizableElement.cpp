@@ -3,9 +3,13 @@
 #include <QPainter>
 #include <QGraphicsScene>
 
-HsmResizableElement::HsmResizableElement()
-    : HsmElement()
+HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
+    : HsmElement(elementType)
 {
+}
+
+void HsmResizableElement::init() {
+    HsmElement::init();
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     createBoundaryGrips();
     setGripVisibility(false);
@@ -42,6 +46,10 @@ void HsmResizableElement::setGripVisibility(bool visible) {
 
     for (const auto& grip : mGrips) {
         grip.second->setVisible(visible);
+
+        if (grip.second->scene() == nullptr) {
+            qDebug() << "ERROR: grip is not attached to sceen";
+        }
     }
 
     update();
@@ -152,8 +160,9 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
 // }
 
 QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
-    qreal xCenter = mOuterRect.center().x();
-    qreal yCenter = mOuterRect.center().y();
+    const QPointF elementCenter = mOuterRect.center();
+    qreal xCenter = elementCenter.x();
+    qreal yCenter = elementCenter.y();
     QMap<GripDirection, QPointF> positions = {
         {GripDirection::North, QPointF(xCenter, mOuterRect.top())},
         {GripDirection::NorthEast, mOuterRect.topRight()},

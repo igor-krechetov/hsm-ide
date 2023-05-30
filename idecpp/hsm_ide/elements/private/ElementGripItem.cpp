@@ -5,24 +5,18 @@
 #include <QMetaMethod>
 
 ElementGripItem::ElementGripItem(HsmElement* annotationElement)
-    : QGraphicsObject(dynamic_cast<QGraphicsItem*>(annotationElement))
+    : QGraphicsObject(annotationElement)
     , mGripRect(-4, -4, 8, 8)
     , mGripColor("green")
 {
 }
 
 void ElementGripItem::init() {
-//    tryConnectSignal(SIGNAL(onGripDoubleClick(ElementGripItem*)), parentObject(), SLOT(onGripDoubleClick(ElementGripItem*)));
-    // # self.tryConnectSignal(self.onGripMoved, annotation_element, "onGripMoved")
-//    tryConnectSignal(SIGNAL(onGripLostFocus(ElementGripItem*)), parentObject(), SLOT(onGripLostFocus(ElementGripItem*)));
-
     tryConnectSignal("onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
-    tryConnectSignal("onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
+    tryConnectSignal("onGripLostFocus(ElementGripItem*)", parentObject(), "onGripLostFocus(ElementGripItem*)");
 
     // setFlag(ItemIgnoresTransformations, true);
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setFlag(QGraphicsItem::ItemIsMovable, true);
-    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemSendsGeometryChanges);
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
@@ -61,16 +55,19 @@ void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-    QPointF p;
+    QVariant res;
+
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        p = value.toPointF();
+        QPointF p = value.toPointF();
 
         if (false == annotationElement()->onGripMoved(this, p)) {
             p = pos();
         }
+
+        res = p;
     } else {
-        p = QGraphicsObject::itemChange(change, value).toPointF();
+        res = QGraphicsObject::itemChange(change, value);
     }
 
     if (change == QGraphicsItem::ItemSelectedHasChanged) {
@@ -79,7 +76,7 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
         }
     }
 
-    return p;
+    return res;
 }
 
 void ElementGripItem::tryConnectSignal(const char *signalName, QObject* object, const char* slotName) {

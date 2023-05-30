@@ -9,6 +9,8 @@ class QPainter;
 class QWidget;
 
 class HsmStateElement : public HsmConnectableElement {
+    Q_OBJECT
+
 public:
     HsmStateElement();
     virtual ~HsmStateElement() = default;
