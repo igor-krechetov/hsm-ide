@@ -29,7 +29,8 @@
 *** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<in_progress>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
-***** REQ-102a1: Highlight for connectable elements <<todo>>
+***** REQ-102a2: Highlight for connectable elements <<todo>>
+***** REQ-102a3: Transition rendering <<in_progress>>
 **** REQ-102b: Event labeling
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions
@@ -39,6 +40,7 @@
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
 **** REQ-103c: Multi-select operations <<in_progress>>
+**** REQ-103d: Delete selected elements <<in_progress>>
 *** REQ-104: State Behavior Configuration
 **** REQ-104a: Entry actions (onentry)
 **** REQ-104b: Exit actions (onexit)
@@ -71,6 +73,7 @@
 **** REQ-201c: Canvas workspace
 *** REQ-202: Visualization features
 **** REQ-202a: Zoom/pan controls <<in_progress>>
+***** REQ-202a1: Custom cursor when zooming <<prio_low>>
 **** REQ-202b: Grid snapping
 **** REQ-202c: Element theming <<prio_low>>
 *** REQ-203: Project structure overview  <<prio_low>>
