@@ -1,0 +1,8 @@
+@startgantt
+[Static Validation (REQ-501)] lasts 3 days
+[Runtime Simulation (REQ-502a-e)] lasts 4 days
+[Recording Visualization (REQ-502f)] lasts 3 days
+
+[Runtime Simulation (REQ-502a-e)] starts at [Static Validation (REQ-501)]'s end
+[Recording Visualization (REQ-502f)] starts at [Runtime Simulation (REQ-502a-e)]'s end
+@endgantt

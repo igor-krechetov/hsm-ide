@@ -10,7 +10,8 @@ class ElementGripItem : public QGraphicsObject {
 
 public:
     explicit ElementGripItem(HsmElement* annotationElement);
-    virtual ~ElementGripItem() = default;
+    // virtual ~ElementGripItem() = default;
+    virtual ~ElementGripItem();
 
     virtual void init();
 
@@ -21,6 +22,11 @@ public:
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
+
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 signals:
@@ -31,8 +37,10 @@ private:
     void tryConnectSignal(const char* signal, QObject* object, const char* functionName);
 
 private:
+    HsmElement* mAnnotationElement = nullptr;
     QRectF mGripRect;
     QColor mGripColor;
+    QPointF mLastPos;
 };
 
 #endif  // ELEMENTGRIPITEM_HPP

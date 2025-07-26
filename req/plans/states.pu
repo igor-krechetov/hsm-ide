@@ -1,0 +1,10 @@
+@startgantt
+[Basic States (REQ-101a,b,c,g)] lasts 2 days
+[History States (REQ-101d)] lasts 1 days
+[Entry/Exit Points (REQ-101e,f)] lasts 2 days
+[State Actions (REQ-104)] lasts 3 days
+
+[History States (REQ-101d)] starts at [Basic States (REQ-101a,b,c,g)]'s end
+[Entry/Exit Points (REQ-101e,f)] starts at [History States (REQ-101d)]'s end
+[State Actions (REQ-104)] starts at [Entry/Exit Points (REQ-101e,f)]'s end
+@endgantt

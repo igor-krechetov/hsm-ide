@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+class Ui_hsm_ide;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -16,7 +16,7 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+    Ui_hsm_ide *ui;
     // QSettingsDialog mSettings;
     // HsmGraphicsView* mMainView;
     // HsmElementsList* mListHsmElements;
@@ -26,5 +26,8 @@ private:
     QString mLastDirectory;
     QString mAppTitle;
     QString mConfigPath;
+
+public slots:
+    void deleteSelectedItems();
 };
 #endif // MAINWINDOW_H

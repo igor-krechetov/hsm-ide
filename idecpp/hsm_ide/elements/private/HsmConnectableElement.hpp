@@ -19,7 +19,7 @@ public:
 
     void init() override;
 
-    void addTransition(HsmTransition* transition, HsmConnectableElement* target);
+    void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
 
     QRectF boundingRect() const override;
     void updateHoverRect(bool expendArea);
@@ -44,10 +44,14 @@ private slots:
 private:
     // TODO: use smart pointers
     QMap<ElementConnectionArrow::Direction, ElementConnectionArrow*> mArrows;
-    QList<HsmTransition*> mTransitions;
+    // TODO: does it make sence to store all transitions inside this object?
+    // TODO: remove shared_ptr. Transitions belong to the sceene and will be deleted by it
+    // TODO: use QPointer
+    QList<std::shared_ptr<HsmTransition>> mTransitions;
     QRectF mHoverRect;
     bool mDrawConnectionLine = false;
-    HsmTransition* mConnection = nullptr;
+    // TODO: replace with shared_ptr
+    std::shared_ptr<HsmTransition> mConnection;
 };
 
 #endif // HSMCONNECTABLEELEMENT_HPP

@@ -1,0 +1,16 @@
+@startgantt
+[Visual Transition Creation (REQ-102a)] lasts 2 days
+[Event Labeling (REQ-102b)] lasts 1 days
+[Guard Conditions (REQ-102c)] lasts 2 days
+[Self-Transitions (REQ-102e)] lasts 1 days
+[Internal/External Transitions (REQ-102d)] lasts 1 days
+[Transition Actions (REQ-102f)] lasts 2 days
+[Timer Events (REQ-105a,b)] lasts 2 days
+
+[Event Labeling (REQ-102b)] starts at [Visual Transition Creation (REQ-102a)]'s end
+[Guard Conditions (REQ-102c)] starts at [Event Labeling (REQ-102b)]'s end
+[Self-Transitions (REQ-102e)] starts at [Guard Conditions (REQ-102c)]'s end
+[Internal/External Transitions (REQ-102d)] starts at [Self-Transitions (REQ-102e)]'s end
+[Transition Actions (REQ-102f)] starts at [Internal/External Transitions (REQ-102d)]'s end
+[Timer Events (REQ-105a,b)] starts at [Transition Actions (REQ-102f)]'s end
+@endgantt

@@ -1,0 +1,5 @@
+Highlight target element when creating transition.
+Delete selected item with DEL.
+Add support for rectangualr selection of multiple elements.
+Draw arrows for transitions
+Add zoom cursor

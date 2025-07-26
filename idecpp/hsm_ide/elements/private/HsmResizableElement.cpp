@@ -17,14 +17,16 @@ void HsmResizableElement::init() {
 }
 
 void HsmResizableElement::createBoundaryGrips() {
-    for (const auto& direction : {GripDirection::North,
-                                  GripDirection::NorthEast,
-                                  GripDirection::East,
-                                  GripDirection::SouthEast,
-                                  GripDirection::South,
-                                  GripDirection::SouthWest,
-                                  GripDirection::West,
-                                  GripDirection::NorthWest}) {
+    QList<GripDirection> directions = {GripDirection::North,
+                                        GripDirection::NorthEast,
+                                        GripDirection::East,
+                                        GripDirection::SouthEast,
+                                        GripDirection::South,
+                                        GripDirection::SouthWest,
+                                        GripDirection::West,
+                                        GripDirection::NorthWest};
+
+    for (const auto& direction : directions) {
         ElementBoundaryGripItem* newGrip = createGrip(direction);  // TODO: smart pointers
 
         mGrips[direction] = newGrip;
@@ -73,13 +75,13 @@ void HsmResizableElement::onGripLostFocus(ElementBoundaryGripItem* grip) {
 bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
     QRectF newOuterRect = mOuterRect;
     QList<GripDirection> updateGrips = {GripDirection::North,
-                                                       GripDirection::NorthEast,
-                                                       GripDirection::East,
-                                                       GripDirection::SouthEast,
-                                                       GripDirection::South,
-                                                       GripDirection::SouthWest,
-                                                       GripDirection::West,
-                                                       GripDirection::NorthWest};
+                                        GripDirection::NorthEast,
+                                        GripDirection::East,
+                                        GripDirection::SouthEast,
+                                        GripDirection::South,
+                                        GripDirection::SouthWest,
+                                        GripDirection::West,
+                                        GripDirection::NorthWest};
     // TODO: is there a better option instead of casting?
     const GripDirection gripDirection = reinterpret_cast<const ElementBoundaryGripItem*>(selectedGrip)->direction();
 

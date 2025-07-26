@@ -1,0 +1,118 @@
+@startwbs
+<style>
+    wbsDiagram {
+        .in_progress {
+            BackgroundColor Yellow
+        }
+        .done {
+            BackgroundColor LightGreen
+        }
+        .prio_low {
+            BackgroundColor SkyBlue
+        }
+        .todo {
+            BackgroundColor Salmon
+        }
+    }
+</style>
+
+* REQ-000: SCXML State Machine Editor
+** REQ-100: Core Editor Functionality
+*** REQ-101: Support all SCXML state types
+**** REQ-101a: Atomic states
+**** REQ-101b: Parallel states
+**** REQ-101c: Compound states
+**** REQ-101d: History states (shallow/deep)
+**** REQ-101e: Entry points
+**** REQ-101f: Exit points
+**** REQ-101g: Final states
+*** REQ-102: Transition management
+**** REQ-102a: Visual transition creation <<in_progress>>
+***** REQ-102a1: Arrows for connectable elements <<done>>
+***** REQ-102a1: Highlight for connectable elements <<todo>>
+**** REQ-102b: Event labeling
+**** REQ-102c: Guard condition specification
+**** REQ-102d: Internal/External transitions
+**** REQ-102e: Self-transitions
+**** REQ-102f: Transition actions
+*** REQ-103: Element manipulation <<in_progress>>
+**** REQ-103a: Drag-and-drop placement <<done>>
+**** REQ-103b: Resize/reposition elements <<done>>
+**** REQ-103c: Multi-select operations <<in_progress>>
+*** REQ-104: State Behavior Configuration
+**** REQ-104a: Entry actions (onentry)
+**** REQ-104b: Exit actions (onexit)
+**** REQ-104c: State change callbacks
+*** REQ-105: Timing Features
+**** REQ-105a: Timer event configuration
+**** REQ-105b: Timeout transitions
+*** REQ-106: Modular Design
+**** REQ-106a: Dependency Visualization
+***** REQ-106a1: Display included files in current state machine
+***** REQ-106a2: Visualize external state references
+***** REQ-106a3: Render dependency graphs for interconnected files
+**** REQ-106b: Change Management
+***** REQ-106b1: Detect modifications in included files
+***** REQ-106b2: Notify when referenced content changes
+***** REQ-106b3: Provide update/refresh mechanisms
+**** REQ-106c: Navigation
+***** REQ-106c1: Click-to-open for included files
+***** REQ-106c2: Breadcrumb trails showing inclusion hierarchy
+***** REQ-106c3: Cross-file reference finder
+**** REQ-106d: Validation  <<prio_low>>
+***** REQ-106d1: Circular dependency checking  <<prio_low>>
+***** REQ-106d2: Included file existence verification  <<prio_low>>
+***** REQ-106d3: Interface compatibility validation (entry/exit points)  <<prio_low>>
+
+** REQ-200: UI/UX Requirements
+*** REQ-201: Workspace layout
+**** REQ-201a: Element palette (toolbox)
+**** REQ-201b: Properties editor panel
+**** REQ-201c: Canvas workspace
+*** REQ-202: Visualization features
+**** REQ-202a: Zoom/pan controls <<in_progress>>
+**** REQ-202b: Grid snapping
+**** REQ-202c: Element theming <<prio_low>>
+*** REQ-203: Project structure overview  <<prio_low>>
+**** REQ-203a: Dependency graph visualization  <<prio_low>>
+**** REQ-203b: File inclusion hierarchy  <<prio_low>>
+**** REQ-203c: Cross-file reference highlighting  <<prio_low>>
+
+** REQ-300: Import/Export
+*** REQ-301: SCXML file handling
+**** REQ-301a: Import SCXML 1.0 files
+**** REQ-301b: Export SCXML 1.0 files
+*** REQ-302: Image export
+**** REQ-302a: PNG export
+**** REQ-302b: SVG export
+
+** REQ-400: hsmcpp Integration  <<prio_low>>
+*** REQ-401: hsmcpp compatibility  <<prio_low>>
+**** REQ-401a: Generate valid hsmcpp state machine code  <<prio_low>>
+**** REQ-401b: Parse existing hsmcpp state machines  <<prio_low>>
+*** REQ-402: Embedded development features  <<prio_low>>
+**** REQ-402a: Resource-optimized visualization  <<prio_low>>
+**** REQ-402b: Cross-compilation support flags  <<prio_low>>
+
+** REQ-500: Validation & Testing <<prio_low>>
+*** REQ-501: Static validation  <<prio_low>>
+**** REQ-501a: State machine structural checks  <<prio_low>>
+**** REQ-501b: Transition path validation  <<prio_low>>
+**** REQ-501c: Action syntax validation  <<prio_low>>
+**** REQ-501d: Timer configuration checks  <<prio_low>>
+**** REQ-501e: Dependency validation  <<prio_low>>
+*** REQ-502: Simulation <<prio_low>>
+**** REQ-502a: State transition visualization  <<prio_low>>
+**** REQ-502b: Event triggering simulation  <<prio_low>>
+**** REQ-502c: Action execution visualization  <<prio_low>>
+**** REQ-502d: Timer event simulation  <<prio_low>>
+**** REQ-502e: Async transition visualization  <<prio_low>>
+**** REQ-502f: Transition Recording Visualization  <<prio_low>>
+***** REQ-502f1: Import hsmcpp transition recordings  <<prio_low>>
+***** REQ-502f2: Timeline visualization of state transitions  <<prio_low>>
+***** REQ-502f3: Step-by-step playback control  <<prio_low>>
+***** REQ-502f4: Step navigation (forward/backward through recording)  <<prio_low>>
+***** REQ-502f5: Error visualization (highlight skipped transitions)  <<prio_low>>
+***** REQ-502f6: Filtering by state/transition type  <<prio_low>>
+***** REQ-502f7: Transition statistics and metrics  <<prio_low>>
+@endwbs

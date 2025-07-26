@@ -1,0 +1,8 @@
+@startgantt
+[Drag-and-Drop (REQ-103a)] lasts 2 days
+[Multi-Select (REQ-103c)] lasts 1 days
+[Resize/Reposition (REQ-103b)] lasts 2 days
+
+[Multi-Select (REQ-103c)] starts at [Drag-and-Drop (REQ-103a)]'s end
+[Resize/Reposition (REQ-103b)] starts at [Multi-Select (REQ-103c)]'s end
+@endgantt

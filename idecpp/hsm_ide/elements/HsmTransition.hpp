@@ -16,7 +16,10 @@ class HsmTransition : public HsmElement {
 
 public:
     HsmTransition();
-    virtual ~HsmTransition() = default;
+    // virtual ~HsmTransition() = default;
+    virtual ~HsmTransition();
+
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event) override;
 
     void beginConnection(HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;

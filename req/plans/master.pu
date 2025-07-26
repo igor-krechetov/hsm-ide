@@ -1,0 +1,20 @@
+@startgantt
+[Core Elements (REQ-103)] lasts 3 days
+[State Management (REQ-101, REQ-104)] lasts 4 days
+[Transition System (REQ-102, REQ-105)] lasts 3 days
+[UI Framework (REQ-201, REQ-202)] lasts 5 days
+[Import/Export (REQ-301, REQ-302)] lasts 3 days
+[hsmcpp Integration (REQ-401, REQ-402)] lasts 4 days
+[Testing System (REQ-501, REQ-502)] lasts 5 days
+[Dependency Visualization (REQ-203, REQ-106)] lasts 4 days
+
+[Core Elements (REQ-103)] is colored in green
+[State Management (REQ-101, REQ-104)] starts at [Core Elements (REQ-103)]'s end
+[Transition System (REQ-102, REQ-105)] starts at [Core Elements (REQ-103)]'s end
+[UI Framework (REQ-201, REQ-202)] starts at [State Management (REQ-101, REQ-104)]'s end
+[Import/Export (REQ-301, REQ-302)] starts at [Transition System (REQ-102, REQ-105)]'s end
+[hsmcpp Integration (REQ-401, REQ-402)] starts at [Import/Export (REQ-301, REQ-302)]'s end
+[Dependency Visualization (REQ-203, REQ-106)] starts at [UI Framework (REQ-201, REQ-202)]'s end
+[Testing System (REQ-501, REQ-502)] starts at [hsmcpp Integration (REQ-401, REQ-402)]'s end
+[Testing System (REQ-501, REQ-502)] starts at [Dependency Visualization (REQ-203, REQ-106)]'s end
+@endgantt

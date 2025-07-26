@@ -1,0 +1,8 @@
+@startgantt
+[Code Generation (REQ-401a)] lasts 2 days
+[State Machine Parsing (REQ-401b)] lasts 3 days
+[Embedded Features (REQ-402)] lasts 2 days
+
+[State Machine Parsing (REQ-401b)] starts at [Code Generation (REQ-401a)]'s end
+[Embedded Features (REQ-402)] starts at [State Machine Parsing (REQ-401b)]'s end
+@endgantt

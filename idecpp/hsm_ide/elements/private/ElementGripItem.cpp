@@ -3,12 +3,20 @@
 #include <QCursor>
 #include <QPainter>
 #include <QMetaMethod>
+#include <QGraphicsSceneMouseEvent>
+#include <QDebug>
 
 ElementGripItem::ElementGripItem(HsmElement* annotationElement)
     : QGraphicsObject(annotationElement)
     , mGripRect(-4, -4, 8, 8)
     , mGripColor("green")
+    , mAnnotationElement(annotationElement)
 {
+    qDebug() << "CREATE: ElementGripItem: " << this;
+}
+
+ElementGripItem::~ElementGripItem() {
+    qDebug() << "DELETE: ElementGripItem: " << this;
 }
 
 void ElementGripItem::init() {
@@ -19,14 +27,16 @@ void ElementGripItem::init() {
     setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemSendsGeometryChanges);
     setAcceptHoverEvents(true);
     setZValue(11);
-    setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 HsmElement* ElementGripItem::annotationElement() const {
-    return dynamic_cast<HsmElement*>(parentItem());
+    // return dynamic_cast<HsmElement*>(parentItem());
+    return mAnnotationElement;
 }
 
 QRectF ElementGripItem::boundingRect() const {
+    // printf("ElementGripItem::boundingRect: %f, %f, %f, %f\n", mGripRect
+    // qDebug() << mGripRect << "\n";
     return mGripRect;
 }
 
@@ -42,6 +52,7 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
     mGripColor = QColor("red");
     QGraphicsObject::hoverEnterEvent(event);
+    setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
@@ -49,23 +60,42 @@ void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     QGraphicsObject::hoverLeaveEvent(event);
 }
 
+void ElementGripItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+    // qDebug() << "GRIP: hoverMoveEvent";
+}
+
+void ElementGripItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    // printf("ElementGripItem::mousePressEvent\n");
+    mLastPos = event->scenePos();
+    event->accept();
+}
+
+void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    // printf("ElementGripItem::mouseMoveEvent\n");
+    QPointF delta = event->scenePos() - mLastPos;
+
+    moveBy(delta.x(), delta.y());
+    mLastPos = event->scenePos();
+}
+
 void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    printf("ElementGripItem::mouseDoubleClickEvent\n");
     emit onGripDoubleClick(this);
     QGraphicsObject::mouseDoubleClickEvent(event);
 }
 
 QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
+    // qDebug() << "ElementGripItem::itemChange: " << change;
     QVariant res;
 
-
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        QPointF p = value.toPointF();
-
-        if (false == annotationElement()->onGripMoved(this, p)) {
-            p = pos();
+        if (false == annotationElement()->onGripMoved(this, value.toPointF())) {
+            res = pos();
+        } else {
+            res = value;
         }
-
-        res = p;
     } else {
         res = QGraphicsObject::itemChange(change, value);
     }
@@ -85,13 +115,13 @@ void ElementGripItem::tryConnectSignal(const char *signalName, QObject* object, 
     int index = object->metaObject()->indexOfSlot(slotName);
     auto slotMethod = object->metaObject()->method(object->metaObject()->indexOfSlot(slotName));
 
-    qDebug() << index;
+    // qDebug() << index;
 
-    qDebug() << signalMethod.name();
-    qDebug() << signalMethod.methodSignature();
+    // qDebug() << signalMethod.name();
+    // qDebug() << signalMethod.methodSignature();
 
-    qDebug() << slotMethod.name();
-    qDebug() << slotMethod.methodSignature();
+    // qDebug() << slotMethod.name();
+    // qDebug() << slotMethod.methodSignature();
 
     if (slotMethod.isValid()) {
         QObject::connect(this, signalMethod, object, slotMethod);

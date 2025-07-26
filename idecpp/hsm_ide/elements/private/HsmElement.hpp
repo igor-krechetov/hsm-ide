@@ -26,6 +26,7 @@ class HsmElement : public QGraphicsObject
 
 public:
     HsmElement(const HsmElementType elementType);
+    virtual ~HsmElement();
 
     HsmElementType elementType() const;
     QRectF elementRect() const;

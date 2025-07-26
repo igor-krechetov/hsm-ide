@@ -1,0 +1,96 @@
+@startuml
+
+!theme plain
+
+skinparam groupInheritance 2
+skinparam Shadowing false
+skinparam Class {
+    BackgroundColor White
+    ArrowColor #0078d7
+    BorderColor #0078d7
+}
+
+title HSM IDE Class Diagram
+
+package "Core Elements" {
+  class HsmElement {
+    + elementType(): HsmElementType
+    + elementRect(): QRectF
+    + init()
+    + onGripMoved()
+    + updateBoundingRect()
+    + boundingRect(): QRectF
+  }
+
+  class HsmResizableElement {
+    + createBoundaryGrips()
+    + updateGripsPosition()
+    + setGripVisibility()
+    + gripPoint()
+  }
+
+  class HsmConnectableElement {
+    + addTransition()
+    + createConnectionArrows()
+    + removeConnectionArrows()
+    + updateConnectionArrowsPos()
+    + getArrowPos()
+  }
+
+  HsmElement <|-- HsmResizableElement
+  HsmResizableElement <|-- HsmConnectableElement
+
+  class HsmEntryPointElement
+  class HsmExitPointElement
+  class HsmFinalElement
+  class HsmHistoryElement
+  class HsmStartElement
+  class HsmStateElement
+
+  HsmConnectableElement <|-- HsmEntryPointElement
+  HsmConnectableElement <|-- HsmExitPointElement
+  HsmConnectableElement <|-- HsmFinalElement
+  HsmConnectableElement <|-- HsmHistoryElement
+  HsmConnectableElement <|-- HsmStartElement
+  HsmConnectableElement <|-- HsmStateElement
+
+  class HsmTransition {
+    + beginConnection()
+    + connectElements()
+    + removeConnection()
+    + recalculateLine()
+  }
+  HsmElement <|-- HsmTransition
+}
+
+package "UI Widgets" {
+  class HsmElementsList {
+    + mimeTypes()
+    + mimeData()
+  }
+  class HsmGraphicsView
+  class QClickableSlider
+  class QImageViewArea
+}
+
+package "Supporting Elements" {
+  class ElementGripItem
+  class ElementBoundaryGripItem
+  class ElementConnectionArrow
+  ElementGripItem <|-- ElementBoundaryGripItem
+  ElementGripItem --* HsmTransition: parent
+
+  class HsmElementsFactory {
+    + createElementsList()
+    + createElement()
+  }
+}
+
+' Relationships
+HsmConnectableElement "1" *-- "0..*" HsmTransition : transitions
+HsmResizableElement "1" *-- "0..8" ElementBoundaryGripItem : boundary grips
+HsmTransition "1" --> "0..1" HsmConnectableElement : from
+HsmTransition "1" --> "0..1" HsmConnectableElement : to
+HsmElementsFactory ..> HsmElement : creates
+
+@enduml

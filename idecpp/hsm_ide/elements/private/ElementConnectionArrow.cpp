@@ -19,16 +19,20 @@ void ElementConnectionArrow::setPos(const QPointF& pos) {
 
     switch (mDirection) {
         case Direction::North:
+            mPos.setX(pos.x());
             mPos.setY(pos.y() - mW / 2 - offset);
             break;
         case Direction::East:
             mPos.setX(pos.x() + mW / 2 + offset);
+            mPos.setY(pos.y());
             break;
         case Direction::South:
+            mPos.setX(pos.x());
             mPos.setY(pos.y() + mW / 2 + offset);
             break;
         case Direction::West:
             mPos.setX(pos.x() - mW / 2 - offset);
+            mPos.setY(pos.y());
             break;
         default:
             // do nothing

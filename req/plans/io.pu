@@ -1,0 +1,8 @@
+@startgantt
+[SCXML Import (REQ-301a)] lasts 2 days
+[SCXML Export (REQ-301b)] lasts 2 days
+[Image Export (REQ-302)] lasts 2 days
+
+[SCXML Export (REQ-301b)] starts at [SCXML Import (REQ-301a)]'s end
+[Image Export (REQ-302)] starts at [SCXML Export (REQ-301b)]'s end
+@endgantt

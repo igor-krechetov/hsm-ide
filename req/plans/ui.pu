@@ -1,0 +1,8 @@
+@startgantt
+[Workspace Layout (REQ-201)] lasts 2 days
+[Visualization Features (REQ-202)] lasts 3 days
+[Project Structure Overview (REQ-203)] lasts 4 days
+
+[Visualization Features (REQ-202)] starts at [Workspace Layout (REQ-201)]'s end
+[Project Structure Overview (REQ-203)] starts at [Visualization Features (REQ-202)]'s end
+@endgantt

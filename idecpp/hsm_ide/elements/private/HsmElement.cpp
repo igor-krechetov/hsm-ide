@@ -7,9 +7,14 @@ HsmElement::HsmElement(const HsmElementType elementType)
     : QGraphicsObject()
     , mSize(200.0, 40.0)
     , mType(elementType) {
+    qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
     setZValue(3);
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
+}
+
+HsmElement::~HsmElement() {
+    qDebug() << "DELETE: HsmElement: " << this;
 }
 
 HsmElementType HsmElement::elementType() const {

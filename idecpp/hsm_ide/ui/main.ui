@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
+ <class>hsm_ide</class>
  <widget class="QMainWindow" name="hsm_ide">
   <property name="geometry">
    <rect>
@@ -53,6 +53,7 @@
       <string>Recent HSM</string>
      </property>
     </widget>
+    <addaction name="actionNew"/>
     <addaction name="actionOpenHsm"/>
     <addaction name="menuFileRecentHSM"/>
     <addaction name="separator"/>
@@ -77,7 +78,25 @@
     <addaction name="actionShowOnlineHelp"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionCut"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
+    <addaction name="actionDelete"/>
+    <addaction name="separator"/>
+    <addaction name="actionDuplicate"/>
+    <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="actionSelect_All"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -273,7 +292,7 @@
   </action>
   <action name="actionQuit">
    <property name="text">
-    <string>Quit</string>
+    <string>Exit</string>
    </property>
   </action>
   <action name="actionGoToFrame">
@@ -292,6 +311,86 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionDuplicate">
+   <property name="text">
+    <string>Duplicate</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionSelect_All">
+   <property name="text">
+    <string>Select All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New HSM</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>
@@ -325,5 +424,24 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDelete</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>deleteSelectedItems()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>deleteSelectedItems()</slot>
+ </slots>
 </ui>

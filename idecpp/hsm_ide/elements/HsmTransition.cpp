@@ -6,7 +6,7 @@
 #include <QPointF>
 #include <QPolygonF>
 #include <cmath>
-
+#include <QDebug>
 #include "private/ElementGripItem.hpp"
 
 HsmTransition::HsmTransition()
@@ -14,6 +14,7 @@ HsmTransition::HsmTransition()
     , mFromElement(nullptr)
     , mToElement(nullptr)
     , mDebugShowSelectionPolygon(false) {
+    qDebug() << "CREATE: HsmTransition: " << this;
     // NOTE: there are no grips at the beginning and and of the poly-line
     // TODO: fix me
     // self.lineGrips = [None, None]
@@ -21,6 +22,15 @@ HsmTransition::HsmTransition()
     setFlag(QGraphicsItem::ItemIsMovable, false);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setZValue(0);
+    // setAcceptHoverEvents(true);
+}
+
+HsmTransition::~HsmTransition() {
+    qDebug() << "DELETE: HsmTransition: " << this;
+}
+
+void HsmTransition::hoverMoveEvent(QGraphicsSceneHoverEvent *event) {
+    qDebug() << "TRANSITION: hoverMoveEvent";
 }
 
 void HsmTransition::updateBoundingRect(const QRectF& newRect) {
@@ -260,6 +270,7 @@ void HsmTransition::recalculateLine() {
 
         mLinePath.prepend(pointFrom);
         mLinePath.append(pointTo);
+        // qDebug() << "mLinePath: " << mLinePath.size() << ": " << mLinePath;
     } else if (nullptr != mFromElement) {
         QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
         QPointF pointFrom = findStartingPointFromPoint(rectFrom, mCurrentMovePos);
@@ -278,6 +289,7 @@ void HsmTransition::recalculateLine() {
 // Grip notifications
 bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
     const int gripIndex = findGripIndex(grip);
+    // qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
 
     if (gripIndex >= 0) {
         mLinePath[gripIndex] = pos;
@@ -289,6 +301,7 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 }
 
 void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
+    printf("HsmTransition::onGripDoubleClick\n");
     // const int gripIndex = findGripIndex(grip);
     auto it = std::find(mLineGrips.begin(), mLineGrips.end(), grip);
 
@@ -323,11 +336,13 @@ int HsmTransition::findGripIndex(const ElementGripItem* grip) {
 }
 
 void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    qDebug() << "HsmTransition::mouseDoubleClickEvent";
     std::tuple<bool, QPointF, int> result = isPointOnTheLine(event->pos());
 
     if (true == std::get<0>(result)) {
         // TODO: use smart pointer
         ElementGripItem* grip = new ElementGripItem(this);
+        QPointF gripPos = mapToScene(std::get<1>(result));
 
         grip->init();
         grip->setPos(std::get<1>(result));
