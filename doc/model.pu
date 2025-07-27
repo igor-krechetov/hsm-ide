@@ -1,0 +1,66 @@
+@startuml
+
+!theme plain
+
+class StateMachineModel {
+    + name: string
+    + addChild(child: shared_ptr<StateMachineElement>)
+    + children(): vector<shared_ptr<StateMachineElement>>
+}
+
+class StateMachineElement {
+    + type: Type
+    --
+    __Enum Type__
+    State
+    Transition
+}
+
+class State {
+    + id: string
+    + type: Type
+    + addChildState(child: shared_ptr<State>)
+    + addTransition(child: shared_ptr<Transition>)
+    + children(): vector<shared_ptr<StateMachineElement>>
+    --
+    __Enum Type__
+    Initial
+    Regular
+    Final
+    History
+}
+
+class InitialState {
+    + InitialState(id: string)
+}
+
+class FinalState {
+    + FinalState(id: string)
+}
+
+class HistoryState {
+    + historyType: HistoryType
+    + HistoryState(id: string, historyType: HistoryType)
+    --
+    __Enum HistoryType__
+    Shallow
+    Deep
+}
+
+class Transition {
+    + source: shared_ptr<State>
+    + target: shared_ptr<State>
+    + event: string
+    + Transition(source, target, event)
+}
+
+StateMachineModel "1" *-- "0..*" StateMachineElement
+StateMachineElement <|-- State
+StateMachineElement <|-- Transition
+State "1" *-- "0..*" State
+State "1" *-- "0..*" Transition
+State <|-- InitialState
+State <|-- FinalState
+State <|-- HistoryState
+
+@enduml

@@ -87,8 +87,9 @@ package "Supporting Elements" {
 }
 
 ' Relationships
-HsmConnectableElement "1" *-- "0..*" HsmTransition : transitions
+' HsmConnectableElement "1" *-- "0..*" HsmTransition : transitions
 HsmResizableElement "1" *-- "0..8" ElementBoundaryGripItem : boundary grips
+HsmConnectableElement "1" -- "0..*" HsmTransition: transitions
 HsmTransition "1" --> "0..1" HsmConnectableElement : from
 HsmTransition "1" --> "0..1" HsmConnectableElement : to
 HsmElementsFactory ..> HsmElement : creates

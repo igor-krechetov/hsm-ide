@@ -1,0 +1,63 @@
+@startuml
+
+' !theme plain
+
+skinparam groupInheritance 2
+skinparam Shadowing false
+skinparam Class {
+    BackgroundColor White
+    ArrowColor #0078d7
+    BorderColor #0078d7
+}
+
+title HSM IDE Component Diagram
+
+[MainEditorController]
+note left of [MainEditorController]
+   Main business logic
+   of the application
+end note
+
+[ProjectController]
+note right of [ProjectController]
+   Manages a single open project.
+   Sync data in model and view.
+   Handles user actions.
+end note
+
+[MainWindow]
+note bottom of [MainWindow]
+   UI for main edito window.
+end note
+
+[StateMachineModel]
+note left of [StateMachineModel]
+   Represents the hierarchical state machine
+   data model. Contains states, transitions,
+   and other elements. Owned by ProjectController.
+end note
+
+[PersistenceController]
+note right of [PersistenceController]
+   Handles saving and loading of state machine
+   projects to/from disk.
+end note
+
+[SettingsController]
+note right of [SettingsController]
+   Manages application settings and preferences.
+end note
+
+[main] --> [MainEditorController]: owns
+[MainEditorController] -> [MainWindow]: owns
+[MainEditorController] --> [PersistenceController]: owns
+[MainEditorController] --> [SettingsController]: owns
+[MainEditorController] "1" -> "1..*" [ProjectController]: owns
+
+[ProjectController] --> [StateMachineModel]: owns
+[ProjectController] ..> [MainWindow]: manages
+
+[PersistenceController] ..> [MainWindow]: uses
+[SettingsController] ..> [MainWindow]: uses
+
+@enduml

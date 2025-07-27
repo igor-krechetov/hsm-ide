@@ -1,0 +1,25 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "~/Qt/6.3.0/gcc_64/include",
+                "~/Qt/6.3.0/gcc_64/include/QtCore",
+                "~/Qt/6.3.0/gcc_64/include/QtWidgets",
+                "~/Qt/6.3.0/gcc_64/include/QtGui"
+            ],
+            "defines": [
+                "QT_CORE_LIB",
+                "QT_WIDGETS_LIB"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "~/Qt/6.3.0/gcc_64/"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ]
+}

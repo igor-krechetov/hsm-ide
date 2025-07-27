@@ -80,6 +80,10 @@
 **** REQ-203a: Dependency graph visualization  <<prio_low>>
 **** REQ-203b: File inclusion hierarchy  <<prio_low>>
 **** REQ-203c: Cross-file reference highlighting  <<prio_low>>
+*** REQ-204: Menu Features
+**** REQ-204a: Copy/Paste/Cut
+**** REQ-204b: Delete
+**** REQ-204c: Undo/Redo
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling

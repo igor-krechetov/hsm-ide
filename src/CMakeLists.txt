@@ -9,57 +9,69 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
-set(TS_FILES ts/hsm_ide_en_001.ts)
+set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.hpp
+        controllers/MainEditorController.cpp
+        controllers/ProjectController.cpp
+        # controllers/RecentFilesManager.cpp
+        
+        model/StateMachineModel.cpp
+        model/State.cpp
+        model/StateMachineElement.cpp
+        model/InitialState.cpp
+        model/HistoryState.cpp
+        model/FinalState.cpp
+        model/Transition.cpp
 
-        widgets/HsmElementsList.cpp
-        widgets/HsmElementsList.hpp
-        widgets/HsmGraphicsView.cpp
-        widgets/HsmGraphicsView.hpp
-        widgets/QClickableSlider.cpp
-        widgets/QClickableSlider.hpp
-        widgets/QImageViewArea.cpp
-        widgets/QImageViewArea.hpp
+        view/MainWindow.cpp
+        view/MainWindow.hpp
 
-        elements/HsmElementsFactory.cpp
-        elements/HsmElementsFactory.hpp
-        elements/HsmEntryPointElement.cpp
-        elements/HsmEntryPointElement.hpp
-        elements/HsmExitPointElement.cpp
-        elements/HsmExitPointElement.hpp
-        elements/HsmFinalElement.cpp
-        elements/HsmFinalElement.hpp
-        elements/HsmHistoryElement.cpp
-        elements/HsmHistoryElement.hpp
-        elements/HsmStartElement.cpp
-        elements/HsmStartElement.hpp
-        elements/HsmStateElement.cpp
-        elements/HsmStateElement.hpp
-        elements/HsmTransition.cpp
-        elements/HsmTransition.hpp
+        view/widgets/HsmElementsList.cpp
+        view/widgets/HsmElementsList.hpp
+        view/widgets/HsmGraphicsView.cpp
+        view/widgets/HsmGraphicsView.hpp
+        view/widgets/QClickableSlider.cpp
+        view/widgets/QClickableSlider.hpp
+        view/widgets/QImageViewArea.cpp
+        view/widgets/QImageViewArea.hpp
 
-        elements/private/ElementBoundaryGripItem.cpp
-        elements/private/ElementBoundaryGripItem.hpp
-        elements/private/ElementConnectionArrow.cpp
-        elements/private/ElementConnectionArrow.hpp
-        elements/private/ElementGripItem.cpp
-        elements/private/ElementGripItem.hpp
-        elements/private/HsmConnectableElement.cpp
-        elements/private/HsmConnectableElement.hpp
-        elements/private/HsmElement.cpp
-        elements/private/HsmElement.hpp
-        elements/private/HsmResizableElement.cpp
-        elements/private/HsmResizableElement.hpp
+        view/elements/HsmElementsFactory.cpp
+        view/elements/HsmElementsFactory.hpp
+        view/elements/HsmEntryPointElement.cpp
+        view/elements/HsmEntryPointElement.hpp
+        view/elements/HsmExitPointElement.cpp
+        view/elements/HsmExitPointElement.hpp
+        view/elements/HsmFinalElement.cpp
+        view/elements/HsmFinalElement.hpp
+        view/elements/HsmHistoryElement.cpp
+        view/elements/HsmHistoryElement.hpp
+        view/elements/HsmStartElement.cpp
+        view/elements/HsmStartElement.hpp
+        view/elements/HsmStateElement.cpp
+        view/elements/HsmStateElement.hpp
+        view/elements/HsmTransition.cpp
+        view/elements/HsmTransition.hpp
 
-        ui/main.ui
-        ui/settings.ui
+        view/elements/private/ElementBoundaryGripItem.cpp
+        view/elements/private/ElementBoundaryGripItem.hpp
+        view/elements/private/ElementConnectionArrow.cpp
+        view/elements/private/ElementConnectionArrow.hpp
+        view/elements/private/ElementGripItem.cpp
+        view/elements/private/ElementGripItem.hpp
+        view/elements/private/HsmConnectableElement.cpp
+        view/elements/private/HsmConnectableElement.hpp
+        view/elements/private/HsmElement.cpp
+        view/elements/private/HsmElement.hpp
+        view/elements/private/HsmResizableElement.cpp
+        view/elements/private/HsmResizableElement.hpp
+
+        view/ui/main.ui
+        view/ui/settings.ui
         ${TS_FILES}
 )
 
@@ -91,7 +103,7 @@ else()
 endif()
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
 
 set_target_properties(hsm_ide PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
