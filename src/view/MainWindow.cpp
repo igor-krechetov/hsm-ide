@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->mainView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
     // initialize list of HSM elements
-    auto items = HsmElementsFactory::createElementsList();
+    auto items = view::HsmElementsFactory::createElementsList();
 
     for (QListWidgetItem* newItem : items) {
         ui->listHsmElements->addItem(newItem);

@@ -2,27 +2,31 @@
 #define TRANSITION_HPP
 
 #include <QSharedPointer>
-#include <string>
+#include <QString>
 
-#include "StateMachineElement.hpp"
+#include "StateMachineEntity.hpp"
 
 // Forward declaration to break circular dependency
 class State;
 
-class Transition : public StateMachineElement {
+namespace model {
+
+class Transition : public StateMachineEntity {
 public:
-    Transition(QSharedPointer<State> source, QSharedPointer<State> target, const std::string& event);
+    Transition(QSharedPointer<State> source, QSharedPointer<State> target, const QString& event);
     virtual ~Transition() = default;
 
     QSharedPointer<State> source() const;
     QSharedPointer<State> target() const;
-    const std::string& event() const;
+    const QString& event() const;
 
 private:
     // TODO: weak ptr?
     QSharedPointer<State> mSource;
     QSharedPointer<State> mTarget;
-    std::string mEvent;
+    QString mEvent;
 };
+
+} // namespace model
 
 #endif  // TRANSITION_HPP

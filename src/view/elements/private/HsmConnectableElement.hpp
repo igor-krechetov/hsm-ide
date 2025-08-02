@@ -8,6 +8,8 @@
 #include "HsmResizableElement.hpp"
 #include "view/elements/HsmTransition.hpp"
 
+namespace view {
+
 class ElementBoundaryGripItem;
 
 class HsmConnectableElement : public HsmResizableElement {
@@ -19,6 +21,8 @@ public:
 
     void init() override;
 
+    bool isConnectable() const override;
+
     void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
 
     QRectF boundingRect() const override;
@@ -26,6 +30,10 @@ public:
     void createConnectionArrows();
     void removeConnectionArrows();
     void updateConnectionArrowsPos();
+
+signals:
+    // TODO: change type from ptr to ID_t
+    void elementConnected(const HsmElement* fromElement, const HsmElement* toElement);
 
 protected:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
@@ -53,5 +61,7 @@ private:
     // TODO: replace with shared_ptr
     std::shared_ptr<HsmTransition> mConnection;
 };
+
+}; // namespace view
 
 #endif  // HSMCONNECTABLEELEMENT_HPP

@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+namespace view {
+
 HsmEntryPointElement::HsmEntryPointElement()
     : HsmConnectableElement(HsmElementType::ENTRY_POINT) {}
 
@@ -14,3 +16,5 @@ void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIt
 
     HsmConnectableElement::paint(painter, option, widget);
 }
+
+}; // namespace view

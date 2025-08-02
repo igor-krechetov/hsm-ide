@@ -122,4 +122,5 @@
 ***** REQ-502f5: Error visualization (highlight skipped transitions)  <<prio_low>>
 ***** REQ-502f6: Filtering by state/transition type  <<prio_low>>
 ***** REQ-502f7: Transition statistics and metrics  <<prio_low>>
+
 @endwbs

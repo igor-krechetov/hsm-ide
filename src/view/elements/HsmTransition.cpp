@@ -10,6 +10,8 @@
 
 #include "private/ElementGripItem.hpp"
 
+namespace view {
+
 HsmTransition::HsmTransition()
     : HsmElement(HsmElementType::TRANSITION)
     , mFromElement(nullptr)
@@ -96,7 +98,7 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     }
 }
 
-void HsmTransition::beginConnection(HsmElement* fromElement, const QPointF& pos) {
+void HsmTransition::beginConnection(const HsmElement* fromElement, const QPointF& pos) {
     // print(f"{fromElement}, {pos}")
     removeConnection();
     mFromElement = fromElement;
@@ -117,7 +119,7 @@ void HsmTransition::moveConnectionTo(const QPointF& pos) {
     }
 }
 
-void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toElement) {
+void HsmTransition::connectElements(const HsmElement* fromElement, const HsmElement* toElement) {
     removeConnection();
     mFromElement = fromElement;
     mToElement = toElement;
@@ -396,3 +398,5 @@ std::tuple<bool, QPointF, int> HsmTransition::isPointOnTheLine(const QPointF& po
 
     return std::make_tuple(intersects, linePoint, prevPointIndex);
 }
+
+}; // namespace view

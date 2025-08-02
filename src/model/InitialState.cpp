@@ -1,4 +1,8 @@
 #include "InitialState.hpp"
 
-InitialState::InitialState(const std::string& id)
+namespace model {
+
+InitialState::InitialState(const QString& id)
     : State(id, State::Type::Initial) {}
+
+} // namespace model

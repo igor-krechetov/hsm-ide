@@ -4,6 +4,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
+namespace view {
+
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
     : HsmElement(elementType) {}
 
@@ -228,3 +230,5 @@ ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction
 
     return grip;
 }
+
+}; // namespace view

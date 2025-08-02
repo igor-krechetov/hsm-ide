@@ -9,6 +9,9 @@
 class QPainter;
 class QWidget;
 class QGraphicsSceneMouseEvent;
+
+namespace view {
+
 class ElementGripItem;
 
 class HsmTransition : public HsmElement {
@@ -21,10 +24,10 @@ public:
 
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
 
-    void beginConnection(HsmElement* fromElement, const QPointF& pos);
+    void beginConnection(const HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;
     void moveConnectionTo(const QPointF& pos);
-    void connectElements(HsmElement* fromElement, HsmElement* toElement);
+    void connectElements(const HsmElement* fromElement, const HsmElement* toElement);
     void removeConnection();
 
 protected:
@@ -58,8 +61,8 @@ private:
     bool mDebugShowSelectionPolygon = false;
 
     // TODO: use smart pointers
-    HsmElement* mFromElement = nullptr;
-    HsmElement* mToElement = nullptr;
+    const HsmElement* mFromElement = nullptr;
+    const HsmElement* mToElement = nullptr;
     QPainterPath mSelectionPath;
     QPolygonF mLinePath;
     // QPolygonF mLineGrips;
@@ -69,5 +72,7 @@ private:
     std::vector<ElementGripItem*> mLineGrips = {nullptr, nullptr};
     QPointF mCurrentMovePos;
 };
+
+}; // namespace view
 
 #endif  // HSMTRANSITION_HPP

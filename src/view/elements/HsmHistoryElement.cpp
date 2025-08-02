@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+namespace view {
+
 HsmHistoryElement::HsmHistoryElement()
     : HsmConnectableElement(HsmElementType::HISTORY) {}
 
@@ -14,3 +16,5 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
 
     HsmConnectableElement::paint(painter, option, widget);
 }
+
+}; // namespace view

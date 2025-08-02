@@ -3,11 +3,13 @@
 
 #include "State.hpp"
 
+namespace model {
+
 class HistoryState : public State {
 public:
     enum class HistoryType { Shallow, Deep };
 
-    explicit HistoryState(const std::string& id, const HistoryType historyType);
+    explicit HistoryState(const QString& id, const HistoryType historyType);
 
     HistoryType historyType() const {
         return mHistoryType;
@@ -19,5 +21,7 @@ public:
 private:
     HistoryType mHistoryType;
 };
+
+} // namespace model
 
 #endif  // HISTORYSTATE_HPP

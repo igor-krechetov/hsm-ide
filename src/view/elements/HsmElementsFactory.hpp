@@ -10,10 +10,12 @@
 
 class QListWidgetItem;
 
+namespace view {
+
 class HsmElementsFactory {
 public:
     static std::list<QListWidgetItem*> createElementsList();
-    static HsmElement* createElement(const QString& id);
+    static HsmElement* createElement(const QString& typeId, const uint32_t modelElementId);
 
 private:
     static HsmElement* _createElementState();
@@ -26,5 +28,7 @@ private:
 private:
     static std::map<QString, std::tuple<QString, QString, std::function<HsmElement*()>>> mItemsCatalog;
 };
+
+}; // namespace view
 
 #endif  // HSMELEMENTSFACTORY_HPP

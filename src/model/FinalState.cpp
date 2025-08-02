@@ -1,4 +1,8 @@
 #include "FinalState.hpp"
 
-FinalState::FinalState(const std::string& id)
+namespace model {
+
+FinalState::FinalState(const QString& id)
     : State(id, State::Type::Final) {}
+
+} // namespace model

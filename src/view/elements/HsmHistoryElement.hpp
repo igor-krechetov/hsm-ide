@@ -8,6 +8,8 @@
 class QPainter;
 class QWidget;
 
+namespace view {
+
 class HsmHistoryElement : public HsmConnectableElement {
 public:
     HsmHistoryElement();
@@ -18,5 +20,7 @@ public:
 private:
     QRectF mItemRect;
 };
+
+}; // namespace view
 
 #endif  // HSMHISTORYELEMENT_HPP

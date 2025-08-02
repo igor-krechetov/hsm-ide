@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+namespace view {
+
 HsmExitPointElement::HsmExitPointElement()
     : HsmConnectableElement(HsmElementType::EXIT_POINT) {}
 
@@ -14,3 +16,5 @@ void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
 
     HsmConnectableElement::paint(painter, option, widget);
 }
+
+}; // namespace view

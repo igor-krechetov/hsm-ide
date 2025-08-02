@@ -3,12 +3,17 @@
 
 #include <QGraphicsView>
 #include <QSharedPointer>
+#include "model/StateMachineEntity.hpp"
 
 class QDragEnterEvent;
 class QDragMoveEvent;
 class QDropEvent;
 class ProjectController;
 
+namespace view {
+    class HsmElement;
+    class HsmTransition;
+};
 class HsmGraphicsView : public QGraphicsView {
 public:
     HsmGraphicsView(QWidget* parent);
@@ -16,7 +21,8 @@ public:
 
     void setProjectController(QSharedPointer<ProjectController> controller);
 
-    void createHsmElement(const QString& elementId, const QPoint& pos);
+    view::HsmElement* createHsmElement(const QString& modelElementId, const QString& elementTypeId, const QPoint& pos);
+    view::HsmTransition* createHsmTransition(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId);
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -34,8 +40,12 @@ protected:
 
 private:
     void setPanningMode(const bool enable);
+    QPointer<view::HsmElement> findHsmElement(const model::StateMachineEntity::ID_t id) const;
+
 
 private:
+    // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
+    QMap<model::StateMachineEntity::ID_t, QPointer<view::HsmElement>> mElements;
     QSharedPointer<ProjectController> mProjectController;
     QPoint mLastPanPoint;
     bool mPanning = false;

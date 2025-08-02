@@ -8,6 +8,8 @@
 
 #include "HsmElement.hpp"
 
+namespace view {
+
 ElementGripItem::ElementGripItem(HsmElement* annotationElement)
     : QGraphicsObject(annotationElement)
     , mGripRect(-4, -4, 8, 8)
@@ -126,3 +128,5 @@ void ElementGripItem::tryConnectSignal(const char* signalName, QObject* object, 
         QObject::connect(this, signalMethod, object, slotMethod);
     }
 }
+
+}; // namespace view

@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+namespace view {
+
 HsmFinalElement::HsmFinalElement()
     : HsmConnectableElement(HsmElementType::FINAL) {}
 
@@ -14,3 +16,5 @@ void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     HsmConnectableElement::paint(painter, option, widget);
 }
+
+}; // namespace view

@@ -4,6 +4,8 @@
 // #include <QGraphicsSceneMouseEvent>
 // #include <QPainter>
 
+namespace view {
+
 ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction)
     : ElementGripItem(annotationElement)
     , mGripDirection(direction) {
@@ -63,3 +65,5 @@ QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QV
 
     return res;
 }
+
+}; // namespace view

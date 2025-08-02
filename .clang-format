@@ -13,7 +13,7 @@ AllowShortLambdasOnASingleLine: Inline
 BinPackArguments: false
 BinPackParameters: false
 ColumnLimit: 128
-DerivePointerAlignment: true
+DerivePointerAlignment: false
 IndentWidth: 4
 IndentPPDirectives: BeforeHash
 PPIndentWidth: 2
@@ -24,4 +24,5 @@ PointerAlignment: Left
 PackConstructorInitializers: Never
 AlignOperands: Align
 BreakConstructorInitializers: BeforeComma
+
 ...

@@ -14,8 +14,8 @@ public:
     int start();
 
 private:
-    QSharedPointer<MainWindow> m_mainWindow;
-    QSharedPointer<ProjectController> m_projectController;
+    QSharedPointer<MainWindow> mMainWindow;
+    QSharedPointer<ProjectController> mProjectController;
 };
 
 #endif  // MAINEDITORCONTROLLER_HPP

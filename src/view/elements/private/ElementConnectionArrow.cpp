@@ -4,6 +4,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QTransform>
 
+namespace view {
+
 ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction)
     : QGraphicsObject(annotationElement)
     , mDirection(direction)
@@ -115,3 +117,5 @@ void ElementConnectionArrow::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     emit connectionPositionChanged(this, mapToScene(event->pos()));
     QGraphicsObject::mouseMoveEvent(event);
 }
+
+}; // namespace view

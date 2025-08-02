@@ -8,6 +8,8 @@
 class QPainter;
 class QWidget;
 
+namespace view {
+
 class HsmStartElement : public HsmConnectableElement {
 public:
     HsmStartElement();
@@ -19,5 +21,7 @@ protected:
 private:
     QRectF mItemRect;
 };
+
+}; // namespace view
 
 #endif  // HSMSTARTELEMENT_HPP

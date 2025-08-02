@@ -9,6 +9,8 @@
 
 class QPainter;
 
+namespace view {
+
 class ElementConnectionArrow : public QGraphicsObject {
     Q_OBJECT
 
@@ -52,5 +54,7 @@ private:
     QPainterPath mShapeArrow;
     QColor mArrowColor;
 };
+
+}; // namespace view
 
 #endif  // ELEMENTCONNECTIONARROW_HPP

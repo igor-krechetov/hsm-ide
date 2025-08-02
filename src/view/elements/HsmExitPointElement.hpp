@@ -5,6 +5,8 @@
 
 #include "private/HsmConnectableElement.hpp"
 
+namespace view {
+
 class HsmExitPointElement : public HsmConnectableElement {
 public:
     HsmExitPointElement();
@@ -16,5 +18,7 @@ protected:
 private:
     QRectF mItemRect;
 };
+
+}; // namespace view
 
 #endif  // HSMEXITPOINTELEMENT_HPP

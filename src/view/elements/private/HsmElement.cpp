@@ -3,6 +3,8 @@
 #include <QGraphicsSceneDragDropEvent>
 #include <QMimeData>
 
+namespace view {
+
 HsmElement::HsmElement(const HsmElementType elementType)
     : QGraphicsObject()
     , mSize(200.0, 40.0)
@@ -13,8 +15,21 @@ HsmElement::HsmElement(const HsmElementType elementType)
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
 
+HsmElement::HsmElement(const HsmElementType elementType, const uint32_t modelElementId)
+    : HsmElement(elementType) {
+    setModelId(modelElementId);
+}
+
 HsmElement::~HsmElement() {
     qDebug() << "DELETE: HsmElement: " << this;
+}
+
+uint32_t HsmElement::modelId() const {
+    return mModelElementId;
+}
+
+void HsmElement::setModelId(const uint32_t modelElementId) {
+    mModelElementId = modelElementId;
 }
 
 HsmElementType HsmElement::elementType() const {
@@ -29,12 +44,16 @@ void HsmElement::init() {
     updateBoundingRect();
 }
 
-bool HsmElement::onGripMoved(const ElementGripItem *selectedGrip, const QPointF &pos) {
+bool HsmElement::isConnectable() const {
+    return false;
+}
+
+bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
     // TODO: impl
     return true;
 }
 
-void HsmElement::updateBoundingRect(const QRectF &newRect) {
+void HsmElement::updateBoundingRect(const QRectF& newRect) {
     prepareGeometryChange();
 
     if (newRect.isNull()) {
@@ -54,12 +73,14 @@ QRectF HsmElement::boundingRect() const {
     return mOuterRect;
 }
 
-void HsmElement::dragEnterEvent(QGraphicsSceneDragDropEvent *event) {
+void HsmElement::dragEnterEvent(QGraphicsSceneDragDropEvent* event) {
     qDebug() << "ITEM: dragEnterEvent: " << event->source() << ", <" << event->mimeData()->formats() << ">";
     QGraphicsObject::dragEnterEvent(event);
 }
 
-void HsmElement::dropEvent(QGraphicsSceneDragDropEvent *event) {
+void HsmElement::dropEvent(QGraphicsSceneDragDropEvent* event) {
     qDebug() << "ITEM: dropEvent: " << event->source() << ", <" << event->mimeData()->formats() << ">";
     QGraphicsObject::dropEvent(event);
 }
+
+}; // namespace view

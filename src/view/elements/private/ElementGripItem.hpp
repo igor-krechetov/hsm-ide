@@ -3,6 +3,8 @@
 
 #include <QGraphicsObject>
 
+namespace view {
+
 class HsmElement;
 
 class ElementGripItem : public QGraphicsObject {
@@ -42,5 +44,7 @@ private:
     QColor mGripColor;
     QPointF mLastPos;
 };
+
+}; // namespace view
 
 #endif  // ELEMENTGRIPITEM_HPP

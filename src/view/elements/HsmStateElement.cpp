@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+namespace view {
+
 HsmStateElement::HsmStateElement()
     : HsmConnectableElement(HsmElementType::STATE) {}
 
@@ -14,3 +16,5 @@ void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     HsmConnectableElement::paint(painter, option, widget);
 }
+
+}; // namespace view

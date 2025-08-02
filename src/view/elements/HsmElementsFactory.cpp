@@ -14,6 +14,8 @@
 #include "HsmStateElement.hpp"
 #include "private/HsmElement.hpp"
 
+namespace view {
+
 std::map<QString, std::tuple<QString, QString, std::function<HsmElement*()>>> HsmElementsFactory::mItemsCatalog = {
     {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
     {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
@@ -38,33 +40,15 @@ std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
     return elements;
 }
 
-HsmElement* HsmElementsFactory::createElement(const QString& id) {
+HsmElement* HsmElementsFactory::createElement(const QString& typeId, const uint32_t modelElementId) {
     HsmElement* element = nullptr;
-    auto itItem = mItemsCatalog.find(id);
+    auto itItem = mItemsCatalog.find(typeId);
 
     if (mItemsCatalog.end() != itItem) {
         const auto& callback = std::get<2>(itItem->second);
 
         element = callback();
-
-        // if (callback == "_createElementState") {
-        //     element = _createElementState();
-        // }
-        // else if (callback == "_createElementStart") {
-        //     element = _createElementStart();
-        // }
-        // else if (callback == "_createElementFinal") {
-        //     element = _createElementFinal();
-        // }
-        // else if (callback == "_createElementEntryPoint") {
-        //     element = _createElementEntryPoint();
-        // }
-        // else if (callback == "_createElementExitPoint") {
-        //     element = _createElementExitPoint();
-        // }
-        // else if (callback == "_createElementHistory") {
-        //     element = _createElementHistory();
-        // }
+        element->setModelId(modelElementId);
     }
 
     return element;
@@ -111,3 +95,5 @@ HsmElement* HsmElementsFactory::_createElementHistory() {
     elem->init();
     return elem;
 }
+
+}; // namespace view

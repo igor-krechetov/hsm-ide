@@ -8,6 +8,8 @@
 class QPainter;
 class QWidget;
 
+namespace view {
+
 class HsmStateElement : public HsmConnectableElement {
     Q_OBJECT
 
@@ -21,5 +23,7 @@ protected:
 private:
     QRectF mItemRect;
 };
+
+}; // namespace view
 
 #endif  // HSMSTATEELEMENT_HPP

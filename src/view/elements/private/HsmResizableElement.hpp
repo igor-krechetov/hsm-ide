@@ -9,6 +9,9 @@
 #include "HsmElement.hpp"
 
 class QPainter;
+
+namespace view {
+
 class HsmResizableElement : public HsmElement {
     Q_OBJECT
 
@@ -43,10 +46,13 @@ private:
 
     // private:
 public:
+    // TODO: replace with QMap
     std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
     QPen mPenSelectedBorder = QColor("lightblue");
     bool mResizeMode = false;
     bool mGripSelected = false;
 };
+
+}; // namespace view
 
 #endif  // HSMRESIZABLEELEMENT_HPP

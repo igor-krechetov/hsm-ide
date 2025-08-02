@@ -1,7 +1,7 @@
 #!/bin/bash
 source ~/projects/shell_ex.sh
 
-mkdir -p ./src/build
-cd ./src/build
+mkdir -p ./build
+cd ./build
 qt6_env
 normal_build

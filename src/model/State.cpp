@@ -1,28 +1,31 @@
 #include "State.hpp"
-
 #include "Transition.hpp"
 
-State::State(const std::string& id, const Type type)
-    : StateMachineElement(StateMachineElement::Type::State)
-    , mId(id)
+namespace model {
+
+State::State(const QString& id, const Type type)
+    : StateMachineEntity(StateMachineEntity::Type::State)
+    , mName(id)
     , mStateType(type) {}
 
-const std::string& State::id() const {
-    return mId;
-}
+// const QString& State::id() const {
+//     return mId;
+// }
 
-State::Type State::type() const {
+State::Type State::stateType() const {
     return mStateType;
 }
 
 void State::addChildState(QSharedPointer<State> child) {
-    mChildren.push_back(child);
+    mChildren.push_back(qSharedPointerCast<StateMachineEntity>(child));
 }
 
 void State::addTransition(QSharedPointer<Transition> child) {
-    mChildren.push_back(child);
+    mChildren.push_back(qSharedPointerCast<StateMachineEntity>(child));
 }
 
-const std::vector<QSharedPointer<StateMachineElement>>& State::children() const {
+const std::vector<QSharedPointer<StateMachineEntity>>& State::children() const {
     return mChildren;
 }
+
+} // namespace model

@@ -3,6 +3,8 @@
 
 #include "ElementGripItem.hpp"
 
+namespace view {
+
 class HsmResizableElement;
 
 enum class GripDirection {
@@ -37,5 +39,7 @@ private:
     GripDirection mGripDirection;
     GripDirectionType mGripDirectionType;
 };
+
+}; // namespace view
 
 #endif  // ELEMENTBOUNDARYGRIPITEM_HPP

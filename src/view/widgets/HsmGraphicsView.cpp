@@ -1,15 +1,17 @@
 #include "HsmGraphicsView.hpp"
 
 #include <QDebug>
-#include <QDragEnterEvent>
-#include <QDragMoveEvent>
-#include <QDropEvent>
+#include <QDrag>
 #include <QKeyEvent>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QScrollBar>
+#include <QWheelEvent>
 
 #include "controllers/ProjectController.hpp"
+#include "model/StateMachineEntity.hpp"
+#include "view/elements/HsmStateElement.hpp"
+#include "view/elements/HsmTransition.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 
 HsmGraphicsView::HsmGraphicsView(QWidget* parent)
@@ -27,11 +29,34 @@ void HsmGraphicsView::setProjectController(QSharedPointer<ProjectController> con
     mProjectController = controller;
 }
 
-void HsmGraphicsView::createHsmElement(const QString& elementId, const QPoint& pos) {
-    HsmElement* e1 = HsmElementsFactory::createElement(elementId);
+// TODO: how can we add sub elements?
+view::HsmElement* HsmGraphicsView::createHsmElement(const QString& modelElementId, const QString& elementTypeId, const QPoint& pos) {
+    // TODO: remove ID from args
+    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, 1);
 
-    e1->setPos(mapToScene(pos));
-    scene()->addItem(e1);
+    newElement->setPos(mapToScene(pos));
+    scene()->addItem(newElement);
+
+    return newElement;
+}
+
+// TODO: do we need to return the value?
+view::HsmTransition* HsmGraphicsView::createHsmTransition(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId) {
+    view::HsmTransition* transition = nullptr;
+    QPointer<view::HsmElement> fromElement = findHsmElement(fromElementId);
+    QPointer<view::HsmElement> toElement = findHsmElement(toElementId);
+
+    // TODO: does QPointer have bool() operator?
+    if (fromElement && toElement) {
+        view::HsmTransition* transition = new view::HsmTransition();
+
+        transition->init();
+        transition->connectElements(fromElement, toElement);
+        // TODO: how do we add it to substates?
+        scene()->addItem(transition);
+    }
+
+    return transition;
 }
 
 void HsmGraphicsView::dragEnterEvent(QDragEnterEvent* event) {
@@ -141,4 +166,9 @@ void HsmGraphicsView::setPanningMode(const bool enable) {
     qDebug() << "setPanningMode: " << enable;
     mPanning = enable;
     viewport()->setCursor(true == mPanning ? Qt::ClosedHandCursor : Qt::ArrowCursor);
+}
+
+QPointer<view::HsmElement> HsmGraphicsView::findHsmElement(const model::StateMachineEntity::ID_t id) const {
+    // TODO: implement
+    return nullptr;
 }
