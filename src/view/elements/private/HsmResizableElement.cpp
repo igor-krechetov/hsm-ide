@@ -3,14 +3,23 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QDebug>
 
 namespace view {
 
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
-    : HsmElement(elementType) {}
+    : HsmElement(elementType) {
+    qDebug() << "CREATE: HsmResizableElement: " << this;
+}
 
-void HsmResizableElement::init() {
-    HsmElement::init();
+HsmResizableElement::~HsmResizableElement() {
+    qDebug() << "DELETE " << this;
+}
+
+void HsmResizableElement::init(const model::EntityID_t modelElementId) {
+    HsmElement::init(modelElementId);
+    qDebug() << Q_FUNC_INFO << this << modelId();
+
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     createBoundaryGrips();
     setGripVisibility(false);
@@ -217,18 +226,20 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
 
 // TODO: remove function?
 ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction) {
+    qDebug() << Q_FUNC_INFO << this << modelId();
     // TODO: use smart pointers
     ElementBoundaryGripItem* grip = new ElementBoundaryGripItem(this, direction);
 
     // grip->setRect(-2.5, -2.5, 5, 5);
     // grip->setData(0, QVariant(static_cast<int>(direction)));
-
+    qDebug() << "-- before init";
     grip->init();
     grip->setEnabled(false);
     grip->setPos(gripPoint(direction));
     grip->setEnabled(true);
+    qDebug() << "-- after init";
 
     return grip;
 }
 
-}; // namespace view
+};  // namespace view

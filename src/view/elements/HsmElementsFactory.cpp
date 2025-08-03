@@ -16,7 +16,7 @@
 
 namespace view {
 
-std::map<QString, std::tuple<QString, QString, std::function<HsmElement*()>>> HsmElementsFactory::mItemsCatalog = {
+std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>> HsmElementsFactory::mItemsCatalog = {
     {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
     {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
     {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::_createElementState}},
@@ -40,59 +40,59 @@ std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
     return elements;
 }
 
-HsmElement* HsmElementsFactory::createElement(const QString& typeId, const uint32_t modelElementId) {
+HsmElement* HsmElementsFactory::createElement(const QString& typeId, const model::EntityID_t modelElementId) {
     HsmElement* element = nullptr;
     auto itItem = mItemsCatalog.find(typeId);
 
     if (mItemsCatalog.end() != itItem) {
         const auto& callback = std::get<2>(itItem->second);
 
-        element = callback();
-        element->setModelId(modelElementId);
+        element = callback(modelElementId);
+        // element->setModelId(modelElementId);
     }
 
     return element;
 }
 
-HsmElement* HsmElementsFactory::_createElementState() {
+HsmElement* HsmElementsFactory::_createElementState(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmStateElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::_createElementStart() {
+HsmElement* HsmElementsFactory::_createElementStart(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmStartElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::_createElementFinal() {
+HsmElement* HsmElementsFactory::_createElementFinal(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmFinalElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::_createElementEntryPoint() {
+HsmElement* HsmElementsFactory::_createElementEntryPoint(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmEntryPointElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::_createElementExitPoint() {
+HsmElement* HsmElementsFactory::_createElementExitPoint(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmExitPointElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::_createElementHistory() {
+HsmElement* HsmElementsFactory::_createElementHistory(const model::EntityID_t modelElementId) {
     HsmElement* elem = new HsmHistoryElement();
 
-    elem->init();
+    elem->init(modelElementId);
     return elem;
 }
 

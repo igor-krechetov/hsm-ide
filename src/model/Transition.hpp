@@ -6,10 +6,10 @@
 
 #include "StateMachineEntity.hpp"
 
+namespace model {
+
 // Forward declaration to break circular dependency
 class State;
-
-namespace model {
 
 class Transition : public StateMachineEntity {
 public:
@@ -27,6 +27,6 @@ private:
     QString mEvent;
 };
 
-} // namespace model
+}; // namespace model
 
 #endif  // TRANSITION_HPP

@@ -17,11 +17,13 @@ class HsmConnectableElement : public HsmResizableElement {
 
 public:
     explicit HsmConnectableElement(const HsmElementType elementType);
-    virtual ~HsmConnectableElement() = default;
+    // virtual ~HsmConnectableElement() = default;
+    virtual ~HsmConnectableElement();
 
-    void init() override;
+    void init(const model::EntityID_t modelElementId) override;
 
     bool isConnectable() const override;
+    HsmElement* connectableElementAt(const QPointF& pos) const;
 
     void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
 
@@ -32,8 +34,8 @@ public:
     void updateConnectionArrowsPos();
 
 signals:
-    // TODO: change type from ptr to ID_t
-    void elementConnected(const HsmElement* fromElement, const HsmElement* toElement);
+    // TODO: change type from ptr to EntityID_t
+    void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 
 protected:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;

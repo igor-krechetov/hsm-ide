@@ -12,6 +12,7 @@ ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElemen
     , mOuterRect(-mW / 2, -mW / 2, mW, mW)
     , mShapeArrow(initShape(direction))
     , mArrowColor("green") {
+    qDebug() << "CREATE: ElementConnectionArrow: " << this;
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
@@ -114,6 +115,7 @@ void ElementConnectionArrow::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) 
 }
 
 void ElementConnectionArrow::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    qDebug("RELEASE - mouseMoveEvent");
     emit connectionPositionChanged(this, mapToScene(event->pos()));
     QGraphicsObject::mouseMoveEvent(event);
 }

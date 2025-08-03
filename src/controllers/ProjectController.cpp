@@ -7,6 +7,7 @@
 
 #include "ObjectUtils.hpp"
 #include "model/StateMachineModel.hpp"
+#include "model/Transition.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 // TODO: move out from private
@@ -15,7 +16,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(ProjectController)
 
-ProjectController::ProjectController(QSharedPointer<MainWindow> mainWindow, QObject* parent)
+ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* parent)
     : QObject(parent)
     , mMainWindow(mainWindow)
     , mModel(new model::StateMachineModel("Default Model", this)) {
@@ -39,7 +40,7 @@ void ProjectController::handleViewDropEvent(QDropEvent* event) {
     createElement(event->mimeData()->data("hsm/element").data(), event->position().toPoint());
 }
 
-void ProjectController::connectElements(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId) {
+void ProjectController::connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
     qDebug() << Q_FUNC_INFO << fromElementId << " -> " << toElementId;
     // TODO
 
@@ -49,17 +50,21 @@ void ProjectController::connectElements(const model::StateMachineEntity::ID_t fr
 
     // transition->connectElements(this, target);
     // mTransitions.append(transition);
-    auto from = mModel->findChild(fromElementId);
-    auto to = mModel->findChild(toElementId);
+    // auto from = mModel->findChild(fromElementId);
+    // auto to = mModel->findChild(toElementId);
 
-    if (from && to) {
-        // TODO: substate support
-        auto newTransition = mModel->createUniqueTransition(from.dynamicCast<model::State>(), to.dynamicCast<model::State>());
-        // mModel->addChild(newTransition);
+    // if (from && to) {
+    // TODO: substate support
+    auto newTransition = mModel->createUniqueTransition(fromElementId, toElementId);
 
-        // TODO: implement
-        // mMainWindow->view()->createHsmTransition();
+    if (newTransition) {
+        qDebug() << "transition created: " << newTransition;
+        mModel->addChild(newTransition);
+        mMainWindow->view()->createHsmTransition(newTransition->id(), fromElementId, toElementId);
+    } else {
+        qCritical() << "Failed to create new transition";
     }
+    // }
 }
 
 void ProjectController::createElement(const QString& elementTypeId, const QPoint& pos) {
@@ -74,15 +79,16 @@ void ProjectController::createElement(const QString& elementTypeId, const QPoint
 
     if (sElementTypes.end() != it) {
         auto newModelElement = mModel->createUniqueState(it->second);
-        view::HsmElement* newViewElement = mMainWindow->view()->createHsmElement("id", elementTypeId, pos);
+        view::HsmElement* newViewElement = mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos);
 
-        // TODO: change type from ptr to ID_t
-        tryConnectSignal(newViewElement, "elementConnected(const HsmElement*,const HsmElement*)", this, "connectElements(const HsmElement*,const HsmElement*)");
+        tryConnectSignal(newViewElement,
+                         "elementConnected(model::EntityID_t,model::EntityID_t)",
+                         this,
+                         "connectElements(model::EntityID_t,model::EntityID_t)");
     } else {
         qCritical() << Q_FUNC_INFO << "Unsupported element type:" << elementTypeId;
     }
 }
 
-void ProjectController::createTransition(const QSharedPointer<model::State>& fromElement, const QSharedPointer<model::State>& toElement) {
-
-}
+void ProjectController::createTransition(const QSharedPointer<model::State>& fromElement,
+                                         const QSharedPointer<model::State>& toElement) {}

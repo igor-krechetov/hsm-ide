@@ -23,17 +23,21 @@ public:
 
     // Creates a new State element with unique ID
     QSharedPointer<State> createUniqueState(const State::Type type);
+    QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
     QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source, const QSharedPointer<State>& target);
 
-    void addChild(QSharedPointer<StateMachineEntity>& child);
+    void addChild(const QSharedPointer<StateMachineEntity>& child);
+    void addChild(const QSharedPointer<Transition>& child);
+    void addChild(const QSharedPointer<State>& child);
+
     const std::vector<QSharedPointer<StateMachineEntity>>& children() const;
-    QSharedPointer<StateMachineEntity> findChild(const StateMachineEntity::ID_t id) const;
+    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id) const;
 
 private:
     QString mName;
     std::vector<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
-} // namespace model
+}; // namespace model
 
 #endif  // STATEMACHINEMODEL_HPP

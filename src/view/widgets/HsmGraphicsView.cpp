@@ -25,23 +25,26 @@ HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     // translate(100, 0);
 }
 
-void HsmGraphicsView::setProjectController(QSharedPointer<ProjectController> controller) {
+void HsmGraphicsView::setProjectController(QPointer<ProjectController> controller) {
     mProjectController = controller;
 }
 
 // TODO: how can we add sub elements?
-view::HsmElement* HsmGraphicsView::createHsmElement(const QString& modelElementId, const QString& elementTypeId, const QPoint& pos) {
-    // TODO: remove ID from args
-    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, 1);
+view::HsmElement* HsmGraphicsView::createHsmElement(const model::EntityID_t modelElementId, const QString& elementTypeId, const QPoint& pos) {
+    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElementId);
 
+    qDebug() << Q_FUNC_INFO << "ID=" << newElement->modelId() << ", pos=" << mapToScene(pos);
+    qDebug() << Q_FUNC_INFO << newElement;
     newElement->setPos(mapToScene(pos));
     scene()->addItem(newElement);
+    mElements[modelElementId] = QPointer(newElement);
 
     return newElement;
 }
 
 // TODO: do we need to return the value?
-view::HsmTransition* HsmGraphicsView::createHsmTransition(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId) {
+view::HsmTransition* HsmGraphicsView::createHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
+    qDebug() << Q_FUNC_INFO;
     view::HsmTransition* transition = nullptr;
     QPointer<view::HsmElement> fromElement = findHsmElement(fromElementId);
     QPointer<view::HsmElement> toElement = findHsmElement(toElementId);
@@ -50,13 +53,21 @@ view::HsmTransition* HsmGraphicsView::createHsmTransition(const model::StateMach
     if (fromElement && toElement) {
         view::HsmTransition* transition = new view::HsmTransition();
 
-        transition->init();
+        transition->init(transitionId);
         transition->connectElements(fromElement, toElement);
         // TODO: how do we add it to substates?
         scene()->addItem(transition);
+        mElements[transitionId] = QPointer(transition);
+        qDebug() << "transition added to view";
+    } else {
+        qWarning() << "Cant find elements with ID " << fromElementId << " or " << toElementId;
     }
 
     return transition;
+}
+
+void HsmGraphicsView::deleteHsmElement(const model::EntityID_t modelElementId) {
+    // TODO: implement
 }
 
 void HsmGraphicsView::dragEnterEvent(QDragEnterEvent* event) {
@@ -168,7 +179,7 @@ void HsmGraphicsView::setPanningMode(const bool enable) {
     viewport()->setCursor(true == mPanning ? Qt::ClosedHandCursor : Qt::ArrowCursor);
 }
 
-QPointer<view::HsmElement> HsmGraphicsView::findHsmElement(const model::StateMachineEntity::ID_t id) const {
-    // TODO: implement
-    return nullptr;
+QPointer<view::HsmElement> HsmGraphicsView::findHsmElement(const model::EntityID_t id) const {
+    auto it = mElements.find(id);
+    return (it != mElements.end() ? *it : nullptr);
 }

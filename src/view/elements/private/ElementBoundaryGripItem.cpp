@@ -3,12 +3,15 @@
 #include "HsmResizableElement.hpp"
 // #include <QGraphicsSceneMouseEvent>
 // #include <QPainter>
+#include <QDebug>
 
 namespace view {
 
 ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction)
     : ElementGripItem(annotationElement)
     , mGripDirection(direction) {
+    qDebug() << "CREATE: ElementBoundaryGripItem: " << this << "parent: " << annotationElement->modelId() << " | " << annotationElement;
+
     if ((GripDirection::North == mGripDirection) || (GripDirection::South == mGripDirection)) {
         mGripDirectionType = GripDirectionType::Vertical;
     } else if ((GripDirection::West == mGripDirection) || (GripDirection::East == mGripDirection)) {
@@ -20,7 +23,7 @@ ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotation
 }
 
 HsmResizableElement* ElementBoundaryGripItem::annotationElement() const {
-    return dynamic_cast<HsmResizableElement*>(parentItem());
+    return reinterpret_cast<HsmResizableElement*>(ElementGripItem::annotationElement());
 }
 
 GripDirection ElementBoundaryGripItem::direction() const {

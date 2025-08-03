@@ -30,6 +30,6 @@ protected:
     std::vector<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
-} // namespace model
+}; // namespace model
 
 #endif  // STATE_HPP

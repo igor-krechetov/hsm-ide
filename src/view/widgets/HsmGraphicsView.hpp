@@ -2,8 +2,8 @@
 #define HSMGRAPHICSVIEW_HPP
 
 #include <QGraphicsView>
-#include <QSharedPointer>
-#include "model/StateMachineEntity.hpp"
+#include <QPointer>
+#include "model/ModelTypes.hpp"
 
 class QDragEnterEvent;
 class QDragMoveEvent;
@@ -19,10 +19,11 @@ public:
     HsmGraphicsView(QWidget* parent);
     virtual ~HsmGraphicsView() = default;
 
-    void setProjectController(QSharedPointer<ProjectController> controller);
+    void setProjectController(QPointer<ProjectController> controller);
 
-    view::HsmElement* createHsmElement(const QString& modelElementId, const QString& elementTypeId, const QPoint& pos);
-    view::HsmTransition* createHsmTransition(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId);
+    view::HsmElement* createHsmElement(const model::EntityID_t  modelElementId, const QString& elementTypeId, const QPoint& pos);
+    view::HsmTransition* createHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+    void deleteHsmElement(const model::EntityID_t modelElementId);
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -40,13 +41,13 @@ protected:
 
 private:
     void setPanningMode(const bool enable);
-    QPointer<view::HsmElement> findHsmElement(const model::StateMachineEntity::ID_t id) const;
+    QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
 
 
 private:
     // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
-    QMap<model::StateMachineEntity::ID_t, QPointer<view::HsmElement>> mElements;
-    QSharedPointer<ProjectController> mProjectController;
+    QMap<model::EntityID_t, QPointer<view::HsmElement>> mElements;
+    QPointer<ProjectController> mProjectController;
     QPoint mLastPanPoint;
     bool mPanning = false;
     bool mSpacePressed = false;

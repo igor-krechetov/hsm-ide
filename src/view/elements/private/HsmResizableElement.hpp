@@ -17,9 +17,10 @@ class HsmResizableElement : public HsmElement {
 
 public:
     explicit HsmResizableElement(const HsmElementType elementType);
-    virtual ~HsmResizableElement() = default;
+    // virtual ~HsmResizableElement() = default;
+    virtual ~HsmResizableElement();
 
-    void init() override;
+    void init(const model::EntityID_t modelElementId) override;
 
     void createBoundaryGrips();
     void updateGripsPosition(const QList<GripDirection>& directionsList);

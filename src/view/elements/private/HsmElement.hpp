@@ -5,6 +5,7 @@
 #include <QPoint>
 #include <QString>
 
+#include "model/ModelTypes.hpp"
 namespace view {
 
 class ElementGripItem;
@@ -28,16 +29,16 @@ class HsmElement : public QGraphicsObject {
 
 public:
     explicit HsmElement(const HsmElementType elementType);
-    explicit HsmElement(const HsmElementType elementType, const uint32_t modelElementId);
+    explicit HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId);
     virtual ~HsmElement();
 
-    uint32_t modelId() const;
-    void setModelId(const uint32_t modelElementId);
+    model::EntityID_t modelId() const;
+    // void setModelId(const model::EntityID_t modelElementId);
 
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
-    virtual void init();
+    virtual void init(const model::EntityID_t modelElementId);
 
     virtual bool isConnectable() const;
 
@@ -55,7 +56,7 @@ protected:
     void dropEvent(QGraphicsSceneDragDropEvent* event) override;
 
 protected:
-    uint32_t mModelElementId;
+    model::EntityID_t mModelElementId = 777;
     QSizeF mSize;
     QRectF mOuterRect;
 
@@ -63,6 +64,6 @@ private:
     HsmElementType mType = HsmElementType::UNKNOWN;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMELEMENT_HPP

@@ -28,4 +28,4 @@ const std::vector<QSharedPointer<StateMachineEntity>>& State::children() const {
     return mChildren;
 }
 
-} // namespace model
+}; // namespace model

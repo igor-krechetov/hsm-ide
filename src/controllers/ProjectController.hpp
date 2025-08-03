@@ -2,7 +2,7 @@
 #define PROJECTCONTROLLER_HPP
 
 #include <QObject>
-#include <QSharedPointer>
+#include <QPointer>
 
 #include "model/StateMachineModel.hpp"
 
@@ -19,19 +19,19 @@ namespace view {
 class ProjectController : public QObject {
     Q_OBJECT
 public:
-    explicit ProjectController(QSharedPointer<MainWindow> mainWindow, QObject* parent = nullptr);
+    explicit ProjectController(QPointer<MainWindow> mainWindow, QObject* parent = nullptr);
 
     void handleViewDropEvent(QDropEvent* event);
 
 public slots:
-    void connectElements(const model::StateMachineEntity::ID_t fromElementId, const model::StateMachineEntity::ID_t toElementId);
+    void connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 
 private:
     void createElement(const QString& elementTypeId, const QPoint& pos);
     void createTransition(const QSharedPointer<model::State>& fromElement, const QSharedPointer<model::State>& toElement);
 
 private:
-    QSharedPointer<MainWindow> mMainWindow;
+    QPointer<MainWindow> mMainWindow;
     QSharedPointer<model::StateMachineModel> mModel;
 };
 

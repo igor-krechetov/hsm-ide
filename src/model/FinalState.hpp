@@ -18,6 +18,6 @@ public:
     const std::vector<std::shared_ptr<StateMachineEntity>>& children() const = delete;
 };
 
-} // namespace model
+}; // namespace model
 
 #endif  // FINALSTATE_HPP

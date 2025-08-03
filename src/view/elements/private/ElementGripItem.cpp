@@ -15,7 +15,9 @@ ElementGripItem::ElementGripItem(HsmElement* annotationElement)
     , mGripRect(-4, -4, 8, 8)
     , mGripColor("green")
     , mAnnotationElement(annotationElement) {
-    qDebug() << "CREATE: ElementGripItem: " << this;
+    qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
+    qDebug() << "QObject parent:" << parentObject();
+    qDebug() << "QGraphicsItem parent:" << parentItem();
 }
 
 ElementGripItem::~ElementGripItem() {

@@ -22,6 +22,6 @@ private:
     HistoryType mHistoryType;
 };
 
-} // namespace model
+}; // namespace model
 
 #endif  // HISTORYSTATE_HPP

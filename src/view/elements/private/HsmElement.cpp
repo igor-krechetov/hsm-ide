@@ -15,22 +15,24 @@ HsmElement::HsmElement(const HsmElementType elementType)
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
 
-HsmElement::HsmElement(const HsmElementType elementType, const uint32_t modelElementId)
+HsmElement::HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId)
     : HsmElement(elementType) {
-    setModelId(modelElementId);
+    mModelElementId = modelElementId;
+    // setModelId(modelElementId);
+    qDebug() << "CREATE: HsmElement (2): " << (int)elementType << ": " << this;
 }
 
 HsmElement::~HsmElement() {
     qDebug() << "DELETE: HsmElement: " << this;
 }
 
-uint32_t HsmElement::modelId() const {
+model::EntityID_t HsmElement::modelId() const {
     return mModelElementId;
 }
 
-void HsmElement::setModelId(const uint32_t modelElementId) {
-    mModelElementId = modelElementId;
-}
+// void HsmElement::setModelId(const model::EntityID_t modelElementId) {
+//     mModelElementId = modelElementId;
+// }
 
 HsmElementType HsmElement::elementType() const {
     return mType;
@@ -40,11 +42,13 @@ QRectF HsmElement::elementRect() const {
     return mOuterRect;
 }
 
-void HsmElement::init() {
+void HsmElement::init(const model::EntityID_t modelElementId) {
+    mModelElementId = modelElementId;
     updateBoundingRect();
 }
 
 bool HsmElement::isConnectable() const {
+    qDebug() << Q_FUNC_INFO << this;
     return false;
 }
 

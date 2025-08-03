@@ -20,4 +20,4 @@ const QString& Transition::event() const {
     return mEvent;
 }
 
-} // namespace model
+}; // namespace model
