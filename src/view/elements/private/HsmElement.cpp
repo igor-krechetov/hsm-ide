@@ -8,7 +8,8 @@ namespace view {
 HsmElement::HsmElement(const HsmElementType elementType)
     : QGraphicsObject()
     , mSize(200.0, 40.0)
-    , mType(elementType) {
+    , mType(elementType)
+    , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
     setZValue(3);
@@ -28,6 +29,11 @@ HsmElement::~HsmElement() {
 
 model::EntityID_t HsmElement::modelId() const {
     return mModelElementId;
+}
+
+void HsmElement::hightlight(const bool enable) {
+    mHightlight = enable;
+    update();
 }
 
 // void HsmElement::setModelId(const model::EntityID_t modelElementId) {

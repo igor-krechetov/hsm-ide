@@ -27,10 +27,10 @@
 **** REQ-101f: Exit points
 **** REQ-101g: Final states
 *** REQ-102: Transition management
-**** REQ-102a: Visual transition creation <<in_progress>>
+**** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
-***** REQ-102a2: Highlight for connectable elements <<todo>>
-***** REQ-102a3: Transition rendering <<in_progress>>
+***** REQ-102a2: Highlight for connectable elements <<done>>
+***** REQ-102a3: Transition rendering <<done>>
 **** REQ-102b: Event labeling
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions

@@ -87,8 +87,37 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
         painter->setPen(Qt::DashLine);
     }
 
+    // Draw the transition path
     for (int i = 0; i < (mLinePath.size() - 1); ++i) {
         painter->drawLine(mLinePath[i], mLinePath[i + 1]);
+    }
+
+    // Draw arrow at the end of the transition as a filled triangle
+    if (mLinePath.size() >= 2) {
+        const int last = mLinePath.size() - 1;
+        QPointF p1 = mLinePath[last-1];
+        QPointF p2 = mLinePath[last];
+
+        // Calculate the angle of the last segment
+        double angle = std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
+        
+        // Arrow parameters
+        double arrowSize = 10.0;
+        double arrowAngle = M_PI / 6.0; // 30 degrees
+        
+        // Calculate arrowhead points
+        QPointF arrowP1 = p2 - QPointF(std::cos(angle - arrowAngle) * arrowSize, 
+                                       std::sin(angle - arrowAngle) * arrowSize);
+        QPointF arrowP2 = p2 - QPointF(std::cos(angle + arrowAngle) * arrowSize, 
+                                       std::sin(angle + arrowAngle) * arrowSize);
+        
+        // Draw arrowhead as a filled triangle
+        QPolygonF arrowHead;
+        arrowHead << p2 << arrowP1 << arrowP2;
+        
+        // Set brush to same color as pen to fill the triangle
+        painter->setBrush(painter->pen().color());
+        painter->drawPolygon(arrowHead);
     }
 
     // TODO: Debug code. Remove later

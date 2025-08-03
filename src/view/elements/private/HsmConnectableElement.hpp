@@ -3,6 +3,7 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QMap>
+#include <QPointer>
 
 #include "ElementConnectionArrow.hpp"
 #include "HsmResizableElement.hpp"
@@ -60,10 +61,12 @@ private:
     QList<std::shared_ptr<HsmTransition>> mTransitions;
     QRectF mHoverRect;
     bool mDrawConnectionLine = false;
+
     // TODO: replace with shared_ptr
     std::shared_ptr<HsmTransition> mConnection;
+    QPointer<HsmElement> mLastConnectionTarget;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMCONNECTABLEELEMENT_HPP

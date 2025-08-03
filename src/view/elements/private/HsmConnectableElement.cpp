@@ -39,8 +39,8 @@ HsmElement* HsmConnectableElement::connectableElementAt(const QPointF& pos) cons
             element = dynamic_cast<HsmElement*>(targetItem);
 
             if (element->isConnectable() == false) {
-                qDebug() << "Target is not connectable: " << targetHsmElement->modelId()
-                         << " | viewElementType=" << elementType << " | " << targetHsmElement;
+                qDebug() << "Target is not connectable: " << element->modelId()
+                         << " | viewElementType=" << elementType << " | " << element;
                 element = nullptr;
             }
         }
@@ -189,73 +189,20 @@ void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const
 }
 
 void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
-    QGraphicsItem* targetItem = scene()->itemAt(pos, QTransform());
-    // QList<QGraphicsItem*> allItems = scene()->items(pos);
-
-    if (targetItem == arrow) {
-        targetItem = nullptr;
-    }
+    qDebug() << "FINISH - arrow. Target" << mLastConnectionTarget << pos;
 
     mDrawConnectionLine = false;
-    qDebug() << "FINISH - arrow. Target" << targetItem << pos;
 
     if (mConnection) {
         scene()->removeItem(mConnection.get());
         mConnection.reset();
     }
 
-    // TODO: fix
-    if (nullptr != targetItem) {
-        // if (this == targetItem) {
-        //     qDebug() << "TODO: target-self";
-        //     mConnection->setParentItem(nullptr);
-        // } else {
-
-        QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
-
-        if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
-            // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
-            //       to use dynamic_cast. parentItem() != parentObject()
-            HsmElement* targetHsmElement = dynamic_cast<HsmElement*>(targetItem);
-
-            if (targetHsmElement->isConnectable() == true) {
-                qDebug() << "emit elementConnected";
-                emit elementConnected(this->modelId(), targetHsmElement->modelId());
-            } else {
-                qDebug() << "Target is not connectable: " << targetHsmElement->modelId()
-                         << " | viewElementType=" << elementType << " | " << targetHsmElement;
-            }
-        }
-
-        // qDebug() << "TARGET: " << targetHsmElement->metaObject()->className();
-
-        // if (true == elementType.isValid()) {
-
-        // switch (static_cast<HsmElementType>(elementType.toInt())) {
-        //     case HsmElementType::STATE:
-        //         qDebug() << "TODO: target-state";
-        //         addTransition(mConnection, dynamic_cast<HsmConnectableElement*>(targetItem));
-        //         mConnection.reset();
-        //         break;
-        //     // case HsmElementType::START:
-        //     //     break;
-        //     // case HsmElementType::FINAL:
-        //     //     break;
-        //     // case HsmElementType::ENTRY_POINT:
-        //     //     break;
-        //     // case HsmElementType::EXIT_POINT:
-        //     //     break;
-        //     // case HsmElementType::TRANSITION:
-        //     //     break;
-        //     // case HsmElementType::HISTORY:
-        //     //     break;
-        //     default:
-        //         qDebug() << "TODO: cancel connection";
-        //         mConnection->setParentItem(nullptr);
-        //         break;
-        // }
-        // }
-        // }
+    if (mLastConnectionTarget) {
+        mLastConnectionTarget->hightlight(false);
+        qDebug() << "emit elementConnected";
+        emit elementConnected(this->modelId(), mLastConnectionTarget->modelId());
+        mLastConnectionTarget.clear();
     }
 }
 
@@ -264,7 +211,19 @@ void HsmConnectableElement::updateConnectionLine(ElementConnectionArrow* arrow, 
         mConnection->moveConnectionTo(pos);
 
         // Check if there is an element under cursor and highlight it
-        // HsmElement* element = connectableElementAt(pos);
+        QPointer<HsmElement> element = connectableElementAt(pos);
+
+        if (mLastConnectionTarget != element) {
+            if (mLastConnectionTarget) {
+                mLastConnectionTarget->hightlight(false);
+            }
+
+            if (element) {
+                element->hightlight(true);
+            }
+
+            mLastConnectionTarget = element;
+        }
     }
 }
 

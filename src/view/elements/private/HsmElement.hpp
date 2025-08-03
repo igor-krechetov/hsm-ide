@@ -3,6 +3,7 @@
 
 #include <QGraphicsObject>
 #include <QPoint>
+#include <QPen>
 #include <QString>
 
 #include "model/ModelTypes.hpp"
@@ -35,6 +36,8 @@ public:
     model::EntityID_t modelId() const;
     // void setModelId(const model::EntityID_t modelElementId);
 
+    void hightlight(const bool enable);
+
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
@@ -56,9 +59,12 @@ protected:
     void dropEvent(QGraphicsSceneDragDropEvent* event) override;
 
 protected:
-    model::EntityID_t mModelElementId = 777;
+    model::EntityID_t mModelElementId = model::INVALID_MODEL_ID;
+    bool mHightlight = false;
     QSizeF mSize;
     QRectF mOuterRect;
+
+    QPen mPenHighlightMode;
 
 private:
     HsmElementType mType = HsmElementType::UNKNOWN;
