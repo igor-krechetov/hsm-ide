@@ -24,16 +24,29 @@ HsmTransition::HsmTransition()
 
     setFlag(QGraphicsItem::ItemIsMovable, false);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setZValue(0);
-    // setAcceptHoverEvents(true);
+    setZValue(5);
+    setAcceptHoverEvents(true);
+
+    mSrcGrip = new ElementGripItem(this);
+    mDestGrip = new ElementGripItem(this);
+    mSrcGrip->setVisible(false);
+    mDestGrip->setVisible(false);
+    mSrcGrip->init();
+    mDestGrip->init();
+
+    mLineGrips = {mSrcGrip, mDestGrip};
 }
 
 HsmTransition::~HsmTransition() {
     qDebug() << "DELETE: HsmTransition: " << this;
 }
 
-void HsmTransition::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    qDebug() << "TRANSITION: hoverMoveEvent";
+void HsmTransition::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+    setConnectionGripsVisibility(true);
+}
+
+void HsmTransition::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
+    setConnectionGripsVisibility(isSelected());
 }
 
 void HsmTransition::updateBoundingRect(const QRectF& newRect) {
@@ -95,26 +108,24 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     // Draw arrow at the end of the transition as a filled triangle
     if (mLinePath.size() >= 2) {
         const int last = mLinePath.size() - 1;
-        QPointF p1 = mLinePath[last-1];
+        QPointF p1 = mLinePath[last - 1];
         QPointF p2 = mLinePath[last];
 
         // Calculate the angle of the last segment
         double angle = std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
-        
+
         // Arrow parameters
         double arrowSize = 10.0;
-        double arrowAngle = M_PI / 6.0; // 30 degrees
-        
+        double arrowAngle = M_PI / 6.0;  // 30 degrees
+
         // Calculate arrowhead points
-        QPointF arrowP1 = p2 - QPointF(std::cos(angle - arrowAngle) * arrowSize, 
-                                       std::sin(angle - arrowAngle) * arrowSize);
-        QPointF arrowP2 = p2 - QPointF(std::cos(angle + arrowAngle) * arrowSize, 
-                                       std::sin(angle + arrowAngle) * arrowSize);
-        
+        QPointF arrowP1 = p2 - QPointF(std::cos(angle - arrowAngle) * arrowSize, std::sin(angle - arrowAngle) * arrowSize);
+        QPointF arrowP2 = p2 - QPointF(std::cos(angle + arrowAngle) * arrowSize, std::sin(angle + arrowAngle) * arrowSize);
+
         // Draw arrowhead as a filled triangle
         QPolygonF arrowHead;
         arrowHead << p2 << arrowP1 << arrowP2;
-        
+
         // Set brush to same color as pen to fill the triangle
         painter->setBrush(painter->pen().color());
         painter->drawPolygon(arrowHead);
@@ -127,37 +138,38 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     }
 }
 
-void HsmTransition::beginConnection(const HsmElement* fromElement, const QPointF& pos) {
-    // print(f"{fromElement}, {pos}")
-    removeConnection();
+void HsmTransition::beginConnection(HsmElement* fromElement, const QPointF& pos) {
+    disconnectElements();
     mFromElement = fromElement;
-    mCurrentMovePos = pos;
+    mConnecting = true;
+    mDestGrip->setPos(pos);
     recalculateLine();
 }
 
 bool HsmTransition::isConnecting() const {
-    return (nullptr != mFromElement) && (nullptr == mToElement);
+    return mConnecting;
 }
 
 void HsmTransition::moveConnectionTo(const QPointF& pos) {
     if (true == isConnecting()) {
-        mCurrentMovePos = pos;
-        recalculateLine();
+        mDestGrip->setPos(pos);
     } else {
         qDebug() << "WARNING: unexpected moveConnectionTo call";
     }
 }
 
-void HsmTransition::connectElements(const HsmElement* fromElement, const HsmElement* toElement) {
-    removeConnection();
+void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toElement) {
+    qDebug() << Q_FUNC_INFO;
+    disconnectElements();
     mFromElement = fromElement;
     mToElement = toElement;
-    recalculateLine();
     connect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
     connect(mToElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
+    recalculateLine();
 }
 
-void HsmTransition::removeConnection() {
+void HsmTransition::disconnectElements() {
+    qDebug() << Q_FUNC_INFO;
     if (mFromElement != nullptr) {
         try {
             QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
@@ -175,7 +187,10 @@ void HsmTransition::removeConnection() {
 
     mFromElement = nullptr;
     mToElement = nullptr;
-    // recalculateLine();
+}
+
+QPointer<HsmElement> HsmTransition::connectionCandidate() const {
+    return mLastConnectionTarget;
 }
 
 QPointF HsmTransition::findStartingPointFromPoint(const QRectF& rectFrom, const QPointF& pointTo) {
@@ -257,6 +272,14 @@ QPointF HsmTransition::findStartingPointFromRect(const QRectF& rectFrom, const Q
 }
 
 void HsmTransition::recalculateLine() {
+    qDebug() << Q_FUNC_INFO;
+    QPointF currentMovePos;
+
+    if (mLinePath.size() >= 2) {
+        mLinePath.removeFirst();
+        mLinePath.removeLast();
+    }
+
     // TODO: decide how to snap transition to items
     if ((nullptr != mFromElement) && (nullptr != mToElement)) {
         // posFrom = self.fromElement.mapToScene(self.fromElement.pos())
@@ -284,10 +307,17 @@ void HsmTransition::recalculateLine() {
         // cout << "from: " << rectFrom << ", to: " << rectTo << endl;
         // cout << "from.b=" << rectFrom.bottom() << ", to.t=" << rectTo.top() << endl;
 
-        if (mLinePath.size() > 0) {
-            mLinePath.removeFirst();
-            mLinePath.removeLast();
-        }
+        // if (mLinePath.size() > 0) {
+        //     mLinePath.removeFirst();
+        //     mLinePath.removeLast();
+        // }
+        // mLinePath.clear();
+
+        // for (auto& grip: mLineGrips) {
+        //     mLinePath.append(grip->pos());
+        // }
+        // mLinePath.removeFirst();
+        // mLinePath.removeLast();
 
         QPointF pointFrom;
         QPointF pointTo;
@@ -303,13 +333,41 @@ void HsmTransition::recalculateLine() {
         mLinePath.prepend(pointFrom);
         mLinePath.append(pointTo);
         // qDebug() << "mLinePath: " << mLinePath.size() << ": " << mLinePath;
-    } else if (nullptr != mFromElement) {
-        QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
-        QPointF pointFrom = findStartingPointFromPoint(rectFrom, mCurrentMovePos);
 
-        mLinePath.clear();
-        mLinePath.append(pointFrom);
-        mLinePath.append(mCurrentMovePos);
+        mSrcGrip->setPos(mLinePath.first());
+        mDestGrip->setPos(mLinePath.last());
+    } else if (nullptr != mFromElement) {
+        currentMovePos = mDestGrip->pos();
+
+        QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
+        QPointF pointFrom;
+
+        if (false == mLinePath.isEmpty()) {
+            pointFrom = findStartingPointFromPoint(rectFrom, mLinePath.first());
+        } else {
+            pointFrom = findStartingPointFromPoint(rectFrom, currentMovePos);
+        }
+
+        mLinePath.prepend(pointFrom);
+        mLinePath.append(currentMovePos);
+        mSrcGrip->setPos(pointFrom);
+        // qDebug() << "DEST changed: " << mLinePath;
+    } else if (nullptr != mToElement) {
+        currentMovePos = mSrcGrip->pos();
+
+        QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
+        QPointF pointTo;
+
+        if (false == mLinePath.isEmpty()) {
+            pointTo = findStartingPointFromPoint(rectTo, mLinePath.last());
+        } else {
+            pointTo = findStartingPointFromPoint(rectTo, currentMovePos);
+        }
+
+        mLinePath.prepend(currentMovePos);
+        mLinePath.append(pointTo);
+        mDestGrip->setPos(pointTo);
+        // qDebug() << "SRC changed: " << mLinePath;
     } else {
         mLinePath.clear();
     }
@@ -319,21 +377,54 @@ void HsmTransition::recalculateLine() {
 
 // =================================================================================================================
 // Grip notifications
-bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
-    const int gripIndex = findGripIndex(grip);
-    // qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
+void HsmTransition::setConnectionGripsVisibility(const bool visible) {
+    mSrcGrip->setVisible(visible);
+    mDestGrip->setVisible(visible);
+}
 
-    if (gripIndex >= 0) {
-        mLinePath[gripIndex] = pos;
-        recalculateLine();
-        updateBoundingRect();
+bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
+    if (mLinePath.isEmpty() == false) {
+        const int gripIndex = findGripIndex(grip);
+        qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
+
+        if (gripIndex >= 0) {
+            // Inner grips changed
+            qDebug() << "conditions";
+            if ((gripIndex > 0 && gripIndex < (mLinePath.size() - 1)) ||
+                (isConnecting() == true && ((mFromElement == nullptr && grip == mSrcGrip) ||
+                                            (mToElement == nullptr && grip == mDestGrip)) ) ) {
+                qDebug() << "recalc, mLinePath.size=" << mLinePath.size();
+                mLinePath[gripIndex] = pos;
+                recalculateLine();
+                updateBoundingRect();
+            }
+        }
+
+        if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size()-1))) {
+            qDebug() << "highlight";
+            // Check if there is an element under cursor and highlight it
+            QPointer<HsmElement> element = connectableElementAt(pos);
+
+            qDebug() << "cond2";
+            if (mLastConnectionTarget != element) {
+                if (mLastConnectionTarget) {
+                    mLastConnectionTarget->hightlight(false);
+                }
+
+                if (element) {
+                    element->hightlight(true);
+                }
+
+                mLastConnectionTarget = element;
+            }
+        }
     }
 
     return true;
 }
 
 void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
-    printf("HsmTransition::onGripDoubleClick\n");
+    qDebug() << Q_FUNC_INFO;
     // const int gripIndex = findGripIndex(grip);
     auto it = std::find(mLineGrips.begin(), mLineGrips.end(), grip);
 
@@ -346,6 +437,52 @@ void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
         delete grip;
         mLineGrips.erase(it);
         updateBoundingRect();
+    }
+}
+
+void HsmTransition::onGripMoveEnterEvent(ElementGripItem* gripItem) {
+    qDebug() << Q_FUNC_INFO;
+
+    // NOTE: old element stays connected, but it's impossible for user to resize it
+    if (gripItem == mSrcGrip) {
+        qDebug() << "SRC grip moved";
+        mPrevConnectedElement = mFromElement;
+        mFromElement = nullptr;
+        mConnecting = true;
+    } else if (gripItem == mDestGrip) {
+        qDebug() << "DEST grip moved";
+        mPrevConnectedElement = mToElement;
+        mToElement = nullptr;
+        mConnecting = true;
+    }
+
+    recalculateLine();
+}
+
+void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
+    qDebug() << Q_FUNC_INFO;
+    // TODO: implement
+    if (isConnecting() == true) {
+        if (gripItem == mSrcGrip || gripItem == mDestGrip) {
+            QPointF pos = gripItem->pos();
+            HsmElement* targetElement = connectableElementAt(pos);
+
+            if (nullptr == targetElement) {
+                targetElement = mPrevConnectedElement;
+            }
+
+            targetElement->hightlight(false);
+
+            mConnecting = false;
+            mLastConnectionTarget.clear();
+            recalculateLine();
+
+            if (gripItem == mSrcGrip) {
+                emit transitionReconnected(modelId(), targetElement->modelId(), mToElement->modelId());
+            } else if (gripItem == mDestGrip) {
+                emit transitionReconnected(modelId(), mFromElement->modelId(), targetElement->modelId());
+            }
+        }
     }
 }
 
@@ -364,7 +501,16 @@ int HsmTransition::findGripIndex(const ElementGripItem* grip) {
         }
     }
 
+    // return (gripIndex > 0 && gripIndex < (mLineGrips.size()-1) ? gripIndex : -1);
     return gripIndex;
+}
+
+QVariant HsmTransition::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (QGraphicsItem::ItemSelectedHasChanged == change) {
+        setConnectionGripsVisibility(isSelected());
+    }
+
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
@@ -428,4 +574,4 @@ std::tuple<bool, QPointF, int> HsmTransition::isPointOnTheLine(const QPointF& po
     return std::make_tuple(intersects, linePoint, prevPointIndex);
 }
 
-}; // namespace view
+};  // namespace view

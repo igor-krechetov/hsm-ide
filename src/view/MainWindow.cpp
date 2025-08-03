@@ -43,24 +43,9 @@ QPointer<HsmGraphicsView> MainWindow::view() {
 }
 
 void MainWindow::deleteSelectedItems() {
-    // TODO: need to re-think how to handle transition
-    //       What to do when one of the states is deleted? Delete transition too?
-    //       Do we want to allow dangling transitions?
     if (!ui || !ui->mainView || !ui->mainView->scene()) {
         return;
     }
 
-    auto items = ui->mainView->scene()->selectedItems();
-    QList<QGraphicsItem*> topLevelItems;
-
-    for (QGraphicsItem* item : items) {
-        QGraphicsItem* parent = item->parentItem();
-
-        if (nullptr == parent) {
-            topLevelItems.append(item);
-        }
-    }
-    for (QGraphicsItem* item : topLevelItems) {
-        delete item;
-    }
+    ui->mainView->deleteSelectedItems();
 }

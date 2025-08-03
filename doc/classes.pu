@@ -1,7 +1,6 @@
 @startuml
 
 !theme plain
-
 skinparam groupInheritance 2
 skinparam Shadowing false
 skinparam Class {
@@ -12,21 +11,68 @@ skinparam Class {
 
 title HSM IDE Class Diagram
 
-package "Core Elements" {
+package "Model" {
+  class StateMachineModel {
+    + addState()
+    + removeState()
+    + addTransition()
+    + validate()
+    + serialize()
+  }
+
+  class StateMachineEntity {
+    + getId(): string
+    + getName(): string
+    + getParent(): StateMachineEntity
+  }
+
+  class State {
+    + getChildStates()
+    + addTransition()
+  }
+
+  class Transition {
+    + getSource()
+    + getTarget()
+    + getEvent()
+  }
+
+  class FinalState
+  class HistoryState
+  class InitialState
+
+  StateMachineEntity <|-- State
+  StateMachineEntity <|-- Transition
+  State <|-- FinalState
+  State <|-- HistoryState
+  State <|-- InitialState
+
+  StateMachineModel "1" *-- "*" StateMachineEntity : contains
+}
+
+package "View" {
+  class MainWindow {
+    + setupUi()
+    + connectSignals()
+  }
+
+  class HsmGraphicsView {
+    + addElement()
+    + removeElement()
+    + clearScene()
+  }
+
   class HsmElement {
     + elementType(): HsmElementType
     + elementRect(): QRectF
     + init()
-    + onGripMoved()
     + updateBoundingRect()
-    + boundingRect(): QRectF
   }
 
   class HsmResizableElement {
     + createBoundaryGrips()
     + updateGripsPosition()
     + setGripVisibility()
-    + gripPoint()
   }
 
   class HsmConnectableElement {
@@ -34,11 +80,7 @@ package "Core Elements" {
     + createConnectionArrows()
     + removeConnectionArrows()
     + updateConnectionArrowsPos()
-    + getArrowPos()
   }
-
-  HsmElement <|-- HsmResizableElement
-  HsmResizableElement <|-- HsmConnectableElement
 
   class HsmEntryPointElement
   class HsmExitPointElement
@@ -47,6 +89,9 @@ package "Core Elements" {
   class HsmStartElement
   class HsmStateElement
 
+  MainWindow "1" *-- "1" HsmGraphicsView : contains
+  HsmElement <|-- HsmResizableElement
+  HsmResizableElement <|-- HsmConnectableElement
   HsmConnectableElement <|-- HsmEntryPointElement
   HsmConnectableElement <|-- HsmExitPointElement
   HsmConnectableElement <|-- HsmFinalElement
@@ -63,14 +108,22 @@ package "Core Elements" {
   HsmElement <|-- HsmTransition
 }
 
-package "UI Widgets" {
-  class HsmElementsList {
-    + mimeTypes()
-    + mimeData()
+package "Controller" {
+  class MainEditorController {
+    + newProject()
+    + openProject()
+    + saveProject()
+    + addState()
+    + addTransition()
   }
-  class HsmGraphicsView
-  class QClickableSlider
-  class QImageViewArea
+
+  class ProjectController {
+    + loadProject()
+    + saveProject()
+    + getRecentProjects()
+  }
+
+  MainEditorController "1" *-- "1" ProjectController : uses
 }
 
 package "Supporting Elements" {
@@ -78,20 +131,31 @@ package "Supporting Elements" {
   class ElementBoundaryGripItem
   class ElementConnectionArrow
   ElementGripItem <|-- ElementBoundaryGripItem
-  ElementGripItem --* HsmTransition: parent
 
   class HsmElementsFactory {
-    + createElementsList()
     + createElement()
+    + createTransition()
   }
+
+  HsmResizableElement "1" *-- "0..8" ElementBoundaryGripItem : boundary grips
+  HsmConnectableElement "1" -- "0..*" HsmTransition: transitions
+  HsmElementsFactory ..> HsmElement : creates
 }
 
-' Relationships
-' HsmConnectableElement "1" *-- "0..*" HsmTransition : transitions
-HsmResizableElement "1" *-- "0..8" ElementBoundaryGripItem : boundary grips
-HsmConnectableElement "1" -- "0..*" HsmTransition: transitions
-HsmTransition "1" --> "0..1" HsmConnectableElement : from
-HsmTransition "1" --> "0..1" HsmConnectableElement : to
-HsmElementsFactory ..> HsmElement : creates
+' Model-View-Controller Relationships
+MainEditorController --> StateMachineModel : manipulates
+MainEditorController --> MainWindow : updates
+StateMachineModel ..> MainEditorController : notifies
+MainWindow ..> MainEditorController : sends events
+
+' Element Connections
+HsmTransition "1" --> "1" HsmConnectableElement : from
+HsmTransition "1" --> "1" HsmConnectableElement : to
+
+' View-Model Mapping
+note "View elements represent\nmodel entities" as N1
+HsmStateElement ..|> State : represents
+HsmTransition ..|> Transition : represents
+HsmFinalElement ..|> FinalState : represents
 
 @enduml

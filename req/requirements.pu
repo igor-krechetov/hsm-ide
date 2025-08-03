@@ -13,6 +13,9 @@
         .todo {
             BackgroundColor Salmon
         }
+        .partial {
+            BackgroundColor LightYellow
+        }
     }
 </style>
 
@@ -31,16 +34,24 @@
 ***** REQ-102a1: Arrows for connectable elements <<done>>
 ***** REQ-102a2: Highlight for connectable elements <<done>>
 ***** REQ-102a3: Transition rendering <<done>>
+***** REQ-102a4: Change transition source/target <<done>>
 **** REQ-102b: Event labeling
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions
 **** REQ-102e: Self-transitions
 **** REQ-102f: Transition actions
-*** REQ-103: Element manipulation <<in_progress>>
+*** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
-**** REQ-103c: Multi-select operations <<in_progress>>
-**** REQ-103d: Delete selected elements <<in_progress>>
+**** REQ-103c: Multi-select operations
+***** REQ-103c1: Copy
+***** REQ-103c2: Cut
+***** REQ-103c3: Paste
+***** REQ-103c4: Delete <<done>>
+**** REQ-103d: Delete selected elements <<done>>
+***** REQ-103d1: Delete states <<done>>
+***** REQ-103d2: Delete transition <<done>>
+***** REQ-103d3: Delete multiple elements <<done>>
 *** REQ-104: State Behavior Configuration
 **** REQ-104a: Entry actions (onentry)
 **** REQ-104b: Exit actions (onexit)
@@ -84,6 +95,10 @@
 **** REQ-204a: Copy/Paste/Cut
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
+*** REQ-205: Custom Widgets
+**** REQ-205a: HSM Elements list
+**** REQ-205b: HSM Tree View
+**** REQ-205c: Attributes editor
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling

@@ -44,8 +44,9 @@ public:
     virtual void init(const model::EntityID_t modelElementId);
 
     virtual bool isConnectable() const;
+    HsmElement* connectableElementAt(const QPointF& pos) const;
 
-    // TODO: why is this here?
+    // TODO: move to an interface
     virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
 
     // QGraphicsItem interface

@@ -3,6 +3,7 @@
 
 #include <QLineF>
 #include <QPen>
+#include <QPointer>
 
 #include "private/HsmElement.hpp"
 
@@ -22,13 +23,16 @@ public:
     // virtual ~HsmTransition() = default;
     virtual ~HsmTransition();
 
-    void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
-
-    void beginConnection(const HsmElement* fromElement, const QPointF& pos);
+    void beginConnection(HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;
     void moveConnectionTo(const QPointF& pos);
-    void connectElements(const HsmElement* fromElement, const HsmElement* toElement);
-    void removeConnection();
+    void connectElements(HsmElement* fromElement, HsmElement* toElement);
+    void disconnectElements();
+
+    QPointer<HsmElement> connectionCandidate() const;
+
+signals:
+    void transitionReconnected(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 
 protected:
     QPainterPath shape() const override;
@@ -44,6 +48,11 @@ protected:
     QPointF findStartingPointFromRect(const QRectF& rectFrom, const QRectF& rectTo);
     int findGripIndex(const ElementGripItem* grip);
 
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     std::tuple<bool, QPointF, int> isPointOnTheLine(const QPointF& pos);
 
@@ -51,26 +60,32 @@ protected:
 
 protected slots:
     void onGripDoubleClick(ElementGripItem* grip);
+    void onGripMoveEnterEvent(ElementGripItem* gripItem);
+    void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
 protected slots:
     void recalculateLine();
+
+private:
+    void setConnectionGripsVisibility(const bool visible);
 
 private:
     static constexpr qreal SELECTION_DISTANCE = 2.0;
 
     bool mDebugShowSelectionPolygon = false;
 
-    // TODO: use smart pointers
-    const HsmElement* mFromElement = nullptr;
-    const HsmElement* mToElement = nullptr;
+    QPointer<HsmElement> mFromElement;
+    QPointer<HsmElement> mToElement;
     QPainterPath mSelectionPath;
     QPolygonF mLinePath;
-    // QPolygonF mLineGrips;
-    // QVector<QPointF> mLinePath;
-    // TODO: use smart pointers
-    // TODO: use list ??
-    std::vector<ElementGripItem*> mLineGrips = {nullptr, nullptr};
-    QPointF mCurrentMovePos;
+    std::vector<ElementGripItem*> mLineGrips;
+
+    bool mConnecting = false;
+    QPointer<HsmElement> mPrevConnectedElement;
+
+    ElementGripItem* mSrcGrip = nullptr;
+    ElementGripItem* mDestGrip = nullptr;
+    QPointer<HsmElement> mLastConnectionTarget;
 };
 
 }; // namespace view

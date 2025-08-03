@@ -28,13 +28,12 @@ public:
     // int indexOf(const QPointF& p);
     QPointF gripPoint(GripDirection gripDirection);
 
-    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
-
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 public slots:
-    virtual void onGripLostFocus(ElementBoundaryGripItem* grip);
+    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
+    void onGripLostFocus(ElementBoundaryGripItem* grip);
 
 signals:
     void geometryChanged(HsmResizableElement* element);

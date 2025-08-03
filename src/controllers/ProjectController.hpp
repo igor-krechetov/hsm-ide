@@ -10,10 +10,10 @@ class MainWindow;
 class QDropEvent;
 
 namespace model {
-    class State;
+class State;
 };
 namespace view {
-    class HsmElement;
+class HsmElement;
 };
 
 class ProjectController : public QObject {
@@ -22,9 +22,13 @@ public:
     explicit ProjectController(QPointer<MainWindow> mainWindow, QObject* parent = nullptr);
 
     void handleViewDropEvent(QDropEvent* event);
+    void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
 
 public slots:
     void connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+    void reconnectElements(const model::EntityID_t transitionId,
+                           const model::EntityID_t newFromElementId,
+                           const model::EntityID_t newToElementId);
 
 private:
     void createElement(const QString& elementTypeId, const QPoint& pos);

@@ -22,41 +22,17 @@ void HsmConnectableElement::init(const model::EntityID_t modelElementId) {
 }
 
 bool HsmConnectableElement::isConnectable() const {
-    qDebug() << Q_FUNC_INFO << this;
     return true;
 }
 
-HsmElement* HsmConnectableElement::connectableElementAt(const QPointF& pos) const {
-    HsmElement* element = nullptr;
-    QGraphicsItem* targetItem = scene()->itemAt(pos, QTransform());
+// void HsmConnectableElement::addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target) {
+//     if (scene()->items().contains(transition.get()) == false) {
+//         scene()->addItem(transition.get());
+//     }
 
-    if (nullptr != targetItem) {
-        QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
-
-        if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
-            // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
-            //       to use dynamic_cast. parentItem() != parentObject()
-            element = dynamic_cast<HsmElement*>(targetItem);
-
-            if (element->isConnectable() == false) {
-                qDebug() << "Target is not connectable: " << element->modelId()
-                         << " | viewElementType=" << elementType << " | " << element;
-                element = nullptr;
-            }
-        }
-    }
-
-    return element;
-}
-
-void HsmConnectableElement::addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target) {
-    if (scene()->items().contains(transition.get()) == false) {
-        scene()->addItem(transition.get());
-    }
-
-    transition->connectElements(this, target);
-    mTransitions.append(transition);
-}
+//     transition->connectElements(this, target);
+//     mTransitions.append(transition);
+// }
 
 QRectF HsmConnectableElement::boundingRect() const {
     return mHoverRect;
@@ -180,50 +156,33 @@ QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVar
 void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const QPointF& pos) {
     mDrawConnectionLine = false;
     mConnection = std::make_shared<HsmTransition>();
-    mConnection->init(0);
+    mConnection->init(model::INVALID_MODEL_ID);
     mConnection->beginConnection(this, pos);
     scene()->addItem(mConnection.get());
-    if (mConnection->parent()) {
-        qDebug() << "ERROR: parent is null";
-    }
 }
 
+// TODO: do we still need it?
 void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
-    qDebug() << "FINISH - arrow. Target" << mLastConnectionTarget << pos;
-
     mDrawConnectionLine = false;
 
     if (mConnection) {
+        QPointer<HsmElement> targetElement = mConnection->connectionCandidate();
+
+        qDebug() << "FINISH - arrow. Target" << targetElement << pos;
         scene()->removeItem(mConnection.get());
         mConnection.reset();
-    }
 
-    if (mLastConnectionTarget) {
-        mLastConnectionTarget->hightlight(false);
-        qDebug() << "emit elementConnected";
-        emit elementConnected(this->modelId(), mLastConnectionTarget->modelId());
-        mLastConnectionTarget.clear();
+        if (targetElement) {
+            targetElement->hightlight(false);
+            qDebug() << "emit elementConnected";
+            emit elementConnected(this->modelId(), targetElement->modelId());
+        }
     }
 }
 
 void HsmConnectableElement::updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
     if (mConnection) {
         mConnection->moveConnectionTo(pos);
-
-        // Check if there is an element under cursor and highlight it
-        QPointer<HsmElement> element = connectableElementAt(pos);
-
-        if (mLastConnectionTarget != element) {
-            if (mLastConnectionTarget) {
-                mLastConnectionTarget->hightlight(false);
-            }
-
-            if (element) {
-                element->hightlight(true);
-            }
-
-            mLastConnectionTarget = element;
-        }
     }
 }
 

@@ -1,5 +1,6 @@
 #include "HsmElement.hpp"
 
+#include <QGraphicsScene>
 #include <QGraphicsSceneDragDropEvent>
 #include <QMimeData>
 
@@ -58,6 +59,37 @@ bool HsmElement::isConnectable() const {
     return false;
 }
 
+HsmElement* HsmElement::connectableElementAt(const QPointF& pos) const {
+    HsmElement* element = nullptr;
+
+    if (scene() != nullptr) {
+        QList<QGraphicsItem*> targetItems = scene()->items(pos);
+
+        // TODO: account for subitems
+        for (auto targetItem : targetItems) {
+            if (nullptr != targetItem) {
+                QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
+
+                if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
+                    // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
+                    //       to use dynamic_cast. parentItem() != parentObject()
+                    element = dynamic_cast<HsmElement*>(targetItem);
+
+                    if (nullptr != element) {
+                        if (element->isConnectable() == false) {
+                            qDebug() << "Target is not connectable: " << element->modelId() << " | viewElementType=" << elementType
+                                    << " | " << element;
+                            element = nullptr;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return element;
+}
+
 bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
     // TODO: impl
     return true;
@@ -93,4 +125,4 @@ void HsmElement::dropEvent(QGraphicsSceneDragDropEvent* event) {
     QGraphicsObject::dropEvent(event);
 }
 
-}; // namespace view
+};  // namespace view

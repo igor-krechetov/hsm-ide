@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QString>
-#include <vector>
+#include <QList>
 
 #include "State.hpp"
 // #include "Transition.hpp"
@@ -30,12 +30,18 @@ public:
     void addChild(const QSharedPointer<Transition>& child);
     void addChild(const QSharedPointer<State>& child);
 
-    const std::vector<QSharedPointer<StateMachineEntity>>& children() const;
+    void deleteChild(const EntityID_t id);
+
+    const QList<QSharedPointer<StateMachineEntity>>& children() const;
     QSharedPointer<StateMachineEntity> findChild(const EntityID_t id) const;
+
+    QSharedPointer<State> findState(const EntityID_t id) const;
+    QSharedPointer<Transition> findTransition(const EntityID_t id) const;
+
 
 private:
     QString mName;
-    std::vector<QSharedPointer<StateMachineEntity>> mChildren;
+    QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
 }; // namespace model

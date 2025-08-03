@@ -24,9 +24,8 @@ public:
     void init(const model::EntityID_t modelElementId) override;
 
     bool isConnectable() const override;
-    HsmElement* connectableElementAt(const QPointF& pos) const;
 
-    void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
+    // void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
 
     QRectF boundingRect() const override;
     void updateHoverRect(bool expendArea);
@@ -35,7 +34,6 @@ public:
     void updateConnectionArrowsPos();
 
 signals:
-    // TODO: change type from ptr to EntityID_t
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 
 protected:
@@ -55,16 +53,11 @@ private slots:
 private:
     // TODO: use smart pointers
     QMap<ElementConnectionArrow::Direction, ElementConnectionArrow*> mArrows;
-    // TODO: does it make sence to store all transitions inside this object?
-    // TODO: remove shared_ptr. Transitions belong to the sceene and will be deleted by it
-    // TODO: use QPointer
-    QList<std::shared_ptr<HsmTransition>> mTransitions;
     QRectF mHoverRect;
     bool mDrawConnectionLine = false;
 
-    // TODO: replace with shared_ptr
+    // TODO: replace with QSharedPointer
     std::shared_ptr<HsmTransition> mConnection;
-    QPointer<HsmElement> mLastConnectionTarget;
 };
 
 };  // namespace view

@@ -27,6 +27,7 @@ public:
 
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
@@ -34,15 +35,16 @@ public:
 signals:
     void onGripDoubleClick(ElementGripItem* gripItem);
     void onGripLostFocus(ElementGripItem* gripItem);
-
-private:
-    void tryConnectSignal(const char* signal, QObject* object, const char* functionName);
+    // void onGripMoved(ElementGripItem* gripItem, const QPointF& pos);
+    void onGripMoveEnterEvent(ElementGripItem* gripItem);
+    void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
 private:
     HsmElement* mAnnotationElement = nullptr;
     QRectF mGripRect;
     QColor mGripColor;
     QPointF mLastPos;
+    bool mDragging = false;
 };
 
 }; // namespace view

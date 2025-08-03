@@ -6,6 +6,7 @@
 #include <QMetaMethod>
 #include <QPainter>
 
+#include "ObjectUtils.hpp"
 #include "HsmElement.hpp"
 
 namespace view {
@@ -25,8 +26,11 @@ ElementGripItem::~ElementGripItem() {
 }
 
 void ElementGripItem::init() {
-    tryConnectSignal("onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
-    tryConnectSignal("onGripLostFocus(ElementGripItem*)", parentObject(), "onGripLostFocus(ElementGripItem*)");
+    tryConnectSignal(this, "onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
+    tryConnectSignal(this, "onGripLostFocus(ElementGripItem*)", parentObject(), "onGripLostFocus(ElementGripItem*)");
+    // tryConnectSignal("onGripMoved(ElementGripItem*,QPointF)", parentObject(), "onGripMoved(ElementGripItem*,QPointF)");
+    tryConnectSignal(this, "onGripMoveEnterEvent(ElementGripItem*)", parentObject(), "onGripMoveEnterEvent(ElementGripItem*)");
+    tryConnectSignal(this, "onGripMoveLeaveEvent(ElementGripItem*)", parentObject(), "onGripMoveLeaveEvent(ElementGripItem*)");
 
     // setFlag(ItemIgnoresTransformations, true);
     setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemSendsGeometryChanges);
@@ -73,6 +77,16 @@ void ElementGripItem::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     // printf("ElementGripItem::mousePressEvent\n");
     mLastPos = event->scenePos();
     event->accept();
+    mDragging = true;
+    qDebug() << "emit onGripMoveEnterEvent";
+    emit onGripMoveEnterEvent(this);
+}
+
+void ElementGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    event->accept();
+    mDragging = false;
+    qDebug() << "emit onGripMoveLeaveEvent";
+    emit onGripMoveLeaveEvent(this);
 }
 
 void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
@@ -110,25 +124,6 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
     }
 
     return res;
-}
-
-void ElementGripItem::tryConnectSignal(const char* signalName, QObject* object, const char* slotName) {
-    auto signalMethod = metaObject()->method(metaObject()->indexOfSignal(signalName));
-    auto meta = object->metaObject();
-    int index = object->metaObject()->indexOfSlot(slotName);
-    auto slotMethod = object->metaObject()->method(object->metaObject()->indexOfSlot(slotName));
-
-    // qDebug() << index;
-
-    // qDebug() << signalMethod.name();
-    // qDebug() << signalMethod.methodSignature();
-
-    // qDebug() << slotMethod.name();
-    // qDebug() << slotMethod.methodSignature();
-
-    if (slotMethod.isValid()) {
-        QObject::connect(this, signalMethod, object, slotMethod);
-    }
 }
 
 }; // namespace view

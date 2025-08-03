@@ -43,7 +43,15 @@ void StateMachineModel::addChild(const QSharedPointer<State>& child) {
     addChild(child.dynamicCast<StateMachineEntity>());
 }
 
-const std::vector<QSharedPointer<StateMachineEntity>>& StateMachineModel::children() const {
+void StateMachineModel::deleteChild(const EntityID_t id) {
+    auto ptr = findChild(id);
+
+    if (ptr) {
+        mChildren.removeAll(ptr);
+    }
+}
+
+const QList<QSharedPointer<StateMachineEntity>>& StateMachineModel::children() const {
     return mChildren;
 }
 
@@ -57,6 +65,28 @@ QSharedPointer<StateMachineEntity> StateMachineModel::findChild(const EntityID_t
             res = element;
             break;
         }
+    }
+
+    return res;
+}
+
+QSharedPointer<State> StateMachineModel::findState(const EntityID_t id) const {
+    QSharedPointer<State> res;
+    QSharedPointer<StateMachineEntity> childPtr = findChild(id);
+
+    if (childPtr && childPtr->type() == StateMachineEntity::Type::State) {
+        res = childPtr.dynamicCast<State>();
+    }
+
+    return res;
+}
+
+QSharedPointer<Transition> StateMachineModel::findTransition(const EntityID_t id) const {
+    QSharedPointer<Transition> res;
+    QSharedPointer<StateMachineEntity> childPtr = findChild(id);
+
+    if (childPtr && childPtr->type() == StateMachineEntity::Type::Transition) {
+        res = childPtr.dynamicCast<Transition>();
     }
 
     return res;

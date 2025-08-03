@@ -25,6 +25,10 @@ public:
     view::HsmTransition* createHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
 
+    void reconnectHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+
+    void deleteSelectedItems();
+
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;
@@ -42,6 +46,8 @@ protected:
 private:
     void setPanningMode(const bool enable);
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
+    QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
+    view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
 
 
 private:
