@@ -33,6 +33,7 @@ model::EntityID_t HsmElement::modelId() const {
 }
 
 void HsmElement::hightlight(const bool enable) {
+    qDebug() << Q_FUNC_INFO << enable;
     mHightlight = enable;
     update();
 }
@@ -55,39 +56,66 @@ void HsmElement::init(const model::EntityID_t modelElementId) {
 }
 
 bool HsmElement::isConnectable() const {
-    qDebug() << Q_FUNC_INFO << this;
     return false;
 }
 
-HsmElement* HsmElement::connectableElementAt(const QPointF& pos) const {
-    HsmElement* element = nullptr;
+bool HsmElement::isResizable() const {
+    return false;
+}
 
-    if (scene() != nullptr) {
-        QList<QGraphicsItem*> targetItems = scene()->items(pos);
+// HsmElement* HsmElement::connectableElementAt(const QPointF& pos) const {
+//     HsmElement* element = nullptr;
 
-        // TODO: account for subitems
-        for (auto targetItem : targetItems) {
-            if (nullptr != targetItem) {
-                QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
+//     if (scene() != nullptr) {
+//         QList<QGraphicsItem*> targetItems = scene()->items(pos);
 
-                if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
-                    // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
-                    //       to use dynamic_cast. parentItem() != parentObject()
-                    element = dynamic_cast<HsmElement*>(targetItem);
+//         // TODO: account for subitems
+//         for (auto targetItem : targetItems) {
+//             if (nullptr != targetItem) {
+//                 QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
 
-                    if (nullptr != element) {
-                        if (element->isConnectable() == false) {
-                            qDebug() << "Target is not connectable: " << element->modelId() << " | viewElementType=" << elementType
-                                    << " | " << element;
-                            element = nullptr;
-                        }
-                    }
-                }
-            }
+//                 if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
+//                     // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
+//                     //       to use dynamic_cast. parentItem() != parentObject()
+//                     element = dynamic_cast<HsmElement*>(targetItem);
+
+//                     if (nullptr != element) {
+//                         if (element->isConnectable() == false) {
+//                             qDebug() << "Target is not connectable: " << element->modelId() << " | viewElementType=" << elementType
+//                                     << " | " << element;
+//                             element = nullptr;
+//                         } else {
+//                             break;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     return element;
+// }
+
+bool HsmElement::acceptsChildren() const {
+    return false;
+}
+
+bool HsmElement::isDirectChild(HsmElement* item) const {
+    return childItems().contains(item);
+}
+
+QRectF HsmElement::childrenRect() const {
+    QRectF rect;
+
+    for (QGraphicsItem* child : childItems()) {
+        QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
+
+        if (userType.isValid()) {
+            rect = rect.united(child->mapRectToParent(child->boundingRect()));
         }
     }
 
-    return element;
+    return rect;
 }
 
 bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
@@ -99,6 +127,7 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
     prepareGeometryChange();
 
     if (newRect.isNull()) {
+        qDebug() << Q_FUNC_INFO << "RECT is NULL";
         constexpr qreal penWidth = 1.0;
 
         mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
@@ -106,8 +135,21 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
                             mSize.width() + penWidth,
                             mSize.height() + penWidth);
     } else {
+        qDebug() << Q_FUNC_INFO << "RECT UPDATED: " << mOuterRect << " --> " << newRect;
         mOuterRect = newRect;
+        qDebug() << Q_FUNC_INFO << "RECT UPDATED: " << mOuterRect << " --> " << newRect;
         mSize = mOuterRect.size();
+    }
+}
+
+void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback) {
+    for (QGraphicsItem* child : childItems()) {
+        QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
+
+        if (userType.isValid()) {
+            qgraphicsitem_cast<HsmElement*>(child)->forEachChildElement(callback);
+            callback(qgraphicsitem_cast<HsmElement*>(child));
+        }
     }
 }
 

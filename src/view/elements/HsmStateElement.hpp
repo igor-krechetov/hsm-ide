@@ -17,6 +17,8 @@ public:
     HsmStateElement();
     virtual ~HsmStateElement() = default;
 
+    virtual bool acceptsChildren() const;
+
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 

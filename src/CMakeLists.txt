@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         view/MainWindow.cpp
         view/MainWindow.hpp
 
+        view/common/ViewUtils.cpp
+
         view/widgets/HsmElementsList.cpp
         view/widgets/HsmElementsList.hpp
         view/widgets/HsmGraphicsView.cpp

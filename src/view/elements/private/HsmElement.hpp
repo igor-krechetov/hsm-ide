@@ -2,9 +2,10 @@
 #define HSMELEMENT_HPP
 
 #include <QGraphicsObject>
-#include <QPoint>
 #include <QPen>
+#include <QPoint>
 #include <QString>
+#include <functional>
 
 #include "model/ModelTypes.hpp"
 namespace view {
@@ -33,6 +34,8 @@ public:
     explicit HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId);
     virtual ~HsmElement();
 
+    virtual void init(const model::EntityID_t modelElementId);
+
     model::EntityID_t modelId() const;
     // void setModelId(const model::EntityID_t modelElementId);
 
@@ -41,13 +44,20 @@ public:
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
-    virtual void init(const model::EntityID_t modelElementId);
-
     virtual bool isConnectable() const;
-    HsmElement* connectableElementAt(const QPointF& pos) const;
+    virtual bool isResizable() const;
+    // HsmElement* connectableElementAt(const QPointF& pos) const;
+
+    virtual bool acceptsChildren() const;
+    bool isDirectChild(HsmElement* item) const;
+
+    QRectF childrenRect() const;
 
     // TODO: move to an interface
     virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
+
+protected:
+    void forEachChildElement(std::function<void(HsmElement*)> callback);
 
     // QGraphicsItem interface
 public:

@@ -1,10 +1,15 @@
 #include "HsmConnectableElement.hpp"
 
 #include <QGraphicsScene>
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
+#include <QApplication>
 
 #include "ElementBoundaryGripItem.hpp"
 
 namespace view {
+
+// HsmConnectableElementEventFilter::HsmConnectableElementEventFilter(HsmConnectableElement* parent) : QObject(parent), mElement(parent) {}
 
 HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
     : HsmResizableElement(elementType) {
@@ -13,11 +18,18 @@ HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
 
 HsmConnectableElement::~HsmConnectableElement() {
     qDebug() << "DELETE " << this;
+
+    for (const auto& direction : mArrows.keys()) {
+        scene()->removeItem(mArrows[direction]);
+        mArrows[direction]->deleteLater();
+    }
+
+    mArrows.clear();
 }
 
 void HsmConnectableElement::init(const model::EntityID_t modelElementId) {
     HsmResizableElement::init(modelElementId);
-    updateHoverRect(false);
+    updateHoverRect();
     setAcceptHoverEvents(true);
 }
 
@@ -34,19 +46,26 @@ bool HsmConnectableElement::isConnectable() const {
 //     mTransitions.append(transition);
 // }
 
-QRectF HsmConnectableElement::boundingRect() const {
-    return mHoverRect;
+void HsmConnectableElement::resizeElement(const QRectF& newRect) {
+    HsmResizableElement::resizeElement(newRect);
+    updateHoverRect();
+    updateConnectionArrowsPos();
 }
 
-void HsmConnectableElement::updateHoverRect(bool expendArea) {
+// QRectF HsmConnectableElement::boundingRect() const {
+//     return mHoverRect;
+// }
+
+// TODO: try to implement same logic using qgraphicsitemgroup
+void HsmConnectableElement::updateHoverRect() {
     qreal arrowOffset = 0.0;
 
-    update();
-    prepareGeometryChange();
+    // update();// TODO: why wasw this needed?
+    // prepareGeometryChange();
 
-    if (true == expendArea) {
+    // if (true == expandArea) {
         arrowOffset = ElementConnectionArrow::mW;
-    }
+    // }
 
     mHoverRect = QRectF(mOuterRect.left() - arrowOffset,
                         mOuterRect.top() - arrowOffset,
@@ -54,15 +73,18 @@ void HsmConnectableElement::updateHoverRect(bool expendArea) {
                         mOuterRect.height() + 2 * arrowOffset);
 }
 
+// TODO: delete every time or change visibility?
 void HsmConnectableElement::createConnectionArrows() {
     if (true == mArrows.isEmpty()) {
-        updateHoverRect(true);
+        qDebug() << Q_FUNC_INFO << "CREATE";
+        updateHoverRect();
 
         for (const auto direction : {ElementConnectionArrow::Direction::North,
                                      ElementConnectionArrow::Direction::East,
                                      ElementConnectionArrow::Direction::South,
                                      ElementConnectionArrow::Direction::West}) {
-            ElementConnectionArrow* newArrow = new ElementConnectionArrow(this, direction);
+            ElementConnectionArrow* newArrow = new ElementConnectionArrow(nullptr, direction);
+            scene()->addItem(newArrow);
 
             newArrow->setPos(getArrowPos(direction));
             connect(newArrow,
@@ -79,20 +101,41 @@ void HsmConnectableElement::createConnectionArrows() {
                     SLOT(finishConnectionLine(ElementConnectionArrow*, QPointF)));
             mArrows[direction] = newArrow;
         }
+    } else {
+        qDebug() << Q_FUNC_INFO << "REATTACH";
+        for (const auto& direction : mArrows.keys()) {
+            // TODO: find then use
+            // mArrows[direction]->setParentItem(nullptr);
+            // qDebug() << Q_FUNC_INFO << __LINE__;
+            mArrows[direction]->setPos(getArrowPos(direction));
+            scene()->addItem(mArrows[direction]);
+            mArrows[direction]->show();
+            // qDebug() << Q_FUNC_INFO << __LINE__;
+            // mArrows[direction]->deleteLater();
+        }
+    }
+
+    if (false == mEventFilterInstalled) {
+        // mEventFilter = new HsmConnectableElementEventFilter(this);
+        mEventFilterInstalled = true;
+        scene()->installEventFilter(this);
     }
 }
 
 void HsmConnectableElement::removeConnectionArrows() {
-    if (false == mArrows.isEmpty()) {
-        // TODO: replace QMap with map
+    if (hasVisibleArrows() == true) {
         for (const auto& direction : mArrows.keys()) {
             // TODO: find then use
-            mArrows[direction]->setParentItem(nullptr);
-            delete mArrows[direction];
+            // mArrows[direction]->setParentItem(nullptr);
+            // qDebug() << Q_FUNC_INFO << __LINE__;
+            mArrows[direction]->hide();
+            scene()->removeItem(mArrows[direction]);
+            // qDebug() << Q_FUNC_INFO << __LINE__;
+            // mArrows[direction]->deleteLater();
         }
 
-        mArrows.clear();
-        updateHoverRect(false);
+        // mArrows.clear();
+        updateHoverRect();
     }
 }
 
@@ -102,16 +145,22 @@ void HsmConnectableElement::updateConnectionArrowsPos() {
     }
 }
 
-bool HsmConnectableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
-    HsmResizableElement::onGripMoved(selectedGrip, pos);
-    updateHoverRect(true);
-    updateConnectionArrowsPos();
-
-    // TODO: check result
-    return true;
+bool HsmConnectableElement::hasVisibleArrows() const {
+    return (mArrows.isEmpty() == false && mArrows.first()->isVisible() == true);
 }
 
-QPointF HsmConnectableElement::getArrowPos(ElementConnectionArrow::Direction arrowDirection) {
+bool HsmConnectableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
+    const bool canResize = HsmResizableElement::onGripMoved(selectedGrip, pos);
+
+    if (true == canResize) {
+        updateHoverRect();
+        updateConnectionArrowsPos();
+    }
+
+    return canResize;
+}
+
+QPointF HsmConnectableElement::getArrowPos(ElementConnectionArrow::Direction arrowDirection) const {
     const qreal xCenter = mOuterRect.center().x();
     const qreal yCenter = mOuterRect.center().y();
     // TODO: no need to create a map with all items
@@ -122,17 +171,32 @@ QPointF HsmConnectableElement::getArrowPos(ElementConnectionArrow::Direction arr
         {ElementConnectionArrow::Direction::West, QPointF(mOuterRect.left(), yCenter)}};
     // qDebug() << "getArrowPos: " << xCenter << "\\" << yCenter << "   " <<  mOuterRect << "---- " <<
     // positions[arrowDirection];
-    return positions[arrowDirection];
+    return mapToScene(positions[arrowDirection]);
     // return QPointF(xCenter, yCenter);
 }
 
+QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arrowDirection) const {
+    QSizeF res;
+
+    if (mArrows.empty() == false) {
+        res = mArrows[arrowDirection]->boundingRect().size();
+    }
+
+    return res;
+}
+
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    if (mArrows.isEmpty()) {
+    if (hasVisibleArrows() == false) {
         const QRectF sceneRect = mapRectToScene(mOuterRect);
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {
             createConnectionArrows();
+        }
+
+        auto parentConnectable = qgraphicsitem_cast<HsmConnectableElement*>(parentItem());
+        if (parentConnectable) {
+            parentConnectable->removeConnectionArrows();
         }
     }
 
@@ -140,21 +204,52 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
 }
 
 void HsmConnectableElement::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    removeConnectionArrows();
     HsmResizableElement::hoverLeaveEvent(event);
+    // removeConnectionArrows();
 }
+
+// TODO: redraw transitions to subitems
 
 QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemPositionHasChanged == change) {
+        qDebug() << Q_FUNC_INFO << this;
         removeConnectionArrows();
         // TODO: Hide grips
+
+        // Hide arrows for child elements (if any)
+        forEachChildElement([](HsmElement* child){
+            if (child && child->isConnectable()) {
+                qgraphicsitem_cast<HsmConnectableElement*>(child)->removeConnectionArrows();
+            }
+        });
     }
 
     return HsmResizableElement::itemChange(change, value);
 }
 
+bool HsmConnectableElement::eventFilter(QObject* obj, QEvent* event) {
+    if (event->type() == QEvent::GraphicsSceneMouseMove) {
+        if (mDrawConnectionLine == false) {
+            QGraphicsSceneMouseEvent* mouseEvent = static_cast<QGraphicsSceneMouseEvent*>(event);
+            const QPointF scenePos = mouseEvent->scenePos();
+            const QSizeF arrowSize = getArrowSize(ElementConnectionArrow::Direction::West);
+            const QRectF hoverRect = boundingRect().adjusted(-arrowSize.width(), -arrowSize.width(), arrowSize.width(), arrowSize.width());
+            const QRectF sceneHoverRect = mapRectToScene(mHoverRect);
+
+            if (sceneHoverRect.contains(scenePos) == false) {
+                scene()->removeEventFilter(this);
+                removeConnectionArrows();
+                mEventFilterInstalled = false;
+            }
+        }
+    }
+
+    return false;
+}
+
 void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const QPointF& pos) {
-    mDrawConnectionLine = false;
+    qDebug() << Q_FUNC_INFO;
+    mDrawConnectionLine = true;
     mConnection = std::make_shared<HsmTransition>();
     mConnection->init(model::INVALID_MODEL_ID);
     mConnection->beginConnection(this, pos);
@@ -163,6 +258,7 @@ void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const
 
 // TODO: do we still need it?
 void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
+    qDebug() << Q_FUNC_INFO;
     mDrawConnectionLine = false;
 
     if (mConnection) {

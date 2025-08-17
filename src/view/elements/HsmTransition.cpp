@@ -9,7 +9,7 @@
 #include <cmath>
 
 #include "private/ElementGripItem.hpp"
-
+#include "view/common/ViewUtils.hpp"
 namespace view {
 
 HsmTransition::HsmTransition()
@@ -403,7 +403,7 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size()-1))) {
             qDebug() << "highlight";
             // Check if there is an element under cursor and highlight it
-            QPointer<HsmElement> element = connectableElementAt(pos);
+            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), pos, true, false);
 
             qDebug() << "cond2";
             if (mLastConnectionTarget != element) {
@@ -465,7 +465,7 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
     if (isConnecting() == true) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
             QPointF pos = gripItem->pos();
-            HsmElement* targetElement = connectableElementAt(pos);
+            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), pos, true, false);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;

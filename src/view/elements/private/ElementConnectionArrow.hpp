@@ -21,6 +21,7 @@ public:
     ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction);
     virtual ~ElementConnectionArrow() = default;
 
+    inline Direction direction() const;
     // TODO: check if it's ok to overload setPos
     void setPos(const QPointF& pos);
 
@@ -42,6 +43,8 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
 public:
     static constexpr qreal mA = 10.0;
     static constexpr qreal mB = 16.0;
@@ -54,6 +57,10 @@ private:
     QPainterPath mShapeArrow;
     QColor mArrowColor;
 };
+
+inline ElementConnectionArrow::Direction ElementConnectionArrow::direction() const {
+    return mDirection;
+}
 
 }; // namespace view
 

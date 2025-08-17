@@ -21,27 +21,30 @@ public:
 
     const QString& name() const;
 
+    QSharedPointer<State>& root();
+
     // Creates a new State element with unique ID
     QSharedPointer<State> createUniqueState(const State::Type type);
     QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
     QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source, const QSharedPointer<State>& target);
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child);
-    void addChild(const QSharedPointer<Transition>& child);
-    void addChild(const QSharedPointer<State>& child);
+    // void addChild(const QSharedPointer<StateMachineEntity>& child);
+    // void addChild(const QSharedPointer<Transition>& child);
+    // void addChild(const QSharedPointer<State>& child);
 
-    void deleteChild(const EntityID_t id);
+    // void deleteChild(const EntityID_t id);
 
-    const QList<QSharedPointer<StateMachineEntity>>& children() const;
-    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id) const;
+    // const QList<QSharedPointer<StateMachineEntity>>& children() const;
+    // QSharedPointer<StateMachineEntity> findChild(const EntityID_t id) const;
 
-    QSharedPointer<State> findState(const EntityID_t id) const;
-    QSharedPointer<Transition> findTransition(const EntityID_t id) const;
+    // QSharedPointer<State> findState(const EntityID_t id) const;
+    // QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 
 
 private:
     QString mName;
-    QList<QSharedPointer<StateMachineEntity>> mChildren;
+    QSharedPointer<State> mModelRoot;
+    // QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
 }; // namespace model

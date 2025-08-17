@@ -21,7 +21,7 @@ class ProjectController : public QObject {
 public:
     explicit ProjectController(QPointer<MainWindow> mainWindow, QObject* parent = nullptr);
 
-    void handleViewDropEvent(QDropEvent* event);
+    void handleViewDropEvent(QDropEvent* event, const model::EntityID_t parentElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
 
 public slots:
@@ -31,7 +31,7 @@ public slots:
                            const model::EntityID_t newToElementId);
 
 private:
-    void createElement(const QString& elementTypeId, const QPoint& pos);
+    void createElement(const QString& elementTypeId, const QPoint& pos, const model::EntityID_t parentElementId = model::INVALID_MODEL_ID);
     void createTransition(const QSharedPointer<model::State>& fromElement, const QSharedPointer<model::State>& toElement);
 
 private:

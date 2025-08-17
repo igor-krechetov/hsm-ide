@@ -4,7 +4,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QDebug>
-
+// #include <QCursor>
+// #include <QGraphicsView>
 namespace view {
 
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
@@ -24,6 +25,104 @@ void HsmResizableElement::init(const model::EntityID_t modelElementId) {
     createBoundaryGrips();
     setGripVisibility(false);
     mPenSelectedBorder.setStyle(Qt::DotLine);
+}
+
+bool HsmResizableElement::isResizable() const {
+    return true;
+}
+
+void HsmResizableElement::updateBoundingRect(const QRectF& newRect) {
+    HsmElement::updateBoundingRect(newRect);
+    // Resize parent to fit new size of current item
+    resizeParentToFitChildItem();
+}
+
+void HsmResizableElement::resizeElement(const QRectF& newRect) {
+    QList<GripDirection> updateGrips = {GripDirection::North,
+                                        GripDirection::NorthEast,
+                                        GripDirection::East,
+                                        GripDirection::SouthEast,
+                                        GripDirection::South,
+                                        GripDirection::SouthWest,
+                                        GripDirection::West,
+                                        GripDirection::NorthWest};
+    qDebug() << Q_FUNC_INFO << boundingRect() << mOuterRect << " --> " << newRect;
+    updateBoundingRect(newRect);
+    qDebug() << Q_FUNC_INFO << boundingRect() << mOuterRect << " --> " << newRect;
+    updateGripsPosition(updateGrips);
+    // update();
+    // scene()->update();
+    // qDebug() << Q_FUNC_INFO << boundingRect() << " --> " << newRect;
+    notifyGeometryChanged();
+}
+
+void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
+    if (isDirectChild(child) == true) {
+        // Get child bounding rectangle in parent coordinates
+        QRectF childRect = child->mapRectToParent(child->elementRect());
+        // Get parent's current rectangle
+        QRectF parentRect = elementRect();
+
+        // qDebug() << Q_FUNC_INFO << newElement->boundingRect() << " --> ELEM: " << newElement->childrenBoundingRect();
+        // qDebug() << Q_FUNC_INFO << parentRect << resizableParent->childrenBoundingRect();
+
+        // Calculate required size to fit child
+        // qreal requiredWidth = qMax(parentRect.width(), childRect.right() - parentRect.left());
+        // qreal requiredHeight = qMax(parentRect.height(), childRect.bottom() - parentRect.top());
+
+        // parentRect.setLeft(qMin(parentRect.left(), childRect.left() - 5));
+        // parentRect.setTop(qMin(parentRect.top(), childRect.top() - 5));
+        // parentRect.setRight(qMax(parentRect.right(), childRect.right() + 5));
+        // parentRect.setBottom(qMax(parentRect.bottom(), childRect.bottom() + 5));
+        QRectF parentNewRect = parentRect.united(childRect);
+
+        // parentRect = resizableParent->childrenBoundingRect();
+
+        if (parentRect != parentNewRect) {
+            qDebug() << Q_FUNC_INFO << elementRect() << " --> " << parentRect;
+
+            if ( parentRect.left() != parentNewRect.left() ) {
+                parentNewRect.adjust(-5, 0, 0, 0);
+            }
+            if ( parentRect.top() != parentNewRect.top() ) {
+                parentNewRect.adjust(0, -5, 0, 0);
+            }
+            if ( parentRect.right() != parentNewRect.right() ) {
+                parentNewRect.adjust(0, 0, 5, 0);
+            }
+            if ( parentRect.bottom() != parentNewRect.bottom() ) {
+                parentNewRect.adjust(0, 0, 0, 5);
+            }
+
+            // Expand parent if needed
+            // if (requiredWidth > parentRect.width() || requiredHeight > parentRect.height()) {
+                // Update parent size by moving the bottom-right grip
+                // QPointF newSizePoint(parentRect.left() + requiredWidth, parentRect.top() + requiredHeight);
+
+                // parentRect.setWidth(requiredWidth);
+                // parentRect.setHeight(requiredHeight);
+                resizeElement(parentNewRect);
+                // parentElement->onGripMoved(
+                //     nullptr, // No specific grip selected
+                //     newSizePoint
+                // );
+
+                // Emit geometry changed signal
+                // emit resizableParent->geometryChanged(resizableParent);
+            // }
+            resizeParentToFitChildItem();
+        }
+    }
+}
+
+void HsmResizableElement::resizeParentToFitChildItem() {
+    auto parent = dynamic_cast<HsmResizableElement*>(parentItem());
+
+    // TODO: check if parent is also resizable
+    if (parent != nullptr) {
+        qDebug() << Q_FUNC_INFO << "RESIZING PARENT";
+        parent->resizeToFitChildItem(this);
+    }
 }
 
 void HsmResizableElement::createBoundaryGrips() {
@@ -144,18 +243,38 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
     }
 
     bool canResize = true;
+    QRectF childrenSize = childrenRect();
 
-    // TODO: implement min size concept
-    if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
-        updateBoundingRect(newOuterRect);
-        // mOuterRect = newOuterRect;
-        updateGripsPosition(updateGrips);
-        update();
-        // self.scene().update()
-        emit geometryChanged(this);
+    qDebug() << childrenSize << newOuterRect << elementRect();
+
+    if (childrenSize.bottom() < newOuterRect.bottom() &&
+        childrenSize.right() < newOuterRect.right() &&
+        childrenSize.top() > newOuterRect.top() &&
+        childrenSize.left() > newOuterRect.left()) {
+        // TODO: implement min size concept
+        if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
+            updateBoundingRect(newOuterRect);
+            // mOuterRect = newOuterRect;
+            updateGripsPosition(updateGrips);
+            update();
+            // self.scene().update()
+            notifyGeometryChanged();
+        } else {
+            canResize = false;
+        }
     } else {
+        qDebug() << "can't resize because child items wont fit";
         canResize = false;
     }
+
+    // TODO: would be nice to resume resizing only when cursor reaches the grip again
+
+    // if (canResize == false) {
+    //     QPointF viewPos = mapFromScene(pos);
+    //     QPointF screenPos = scene()->views().first()->viewport()->mapToGlobal(viewPos);
+    //     qDebug() << Q_FUNC_INFO << pos << viewPos << screenPos;
+    //     QCursor::setPos(screenPos.toPoint());
+    // }
 
     return canResize;
 }
@@ -186,9 +305,9 @@ QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
     return positions[gripDirection];
 }
 
-QRectF HsmResizableElement::boundingRect() const {
-    return mOuterRect;
-}
+// QRectF HsmResizableElement::boundingRect() const {
+//     return mOuterRect;
+// }
 
 void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     Q_UNUSED(option)
@@ -201,6 +320,10 @@ void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
         painter->drawEllipse(QPointF(0, 0), 5, 5);
         painter->drawPoint(0, 0);
     }
+}
+
+void HsmResizableElement::notifyGeometryChanged() {
+    emit geometryChanged(this);
 }
 
 QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
@@ -218,7 +341,14 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
 
         setGripVisibility(isSelected() || mGripSelected);
     } else if (change == QGraphicsItem::ItemPositionHasChanged) {
-        emit geometryChanged(this);
+        notifyGeometryChanged();
+        resizeParentToFitChildItem();
+
+        forEachChildElement([&](HsmElement* child){
+            if (child && child->isResizable()) {
+                qgraphicsitem_cast<HsmResizableElement*>(child)->notifyGeometryChanged();
+            }
+        });
     }
 
     return QGraphicsItem::itemChange(change, value);

@@ -43,19 +43,24 @@
 *** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
-**** REQ-103c: Multi-select operations
-***** REQ-103c1: Copy
-***** REQ-103c2: Cut
-***** REQ-103c3: Paste
+**** REQ-103c: Multi-select operations <<partial>>
+***** REQ-103c1: Copy <<prio_low>>
+***** REQ-103c2: Cut <<prio_low>>
+***** REQ-103c3: Paste <<prio_low>>
 ***** REQ-103c4: Delete <<done>>
 **** REQ-103d: Delete selected elements <<done>>
 ***** REQ-103d1: Delete states <<done>>
 ***** REQ-103d2: Delete transition <<done>>
 ***** REQ-103d3: Delete multiple elements <<done>>
+**** REQ-103e: Substates <<todo>>
+***** REQ-103e1: Adding/deleting substate elements <<done>>
+***** REQ-103e2: Adding/deleting transitions inside a state <<done>>
+***** REQ-103e3: Moving states in and out <<todo>>
 *** REQ-104: State Behavior Configuration
 **** REQ-104a: Entry actions (onentry)
 **** REQ-104b: Exit actions (onexit)
 **** REQ-104c: State change callbacks
+**** REQ-104d: Editing state name
 *** REQ-105: Timing Features
 **** REQ-105a: Timer event configuration
 **** REQ-105b: Timeout transitions

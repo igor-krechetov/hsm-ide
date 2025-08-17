@@ -21,6 +21,13 @@ public:
     virtual ~HsmResizableElement();
 
     void init(const model::EntityID_t modelElementId) override;
+    virtual bool isResizable() const;
+
+    void updateBoundingRect(const QRectF& newRect = QRectF()) override;
+
+    virtual void resizeElement(const QRectF& newRect);
+    void resizeToFitChildItem(HsmElement* child);
+    void resizeParentToFitChildItem();
 
     void createBoundaryGrips();
     void updateGripsPosition(const QList<GripDirection>& directionsList);
@@ -28,7 +35,7 @@ public:
     // int indexOf(const QPointF& p);
     QPointF gripPoint(GripDirection gripDirection);
 
-    QRectF boundingRect() const override;
+    // QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 public slots:
@@ -39,6 +46,7 @@ signals:
     void geometryChanged(HsmResizableElement* element);
 
 protected:
+    void notifyGeometryChanged();
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
 
 private:

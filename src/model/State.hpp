@@ -1,9 +1,9 @@
 #ifndef STATE_HPP
 #define STATE_HPP
 
+#include <QList>
 #include <QSharedPointer>
 #include <QString>
-#include <vector>
 
 #include "StateMachineEntity.hpp"
 
@@ -13,23 +13,33 @@ class Transition;
 
 class State : public StateMachineEntity {
 public:
-    enum class Type { Initial, Regular, Final, History };
+    enum class Type { Root, Initial, Regular, Final, History };
 
     explicit State(const QString& mName, const Type type = Type::Regular);
     virtual ~State() = default;
 
     Type stateType() const;
 
-    void addChildState(QSharedPointer<State> child);
-    void addTransition(QSharedPointer<Transition> child);
-    const std::vector<QSharedPointer<StateMachineEntity>>& children() const;
+    const QString& name() const;
+    void setName(const QString& name);
+
+    void addChildState(const QSharedPointer<State>& child);
+    void addTransition(const QSharedPointer<Transition>& child);
+    const QList<QSharedPointer<StateMachineEntity>>& children() const;
+
+    void deleteChild(const EntityID_t id);
+
+    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
+                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
+    QSharedPointer<State> findState(const EntityID_t id) const;
+    QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 
 protected:
     QString mName;
     Type mStateType;
-    std::vector<QSharedPointer<StateMachineEntity>> mChildren;
+    QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
-}; // namespace model
+};  // namespace model
 
 #endif  // STATE_HPP

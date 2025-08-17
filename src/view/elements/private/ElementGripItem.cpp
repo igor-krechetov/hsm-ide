@@ -109,8 +109,10 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
         if (false == annotationElement()->onGripMoved(this, value.toPointF())) {
+            qDebug() << pos() << " -> " << value;
             res = pos();
         } else {
+            qDebug() << "GRIP MOVE:" <<  pos() << " -> " << value;
             res = value;
         }
     } else {

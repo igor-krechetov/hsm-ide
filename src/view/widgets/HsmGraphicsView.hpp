@@ -3,6 +3,7 @@
 
 #include <QGraphicsView>
 #include <QPointer>
+
 #include "model/ModelTypes.hpp"
 
 class QDragEnterEvent;
@@ -11,9 +12,9 @@ class QDropEvent;
 class ProjectController;
 
 namespace view {
-    class HsmElement;
-    class HsmTransition;
-};
+class HsmElement;
+class HsmTransition;
+};  // namespace view
 class HsmGraphicsView : public QGraphicsView {
 public:
     HsmGraphicsView(QWidget* parent);
@@ -21,15 +22,24 @@ public:
 
     void setProjectController(QPointer<ProjectController> controller);
 
-    view::HsmElement* createHsmElement(const model::EntityID_t  modelElementId, const QString& elementTypeId, const QPoint& pos);
-    view::HsmTransition* createHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+    view::HsmElement* createHsmElement(const model::EntityID_t modelElementId,
+                                       const QString& elementTypeId,
+                                       const QPoint& pos,
+                                       const model::EntityID_t parentElementId);
+    view::HsmTransition* createHsmTransition(const model::EntityID_t transitionId,
+                                             const model::EntityID_t fromElementId,
+                                             const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
 
-    void reconnectHsmTransition(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+    void reconnectHsmTransition(const model::EntityID_t transitionId,
+                                const model::EntityID_t fromElementId,
+                                const model::EntityID_t toElementId);
 
     void deleteSelectedItems();
 
 protected:
+    void focusOutEvent(QFocusEvent* event) override;
+
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
@@ -44,11 +54,11 @@ protected:
     void keyReleaseEvent(QKeyEvent* event) override;
 
 private:
+    // view::HsmElement* acceptsChildrenElementAt(const QPointF& pos) const;
     void setPanningMode(const bool enable);
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
-
 
 private:
     // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
@@ -57,6 +67,8 @@ private:
     QPoint mLastPanPoint;
     bool mPanning = false;
     bool mSpacePressed = false;
+
+    QPointer<view::HsmElement> mDragTargetElement;
 };
 
 #endif  // HSMGRAPHICSVIEW_HPP

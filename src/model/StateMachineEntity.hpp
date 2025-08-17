@@ -11,7 +11,7 @@ namespace model {
 
 class StateMachineEntity {
 public:
-    enum class Type { State, Transition }; // namespace model
+    enum class Type { Invalid, State, Transition }; // namespace model
 
 public:
     explicit StateMachineEntity(const Type type);

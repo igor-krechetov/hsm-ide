@@ -32,12 +32,15 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // e1->addTransition(t, e2);
 }
 
-void ProjectController::handleViewDropEvent(QDropEvent* event) {
-    qDebug() << Q_FUNC_INFO << event->position();
+void ProjectController::handleViewDropEvent(QDropEvent* event, const model::EntityID_t parentElementId) {
+    qDebug() << Q_FUNC_INFO << event->position() << parentElementId;
+
+    // mMainWindow->view()->scene()->itemAt
+
     event->setDropAction(Qt::CopyAction);
     event->accept();
 
-    createElement(event->mimeData()->data("hsm/element").data(), event->position().toPoint());
+    createElement(event->mimeData()->data("hsm/element").data(), event->position().toPoint(), parentElementId);
 }
 
 void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& elementIDs) {
@@ -45,7 +48,7 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
 
     for (model::EntityID_t id : elementIDs) {
         mMainWindow->view()->deleteHsmElement(id);
-        mModel->deleteChild(id);
+        mModel->root()->deleteChild(id);
     }
 }
 
@@ -60,7 +63,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
         view::HsmTransition* newViewTransition =
             mMainWindow->view()->createHsmTransition(newTransition->id(), fromElementId, toElementId);
 
-        mModel->addChild(newTransition);
+        mModel->root()->addTransition(newTransition);
         tryConnectSignal(newViewTransition,
                          "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
                          this,
@@ -76,11 +79,11 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
                                           const model::EntityID_t newToElementId) {
     qDebug() << Q_FUNC_INFO << transitionId << ": " << newFromElementId << " -> " << newToElementId;
 
-    auto transitionPtr = mModel->findTransition(transitionId);
+    auto transitionPtr = mModel->root()->findTransition(transitionId);
 
     if (transitionPtr) {
-        transitionPtr->setSource(mModel->findState(newFromElementId));
-        transitionPtr->setTarget(mModel->findState(newToElementId));
+        transitionPtr->setSource(mModel->root()->findState(newFromElementId));
+        transitionPtr->setTarget(mModel->root()->findState(newToElementId));
 
         mMainWindow->view()->reconnectHsmTransition(transitionId, newFromElementId, newToElementId);
     } else {
@@ -88,7 +91,10 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
     }
 }
 
-void ProjectController::createElement(const QString& elementTypeId, const QPoint& pos) {
+void ProjectController::createElement(const QString& elementTypeId,
+                                      const QPoint& pos,
+                                      const model::EntityID_t parentElementId) {
+    qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
     static std::map<QString, model::State::Type> sElementTypes = {{"start", model::State::Type::Initial},
                                                                   {"final", model::State::Type::Final},
                                                                   {"state", model::State::Type::Regular},
@@ -100,7 +106,16 @@ void ProjectController::createElement(const QString& elementTypeId, const QPoint
 
     if (sElementTypes.end() != it) {
         auto newModelElement = mModel->createUniqueState(it->second);
-        view::HsmElement* newViewElement = mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos);
+        auto parentState = mModel->root()->findState(parentElementId);
+        view::HsmElement* newViewElement = mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);
+
+        qDebug() << Q_FUNC_INFO << parentState;
+
+        if (parentState.isNull()) {
+            parentState = mModel->root();
+        }
+
+        parentState->addChildState(newModelElement);
 
         tryConnectSignal(newViewElement,
                          "elementConnected(model::EntityID_t,model::EntityID_t)",

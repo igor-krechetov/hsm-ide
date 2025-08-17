@@ -9,9 +9,26 @@
 #include "HsmResizableElement.hpp"
 #include "view/elements/HsmTransition.hpp"
 
+class QEvent;
+
 namespace view {
 
 class ElementBoundaryGripItem;
+
+// class HsmConnectableElement;
+
+// class HsmConnectableElementEventFilter : public QObject {
+//     Q_OBJECT
+// public:
+//     HsmConnectableElementEventFilter(HsmConnectableElement* parent);
+//     virtual ~HsmConnectableElementEventFilter() = default;
+
+// protected:
+//     bool eventFilter(QObject* obj, QEvent* event) override;
+
+// private:
+//     HsmConnectableElement* mElement;
+// };
 
 class HsmConnectableElement : public HsmResizableElement {
     Q_OBJECT
@@ -27,11 +44,10 @@ public:
 
     // void addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target);
 
-    QRectF boundingRect() const override;
-    void updateHoverRect(bool expendArea);
-    void createConnectionArrows();
-    void removeConnectionArrows();
-    void updateConnectionArrowsPos();
+    void resizeElement(const QRectF& newRect) override;
+    // QRectF boundingRect() const override;
+    void updateHoverRect();
+
 
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
@@ -42,8 +58,15 @@ protected:
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
 private:
-    QPointF getArrowPos(ElementConnectionArrow::Direction arrowDirection);
+    void createConnectionArrows();
+    void removeConnectionArrows();
+    void updateConnectionArrowsPos();
+    bool hasVisibleArrows() const;
+    QPointF getArrowPos(ElementConnectionArrow::Direction arrowDirection) const;
+    QSizeF getArrowSize(ElementConnectionArrow::Direction arrowDirection) const;
 
 private slots:
     void beginConnection(ElementConnectionArrow* arrow, const QPointF& pos);
@@ -58,6 +81,9 @@ private:
 
     // TODO: replace with QSharedPointer
     std::shared_ptr<HsmTransition> mConnection;
+
+    // HsmConnectableElementEventFilter* mEventFilter = nullptr;
+    bool mEventFilterInstalled = false;
 };
 
 };  // namespace view
