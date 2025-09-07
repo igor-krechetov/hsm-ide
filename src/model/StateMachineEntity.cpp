@@ -17,4 +17,4 @@ EntityID_t StateMachineEntity::id() const {
     return mId;
 }
 
-}; // namespace model
+};  // namespace model

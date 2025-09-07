@@ -47,6 +47,6 @@ private:
     bool mDragging = false;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // ELEMENTGRIPITEM_HPP

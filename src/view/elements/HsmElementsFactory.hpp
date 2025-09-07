@@ -30,6 +30,6 @@ private:
     static std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>> mItemsCatalog;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMELEMENTSFACTORY_HPP

@@ -14,13 +14,13 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     virtual ~MainWindow();
 
     QPointer<HsmGraphicsView> view();
 
 private:
-    Ui_hsm_ide *ui;
+    Ui_hsm_ide* ui;
     // QSettingsDialog mSettings;
     // HsmGraphicsView* mMainView;
     // HsmElementsList* mListHsmElements;

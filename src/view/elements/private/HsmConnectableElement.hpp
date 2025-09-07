@@ -48,7 +48,6 @@ public:
     // QRectF boundingRect() const override;
     void updateHoverRect();
 
-
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 

@@ -2,8 +2,8 @@
 #define TRANSITION_HPP
 
 #include <QSharedPointer>
-#include <QWeakPointer>
 #include <QString>
+#include <QWeakPointer>
 
 #include "StateMachineEntity.hpp"
 
@@ -35,6 +35,6 @@ private:
     QString mEvent;
 };
 
-}; // namespace model
+};  // namespace model
 
 #endif  // TRANSITION_HPP

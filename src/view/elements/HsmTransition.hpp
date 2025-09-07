@@ -32,7 +32,9 @@ public:
     QPointer<HsmElement> connectionCandidate() const;
 
 signals:
-    void transitionReconnected(const model::EntityID_t transitionId, const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
+    void transitionReconnected(const model::EntityID_t transitionId,
+                               const model::EntityID_t fromElementId,
+                               const model::EntityID_t toElementId);
 
 protected:
     QPainterPath shape() const override;
@@ -50,8 +52,8 @@ protected:
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
 
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     std::tuple<bool, QPointF, int> isPointOnTheLine(const QPointF& pos);
@@ -88,6 +90,6 @@ private:
     QPointer<HsmElement> mLastConnectionTarget;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMTRANSITION_HPP

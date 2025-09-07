@@ -19,6 +19,6 @@ private:
     QRectF mItemRect;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMEXITPOINTELEMENT_HPP

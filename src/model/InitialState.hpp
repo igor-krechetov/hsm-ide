@@ -16,6 +16,6 @@ public:
     void addChildState(std::shared_ptr<State> child) = delete;
 };
 
-}; // namespace model
+};  // namespace model
 
 #endif  // INITIALSTATE_HPP

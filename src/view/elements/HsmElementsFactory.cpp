@@ -16,13 +16,14 @@
 
 namespace view {
 
-std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>> HsmElementsFactory::mItemsCatalog = {
-    {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
-    {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
-    {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::_createElementState}},
-    {"entrypoint", {"Entry Point", "/../../res/element_entrypoint.png", &HsmElementsFactory::_createElementEntryPoint}},
-    {"exitpoint", {"Exit Point", "/../../res/element_exitpoint.png", &HsmElementsFactory::_createElementExitPoint}},
-    {"history", {"History", "/../../res/element_history.png", &HsmElementsFactory::_createElementHistory}}};
+std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>>
+    HsmElementsFactory::mItemsCatalog = {
+        {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
+        {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
+        {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::_createElementState}},
+        {"entrypoint", {"Entry Point", "/../../res/element_entrypoint.png", &HsmElementsFactory::_createElementEntryPoint}},
+        {"exitpoint", {"Exit Point", "/../../res/element_exitpoint.png", &HsmElementsFactory::_createElementExitPoint}},
+        {"history", {"History", "/../../res/element_history.png", &HsmElementsFactory::_createElementHistory}}};
 
 std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
     std::list<QListWidgetItem*> elements;
@@ -96,4 +97,4 @@ HsmElement* HsmElementsFactory::_createElementHistory(const model::EntityID_t mo
     return elem;
 }
 
-}; // namespace view
+};  // namespace view

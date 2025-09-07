@@ -32,13 +32,9 @@ constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
 class HsmElement : public QGraphicsObject {
     Q_OBJECT
 public:
-    enum class DragMode {
-        NONE, SINGLE, GROUP, GROUP_NONE
-    };
+    enum class DragMode { NONE, SINGLE, GROUP, GROUP_NONE };
 
-    enum class DragState {
-        NONE, PREPARE, DRAGGING
-    };
+    enum class DragState { NONE, PREPARE, DRAGGING };
 
 public:
     explicit HsmElement(const HsmElementType elementType);
@@ -82,7 +78,7 @@ protected:
     void forEachChildElement(std::function<void(HsmElement*)> callback);
     virtual void updateBoundingRect(const QRectF& newRect = QRectF());
 
-// QGraphicsItem interface
+    // QGraphicsItem interface
 protected:
     QRectF boundingRect() const override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

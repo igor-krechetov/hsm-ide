@@ -3,15 +3,16 @@
 
 #include <QSharedPointer>
 #include <vector>
+
 #include "ModelTypes.hpp"
 
 // TODO: move StateMachineElement::ID_t to a common header
 
 namespace model {
 
-class StateMachineEntity: public QEnableSharedFromThis<StateMachineEntity> {
+class StateMachineEntity : public QEnableSharedFromThis<StateMachineEntity> {
 public:
-    enum class Type { Invalid, State, Transition }; // namespace model
+    enum class Type { Invalid, State, Transition };  // namespace model
 
 public:
     explicit StateMachineEntity(const Type type);
@@ -25,6 +26,6 @@ private:
     Type mElementType;
 };
 
-}; // namespace model
+};  // namespace model
 
 #endif  // STATEMACHINEENTITY_HPP

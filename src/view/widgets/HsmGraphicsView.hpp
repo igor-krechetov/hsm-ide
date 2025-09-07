@@ -19,11 +19,11 @@ class HsmTransition;
 class HsmGraphicsView : public QGraphicsView {
 public:
     enum KeyboardModifier {
-        NoModifier           = 0x00000000,
-        ShiftModifier        = 0x02000000,
-        ControlModifier      = 0x04000000,
-        AltModifier          = 0x08000000,
-        SpaceModifier        = 0x10000000,
+        NoModifier = 0x00000000,
+        ShiftModifier = 0x02000000,
+        ControlModifier = 0x04000000,
+        AltModifier = 0x08000000,
+        SpaceModifier = 0x10000000,
     };
 
 public:
@@ -70,7 +70,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
 
-// from HsmElement
+    // from HsmElement
 public slots:
     void dragElementBegin(view::HsmElement* element, const QPointF& scenePos);
     void dragElementEvent(view::HsmElement* element, const QPointF& scenePos);

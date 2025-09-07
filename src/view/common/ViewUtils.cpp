@@ -36,7 +36,7 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                             element = nullptr;
                         } else if (onlyAcceptsChildren && element->acceptsChildren() == false) {
                             qDebug() << "Target doesn't accept children: " << element->modelId()
-                                        << " | viewElementType=" << elementType << " | " << element;
+                                     << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
                         }
 

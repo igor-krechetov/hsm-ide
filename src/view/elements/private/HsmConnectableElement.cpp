@@ -1,15 +1,16 @@
 #include "HsmConnectableElement.hpp"
 
-#include <QGraphicsScene>
-#include <QEvent>
-#include <QGraphicsSceneMouseEvent>
 #include <QApplication>
+#include <QEvent>
+#include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 
 #include "ElementBoundaryGripItem.hpp"
 
 namespace view {
 
-// HsmConnectableElementEventFilter::HsmConnectableElementEventFilter(HsmConnectableElement* parent) : QObject(parent), mElement(parent) {}
+// HsmConnectableElementEventFilter::HsmConnectableElementEventFilter(HsmConnectableElement* parent) : QObject(parent),
+// mElement(parent) {}
 
 HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
     : HsmResizableElement(elementType) {
@@ -64,7 +65,7 @@ void HsmConnectableElement::updateHoverRect() {
     // prepareGeometryChange();
 
     // if (true == expandArea) {
-        arrowOffset = ElementConnectionArrow::mW;
+    arrowOffset = ElementConnectionArrow::mW;
     // }
 
     mHoverRect = QRectF(mOuterRect.left() - arrowOffset,
@@ -216,7 +217,7 @@ QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVar
         // TODO: Hide grips
 
         // Hide arrows for child elements (if any)
-        forEachChildElement([](HsmElement* child){
+        forEachChildElement([](HsmElement* child) {
             if (child && child->isConnectable()) {
                 qgraphicsitem_cast<HsmConnectableElement*>(child)->removeConnectionArrows();
             }
@@ -232,7 +233,8 @@ bool HsmConnectableElement::eventFilter(QObject* obj, QEvent* event) {
             QGraphicsSceneMouseEvent* mouseEvent = static_cast<QGraphicsSceneMouseEvent*>(event);
             const QPointF scenePos = mouseEvent->scenePos();
             const QSizeF arrowSize = getArrowSize(ElementConnectionArrow::Direction::West);
-            const QRectF hoverRect = boundingRect().adjusted(-arrowSize.width(), -arrowSize.width(), arrowSize.width(), arrowSize.width());
+            const QRectF hoverRect =
+                boundingRect().adjusted(-arrowSize.width(), -arrowSize.width(), arrowSize.width(), arrowSize.width());
             const QRectF sceneHoverRect = mapRectToScene(mHoverRect);
 
             if (sceneHoverRect.contains(scenePos) == false) {

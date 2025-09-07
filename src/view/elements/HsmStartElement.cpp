@@ -17,4 +17,4 @@ void HsmStartElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     HsmConnectableElement::paint(painter, option, widget);
 }
 
-}; // namespace view
+};  // namespace view

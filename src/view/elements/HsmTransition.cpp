@@ -391,8 +391,8 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
             // Inner grips changed
             qDebug() << "conditions";
             if ((gripIndex > 0 && gripIndex < (mLinePath.size() - 1)) ||
-                (isConnecting() == true && ((mFromElement == nullptr && grip == mSrcGrip) ||
-                                            (mToElement == nullptr && grip == mDestGrip)) ) ) {
+                (isConnecting() == true &&
+                 ((mFromElement == nullptr && grip == mSrcGrip) || (mToElement == nullptr && grip == mDestGrip)))) {
                 qDebug() << "recalc, mLinePath.size=" << mLinePath.size();
                 mLinePath[gripIndex] = pos;
                 recalculateLine();
@@ -400,7 +400,7 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
             }
         }
 
-        if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size()-1))) {
+        if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
             qDebug() << "highlight";
             // Check if there is an element under cursor and highlight it
             QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), pos, true, false);

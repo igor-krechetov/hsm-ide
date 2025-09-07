@@ -121,7 +121,7 @@ void ElementConnectionArrow::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant ElementConnectionArrow::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (GraphicsItemChange::ItemVisibleHasChanged ==  change) {
+    if (GraphicsItemChange::ItemVisibleHasChanged == change) {
         // TODO: make a proper reset function
         mArrowColor = QColor("green");
     }
@@ -129,4 +129,4 @@ QVariant ElementConnectionArrow::itemChange(GraphicsItemChange change, const QVa
     return QGraphicsObject::itemChange(change, value);
 }
 
-}; // namespace view
+};  // namespace view

@@ -6,4 +6,4 @@ HistoryState::HistoryState(const QString& id, const HistoryState::HistoryType hi
     : State(id, State::Type::History)
     , mHistoryType(historyType) {}
 
-}; // namespace model
+};  // namespace model

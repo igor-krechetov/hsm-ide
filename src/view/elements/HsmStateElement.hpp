@@ -26,6 +26,6 @@ private:
     QRectF mItemRect;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMSTATEELEMENT_HPP

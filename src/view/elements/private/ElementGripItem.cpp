@@ -6,8 +6,8 @@
 #include <QMetaMethod>
 #include <QPainter>
 
-#include "ObjectUtils.hpp"
 #include "HsmElement.hpp"
+#include "ObjectUtils.hpp"
 
 namespace view {
 
@@ -112,7 +112,7 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
             qDebug() << pos() << " -> " << value;
             res = pos();
         } else {
-            qDebug() << "GRIP MOVE:" <<  pos() << " -> " << value;
+            qDebug() << "GRIP MOVE:" << pos() << " -> " << value;
             res = value;
         }
     } else {
@@ -128,4 +128,4 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
     return res;
 }
 
-}; // namespace view
+};  // namespace view

@@ -31,7 +31,9 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // e1->addTransition(t, e2);
 }
 
-void ProjectController::handleViewDropEvent(const QString &elementTypeId, const QPoint &pos, const model::EntityID_t targetElementId) {
+void ProjectController::handleViewDropEvent(const QString& elementTypeId,
+                                            const QPoint& pos,
+                                            const model::EntityID_t targetElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << pos;
 
     createElement(elementTypeId, pos, targetElementId);
@@ -121,7 +123,8 @@ void ProjectController::createElement(const QString& elementTypeId,
     if (sElementTypes.end() != it) {
         auto newModelElement = mModel->createUniqueState(it->second);
         auto parentState = mModel->root()->findState(parentElementId);
-        view::HsmElement* newViewElement = mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);
+        view::HsmElement* newViewElement =
+            mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);
 
         qDebug() << Q_FUNC_INFO << parentState;
 

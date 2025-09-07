@@ -1,10 +1,10 @@
 #ifndef STATEMACHINEMODEL_HPP
 #define STATEMACHINEMODEL_HPP
 
+#include <QList>
 #include <QObject>
 #include <QSharedPointer>
 #include <QString>
-#include <QList>
 
 #include "State.hpp"
 // #include "Transition.hpp"
@@ -41,13 +41,12 @@ public:
     // QSharedPointer<Transition> findTransition(const EntityID_t id) const;
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
-
 private:
     QString mName;
     QSharedPointer<State> mModelRoot;
     // QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
-}; // namespace model
+};  // namespace model
 
 #endif  // STATEMACHINEMODEL_HPP

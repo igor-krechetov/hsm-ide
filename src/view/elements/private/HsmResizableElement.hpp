@@ -61,6 +61,6 @@ public:
     bool mGripSelected = false;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMRESIZABLEELEMENT_HPP

@@ -10,7 +10,8 @@ namespace view {
 ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction)
     : ElementGripItem(annotationElement)
     , mGripDirection(direction) {
-    qDebug() << "CREATE: ElementBoundaryGripItem: " << this << "parent: " << annotationElement->modelId() << " | " << annotationElement;
+    qDebug() << "CREATE: ElementBoundaryGripItem: " << this << "parent: " << annotationElement->modelId() << " | "
+             << annotationElement;
 
     if ((GripDirection::North == mGripDirection) || (GripDirection::South == mGripDirection)) {
         mGripDirectionType = GripDirectionType::Vertical;
@@ -69,4 +70,4 @@ QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QV
     return res;
 }
 
-}; // namespace view
+};  // namespace view

@@ -62,6 +62,6 @@ inline ElementConnectionArrow::Direction ElementConnectionArrow::direction() con
     return mDirection;
 }
 
-}; // namespace view
+};  // namespace view
 
 #endif  // ELEMENTCONNECTIONARROW_HPP

@@ -1,9 +1,9 @@
 #include "HsmResizableElement.hpp"
 
+#include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
-#include <QDebug>
 // #include <QCursor>
 // #include <QGraphicsView>
 namespace view {
@@ -81,34 +81,34 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
         if (parentRect != parentNewRect) {
             qDebug() << Q_FUNC_INFO << elementRect() << " --> " << parentRect;
 
-            if ( parentRect.left() != parentNewRect.left() ) {
+            if (parentRect.left() != parentNewRect.left()) {
                 parentNewRect.adjust(-5, 0, 0, 0);
             }
-            if ( parentRect.top() != parentNewRect.top() ) {
+            if (parentRect.top() != parentNewRect.top()) {
                 parentNewRect.adjust(0, -5, 0, 0);
             }
-            if ( parentRect.right() != parentNewRect.right() ) {
+            if (parentRect.right() != parentNewRect.right()) {
                 parentNewRect.adjust(0, 0, 5, 0);
             }
-            if ( parentRect.bottom() != parentNewRect.bottom() ) {
+            if (parentRect.bottom() != parentNewRect.bottom()) {
                 parentNewRect.adjust(0, 0, 0, 5);
             }
 
             // Expand parent if needed
             // if (requiredWidth > parentRect.width() || requiredHeight > parentRect.height()) {
-                // Update parent size by moving the bottom-right grip
-                // QPointF newSizePoint(parentRect.left() + requiredWidth, parentRect.top() + requiredHeight);
+            // Update parent size by moving the bottom-right grip
+            // QPointF newSizePoint(parentRect.left() + requiredWidth, parentRect.top() + requiredHeight);
 
-                // parentRect.setWidth(requiredWidth);
-                // parentRect.setHeight(requiredHeight);
-                resizeElement(parentNewRect);
-                // parentElement->onGripMoved(
-                //     nullptr, // No specific grip selected
-                //     newSizePoint
-                // );
+            // parentRect.setWidth(requiredWidth);
+            // parentRect.setHeight(requiredHeight);
+            resizeElement(parentNewRect);
+            // parentElement->onGripMoved(
+            //     nullptr, // No specific grip selected
+            //     newSizePoint
+            // );
 
-                // Emit geometry changed signal
-                // emit resizableParent->geometryChanged(resizableParent);
+            // Emit geometry changed signal
+            // emit resizableParent->geometryChanged(resizableParent);
             // }
             resizeParentToFitChildItem();
         }
@@ -246,10 +246,8 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
 
     qDebug() << childrenSize << newOuterRect << elementRect();
 
-    if (childrenSize.bottom() < newOuterRect.bottom() &&
-        childrenSize.right() < newOuterRect.right() &&
-        childrenSize.top() > newOuterRect.top() &&
-        childrenSize.left() > newOuterRect.left()) {
+    if (childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
+        childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left()) {
         // TODO: implement min size concept
         if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
             updateBoundingRect(newOuterRect);
@@ -345,7 +343,7 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
         if (isDragged() == false) {
             resizeParentToFitChildItem();
 
-            forEachChildElement([&](HsmElement* child){
+            forEachChildElement([&](HsmElement* child) {
                 if (child && child->isResizable()) {
                     qgraphicsitem_cast<HsmResizableElement*>(child)->notifyGeometryChanged();
                 }

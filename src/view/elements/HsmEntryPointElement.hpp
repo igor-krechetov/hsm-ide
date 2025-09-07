@@ -22,6 +22,6 @@ private:
     QRectF mItemRect;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMENTRYPOINTELEMENT_HPP

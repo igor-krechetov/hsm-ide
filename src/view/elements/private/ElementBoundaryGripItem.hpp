@@ -40,6 +40,6 @@ private:
     GripDirectionType mGripDirectionType;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // ELEMENTBOUNDARYGRIPITEM_HPP

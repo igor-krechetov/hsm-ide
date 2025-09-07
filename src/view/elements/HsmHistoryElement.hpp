@@ -21,6 +21,6 @@ private:
     QRectF mItemRect;
 };
 
-}; // namespace view
+};  // namespace view
 
 #endif  // HSMHISTORYELEMENT_HPP

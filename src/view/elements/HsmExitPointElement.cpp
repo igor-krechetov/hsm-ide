@@ -17,4 +17,4 @@ void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
     HsmConnectableElement::paint(painter, option, widget);
 }
 
-}; // namespace view
+};  // namespace view
