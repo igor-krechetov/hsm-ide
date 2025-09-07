@@ -40,6 +40,24 @@ QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const QShar
     return QSharedPointer<Transition>::create(source, target, QStringLiteral("new_event"));
 }
 
+bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t newParentId) {
+    bool moved = false;
+    QSharedPointer<State> currentParent = mModelRoot->findParentState(elementId);
+
+    if (currentParent && currentParent->id() != newParentId) {
+        QSharedPointer<StateMachineEntity> element = currentParent->findChild(elementId);
+        QSharedPointer<State> newParent = (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findState(newParentId));
+
+        if (element && newParent) {
+            newParent->addChild(element);
+            currentParent->deleteChild(element);
+            moved = true;
+        }
+    }
+
+    return moved;
+}
+
 // void StateMachineModel::addChild(const QSharedPointer<StateMachineEntity>& child) {
 //     // mChildren.push_back(child);
 

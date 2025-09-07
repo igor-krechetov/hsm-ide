@@ -18,7 +18,7 @@ IndentWidth: 4
 IndentPPDirectives: BeforeHash
 PPIndentWidth: 2
 AlwaysBreakAfterReturnType: None
-PenaltyReturnTypeOnItsOwnLine: 130
+PenaltyReturnTypeOnItsOwnLine: 180
 AlwaysBreakTemplateDeclarations: Yes
 PointerAlignment: Left
 PackConstructorInitializers: Never

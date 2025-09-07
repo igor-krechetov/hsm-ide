@@ -23,12 +23,15 @@ public:
     const QString& name() const;
     void setName(const QString& name);
 
+    void addChild(const QSharedPointer<StateMachineEntity>& child);
     void addChildState(const QSharedPointer<State>& child);
     void addTransition(const QSharedPointer<Transition>& child);
     const QList<QSharedPointer<StateMachineEntity>>& children() const;
 
     void deleteChild(const EntityID_t id);
+    void deleteChild(const QSharedPointer<StateMachineEntity> child);
 
+    QSharedPointer<State> findParentState(const EntityID_t childId);
     QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
                                                  const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
     QSharedPointer<State> findState(const EntityID_t id) const;

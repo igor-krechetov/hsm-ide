@@ -9,7 +9,7 @@
 
 namespace model {
 
-class StateMachineEntity {
+class StateMachineEntity: public QEnableSharedFromThis<StateMachineEntity> {
 public:
     enum class Type { Invalid, State, Transition }; // namespace model
 

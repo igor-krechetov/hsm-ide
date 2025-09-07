@@ -120,7 +120,6 @@ void HsmResizableElement::resizeParentToFitChildItem() {
 
     // TODO: check if parent is also resizable
     if (parent != nullptr) {
-        qDebug() << Q_FUNC_INFO << "RESIZING PARENT";
         parent->resizeToFitChildItem(this);
     }
 }
@@ -342,16 +341,19 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
         setGripVisibility(isSelected() || mGripSelected);
     } else if (change == QGraphicsItem::ItemPositionHasChanged) {
         notifyGeometryChanged();
-        resizeParentToFitChildItem();
 
-        forEachChildElement([&](HsmElement* child){
-            if (child && child->isResizable()) {
-                qgraphicsitem_cast<HsmResizableElement*>(child)->notifyGeometryChanged();
-            }
-        });
+        if (isDragged() == false) {
+            resizeParentToFitChildItem();
+
+            forEachChildElement([&](HsmElement* child){
+                if (child && child->isResizable()) {
+                    qgraphicsitem_cast<HsmResizableElement*>(child)->notifyGeometryChanged();
+                }
+            });
+        }
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return HsmElement::itemChange(change, value);
 }
 
 // TODO: remove function?

@@ -7,7 +7,6 @@
 #include "model/StateMachineModel.hpp"
 
 class MainWindow;
-class QDropEvent;
 
 namespace model {
 class State;
@@ -21,7 +20,8 @@ class ProjectController : public QObject {
 public:
     explicit ProjectController(QPointer<MainWindow> mainWindow, QObject* parent = nullptr);
 
-    void handleViewDropEvent(QDropEvent* event, const model::EntityID_t parentElementId);
+    void handleViewDropEvent(const QString &elementTypeId, const QPoint &pos, const model::EntityID_t targetElementId);
+    void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
 
 public slots:

@@ -23,7 +23,7 @@ void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     mItemRect = QRectF(mOuterRect);
     painter->drawRoundedRect(mItemRect, 5, 5);
 
-    if (mHightlight) {
+    if (isHighligted() == true) {
         painter->setPen(mPenHighlightMode);
         painter->drawRoundedRect(mItemRect.adjusted(2, 2, -2, -2), 5, 5);
     }

@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QDrag>
+#include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -50,68 +51,18 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const model::EntityID_t mode
 
         // Resize parent item to fit new child if necessary
         auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(parentElement);
+
         if (resizableParent) {
             resizableParent->resizeToFitChildItem(newElement);
-            // // Get child bounding rectangle in parent coordinates
-            // QRectF childRect = newElement->mapRectToParent(newElement->boundingRect());
-
-            // // Get parent's current rectangle
-            // QRectF parentRect = resizableParent->boundingRect();
-
-            // // qDebug() << Q_FUNC_INFO << newElement->boundingRect() << " --> ELEM: " << newElement->childrenBoundingRect();
-            // // qDebug() << Q_FUNC_INFO << parentRect << resizableParent->childrenBoundingRect();
-
-            // // Calculate required size to fit child
-            // // qreal requiredWidth = qMax(parentRect.width(), childRect.right() - parentRect.left());
-            // // qreal requiredHeight = qMax(parentRect.height(), childRect.bottom() - parentRect.top());
-
-            // // parentRect.setLeft(qMin(parentRect.left(), childRect.left() - 5));
-            // // parentRect.setTop(qMin(parentRect.top(), childRect.top() - 5));
-            // // parentRect.setRight(qMax(parentRect.right(), childRect.right() + 5));
-            // // parentRect.setBottom(qMax(parentRect.bottom(), childRect.bottom() + 5));
-            // QRectF parentNewRect = parentRect.united(childRect);
-
-            // // parentRect = resizableParent->childrenBoundingRect();
-
-            // if (parentRect != parentNewRect) {
-            //     qDebug() << Q_FUNC_INFO << resizableParent->boundingRect() << " --> " << parentRect;
-
-            //     if ( parentRect.left() != parentNewRect.left() ) {
-            //         parentNewRect.adjust(-5, 0, 0, 0);
-            //     }
-            //     if ( parentRect.top() != parentNewRect.top() ) {
-            //         parentNewRect.adjust(0, -5, 0, 0);
-            //     }
-            //     if ( parentRect.right() != parentNewRect.right() ) {
-            //         parentNewRect.adjust(0, 0, 5, 0);
-            //     }
-            //     if ( parentRect.bottom() != parentNewRect.bottom() ) {
-            //         parentNewRect.adjust(0, 0, 0, 5);
-            //     }
-
-            //     // Expand parent if needed
-            //     // if (requiredWidth > parentRect.width() || requiredHeight > parentRect.height()) {
-            //         // Update parent size by moving the bottom-right grip
-            //         // QPointF newSizePoint(parentRect.left() + requiredWidth, parentRect.top() + requiredHeight);
-
-            //         // parentRect.setWidth(requiredWidth);
-            //         // parentRect.setHeight(requiredHeight);
-            //         resizableParent->resizeElement(parentNewRect);
-            //         // parentElement->onGripMoved(
-            //         //     nullptr, // No specific grip selected
-            //         //     newSizePoint
-            //         // );
-
-            //         // Emit geometry changed signal
-            //         // emit resizableParent->geometryChanged(resizableParent);
-            //     // }
-            // }
-
-
         }
     } else {
         scene()->addItem(newElement);
     }
+
+    // connect element events
+    connect(newElement, &view::HsmElement::dragElementBegin, this, &HsmGraphicsView::dragElementBegin);
+    connect(newElement, &view::HsmElement::dragElementEvent, this, &HsmGraphicsView::dragElementEvent);
+    connect(newElement, &view::HsmElement::dropElementEvent, this, &HsmGraphicsView::dropElementEvent);
 
     mElements[modelElementId] = QPointer(newElement);
 
@@ -172,10 +123,31 @@ void HsmGraphicsView::deleteHsmElement(const model::EntityID_t modelElementId) {
     }
 }
 
-void HsmGraphicsView::deleteSelectedItems() {
-    // TODO: need to re-think how to handle transition
-    //       What to do when one of the states is deleted? Delete transition too?
-    //       Do we want to allow dangling transitions?
+void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId) {
+    view::HsmElement* element = findHsmElement(elementId);
+
+    if (nullptr != element) {
+        QPointF oldPos = element->scenePos();
+        view::HsmElement* newParent = findHsmElement(newParentId);
+
+        if (nullptr != newParent) {
+            auto newPos = newParent->mapFromScene(oldPos);
+            element->setParentItem(newParent);
+            element->setPos(newPos);
+
+            auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(newParent);
+
+            if (resizableParent) {
+                resizableParent->resizeToFitChildItem(element);
+            }
+        } else {
+            element->setParentItem(nullptr);
+            element->setPos(oldPos);
+        }
+    }
+}
+
+QList<model::EntityID_t> HsmGraphicsView::getSelectedElements() const {
     auto items = scene()->selectedItems();
     QList<model::EntityID_t> selectedHsmElements;
 
@@ -187,7 +159,31 @@ void HsmGraphicsView::deleteSelectedItems() {
         }
     }
 
-    mProjectController->handleDeleteElements(selectedHsmElements);
+    return selectedHsmElements;
+}
+
+void HsmGraphicsView::deleteSelectedItems() {
+    // TODO: need to re-think how to handle transition
+    //       What to do when one of the states is deleted? Delete transition too?
+    //       Do we want to allow dangling transitions?
+    mProjectController->handleDeleteElements(getSelectedElements());
+}
+
+bool HsmGraphicsView::keyboardShiftPressed() const {
+    return mKeyboardModifiers & ShiftModifier;
+}
+
+bool HsmGraphicsView::keyboardSpacePressed() const {
+    return mKeyboardModifiers & SpaceModifier;
+}
+
+bool HsmGraphicsView::keyboardCtrlPressed() const {
+    qDebug() << "keyboardCtrlPressed: " << (bool)(mKeyboardModifiers & ControlModifier);
+    return mKeyboardModifiers & ControlModifier;
+}
+
+bool HsmGraphicsView::keyboardAltPressed() const {
+    return mKeyboardModifiers & AltModifier;
 }
 
 void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
@@ -195,20 +191,11 @@ void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
     scene()->clearSelection();
 }
 
-void HsmGraphicsView::dragEnterEvent(QDragEnterEvent* event) {
-    if (event->mimeData()->hasFormat("hsm/element")) {
-        qDebug() << "dragEnterEvent:" << event->source() << "," << event->mimeData()->formats();
-        qDebug() << event->mimeData()->data("hsm/element");
-        event->setDropAction(Qt::CopyAction);
-        event->accept();
-    }
-}
+void HsmGraphicsView::handleElementDragEvent(view::HsmElement* element, const QPointF& scenePos) {
+    QPointer<view::HsmElement> targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, true, element);
 
-void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
-    QPointF pos = mapToScene(event->position().toPoint());
-    QPointer<view::HsmElement> targetElement = view::ViewUtils::topHsmElementAt(scene(), pos, false, true);
-
-    qDebug() << Q_FUNC_INFO << pos << targetElement << mDragTargetElement;
+    qDebug() << "handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : -1)
+             << "target=" << (targetElement ? targetElement->modelId() : -1);
 
     if (targetElement != mDragTargetElement) {
         if (nullptr != mDragTargetElement) {
@@ -221,6 +208,85 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
             mDragTargetElement->hightlight(true);
         }
     }
+}
+
+void HsmGraphicsView::handleElementDropEvent(view::HsmElement* element, const QPointF& scenePos) {
+    qDebug() << "handleElementDropEvent";
+    if (nullptr != mDragTargetElement) {
+        mDragTargetElement->hightlight(false);
+    }
+
+    mDragTargetElement = nullptr;
+    mDraggedElement = nullptr;
+}
+
+// NOTE: this is called only for the element under cursor (even if multiple elements are dragged)
+void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF& scenePos) {
+    qDebug() << Q_FUNC_INFO << element << scenePos;
+    forEachSelectedElement([element](view::HsmElement* selectedElement) {
+        if (selectedElement != element) {
+            selectedElement->setGroupDragMode(true);
+        }
+    });
+
+    mDraggedElement = element;
+
+    qDebug() << "mDraggedElement->parentItem" << mDraggedElement->parentItem();
+    qDebug() << "keyboardCtrlPressed" << keyboardCtrlPressed();
+
+    if ((mDraggedElement->parentItem() == nullptr) || keyboardCtrlPressed()) {
+        qDebug() << "dragElementBegin: DRAG";
+        QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
+        mDraggedElement->setDragMode(true);
+    } else {
+        forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
+    }
+}
+
+void HsmGraphicsView::dragElementEvent(view::HsmElement* element, const QPointF& scenePos) {
+    qDebug() << Q_FUNC_INFO << element << scenePos;
+    handleElementDragEvent(element, scenePos);
+}
+
+void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF& scenePos) {
+    qDebug() << Q_FUNC_INFO << element << scenePos
+             << "target: " << (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId());
+
+    if (mDraggedElement && (mDraggedElement->parentItem() == nullptr) || keyboardCtrlPressed()) {
+        if (mProjectController) {
+            qDebug() << "mDragTargetElement" << mDragTargetElement;
+            forEachSelectedElement([&](view::HsmElement* element) {
+                qDebug() << element->modelId();
+                view::HsmElement* currentParent = itemToHsmElement(element->parentItem());
+
+                element->setGroupDragMode(false);
+                mProjectController->handleViewMoveEvent(
+                    element->modelId(),
+                    (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
+            });
+        }
+
+        qDebug() << "---- QGuiApplication::restoreOverrideCursor()";
+        // TODO: there seems to be a case when setOverrideCursor() was called twice or restoreOverrideCursor() is not called
+        QGuiApplication::restoreOverrideCursor();
+    } else {
+        forEachSelectedElement([&](view::HsmElement* element) { element->setGroupDragMode(false); });
+    }
+
+    handleElementDropEvent(nullptr, scenePos);
+}
+
+void HsmGraphicsView::dragEnterEvent(QDragEnterEvent* event) {
+    if (event->mimeData()->hasFormat("hsm/element")) {
+        qDebug() << "dragEnterEvent:" << event->source() << "," << event->mimeData()->formats();
+        qDebug() << event->mimeData()->data("hsm/element");
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+    }
+}
+
+void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
+    handleElementDragEvent(nullptr, mapToScene(event->position().toPoint()));
 
     event->setDropAction(Qt::CopyAction);
     event->accept();
@@ -229,17 +295,17 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
 void HsmGraphicsView::dropEvent(QDropEvent* event) {
     qDebug() << Q_FUNC_INFO << "mDragTargetElement=" << mDragTargetElement;
 
-    if (nullptr != mDragTargetElement) {
-        mDragTargetElement->hightlight(false);
-    }
-
     if (mProjectController) {
         mProjectController->handleViewDropEvent(
-            event,
+            event->mimeData()->data("hsm/element").data(),
+            event->position().toPoint(),
             (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
     }
 
-    mDragTargetElement = nullptr;
+    handleElementDropEvent(nullptr, event->position().toPoint());
+
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
 }
 
 void HsmGraphicsView::wheelEvent(QWheelEvent* event) {
@@ -260,7 +326,7 @@ void HsmGraphicsView::wheelEvent(QWheelEvent* event) {
 void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
     if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
         qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
-        mSpacePressed = true;
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
         viewport()->setCursor(Qt::OpenHandCursor);
         event->accept();
         // if (!event->isAutoRepeat() && event->key() == Qt::Key_Delete) {
@@ -269,6 +335,21 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
         //     event->accept();
         //     return;
         // }
+    } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
+        qDebug() << "PRESS: CTRL";
+        if (mDraggedElement && mDraggedElement->parentItem() != nullptr) {
+            qDebug() << "---- QGuiApplication::setOverrideCursor(Qt::DragMoveCursor)";
+            QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
+            forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
+
+            if (mDragTargetElement) {
+                mDragTargetElement->hightlight(true);
+            }
+        }
+
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
+        qDebug() << mKeyboardModifiers;
+        QGraphicsView::keyPressEvent(event);
     } else {
         QGraphicsView::keyPressEvent(event);
     }
@@ -277,9 +358,22 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
 void HsmGraphicsView::keyReleaseEvent(QKeyEvent* event) {
     if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
         qDebug() << "RELEASE: " << event->key() << " " << event->isAutoRepeat();
-        mSpacePressed = false;
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::SpaceModifier);
         setPanningMode(false);
         event->accept();
+    } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
+        qDebug() << "RELEASE: CTRL";
+        if (mDraggedElement && mDraggedElement->parentItem() != nullptr) {
+            qDebug() << "---- QGuiApplication::restoreOverrideCursor()";
+            QGuiApplication::restoreOverrideCursor();
+            forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
+
+            if (mDragTargetElement) {
+                mDragTargetElement->hightlight(false);
+            }
+        }
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::ControlModifier);
+        QGraphicsView::keyReleaseEvent(event);
     } else {
         QGraphicsView::keyReleaseEvent(event);
     }
@@ -289,7 +383,7 @@ void HsmGraphicsView::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::MiddleButton) {
         setPanningMode(true);
         event->accept();
-    } else if (event->button() == Qt::LeftButton && mSpacePressed) {
+    } else if (event->button() == Qt::LeftButton && keyboardSpacePressed()) {
         setPanningMode(true);
         mLastPanPoint = event->pos();
         event->accept();
@@ -316,7 +410,7 @@ void HsmGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
     if (mPanning && event->button() == Qt::MiddleButton) {
         setPanningMode(false);
         event->accept();
-    } else if (mPanning && event->button() == Qt::LeftButton && mSpacePressed) {
+    } else if (mPanning && event->button() == Qt::LeftButton && keyboardSpacePressed()) {
         setPanningMode(false);
         viewport()->setCursor(Qt::OpenHandCursor);
         event->accept();
@@ -394,4 +488,17 @@ view::HsmElement* HsmGraphicsView::itemToHsmElement(QGraphicsItem* item) const {
     }
 
     return element;
+}
+
+void HsmGraphicsView::forEachSelectedElement(std::function<void(view::HsmElement*)> callback) {
+    auto items = scene()->selectedItems();
+    QList<model::EntityID_t> selectedHsmElements;
+
+    for (QGraphicsItem* item : items) {
+        view::HsmElement* ptr = itemToHsmElement(item);
+
+        if (nullptr != ptr) {
+            callback(ptr);
+        }
+    }
 }

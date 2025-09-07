@@ -21,7 +21,11 @@ EXTENSIONS=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.hh" "*.m" "*.mm")
 # Find and apply clang-format to each file
 echo "Applying clang-format using config at $CLANG_FORMAT_CONFIG"
 for ext in "${EXTENSIONS[@]}"; do
-  find "$PROJECT_DIR" -type f -name "$ext" -print0 | while IFS= read -r -d '' file; do
+  find "$PROJECT_DIR/src" -type f -name "$ext" -print0 | while IFS= read -r -d '' file; do
+    echo "Formatting $file"
+    clang-format-14 -i --style=file:"$CLANG_FORMAT_CONFIG" "$file"
+  done
+  find "$PROJECT_DIR/include" -type f -name "$ext" -print0 | while IFS= read -r -d '' file; do
     echo "Formatting $file"
     clang-format-14 -i --style=file:"$CLANG_FORMAT_CONFIG" "$file"
   done

@@ -55,7 +55,11 @@
 **** REQ-103e: Substates <<todo>>
 ***** REQ-103e1: Adding/deleting substate elements <<done>>
 ***** REQ-103e2: Adding/deleting transitions inside a state <<done>>
-***** REQ-103e3: Moving states in and out <<todo>>
+***** REQ-103e3: Moving states in and out <<done>>
+****** REQ-103e3a: Move top level state into a substate <<done>>
+****** REQ-103e3b: Move substate to top level (hold Ctrl) <<done>>
+****** REQ-103e3c: Move substate to another parent (hold Ctrl) <<done>>
+****** REQ-103e3b: Move multiple elements <<done>>
 *** REQ-104: State Behavior Configuration
 **** REQ-104a: Entry actions (onentry)
 **** REQ-104b: Exit actions (onexit)

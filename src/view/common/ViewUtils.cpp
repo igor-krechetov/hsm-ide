@@ -8,13 +8,14 @@
 namespace view {
 
 HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
-                                       const QPointF& pos,
+                                       const QPointF& scenePos,
                                        const bool onlyConnectable,
-                                       const bool onlyAcceptsChildren) {
+                                       const bool onlyAcceptsChildren,
+                                       const HsmElement* ignoreElement) {
     HsmElement* element = nullptr;
 
     if (scene != nullptr) {
-        QList<QGraphicsItem*> targetItems = scene->items(pos);
+        QList<QGraphicsItem*> targetItems = scene->items(scenePos);
 
         // TODO: account for subitems
         for (auto targetItem : targetItems) {
@@ -27,19 +28,16 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                     element = dynamic_cast<HsmElement*>(targetItem);
 
                     if (nullptr != element) {
-                        if (onlyConnectable) {
-                            if (element->isConnectable() == false) {
-                                qDebug() << "Target is not connectable: " << element->modelId()
-                                         << " | viewElementType=" << elementType << " | " << element;
-                                element = nullptr;
-                            }
-                        }
-                        if (onlyAcceptsChildren) {
-                            if (element->acceptsChildren() == false) {
-                                qDebug() << "Target doesn't accept children: " << element->modelId()
-                                         << " | viewElementType=" << elementType << " | " << element;
-                                element = nullptr;
-                            }
+                        if (ignoreElement == element) {
+                            element = nullptr;
+                        } else if (onlyConnectable && element->isConnectable() == false) {
+                            qDebug() << "Target is not connectable: " << element->modelId()
+                                     << " | viewElementType=" << elementType << " | " << element;
+                            element = nullptr;
+                        } else if (onlyAcceptsChildren && element->acceptsChildren() == false) {
+                            qDebug() << "Target doesn't accept children: " << element->modelId()
+                                        << " | viewElementType=" << elementType << " | " << element;
+                            element = nullptr;
                         }
 
                         if (nullptr != element) {

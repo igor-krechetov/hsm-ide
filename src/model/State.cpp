@@ -27,14 +27,20 @@ void State::setName(const QString& name) {
     mName = name;
 }
 
+void State::addChild(const QSharedPointer<StateMachineEntity>& child) {
+    if (child) {
+        mChildren.push_back(child);
+    }
+}
+
 void State::addChildState(const QSharedPointer<State>& child) {
     qDebug() << Q_FUNC_INFO << "parent=" << id() << mName;
-    mChildren.push_back(qSharedPointerCast<StateMachineEntity>(child));
+    addChild(qSharedPointerCast<StateMachineEntity>(child));
 }
 
 void State::addTransition(const QSharedPointer<Transition>& child) {
     qDebug() << Q_FUNC_INFO << "parent=" << id() << mName;
-    mChildren.push_back(qSharedPointerCast<StateMachineEntity>(child));
+    addChild(qSharedPointerCast<StateMachineEntity>(child));
 }
 
 const QList<QSharedPointer<StateMachineEntity>>& State::children() const {
@@ -42,25 +48,24 @@ const QList<QSharedPointer<StateMachineEntity>>& State::children() const {
 }
 
 void State::deleteChild(const EntityID_t id) {
-    auto ptr = findChild(id);
+    deleteChild(findChild(id));
+}
 
-    if (ptr) {
-        mChildren.removeAll(ptr);
+void State::deleteChild(const QSharedPointer<StateMachineEntity> child) {
+    if (child) {
+        mChildren.removeAll(child);
     }
 }
 
-QSharedPointer<StateMachineEntity> State::findChild(const EntityID_t id, const StateMachineEntity::Type type) const {
-    qDebug() << Q_FUNC_INFO << id;
-    QSharedPointer<StateMachineEntity> res;
+QSharedPointer<State> State::findParentState(const EntityID_t childId) {
+    QSharedPointer<State> res;
 
-    if (INVALID_MODEL_ID != id) {
+    if (INVALID_MODEL_ID != childId) {
         for (const auto& element : mChildren) {
-            qDebug() << Q_FUNC_INFO << element;
-            if ((element->id() == id) && (type == StateMachineEntity::Type::Invalid || element->type() == type)) {
-                qDebug() << Q_FUNC_INFO << "FOUND: " << element;
-                res = element;
+            if (element->id() == childId) {
+                res = sharedFromThis().dynamicCast<State>();
             } else if (element->type() == StateMachineEntity::Type::State) {
-                res = element.dynamicCast<State>()->findChild(id);
+                res = element.dynamicCast<State>()->findParentState(childId);
             }
 
             if (res) {
@@ -69,7 +74,26 @@ QSharedPointer<StateMachineEntity> State::findChild(const EntityID_t id, const S
         }
     }
 
-    qDebug() << Q_FUNC_INFO << res;
+    return res;
+}
+
+QSharedPointer<StateMachineEntity> State::findChild(const EntityID_t id, const StateMachineEntity::Type type) const {
+    QSharedPointer<StateMachineEntity> res;
+
+    if (INVALID_MODEL_ID != id) {
+        for (const auto& element : mChildren) {
+            if ((element->id() == id) && (type == StateMachineEntity::Type::Invalid || element->type() == type)) {
+                res = element;
+            } else if (element->type() == StateMachineEntity::Type::State) {
+                res = element.dynamicCast<State>()->findChild(id, type);
+            }
+
+            if (res) {
+                break;
+            }
+        }
+    }
+
     return res;
 }
 

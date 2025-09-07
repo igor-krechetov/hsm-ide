@@ -1,8 +1,13 @@
 #include "HsmElement.hpp"
 
+#include <QApplication>
+#include <QCursor>
 #include <QGraphicsScene>
 #include <QGraphicsSceneDragDropEvent>
+#include <QGraphicsView>
 #include <QMimeData>
+
+#include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
 
@@ -12,7 +17,7 @@ HsmElement::HsmElement(const HsmElementType elementType)
     , mType(elementType)
     , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
-    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable);
     setZValue(3);
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
@@ -36,6 +41,29 @@ void HsmElement::hightlight(const bool enable) {
     qDebug() << Q_FUNC_INFO << enable;
     mHightlight = enable;
     update();
+}
+
+bool HsmElement::isHighligted() const {
+    return mHightlight;
+}
+
+void HsmElement::setGroupDragMode(const bool enableGroup) {
+    qDebug() << "setGroupDragMode: " << modelId();
+    mDragMode = (enableGroup ? DragMode::GROUP : DragMode::NONE);
+}
+
+void HsmElement::setDragMode(const bool dragging) {
+    if (DragMode::GROUP == mDragMode || DragMode::GROUP_NONE == mDragMode) {
+        mDragMode = (dragging ? DragMode::GROUP : DragMode::GROUP_NONE);
+    } else {
+        mDragMode = (dragging ? DragMode::SINGLE : DragMode::NONE);
+    }
+
+    qDebug() << "HsmElement::setDragMode: " << dragging << (int)mDragMode << isDragged() << (int)mDragState;
+}
+
+bool HsmElement::isDragged() const {
+    return ((DragState::DRAGGING == mDragState && DragMode::SINGLE == mDragMode) || DragMode::GROUP == mDragMode);
 }
 
 // void HsmElement::setModelId(const model::EntityID_t modelElementId) {
@@ -81,7 +109,8 @@ bool HsmElement::isResizable() const {
 
 //                     if (nullptr != element) {
 //                         if (element->isConnectable() == false) {
-//                             qDebug() << "Target is not connectable: " << element->modelId() << " | viewElementType=" << elementType
+//                             qDebug() << "Target is not connectable: " << element->modelId() << " | viewElementType=" <<
+//                             elementType
 //                                     << " | " << element;
 //                             element = nullptr;
 //                         } else {
@@ -135,11 +164,19 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
                             mSize.width() + penWidth,
                             mSize.height() + penWidth);
     } else {
-        qDebug() << Q_FUNC_INFO << "RECT UPDATED: " << mOuterRect << " --> " << newRect;
         mOuterRect = newRect;
-        qDebug() << Q_FUNC_INFO << "RECT UPDATED: " << mOuterRect << " --> " << newRect;
         mSize = mOuterRect.size();
     }
+}
+
+HsmGraphicsView* HsmElement::hsmView() const {
+    HsmGraphicsView* view = nullptr;
+
+    if (scene() != nullptr) {
+        view = dynamic_cast<HsmGraphicsView*>(scene()->views().first());
+    }
+
+    return view;
 }
 
 void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback) {
@@ -155,6 +192,42 @@ void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback) 
 
 QRectF HsmElement::boundingRect() const {
     return mOuterRect;
+}
+
+void HsmElement::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    qDebug() << Q_FUNC_INFO << this;
+    QGraphicsItem::mousePressEvent(event);
+
+    mDragState = DragState::PREPARE;
+}
+
+void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    qDebug() << Q_FUNC_INFO;
+    QGraphicsItem::mouseReleaseEvent(event);
+
+    if (DragState::DRAGGING == mDragState) {
+        emit dropElementEvent(this, event->scenePos());
+    }
+
+    mDragState = DragState::NONE;
+    mDragMode = DragMode::NONE;
+}
+
+QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
+    if ((DragMode::SINGLE == mDragMode || DragState::PREPARE == mDragState) &&
+        QGraphicsItem::ItemPositionHasChanged == change) {
+        QGraphicsView* view = scene()->views().first();
+        auto pos = view->mapToScene(view->mapFromGlobal(QCursor::pos()));
+
+        if (DragState::PREPARE == mDragState) {
+            mDragState = DragState::DRAGGING;
+            emit dragElementBegin(this, pos);
+        } else {
+            emit dragElementEvent(this, pos);
+        }
+    }
+
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void HsmElement::dragEnterEvent(QGraphicsSceneDragDropEvent* event) {

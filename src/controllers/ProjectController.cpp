@@ -1,7 +1,6 @@
 #include "ProjectController.hpp"
 
 #include <QDebug>
-#include <QDropEvent>
 #include <QLoggingCategory>
 #include <QMimeData>
 
@@ -32,15 +31,30 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // e1->addTransition(t, e2);
 }
 
-void ProjectController::handleViewDropEvent(QDropEvent* event, const model::EntityID_t parentElementId) {
-    qDebug() << Q_FUNC_INFO << event->position() << parentElementId;
+void ProjectController::handleViewDropEvent(const QString &elementTypeId, const QPoint &pos, const model::EntityID_t targetElementId) {
+    qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << pos;
 
-    // mMainWindow->view()->scene()->itemAt
+    createElement(elementTypeId, pos, targetElementId);
+}
 
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
+void ProjectController::handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId) {
+    qDebug() << Q_FUNC_INFO << draggedElementId << targetElementId;
+    bool updateUi = false;
 
-    createElement(event->mimeData()->data("hsm/element").data(), event->position().toPoint(), parentElementId);
+    // TODO: handle top level moves
+    if (model::INVALID_MODEL_ID != targetElementId) {
+        // change parent in model
+        updateUi = mModel->moveElement(draggedElementId, targetElementId);
+    } else {
+        updateUi = mModel->moveElement(draggedElementId, mModel->root()->id());
+    }
+
+    qDebug() << "UPDATE UI: " << updateUi;
+
+    if (true == updateUi) {
+        // change parent in view
+        mMainWindow->view()->moveHsmElement(draggedElementId, targetElementId);
+    }
 }
 
 void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& elementIDs) {

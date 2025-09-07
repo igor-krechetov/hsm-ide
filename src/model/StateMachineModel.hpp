@@ -39,6 +39,7 @@ public:
 
     // QSharedPointer<State> findState(const EntityID_t id) const;
     // QSharedPointer<Transition> findTransition(const EntityID_t id) const;
+    bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
 
 private:

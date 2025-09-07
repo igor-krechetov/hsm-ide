@@ -15,7 +15,17 @@ namespace view {
 class HsmElement;
 class HsmTransition;
 };  // namespace view
+
 class HsmGraphicsView : public QGraphicsView {
+public:
+    enum KeyboardModifier {
+        NoModifier           = 0x00000000,
+        ShiftModifier        = 0x02000000,
+        ControlModifier      = 0x04000000,
+        AltModifier          = 0x08000000,
+        SpaceModifier        = 0x10000000,
+    };
+
 public:
     HsmGraphicsView(QWidget* parent);
     virtual ~HsmGraphicsView() = default;
@@ -30,12 +40,19 @@ public:
                                              const model::EntityID_t fromElementId,
                                              const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
+    void moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId);
 
     void reconnectHsmTransition(const model::EntityID_t transitionId,
                                 const model::EntityID_t fromElementId,
                                 const model::EntityID_t toElementId);
 
+    QList<model::EntityID_t> getSelectedElements() const;
     void deleteSelectedItems();
+
+    bool keyboardShiftPressed() const;
+    bool keyboardSpacePressed() const;
+    bool keyboardCtrlPressed() const;
+    bool keyboardAltPressed() const;
 
 protected:
     void focusOutEvent(QFocusEvent* event) override;
@@ -53,12 +70,23 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
 
+// from HsmElement
+public slots:
+    void dragElementBegin(view::HsmElement* element, const QPointF& scenePos);
+    void dragElementEvent(view::HsmElement* element, const QPointF& scenePos);
+    void dropElementEvent(view::HsmElement* element, const QPointF& scenePos);
+
 private:
+    void handleElementDragEvent(view::HsmElement* element, const QPointF& scenePos);
+    void handleElementDropEvent(view::HsmElement* element, const QPointF& scenePos);
+
     // view::HsmElement* acceptsChildrenElementAt(const QPointF& pos) const;
     void setPanningMode(const bool enable);
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
+
+    void forEachSelectedElement(std::function<void(view::HsmElement*)> callback);
 
 private:
     // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
@@ -66,8 +94,9 @@ private:
     QPointer<ProjectController> mProjectController;
     QPoint mLastPanPoint;
     bool mPanning = false;
-    bool mSpacePressed = false;
+    KeyboardModifier mKeyboardModifiers = KeyboardModifier::NoModifier;
 
+    QPointer<view::HsmElement> mDraggedElement;
     QPointer<view::HsmElement> mDragTargetElement;
 };
 

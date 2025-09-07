@@ -212,7 +212,6 @@ void HsmConnectableElement::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
 
 QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemPositionHasChanged == change) {
-        qDebug() << Q_FUNC_INFO << this;
         removeConnectionArrows();
         // TODO: Hide grips
 

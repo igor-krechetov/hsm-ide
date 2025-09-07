@@ -11,9 +11,10 @@ class HsmElement;
 class ViewUtils {
 public:
     static HsmElement* topHsmElementAt(QGraphicsScene* scene,
-                                       const QPointF& pos,
+                                       const QPointF& scenePos,
                                        const bool onlyConnectable,
-                                       const bool onlyAcceptsChildren);
+                                       const bool onlyAcceptsChildren,
+                                       const HsmElement* ignoreElement = nullptr);
 };
 
 };  // namespace view
