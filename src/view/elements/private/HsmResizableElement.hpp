@@ -6,13 +6,13 @@
 #include <map>
 
 #include "ElementBoundaryGripItem.hpp"
-#include "HsmElement.hpp"
+#include "HsmConnectableElement.hpp"
 
 class QPainter;
 
 namespace view {
 
-class HsmResizableElement : public HsmElement {
+class HsmResizableElement : public HsmConnectableElement {
     Q_OBJECT
 
 public:
@@ -25,35 +25,33 @@ public:
 
     void updateBoundingRect(const QRectF& newRect = QRectF()) override;
 
+    // Resizes current element and updates the bounding rect. New position can be genative.
+    // Clients must call normalizeElementRect() to tormalize the coordinates
     virtual void resizeElement(const QRectF& newRect);
     void resizeToFitChildItem(HsmElement* child);
-    void resizeParentToFitChildItem();
+    // Normalizes bounding rect to start at 0,0 position
+    void normalizeElementRect();
 
     void createBoundaryGrips();
     void updateGripsPosition(const QList<GripDirection>& directionsList);
     void setGripVisibility(bool visible);
-    // int indexOf(const QPointF& p);
     QPointF gripPoint(GripDirection gripDirection);
 
-    // QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 public slots:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
     void onGripLostFocus(ElementBoundaryGripItem* grip);
 
-signals:
-    void geometryChanged(HsmResizableElement* element);
-
 protected:
-    void notifyGeometryChanged();
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
 
 private:
     ElementBoundaryGripItem* createGrip(GripDirection direction);
 
-    // private:
-public:
+private:
+    static constexpr int cChildPadding = 5;
+    // public:
     // TODO: replace with QMap
     std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
     QPen mPenSelectedBorder = QColor("lightblue");

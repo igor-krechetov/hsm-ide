@@ -13,7 +13,7 @@ namespace view {
 
 ElementGripItem::ElementGripItem(HsmElement* annotationElement)
     : QGraphicsObject(annotationElement)
-    , mGripRect(-4, -4, 8, 8)
+    , mGripRect(-4, -4, cGripSize, cGripSize)
     , mGripColor("green")
     , mAnnotationElement(annotationElement) {
     qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;

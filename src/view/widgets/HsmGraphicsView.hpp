@@ -13,6 +13,7 @@ class ProjectController;
 
 namespace view {
 class HsmElement;
+class HsmResizableElement;
 class HsmTransition;
 };  // namespace view
 
@@ -85,6 +86,7 @@ private:
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
+    view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
 
     void forEachSelectedElement(std::function<void(view::HsmElement*)> callback);
 

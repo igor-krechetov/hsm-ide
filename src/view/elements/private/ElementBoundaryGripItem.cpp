@@ -36,27 +36,52 @@ GripDirectionType ElementBoundaryGripItem::directionType() const {
 }
 
 QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-    const QPointF newPos = value.toPointF();
+    const QPointF valuePos = value.toPointF();
     QVariant res;
-    QPointF p;
+    QPointF newPos;
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        p = QPointF(pos());
+        newPos = QPointF(pos());
+
+        qDebug() << "ElementBoundaryGripItem: MOVE:" << pos() << " -> " << valuePos;
 
         if (GripDirectionType::Horizontal == mGripDirectionType) {
-            p.setX(newPos.x());
+            newPos.setX(valuePos.x());
         } else if (GripDirectionType::Vertical == mGripDirectionType) {
-            p.setY(newPos.y());
+            newPos.setY(valuePos.y());
         } else {
-            p.setX(newPos.x());
-            p.setY(newPos.y());
+            newPos.setX(valuePos.x());
+            newPos.setY(valuePos.y());
         }
 
-        if (false == annotationElement()->onGripMoved(this, p)) {
-            p = pos();
+        if (false == annotationElement()->onGripMoved(this, newPos - pos())) {
+            newPos = pos();
+        } else {
+            switch (direction()) {
+                case GripDirection::SouthWest:
+                case GripDirection::West:
+                    newPos.setX(0);
+                    break;
+                case GripDirection::NorthWest:
+                    newPos.setX(0);
+                    newPos.setY(0);
+                    break;
+                case GripDirection::North:
+                case GripDirection::NorthEast:
+                    newPos.setY(0);
+                    break;
+
+                case GripDirection::East:
+                case GripDirection::SouthEast:
+                case GripDirection::South:
+                    break;
+
+                default:
+                    break;
+            }
         }
 
-        res = p;
+        res = newPos;
     } else {
         res = ElementGripItem::itemChange(change, value);
     }

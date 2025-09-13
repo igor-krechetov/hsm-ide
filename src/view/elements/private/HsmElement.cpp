@@ -7,6 +7,7 @@
 #include <QGraphicsView>
 #include <QMimeData>
 
+#include "HsmResizableElement.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
@@ -17,7 +18,8 @@ HsmElement::HsmElement(const HsmElementType elementType)
     , mType(elementType)
     , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
-    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable);
+    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
+             QGraphicsItem::ItemSendsGeometryChanges);
     setZValue(3);
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
@@ -159,10 +161,11 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
         qDebug() << Q_FUNC_INFO << "RECT is NULL";
         constexpr qreal penWidth = 1.0;
 
-        mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
-                            -mSize.height() / 2 - penWidth / 2,
-                            mSize.width() + penWidth,
-                            mSize.height() + penWidth);
+        // mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
+        //                     -mSize.height() / 2 - penWidth / 2,
+        //                     mSize.width() + penWidth,
+        //                     mSize.height() + penWidth);
+        mOuterRect = QRectF(0, 0, mSize.width() + penWidth * 2, mSize.height() + penWidth * 2);
     } else {
         mOuterRect = newRect;
         mSize = mOuterRect.size();
@@ -179,12 +182,15 @@ HsmGraphicsView* HsmElement::hsmView() const {
     return view;
 }
 
-void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback) {
+void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback, const int depth) {
     for (QGraphicsItem* child : childItems()) {
         QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
 
         if (userType.isValid()) {
-            qgraphicsitem_cast<HsmElement*>(child)->forEachChildElement(callback);
+            if (depth == DEPTH_INFINITE || depth > 1) {
+                qgraphicsitem_cast<HsmElement*>(child)->forEachChildElement(callback,
+                                                                            (depth != DEPTH_INFINITE ? depth - 1 : depth));
+            }
             callback(qgraphicsitem_cast<HsmElement*>(child));
         }
     }
@@ -214,17 +220,33 @@ void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
-    if ((DragMode::SINGLE == mDragMode || DragState::PREPARE == mDragState) &&
-        QGraphicsItem::ItemPositionHasChanged == change) {
-        QGraphicsView* view = scene()->views().first();
-        auto pos = view->mapToScene(view->mapFromGlobal(QCursor::pos()));
+    if (QGraphicsItem::ItemPositionHasChanged == change) {
+        if (DragMode::SINGLE == mDragMode || DragState::PREPARE == mDragState) {
+            QGraphicsView* view = scene()->views().first();
+            auto itemPos = view->mapToScene(view->mapFromGlobal(QCursor::pos()));
 
-        if (DragState::PREPARE == mDragState) {
-            mDragState = DragState::DRAGGING;
-            emit dragElementBegin(this, pos);
-        } else {
-            emit dragElementEvent(this, pos);
+            if (DragState::PREPARE == mDragState) {
+                mDragState = DragState::DRAGGING;
+                emit dragElementBegin(this, itemPos);
+            } else {
+                emit dragElementEvent(this, itemPos);
+            }
         }
+
+        qDebug() << "HsmElement::itemChange: isDragged" << isDragged();
+
+        if (isDragged() == false) {
+            // if item is moved inside of the parent element
+            resizeParentToFitChildItem();
+        }
+
+        notifyGeometryChanged();
+
+        forEachChildElement([&](HsmElement* child) {
+            if (child) {
+                child->notifyGeometryChanged();
+            }
+        });
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -238,6 +260,19 @@ void HsmElement::dragEnterEvent(QGraphicsSceneDragDropEvent* event) {
 void HsmElement::dropEvent(QGraphicsSceneDragDropEvent* event) {
     qDebug() << "ITEM: dropEvent: " << event->source() << ", <" << event->mimeData()->formats() << ">";
     QGraphicsObject::dropEvent(event);
+}
+
+void HsmElement::notifyGeometryChanged() {
+    emit geometryChanged(this);
+}
+
+void HsmElement::resizeParentToFitChildItem() {
+    auto parent = dynamic_cast<HsmResizableElement*>(parentItem());
+
+    // TODO: check if parent is also resizable
+    if (parent != nullptr) {
+        parent->resizeToFitChildItem(this);
+    }
 }
 
 };  // namespace view

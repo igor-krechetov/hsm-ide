@@ -163,8 +163,8 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
     disconnectElements();
     mFromElement = fromElement;
     mToElement = toElement;
-    connect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
-    connect(mToElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
+    connect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
+    connect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
     recalculateLine();
 }
 
@@ -172,14 +172,14 @@ void HsmTransition::disconnectElements() {
     qDebug() << Q_FUNC_INFO;
     if (mFromElement != nullptr) {
         try {
-            QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
+            QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
         } catch (...) {
             qDebug() << "from not connected";
         }
     }
     if (mToElement != nullptr) {
         try {
-            QObject::disconnect(mToElement, SIGNAL(geometryChanged(HsmResizableElement*)), this, SLOT(recalculateLine()));
+            QObject::disconnect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
         } catch (...) {
             qDebug() << "to not connected";
         }

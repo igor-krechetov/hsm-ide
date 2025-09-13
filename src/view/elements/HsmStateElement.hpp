@@ -3,14 +3,14 @@
 
 #include <QRectF>
 
-#include "private/HsmConnectableElement.hpp"
+#include "private/HsmResizableElement.hpp"
 
 class QPainter;
 class QWidget;
 
 namespace view {
 
-class HsmStateElement : public HsmConnectableElement {
+class HsmStateElement : public HsmResizableElement {
     Q_OBJECT
 
 public:

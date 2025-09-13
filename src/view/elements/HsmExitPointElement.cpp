@@ -13,8 +13,6 @@ void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
     painter->setBrush(QColor("#e28743"));
     mItemRect = QRectF(mOuterRect);
     painter->drawRoundedRect(mItemRect, 5, 5);
-
-    HsmConnectableElement::paint(painter, option, widget);
 }
 
 };  // namespace view

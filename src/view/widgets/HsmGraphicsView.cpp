@@ -253,11 +253,19 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
              << "target: " << (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId());
 
     if (mDraggedElement && (mDraggedElement->parentItem() == nullptr) || keyboardCtrlPressed()) {
+        // If we are dragging element into a new parent or to a top level
         if (mProjectController) {
             qDebug() << "mDragTargetElement" << mDragTargetElement;
             forEachSelectedElement([&](view::HsmElement* element) {
                 qDebug() << element->modelId();
-                view::HsmElement* currentParent = itemToHsmElement(element->parentItem());
+                view::HsmResizableElement* currentParent = itemToHsmResizableElement(element->parentItem());
+
+                if (nullptr != currentParent) {
+                    // NOTE: need to normalize parent bounding rect and position since it might have gone negative
+                    currentParent->normalizeElementRect();
+                }
+
+                // NOTE: no need to do it for the target because it will be done automatically in handleViewMoveEvent
 
                 element->setGroupDragMode(false);
                 mProjectController->handleViewMoveEvent(
@@ -270,7 +278,17 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
         // TODO: there seems to be a case when setOverrideCursor() was called twice or restoreOverrideCursor() is not called
         QGuiApplication::restoreOverrideCursor();
     } else {
-        forEachSelectedElement([&](view::HsmElement* element) { element->setGroupDragMode(false); });
+        // if we a moving element within current parent or top level
+        forEachSelectedElement([&](view::HsmElement* element) {
+            view::HsmResizableElement* currentParent = itemToHsmResizableElement(element->parentItem());
+
+            element->setGroupDragMode(false);
+
+            if (nullptr != currentParent) {
+                // NOTE: need to normalize parent bounding rect and position since it might have gone negative
+                currentParent->normalizeElementRect();
+            }
+        });
     }
 
     handleElementDropEvent(nullptr, scenePos);
@@ -488,6 +506,17 @@ view::HsmElement* HsmGraphicsView::itemToHsmElement(QGraphicsItem* item) const {
     }
 
     return element;
+}
+
+view::HsmResizableElement* HsmGraphicsView::itemToHsmResizableElement(QGraphicsItem* item) const {
+    view::HsmResizableElement* resizableElement = nullptr;
+    view::HsmElement* element = itemToHsmElement(item);
+
+    if (nullptr != element && element->isResizable()) {
+        resizableElement = dynamic_cast<view::HsmResizableElement*>(element);
+    }
+
+    return resizableElement;
 }
 
 void HsmGraphicsView::forEachSelectedElement(std::function<void(view::HsmElement*)> callback) {

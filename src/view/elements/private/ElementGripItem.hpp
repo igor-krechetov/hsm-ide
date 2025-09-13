@@ -11,6 +11,9 @@ class ElementGripItem : public QGraphicsObject {
     Q_OBJECT
 
 public:
+    constexpr static int cGripSize = 8;
+
+public:
     explicit ElementGripItem(HsmElement* annotationElement);
     // virtual ~ElementGripItem() = default;
     virtual ~ElementGripItem();

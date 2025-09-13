@@ -32,6 +32,7 @@ constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
 class HsmElement : public QGraphicsObject {
     Q_OBJECT
 public:
+    constexpr static int DEPTH_INFINITE = -1;
     enum class DragMode { NONE, SINGLE, GROUP, GROUP_NONE };
 
     enum class DragState { NONE, PREPARE, DRAGGING };
@@ -72,11 +73,17 @@ signals:
     void dragElementBegin(HsmElement* element, const QPointF& scenePos);
     void dragElementEvent(HsmElement* element, const QPointF& scenePos);
     void dropElementEvent(HsmElement* element, const QPointF& scenePos);
+    // sent when element's size of position is changed
+    void geometryChanged(HsmElement* element);
 
 protected:
     HsmGraphicsView* hsmView() const;
-    void forEachChildElement(std::function<void(HsmElement*)> callback);
+    void forEachChildElement(std::function<void(HsmElement*)> callback, const int depth = DEPTH_INFINITE);
+
     virtual void updateBoundingRect(const QRectF& newRect = QRectF());
+    void notifyGeometryChanged();
+
+    virtual void resizeParentToFitChildItem();
 
     // QGraphicsItem interface
 protected:

@@ -6,7 +6,7 @@
 namespace view {
 
 HsmStateElement::HsmStateElement()
-    : HsmConnectableElement(HsmElementType::STATE) {}
+    : HsmResizableElement(HsmElementType::STATE) {}
 
 bool HsmStateElement::acceptsChildren() const {
     return true;
@@ -28,7 +28,7 @@ void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         painter->drawRoundedRect(mItemRect.adjusted(2, 2, -2, -2), 5, 5);
     }
 
-    HsmConnectableElement::paint(painter, option, widget);
+    HsmResizableElement::paint(painter, option, widget);
 }
 
 };  // namespace view

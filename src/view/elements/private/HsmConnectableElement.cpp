@@ -13,7 +13,7 @@ namespace view {
 // mElement(parent) {}
 
 HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
-    : HsmResizableElement(elementType) {
+    : HsmElement(elementType) {
     qDebug() << "CREATE: HsmConnectableElement: " << this;
 }
 
@@ -29,7 +29,7 @@ HsmConnectableElement::~HsmConnectableElement() {
 }
 
 void HsmConnectableElement::init(const model::EntityID_t modelElementId) {
-    HsmResizableElement::init(modelElementId);
+    HsmElement::init(modelElementId);
     updateHoverRect();
     setAcceptHoverEvents(true);
 }
@@ -37,25 +37,6 @@ void HsmConnectableElement::init(const model::EntityID_t modelElementId) {
 bool HsmConnectableElement::isConnectable() const {
     return true;
 }
-
-// void HsmConnectableElement::addTransition(std::shared_ptr<HsmTransition>& transition, HsmConnectableElement* target) {
-//     if (scene()->items().contains(transition.get()) == false) {
-//         scene()->addItem(transition.get());
-//     }
-
-//     transition->connectElements(this, target);
-//     mTransitions.append(transition);
-// }
-
-void HsmConnectableElement::resizeElement(const QRectF& newRect) {
-    HsmResizableElement::resizeElement(newRect);
-    updateHoverRect();
-    updateConnectionArrowsPos();
-}
-
-// QRectF HsmConnectableElement::boundingRect() const {
-//     return mHoverRect;
-// }
 
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
@@ -141,8 +122,10 @@ void HsmConnectableElement::removeConnectionArrows() {
 }
 
 void HsmConnectableElement::updateConnectionArrowsPos() {
-    for (const auto& direction : mArrows.keys()) {
-        mArrows[direction]->setPos(getArrowPos(direction));
+    if (hasVisibleArrows()) {
+        for (const auto& direction : mArrows.keys()) {
+            mArrows[direction]->setPos(getArrowPos(direction));
+        }
     }
 }
 
@@ -150,8 +133,15 @@ bool HsmConnectableElement::hasVisibleArrows() const {
     return (mArrows.isEmpty() == false && mArrows.first()->isVisible() == true);
 }
 
+void HsmConnectableElement::updateBoundingRect(const QRectF& newRect) {
+    HsmElement::updateBoundingRect(newRect);
+
+    updateHoverRect();
+    updateConnectionArrowsPos();
+}
+
 bool HsmConnectableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
-    const bool canResize = HsmResizableElement::onGripMoved(selectedGrip, pos);
+    const bool canResize = HsmElement::onGripMoved(selectedGrip, pos);
 
     if (true == canResize) {
         updateHoverRect();
@@ -201,11 +191,11 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
         }
     }
 
-    HsmResizableElement::hoverMoveEvent(event);
+    HsmElement::hoverMoveEvent(event);
 }
 
 void HsmConnectableElement::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    HsmResizableElement::hoverLeaveEvent(event);
+    HsmElement::hoverLeaveEvent(event);
     // removeConnectionArrows();
 }
 
@@ -224,7 +214,7 @@ QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVar
         });
     }
 
-    return HsmResizableElement::itemChange(change, value);
+    return HsmElement::itemChange(change, value);
 }
 
 bool HsmConnectableElement::eventFilter(QObject* obj, QEvent* event) {

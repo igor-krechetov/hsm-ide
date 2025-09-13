@@ -9,7 +9,7 @@
 namespace view {
 
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
-    : HsmElement(elementType) {
+    : HsmConnectableElement(elementType) {
     qDebug() << "CREATE: HsmResizableElement: " << this;
 }
 
@@ -18,10 +18,9 @@ HsmResizableElement::~HsmResizableElement() {
 }
 
 void HsmResizableElement::init(const model::EntityID_t modelElementId) {
-    HsmElement::init(modelElementId);
+    HsmConnectableElement::init(modelElementId);
     qDebug() << Q_FUNC_INFO << this << modelId();
 
-    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     createBoundaryGrips();
     setGripVisibility(false);
     mPenSelectedBorder.setStyle(Qt::DotLine);
@@ -32,7 +31,7 @@ bool HsmResizableElement::isResizable() const {
 }
 
 void HsmResizableElement::updateBoundingRect(const QRectF& newRect) {
-    HsmElement::updateBoundingRect(newRect);
+    HsmConnectableElement::updateBoundingRect(newRect);
     // Resize parent to fit new size of current item
     resizeParentToFitChildItem();
 }
@@ -46,14 +45,16 @@ void HsmResizableElement::resizeElement(const QRectF& newRect) {
                                         GripDirection::SouthWest,
                                         GripDirection::West,
                                         GripDirection::NorthWest};
+
     qDebug() << Q_FUNC_INFO << boundingRect() << mOuterRect << " --> " << newRect;
     updateBoundingRect(newRect);
     qDebug() << Q_FUNC_INFO << boundingRect() << mOuterRect << " --> " << newRect;
     updateGripsPosition(updateGrips);
-    // update();
-    // scene()->update();
-    // qDebug() << Q_FUNC_INFO << boundingRect() << " --> " << newRect;
     notifyGeometryChanged();
+
+    // Need to update parts of connectable element
+    HsmConnectableElement::updateHoverRect();
+    HsmConnectableElement::updateConnectionArrowsPos();
 }
 
 void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
@@ -79,19 +80,17 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
         // parentRect = resizableParent->childrenBoundingRect();
 
         if (parentRect != parentNewRect) {
-            qDebug() << Q_FUNC_INFO << elementRect() << " --> " << parentRect;
-
             if (parentRect.left() != parentNewRect.left()) {
-                parentNewRect.adjust(-5, 0, 0, 0);
+                parentNewRect.adjust(-cChildPadding, 0, 0, 0);
             }
             if (parentRect.top() != parentNewRect.top()) {
-                parentNewRect.adjust(0, -5, 0, 0);
+                parentNewRect.adjust(0, -cChildPadding, 0, 0);
             }
             if (parentRect.right() != parentNewRect.right()) {
-                parentNewRect.adjust(0, 0, 5, 0);
+                parentNewRect.adjust(0, 0, cChildPadding, 0);
             }
             if (parentRect.bottom() != parentNewRect.bottom()) {
-                parentNewRect.adjust(0, 0, 0, 5);
+                parentNewRect.adjust(0, 0, 0, cChildPadding);
             }
 
             // Expand parent if needed
@@ -115,13 +114,35 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
     }
 }
 
-void HsmResizableElement::resizeParentToFitChildItem() {
-    auto parent = dynamic_cast<HsmResizableElement*>(parentItem());
+void HsmResizableElement::normalizeElementRect() {
+    QList<GripDirection> updateGrips = {GripDirection::North,
+                                        GripDirection::NorthEast,
+                                        GripDirection::East,
+                                        GripDirection::SouthEast,
+                                        GripDirection::South,
+                                        GripDirection::SouthWest,
+                                        GripDirection::West,
+                                        GripDirection::NorthWest};
+    QPointF newPositionDelta = mOuterRect.topLeft();
+    QRectF newOuterRect = mOuterRect;
 
-    // TODO: check if parent is also resizable
-    if (parent != nullptr) {
-        parent->resizeToFitChildItem(this);
-    }
+    newOuterRect.moveTo(0, 0);
+
+    setPos(pos() + newPositionDelta);
+    updateBoundingRect(newOuterRect);
+
+    updateGripsPosition(updateGrips);
+
+    // Update position of child items
+    forEachChildElement(
+        [&](HsmElement* child) {
+            qDebug() << "child:" << child->pos() << " -> " << (child->pos() - newPositionDelta);
+            child->setPos(child->pos() - newPositionDelta);
+        },
+        1);
+
+    update();
+    notifyGeometryChanged();
 }
 
 void HsmResizableElement::createBoundaryGrips() {
@@ -180,7 +201,14 @@ void HsmResizableElement::onGripLostFocus(ElementBoundaryGripItem* grip) {
     setGripVisibility(isSelected() || mGripSelected);
 }
 
-bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
+bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& gripPos) {
+    if (gripPos.isNull()) {
+        qDebug() << "SKIP NULL DELTA";
+        return false;
+    }
+
+    // QPointF newPosition = mapFromParent(pos());
+    QPointF newPositionDelta;
     QRectF newOuterRect = mOuterRect;
     QList<GripDirection> updateGrips = {GripDirection::North,
                                         GripDirection::NorthEast,
@@ -196,63 +224,100 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
     updateGrips.removeOne(gripDirection);
 
     switch (gripDirection) {
+        case GripDirection::SouthWest:
+            newPositionDelta.setX(gripPos.x());
+            // newOuterRect.setBottomLeft(gripPos);
+            newOuterRect.adjust(0, 0, -gripPos.x(), gripPos.y());
+            // updateGrips.removeOne(GripDirection::NorthEast);
+            break;
+        case GripDirection::West:
+            newPositionDelta.setX(gripPos.x());
+            newOuterRect.setLeft(gripPos.x());
+            // updateGrips.removeOne(GripDirection::East);
+            // updateGrips.removeOne(GripDirection::SouthEast);
+            // updateGrips.removeOne(GripDirection::NorthEast);
+            break;
+        case GripDirection::NorthWest:
+            newPositionDelta = gripPos;
+            newOuterRect.setTopLeft(gripPos);
+            // updateGrips.removeOne(GripDirection::SouthEast);
+            break;
         case GripDirection::North:
-            newOuterRect.setTop(pos.y());
-            updateGrips.removeOne(GripDirection::South);
-            updateGrips.removeOne(GripDirection::SouthEast);
-            updateGrips.removeOne(GripDirection::SouthWest);
+            newPositionDelta.setY(gripPos.y());
+            newOuterRect.setTop(gripPos.y());
+            // updateGrips.removeOne(GripDirection::South);
+            // updateGrips.removeOne(GripDirection::SouthEast);
+            // updateGrips.removeOne(GripDirection::SouthWest);
             break;
         case GripDirection::NorthEast:
-            newOuterRect.setTopRight(pos);
-            updateGrips.removeOne(GripDirection::SouthWest);
+            newPositionDelta.setY(gripPos.y());
+            newOuterRect.adjust(0, 0, gripPos.x(), -gripPos.y());
+            // updateGrips.removeOne(GripDirection::SouthWest);
             break;
+
         case GripDirection::East:
-            newOuterRect.setRight(pos.x());
+            newOuterRect.adjust(0, 0, gripPos.x(), 0);
             updateGrips.removeOne(GripDirection::West);
             updateGrips.removeOne(GripDirection::NorthWest);
             updateGrips.removeOne(GripDirection::SouthWest);
             break;
         case GripDirection::SouthEast:
-            newOuterRect.setBottomRight(pos);
+            // newOuterRect.setBottomRight(gripPos);
+            newOuterRect.adjust(0, 0, gripPos.x(), gripPos.y());
             updateGrips.removeOne(GripDirection::NorthWest);
             break;
         case GripDirection::South:
-            newOuterRect.setBottom(pos.y());
+            // newOuterRect.setBottom(gripPos.y());
+            newOuterRect.adjust(0, 0, 0, gripPos.y());
             updateGrips.removeOne(GripDirection::North);
             updateGrips.removeOne(GripDirection::NorthWest);
             updateGrips.removeOne(GripDirection::NorthEast);
             break;
-        case GripDirection::SouthWest:
-            newOuterRect.setBottomLeft(pos);
-            updateGrips.removeOne(GripDirection::NorthEast);
-            break;
-        case GripDirection::West:
-            newOuterRect.setLeft(pos.x());
-            updateGrips.removeOne(GripDirection::East);
-            updateGrips.removeOne(GripDirection::SouthEast);
-            updateGrips.removeOne(GripDirection::NorthEast);
-            break;
-        case GripDirection::NorthWest:
-            newOuterRect.setTopLeft(pos);
-            updateGrips.removeOne(GripDirection::SouthEast);
-            break;
+
         default:
             // do nothing
             break;
     }
 
+    // qDebug() << "GRIP MOVED: " << (int)gripDirection << " POS: " << gripPos << " -> " << newPositionDelta;
+    // qDebug() << "NEW POS: " << pos() << " -> " << pos() + newPositionDelta << " : " << newOuterRect;
+
+    newOuterRect.moveTo(0, 0);
+
     bool canResize = true;
     QRectF childrenSize = childrenRect();
 
-    qDebug() << childrenSize << newOuterRect << elementRect();
+    // qDebug() << childrenSize << newOuterRect << elementRect();
+    if (childrenSize.isNull() == false) {
+        childrenSize.adjust(-newPositionDelta.x(), -newPositionDelta.y(), -newPositionDelta.x(), -newPositionDelta.y());
+        childrenSize.adjust(-cChildPadding, -cChildPadding, cChildPadding, cChildPadding);
+    }
 
-    if (childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
-        childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left()) {
+    // qDebug() << "CHILD RECT:" << childrenSize << "NEW RECT:" << newOuterRect << "DELTA:" << newPositionDelta;
+    // qDebug() << childrenSize.topLeft() << childrenSize.bottomRight();
+
+    // qDebug() << (newOuterRect.width() > childrenSize.width())
+    //          << (newOuterRect.height() > childrenSize.height())
+    //          << (childrenSize.bottom() < newOuterRect.bottom())
+    //          << (childrenSize.right() < newOuterRect.right())
+    //          << (childrenSize.top() > newOuterRect.top())
+    //          << (childrenSize.left() > newOuterRect.left());
+
+    if (childrenSize.isNull() ||
+        (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
+         childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
+         childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left())) {
         // TODO: implement min size concept
         if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
+            setPos(pos() + newPositionDelta);
             updateBoundingRect(newOuterRect);
+
             // mOuterRect = newOuterRect;
             updateGripsPosition(updateGrips);
+
+            // Update position of child items
+            forEachChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
+
             update();
             // self.scene().update()
             notifyGeometryChanged();
@@ -319,10 +384,6 @@ void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
     }
 }
 
-void HsmResizableElement::notifyGeometryChanged() {
-    emit geometryChanged(this);
-}
-
 QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
         mGripSelected = isSelected();
@@ -337,21 +398,9 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
         }
 
         setGripVisibility(isSelected() || mGripSelected);
-    } else if (change == QGraphicsItem::ItemPositionHasChanged) {
-        notifyGeometryChanged();
-
-        if (isDragged() == false) {
-            resizeParentToFitChildItem();
-
-            forEachChildElement([&](HsmElement* child) {
-                if (child && child->isResizable()) {
-                    qgraphicsitem_cast<HsmResizableElement*>(child)->notifyGeometryChanged();
-                }
-            });
-        }
     }
 
-    return HsmElement::itemChange(change, value);
+    return HsmConnectableElement::itemChange(change, value);
 }
 
 // TODO: remove function?
