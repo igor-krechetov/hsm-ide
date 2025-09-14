@@ -12,8 +12,8 @@ namespace view {
 // HsmConnectableElementEventFilter::HsmConnectableElementEventFilter(HsmConnectableElement* parent) : QObject(parent),
 // mElement(parent) {}
 
-HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType)
-    : HsmElement(elementType) {
+HsmConnectableElement::HsmConnectableElement(const HsmElementType elementType, const QSizeF& size)
+    : HsmElement(elementType, size) {
     qDebug() << "CREATE: HsmConnectableElement: " << this;
 }
 

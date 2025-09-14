@@ -21,14 +21,15 @@
 
 * REQ-000: SCXML State Machine Editor
 ** REQ-100: Core Editor Functionality
-*** REQ-101: Support all SCXML state types <<todo>>
-**** REQ-101a: Atomic states <<todo>>
+*** REQ-101: Support all SCXML state types <<in_progress>>
+**** REQ-101a: Atomic states <<in_progress>>
 **** REQ-101b: Parallel states
-**** REQ-101c: Compound states <<todo>>
-**** REQ-101d: History states (shallow/deep) <<todo>>
-**** REQ-101e: Entry points <<todo>>
-**** REQ-101f: Exit points <<todo>>
-**** REQ-101g: Final states <<todo>>
+**** REQ-101c: Compound states <<in_progress>>
+**** REQ-101d: History states (shallow/deep) <<in_progress>>
+**** REQ-101e: Entry points <<in_progress>>
+**** REQ-101f: Exit points <<in_progress>>
+**** REQ-101g: Final states <<in_progress>>
+**** REQ-101h: Initial states <<in_progress>>
 *** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>

@@ -1,24 +1,19 @@
 #ifndef HSMHISTORYELEMENT_HPP
 #define HSMHISTORYELEMENT_HPP
 
-#include <QRectF>
-
-#include "private/HsmConnectableElement.hpp"
+#include "private/styles/HsmRoundElement.hpp"
 
 class QPainter;
 class QWidget;
 
 namespace view {
 
-class HsmHistoryElement : public HsmConnectableElement {
+class HsmHistoryElement : public HsmRoundElement {
 public:
     HsmHistoryElement();
     virtual ~HsmHistoryElement() = default;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-
-private:
-    QRectF mItemRect;
 };
 
 };  // namespace view

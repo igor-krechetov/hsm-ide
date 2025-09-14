@@ -9,7 +9,7 @@ namespace model {
 
 class ExitPoint : public State {
 public:
-    explicit ExitPoint(const QString& id);
+    explicit ExitPoint(const QString& name);
     virtual ~ExitPoint() = default;
 
     // Getters

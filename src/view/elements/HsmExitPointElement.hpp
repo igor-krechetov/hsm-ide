@@ -1,22 +1,17 @@
 #ifndef HSMEXITPOINTELEMENT_HPP
 #define HSMEXITPOINTELEMENT_HPP
 
-#include <QRectF>
-
-#include "private/HsmConnectableElement.hpp"
+#include "private/styles/HsmRoundElement.hpp"
 
 namespace view {
 
-class HsmExitPointElement : public HsmConnectableElement {
+class HsmExitPointElement : public HsmRoundElement {
 public:
     HsmExitPointElement();
     virtual ~HsmExitPointElement() = default;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-
-private:
-    QRectF mItemRect;
 };
 
 };  // namespace view

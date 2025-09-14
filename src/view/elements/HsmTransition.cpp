@@ -13,7 +13,7 @@
 namespace view {
 
 HsmTransition::HsmTransition()
-    : HsmElement(HsmElementType::TRANSITION)
+    : HsmElement(HsmElementType::TRANSITION, QSizeF(1, 1))
     , mFromElement(nullptr)
     , mToElement(nullptr)
     , mDebugShowSelectionPolygon(false) {
@@ -441,8 +441,6 @@ void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
 }
 
 void HsmTransition::onGripMoveEnterEvent(ElementGripItem* gripItem) {
-    qDebug() << Q_FUNC_INFO;
-
     // NOTE: old element stays connected, but it's impossible for user to resize it
     if (gripItem == mSrcGrip) {
         qDebug() << "SRC grip moved";

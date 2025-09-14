@@ -8,8 +8,7 @@ namespace model {
 
 class RegularState : public State {
 public:
-    explicit RegularState(const QString& id);
-
+    explicit RegularState(const QString& name);
     virtual ~RegularState() = default;
 
     // Getters

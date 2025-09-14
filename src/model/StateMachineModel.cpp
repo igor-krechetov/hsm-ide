@@ -1,8 +1,11 @@
 #include "StateMachineModel.hpp"
 
+#include <QDebug>
+
 #include "RegularState.hpp"
 #include "State.hpp"
 #include "Transition.hpp"
+#include "ModelElementsFactory.hpp"
 #include "private/StateMachineEntity.hpp"
 
 namespace model {
@@ -10,7 +13,7 @@ namespace model {
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent)
     , mName(name)
-    , mModelRoot(createUniqueState(State::StateType::Regular).dynamicCast<RegularState>()) {
+    , mModelRoot(ModelElementsFactory::createUniqueState(State::StateType::Regular).dynamicCast<RegularState>()) {
     mModelRoot->setName(name);
 }
 
@@ -24,21 +27,11 @@ QSharedPointer<RegularState>& StateMachineModel::root() {
     return mModelRoot;
 }
 
-QSharedPointer<State> StateMachineModel::createUniqueState(const State::StateType type) {
-    // TODO: generate unique ID
-    return QSharedPointer<State>::create(QStringLiteral("new_element"), type);
-}
-
 QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const EntityID_t source, const EntityID_t target) {
     auto from = mModelRoot->findChild(source);
     auto to = mModelRoot->findChild(target);
     // TODO: check for errors
-    return createUniqueTransition(from.dynamicCast<State>(), to.dynamicCast<State>());
-}
-
-QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const QSharedPointer<State>& source,
-                                                                     const QSharedPointer<State>& target) {
-    return QSharedPointer<Transition>::create(source, target, QStringLiteral("new_event"));
+    return ModelElementsFactory::createUniqueTransition(from.dynamicCast<State>(), to.dynamicCast<State>());
 }
 
 bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t newParentId) {
@@ -49,79 +42,13 @@ bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t
         QSharedPointer<StateMachineEntity> element = currentParent->findChild(elementId);
         QSharedPointer<RegularState> newParent =
             (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findRegularState(newParentId));
-
         if (element && newParent) {
             newParent->addChild(element);
             currentParent->deleteChild(element);
             moved = true;
         }
     }
-
     return moved;
 }
-
-// void StateMachineModel::addChild(const QSharedPointer<StateMachineEntity>& child) {
-//     // mChildren.push_back(child);
-
-// }
-
-// void StateMachineModel::addChild(const QSharedPointer<Transition>& child) {
-//     // addChild(child.dynamicCast<StateMachineEntity>());
-//     mModelRoot.addTransition(child);
-// }
-
-// void StateMachineModel::addChild(const QSharedPointer<State>& child) {
-//     // addChild(child.dynamicCast<StateMachineEntity>());
-//     mModelRoot.addChildState(child);
-// }
-
-// void StateMachineModel::deleteChild(const EntityID_t id) {
-//     // auto ptr = findChild(id);
-
-//     // if (ptr) {
-//     //     mChildren.removeAll(ptr);
-//     // }
-// }
-
-// const QList<QSharedPointer<StateMachineEntity>>& StateMachineModel::children() const {
-//     return mModelRoot.children();
-// }
-
-// QSharedPointer<StateMachineEntity> StateMachineModel::findChild(const EntityID_t id) const {
-//     QSharedPointer<StateMachineEntity> res;
-
-//     // TODO: need to support substates
-
-//     for (const auto& element: mChildren) {
-//         if (element->id() == id) {
-//             res = element;
-//             break;
-//         }
-//     }
-
-//     return res;
-// }
-
-// QSharedPointer<State> StateMachineModel::findState(const EntityID_t id) const {
-//     QSharedPointer<State> res;
-//     QSharedPointer<StateMachineEntity> childPtr = findChild(id);
-
-//     if (childPtr && childPtr->type() == StateMachineEntity::Type::State) {
-//         res = childPtr.dynamicCast<State>();
-//     }
-
-//     return res;
-// }
-
-// QSharedPointer<Transition> StateMachineModel::findTransition(const EntityID_t id) const {
-//     QSharedPointer<Transition> res;
-//     QSharedPointer<StateMachineEntity> childPtr = findChild(id);
-
-//     if (childPtr && childPtr->type() == StateMachineEntity::Type::Transition) {
-//         res = childPtr.dynamicCast<Transition>();
-//     }
-
-//     return res;
-// }
 
 };  // namespace model

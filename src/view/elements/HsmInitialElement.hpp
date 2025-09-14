@@ -1,5 +1,5 @@
-#ifndef HSMFINALELEMENT_HPP
-#define HSMFINALELEMENT_HPP
+#ifndef HSMINITIALELEMENT_HPP
+#define HSMINITIALELEMENT_HPP
 
 #include "private/styles/HsmRoundElement.hpp"
 
@@ -8,10 +8,10 @@ class QWidget;
 
 namespace view {
 
-class HsmFinalElement : public HsmRoundElement {
+class HsmInitialElement : public HsmRoundElement {
 public:
-    HsmFinalElement();
-    virtual ~HsmFinalElement() = default;
+    HsmInitialElement();
+    virtual ~HsmInitialElement() = default;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
@@ -19,4 +19,4 @@ protected:
 
 };  // namespace view
 
-#endif  // HSMFINALELEMENT_HPP
+#endif  // HSMINITIALELEMENT_HPP

@@ -7,7 +7,7 @@ namespace model {
 
 class FinalState : public State {
 public:
-    explicit FinalState(const QString& id);
+    explicit FinalState(const QString& name);
     virtual ~FinalState() = default;
 
     // Getters

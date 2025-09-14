@@ -10,7 +10,7 @@
 #include "HsmExitPointElement.hpp"
 #include "HsmFinalElement.hpp"
 #include "HsmHistoryElement.hpp"
-#include "HsmStartElement.hpp"
+#include "HsmInitialElement.hpp"
 #include "HsmStateElement.hpp"
 #include "private/HsmElement.hpp"
 
@@ -18,7 +18,7 @@ namespace view {
 
 std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>>
     HsmElementsFactory::mItemsCatalog = {
-        {"start", {"Start", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
+        {"initial", {"initial", "/../../res/element_start.png", &HsmElementsFactory::_createElementStart}},
         {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::_createElementFinal}},
         {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::_createElementState}},
         {"entrypoint", {"Entry Point", "/../../res/element_entrypoint.png", &HsmElementsFactory::_createElementEntryPoint}},
@@ -63,7 +63,7 @@ HsmElement* HsmElementsFactory::_createElementState(const model::EntityID_t mode
 }
 
 HsmElement* HsmElementsFactory::_createElementStart(const model::EntityID_t modelElementId) {
-    HsmElement* elem = new HsmStartElement();
+    HsmElement* elem = new HsmInitialElement();
 
     elem->init(modelElementId);
     return elem;

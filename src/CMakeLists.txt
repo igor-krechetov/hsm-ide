@@ -1,6 +1,8 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
+add_definitions(-DDEBUG_RENDERING=1)
+
 set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
 set(PROJECT_SOURCES
@@ -10,60 +12,47 @@ set(PROJECT_SOURCES
         controllers/MainEditorController.cpp
         controllers/ProjectController.cpp
         # controllers/RecentFilesManager.cpp
-        
+
         model/EntryPoint.cpp
         model/ExitPoint.cpp
         model/FinalState.cpp
         model/HistoryState.cpp
+        model/InitialState.cpp
         model/RegularState.cpp
         model/State.cpp
         model/StateMachineModel.cpp
         model/Transition.cpp
+        model/ModelElementsFactory.cpp
         model/private/StateMachineEntity.cpp
 
+
         view/MainWindow.cpp
-        view/MainWindow.hpp
 
         view/common/ViewUtils.cpp
 
         view/widgets/HsmElementsList.cpp
-        view/widgets/HsmElementsList.hpp
         view/widgets/HsmGraphicsView.cpp
-        view/widgets/HsmGraphicsView.hpp
         view/widgets/QClickableSlider.cpp
-        view/widgets/QClickableSlider.hpp
         view/widgets/QImageViewArea.cpp
-        view/widgets/QImageViewArea.hpp
 
         view/elements/HsmElementsFactory.cpp
-        view/elements/HsmElementsFactory.hpp
         view/elements/HsmEntryPointElement.cpp
-        view/elements/HsmEntryPointElement.hpp
         view/elements/HsmExitPointElement.cpp
-        view/elements/HsmExitPointElement.hpp
         view/elements/HsmFinalElement.cpp
-        view/elements/HsmFinalElement.hpp
         view/elements/HsmHistoryElement.cpp
-        view/elements/HsmHistoryElement.hpp
-        view/elements/HsmStartElement.cpp
-        view/elements/HsmStartElement.hpp
+        view/elements/HsmInitialElement.cpp
         view/elements/HsmStateElement.cpp
-        view/elements/HsmStateElement.hpp
         view/elements/HsmTransition.cpp
-        view/elements/HsmTransition.hpp
 
         view/elements/private/ElementBoundaryGripItem.cpp
-        view/elements/private/ElementBoundaryGripItem.hpp
         view/elements/private/ElementConnectionArrow.cpp
-        view/elements/private/ElementConnectionArrow.hpp
         view/elements/private/ElementGripItem.cpp
-        view/elements/private/ElementGripItem.hpp
         view/elements/private/HsmConnectableElement.cpp
-        view/elements/private/HsmConnectableElement.hpp
         view/elements/private/HsmElement.cpp
-        view/elements/private/HsmElement.hpp
         view/elements/private/HsmResizableElement.cpp
-        view/elements/private/HsmResizableElement.hpp
+
+        view/elements/private/styles/HsmRectangularElement.cpp
+        view/elements/private/styles/HsmRoundElement.cpp
 
         view/ui/main.ui
         view/ui/settings.ui

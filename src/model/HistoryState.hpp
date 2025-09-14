@@ -9,7 +9,8 @@ class HistoryState : public State {
 public:
     enum class HistoryType { Shallow, Deep };
 
-    explicit HistoryState(const QString& id, const HistoryType historyType);
+    explicit HistoryState(const QString& name, const HistoryType historyType);
+    virtual ~HistoryState() = default;
 
     // Getters
     HistoryType historyType() const {

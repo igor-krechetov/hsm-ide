@@ -13,16 +13,20 @@ class Transition;
 
 class State : public StateMachineEntity {
 public:
-    enum class StateType { Invalid, Regular, EntryPoint, ExitPoint, Final, History };
+    enum class StateType { Invalid, Initial, Regular, EntryPoint, ExitPoint, Final, History };
     // Root - single instance
-    // Initial - only outgoing state (only one instance per model)
+    // Initial - outgoing state (only one instance per model)
+    //         - can only be added to top level
+    //         - only one can exist in the model
+    //         - only one outgoing state
+    //         - is optional (for sub state machines)
     //      -> EntryPoint - event, condition, state
     // Regular - name, 3 callbacks
     //      -> ExitPoint - name, 3 callbacks, auto event
     // Final - onState callback
     // History - type
 
-    explicit State(const QString& mName, const StateType type = StateType::Regular);
+    explicit State(const QString& name, const StateType type = StateType::Regular);
     virtual ~State() = default;
 
     StateType stateType() const;

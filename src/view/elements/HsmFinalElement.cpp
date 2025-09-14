@@ -6,13 +6,22 @@
 namespace view {
 
 HsmFinalElement::HsmFinalElement()
-    : HsmConnectableElement(HsmElementType::FINAL) {}
+    : HsmRoundElement(HsmElementType::FINAL) {}
 
 void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    painter->setPen(Qt::SolidLine);
-    painter->setBrush(QColor("#B259b3"));
-    mItemRect = QRectF(mOuterRect);
-    painter->drawRoundedRect(mItemRect, 5, 5);
+    HsmRoundElement::paint(painter, option, widget);
+
+    const qreal r = radius();
+    const QPointF c = center();
+    const qreal outlineRadius = r * 0.7;
+
+    // Draw the filled circle
+    painter->setBrush(mBackgroundBrush);
+    painter->drawEllipse(c, r, r);
+
+    // Draw the inner circle
+    painter->setBrush(mMainBrush);
+    painter->drawEllipse(c, outlineRadius, outlineRadius);
 }
 
 };  // namespace view

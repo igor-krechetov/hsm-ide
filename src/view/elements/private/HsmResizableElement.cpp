@@ -8,8 +8,8 @@
 // #include <QGraphicsView>
 namespace view {
 
-HsmResizableElement::HsmResizableElement(const HsmElementType elementType)
-    : HsmConnectableElement(elementType) {
+HsmResizableElement::HsmResizableElement(const HsmElementType elementType, const QSizeF& size)
+    : HsmConnectableElement(elementType, size) {
     qDebug() << "CREATE: HsmResizableElement: " << this;
 }
 
@@ -23,7 +23,6 @@ void HsmResizableElement::init(const model::EntityID_t modelElementId) {
 
     createBoundaryGrips();
     setGripVisibility(false);
-    mPenSelectedBorder.setStyle(Qt::DotLine);
 }
 
 bool HsmResizableElement::isResizable() const {
@@ -178,9 +177,9 @@ void HsmResizableElement::setGripVisibility(bool visible) {
     for (const auto& grip : mGrips) {
         grip.second->setVisible(visible);
 
-        if (grip.second->scene() == nullptr) {
-            qDebug() << "ERROR: grip is not attached to sceen";
-        }
+        // if (grip.second->scene() == nullptr) {
+        //     qDebug() << "ERROR: grip is not attached to sceen";
+        // }
     }
 
     update();
@@ -371,18 +370,18 @@ QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
 //     return mOuterRect;
 // }
 
-void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    Q_UNUSED(option)
-    Q_UNUSED(widget)
+// void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+//     Q_UNUSED(option)
+//     Q_UNUSED(widget)
 
-    if (true == mResizeMode) {
-        painter->setPen(mPenSelectedBorder);
-        painter->drawRoundedRect(mOuterRect, 5, 5);
+//     if (true == mResizeMode) {
+//         painter->setPen(mPenSelectedBorder);
+//         painter->drawRoundedRect(mOuterRect, 5, 5);
 
-        painter->drawEllipse(QPointF(0, 0), 5, 5);
-        painter->drawPoint(0, 0);
-    }
-}
+//         painter->drawEllipse(QPointF(0, 0), 5, 5);
+//         painter->drawPoint(0, 0);
+//     }
+// }
 
 QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
@@ -405,18 +404,15 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
 
 // TODO: remove function?
 ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction) {
-    qDebug() << Q_FUNC_INFO << this << modelId();
     // TODO: use smart pointers
     ElementBoundaryGripItem* grip = new ElementBoundaryGripItem(this, direction);
 
     // grip->setRect(-2.5, -2.5, 5, 5);
     // grip->setData(0, QVariant(static_cast<int>(direction)));
-    qDebug() << "-- before init";
     grip->init();
     grip->setEnabled(false);
     grip->setPos(gripPoint(direction));
     grip->setEnabled(true);
-    qDebug() << "-- after init";
 
     return grip;
 }

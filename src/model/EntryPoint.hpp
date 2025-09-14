@@ -9,10 +9,10 @@ class Transition;
 
 class EntryPoint : public State {
 public:
-    explicit EntryPoint(const QString& id);
+    explicit EntryPoint(const QString& name);
     virtual ~EntryPoint() = default;
 
-    void addTransition(const QSharedPointer<Transition>& child);
+    void addTransition(const QSharedPointer<Transition>& transition);
     const QList<QSharedPointer<Transition>>& transitions() const;
 
 private:

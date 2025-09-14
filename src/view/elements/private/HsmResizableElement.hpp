@@ -16,14 +16,12 @@ class HsmResizableElement : public HsmConnectableElement {
     Q_OBJECT
 
 public:
-    explicit HsmResizableElement(const HsmElementType elementType);
+    explicit HsmResizableElement(const HsmElementType elementType, const QSizeF& size);
     // virtual ~HsmResizableElement() = default;
     virtual ~HsmResizableElement();
 
     void init(const model::EntityID_t modelElementId) override;
     virtual bool isResizable() const;
-
-    void updateBoundingRect(const QRectF& newRect = QRectF()) override;
 
     // Resizes current element and updates the bounding rect. New position can be genative.
     // Clients must call normalizeElementRect() to tormalize the coordinates
@@ -37,14 +35,15 @@ public:
     void setGripVisibility(bool visible);
     QPointF gripPoint(GripDirection gripDirection);
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-
 public slots:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
     void onGripLostFocus(ElementBoundaryGripItem* grip);
 
 protected:
+    void updateBoundingRect(const QRectF& newRect = QRectF()) override;
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
+
+    inline bool isResizing() const;
 
 private:
     ElementBoundaryGripItem* createGrip(GripDirection direction);
@@ -54,10 +53,13 @@ private:
     // public:
     // TODO: replace with QMap
     std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
-    QPen mPenSelectedBorder = QColor("lightblue");
     bool mResizeMode = false;
     bool mGripSelected = false;
 };
+
+inline bool HsmResizableElement::isResizing() const {
+    return mResizeMode;
+}
 
 };  // namespace view
 

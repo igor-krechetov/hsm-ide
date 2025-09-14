@@ -8,6 +8,7 @@
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
+#include "model/ModelElementsFactory.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 // TODO: move out from private
@@ -23,8 +24,15 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // ---------------------
     // TODO: debug
     createElement("state", QPoint(10, 10));
-    createElement("state", QPoint(175, 120));
-    createElement("state", QPoint(-100, 120));
+    createElement("state", QPoint(-150, 170));
+    createElement("state", QPoint(250, 170));
+
+    createElement("initial", QPoint(-150, -120));
+    createElement("entrypoint", QPoint(-100, -120));
+    createElement("exitpoint", QPoint(-20, -120));
+    createElement("final", QPoint(75, -120));
+    createElement("history", QPoint(175, -120));
+
     // createTransition("e1", "e2");
 
     // std::shared_ptr<HsmTransition> t = std::make_shared<HsmTransition>();
@@ -73,7 +81,9 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
     qDebug() << Q_FUNC_INFO << fromElementId << " -> " << toElementId;
 
     // TODO: substate support
-    auto newTransition = mModel->createUniqueTransition(fromElementId, toElementId);
+    auto source = mModel->root()->findState(fromElementId);
+    auto target = mModel->root()->findState(toElementId);
+    auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
 
     if (newTransition) {
         qDebug() << "transition created: " << newTransition;
@@ -112,18 +122,21 @@ void ProjectController::createElement(const QString& elementTypeId,
                                       const QPoint& pos,
                                       const model::EntityID_t parentElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
-    // TODO: decide how to handle start states. have them always added to the view?
-    static std::map<QString, model::State::StateType> sElementTypes = {// {"start", model::State::StateType::Initial},
-                                                                       {"final", model::State::StateType::Final},
-                                                                       {"state", model::State::StateType::Regular},
-                                                                       {"entrypoint", model::State::StateType::EntryPoint},
-                                                                       {"exitpoint", model::State::StateType::Final},
-                                                                       {"history", model::State::StateType::History}};
+    
+    static std::map<QString, model::State::StateType> sElementTypes = {
+        // TODO: decide what to do with start type
+        {"initial", model::State::StateType::Initial},
+        {"final", model::State::StateType::Final},
+        {"state", model::State::StateType::Regular},
+        {"entrypoint", model::State::StateType::EntryPoint},
+        {"exitpoint", model::State::StateType::ExitPoint},
+        {"history", model::State::StateType::History}
+    };
 
     auto it = sElementTypes.find(elementTypeId);
 
     if (sElementTypes.end() != it) {
-        auto newModelElement = mModel->createUniqueState(it->second);
+        auto newModelElement = model::ModelElementsFactory::createUniqueState(it->second);
         auto parentState = mModel->root()->findRegularState(parentElementId);
         view::HsmElement* newViewElement =
             mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);

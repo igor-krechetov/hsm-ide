@@ -34,7 +34,7 @@ class HsmConnectableElement : public HsmElement {
     Q_OBJECT
 
 public:
-    explicit HsmConnectableElement(const HsmElementType elementType);
+    explicit HsmConnectableElement(const HsmElementType elementType, const QSizeF& size);
     // virtual ~HsmConnectableElement() = default;
     virtual ~HsmConnectableElement();
 

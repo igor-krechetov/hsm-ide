@@ -6,13 +6,17 @@
 namespace view {
 
 HsmEntryPointElement::HsmEntryPointElement()
-    : HsmConnectableElement(HsmElementType::ENTRY_POINT) {}
+    : HsmRoundElement(HsmElementType::ENTRY_POINT) {}
 
 void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    painter->setPen(Qt::SolidLine);
-    painter->setBrush(QColor("#2596be"));
-    mItemRect = QRectF(mOuterRect);
-    painter->drawRoundedRect(mItemRect, 5, 5);
+    HsmRoundElement::paint(painter, option, widget);
+
+    const qreal r = radius();
+    const QPointF c = center();
+
+    // Draw the circle
+    painter->setBrush(mBackgroundBrush);
+    painter->drawEllipse(c, r, r);
 }
 
 };  // namespace view

@@ -16,19 +16,22 @@ ElementGripItem::ElementGripItem(HsmElement* annotationElement)
     , mGripRect(-4, -4, cGripSize, cGripSize)
     , mGripColor("green")
     , mAnnotationElement(annotationElement) {
-    qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
-    qDebug() << "QObject parent:" << parentObject();
-    qDebug() << "QGraphicsItem parent:" << parentItem();
+    // qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
+    // qDebug() << "QObject parent:" << parentObject();
+    // qDebug() << "QGraphicsItem parent:" << parentItem();
 }
 
 ElementGripItem::~ElementGripItem() {
-    qDebug() << "DELETE: ElementGripItem: " << this;
+    // qDebug() << "DELETE: ElementGripItem: " << this;
 }
 
 void ElementGripItem::init() {
-    tryConnectSignal(this, "onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
+    // For states
     tryConnectSignal(this, "onGripLostFocus(ElementGripItem*)", parentObject(), "onGripLostFocus(ElementGripItem*)");
     // tryConnectSignal("onGripMoved(ElementGripItem*,QPointF)", parentObject(), "onGripMoved(ElementGripItem*,QPointF)");
+
+    // For transitions
+    tryConnectSignal(this, "onGripDoubleClick(ElementGripItem*)", parentObject(), "onGripDoubleClick(ElementGripItem*)");
     tryConnectSignal(this, "onGripMoveEnterEvent(ElementGripItem*)", parentObject(), "onGripMoveEnterEvent(ElementGripItem*)");
     tryConnectSignal(this, "onGripMoveLeaveEvent(ElementGripItem*)", parentObject(), "onGripMoveLeaveEvent(ElementGripItem*)");
 

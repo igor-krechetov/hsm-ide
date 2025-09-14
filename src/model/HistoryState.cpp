@@ -2,8 +2,8 @@
 
 namespace model {
 
-HistoryState::HistoryState(const QString& id, const HistoryState::HistoryType historyType)
-    : State(id, State::StateType::History)
+HistoryState::HistoryState(const QString& name, const HistoryState::HistoryType historyType)
+    : State(name, State::StateType::History)
     , mHistoryType(historyType) {}
 
 void HistoryState::setHistoryType(HistoryState::HistoryType historyType) {

@@ -4,8 +4,8 @@
 
 namespace model {
 
-RegularState::RegularState(const QString& id)
-    : State(id, State::StateType::Regular) {}
+RegularState::RegularState(const QString& name)
+    : State(name, State::StateType::Regular) {}
 
 // Getters
 const QString& RegularState::onStateChangedCallback() const {
@@ -71,7 +71,23 @@ QSharedPointer<RegularState> RegularState::findParentState(const EntityID_t chil
             if (element->id() == childId) {
                 res = sharedFromThis().dynamicCast<RegularState>();
             } else if (element->type() == StateMachineEntity::Type::State) {
-                res = element.dynamicCast<RegularState>()->findParentState(childId);
+                switch(element.dynamicCast<State>()->stateType()) {
+                    case State::StateType::Regular: {
+                        auto ptr = element.dynamicCast<RegularState>();
+                        if (nullptr != ptr) {
+                            res = ptr->findParentState(childId);
+                        } else {
+                            // TODO: error
+                        }
+                        break;
+                    }
+                    case State::StateType::EntryPoint:
+                        // TODO: implement
+                        break;
+                    default:
+                        // can't have children
+                        break;
+                }
             }
 
             if (res) {
@@ -93,6 +109,7 @@ QSharedPointer<StateMachineEntity> RegularState::findChild(const EntityID_t id, 
             } else if (element->type() == StateMachineEntity::Type::State) {
                 switch(element.dynamicCast<State>()->stateType()) {
                     case State::StateType::Regular:
+                        // TODO: check dynamicCast result
                         res = element.dynamicCast<RegularState>()->findChild(id, type);
                         break;
                     case State::StateType::EntryPoint:

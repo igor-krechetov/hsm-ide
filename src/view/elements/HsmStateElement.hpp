@@ -1,16 +1,14 @@
 #ifndef HSMSTATEELEMENT_HPP
 #define HSMSTATEELEMENT_HPP
 
-#include <QRectF>
-
-#include "private/HsmResizableElement.hpp"
+#include "private/styles/HsmRectangularElement.hpp"
 
 class QPainter;
 class QWidget;
 
 namespace view {
 
-class HsmStateElement : public HsmResizableElement {
+class HsmStateElement : public HsmRectangularElement {
     Q_OBJECT
 
 public:
@@ -20,10 +18,17 @@ public:
     virtual bool acceptsChildren() const;
 
 protected:
+    void updateBoundingRect(const QRectF& newRect = QRectF()) override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
+    void centerHeader();
+
+protected slots:
+    void onTextChanged();
+
 private:
-    QRectF mItemRect;
+    QGraphicsTextItem* mTextItem = nullptr;
+
 };
 
 };  // namespace view

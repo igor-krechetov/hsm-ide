@@ -38,8 +38,8 @@ public:
     enum class DragState { NONE, PREPARE, DRAGGING };
 
 public:
-    explicit HsmElement(const HsmElementType elementType);
-    explicit HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId);
+    explicit HsmElement(const HsmElementType elementType, const QSizeF& size);
+    explicit HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId, const QSizeF& size);
     virtual ~HsmElement();
 
     virtual void init(const model::EntityID_t modelElementId);

@@ -193,8 +193,8 @@ void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
 void HsmGraphicsView::handleElementDragEvent(view::HsmElement* element, const QPointF& scenePos) {
     QPointer<view::HsmElement> targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, true, element);
 
-    qDebug() << "handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : -1)
-             << "target=" << (targetElement ? targetElement->modelId() : -1);
+    // qDebug() << "handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : -1)
+    //          << "target=" << (targetElement ? targetElement->modelId() : -1);
 
     if (targetElement != mDragTargetElement) {
         if (nullptr != mDragTargetElement) {
@@ -243,7 +243,7 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
 }
 
 void HsmGraphicsView::dragElementEvent(view::HsmElement* element, const QPointF& scenePos) {
-    qDebug() << Q_FUNC_INFO << element << scenePos;
+    // qDebug() << Q_FUNC_INFO << element << scenePos;
     handleElementDragEvent(element, scenePos);
 }
 

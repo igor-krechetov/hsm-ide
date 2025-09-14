@@ -12,11 +12,10 @@
 
 namespace view {
 
-HsmElement::HsmElement(const HsmElementType elementType)
+HsmElement::HsmElement(const HsmElementType elementType, const QSizeF& size)
     : QGraphicsObject()
-    , mSize(200.0, 40.0)
-    , mType(elementType)
-    , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine) {
+    , mSize(size)
+    , mType(elementType) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
@@ -24,8 +23,8 @@ HsmElement::HsmElement(const HsmElementType elementType)
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
 
-HsmElement::HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId)
-    : HsmElement(elementType) {
+HsmElement::HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId, const QSizeF& size)
+    : HsmElement(elementType, size) {
     mModelElementId = modelElementId;
     // setModelId(modelElementId);
     qDebug() << "CREATE: HsmElement (2): " << (int)elementType << ": " << this;
@@ -232,8 +231,6 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
                 emit dragElementEvent(this, itemPos);
             }
         }
-
-        qDebug() << "HsmElement::itemChange: isDragged" << isDragged();
 
         if (isDragged() == false) {
             // if item is moved inside of the parent element

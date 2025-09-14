@@ -22,10 +22,7 @@ public:
 
     QSharedPointer<RegularState>& root();
 
-    // Creates a new State element with unique ID
-    QSharedPointer<State> createUniqueState(const State::StateType type);
     QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
-    QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source, const QSharedPointer<State>& target);
 
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 

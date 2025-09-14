@@ -6,9 +6,9 @@
 
 namespace model {
 
-State::State(const QString& id, const StateType type)
+State::State(const QString& name, const StateType type)
     : StateMachineEntity(StateMachineEntity::Type::State)
-    , mName(id)
+    , mName(name)
     , mStateType(type) {}
 
 // const QString& State::id() const {

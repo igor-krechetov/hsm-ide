@@ -2,8 +2,8 @@
 
 namespace model {
 
-FinalState::FinalState(const QString& id)
-    : State(id, State::StateType::Final) {}
+FinalState::FinalState(const QString& name)
+    : State(name, State::StateType::Final) {}
 
 // Getters
 const QString& FinalState::onStateChangedCallback() const {

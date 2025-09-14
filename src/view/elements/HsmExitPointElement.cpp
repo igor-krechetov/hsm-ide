@@ -6,13 +6,30 @@
 namespace view {
 
 HsmExitPointElement::HsmExitPointElement()
-    : HsmConnectableElement(HsmElementType::EXIT_POINT) {}
+    : HsmRoundElement(HsmElementType::EXIT_POINT) {}
 
 void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    painter->setPen(Qt::SolidLine);
-    painter->setBrush(QColor("#e28743"));
-    mItemRect = QRectF(mOuterRect);
-    painter->drawRoundedRect(mItemRect, 5, 5);
+    HsmRoundElement::paint(painter, option, widget);
+
+    const qreal r = radius();
+    const QPointF c = center();
+
+    // Draw the circle
+    painter->setBrush(mBackgroundBrush);
+    painter->drawEllipse(c, r, r);
+
+    // Draw two diameter lines perpendicular to each other, rotated by 45 degrees
+    painter->setBrush(mMainBrush);
+
+    // Calculate endpoints for the lines
+    const qreal d = r * std::sqrt(2);  // diameter of the circle along 45-degree axis
+    QPointF p1(c.x() - d / 2, c.y() - d / 2);
+    QPointF p2(c.x() + d / 2, c.y() + d / 2);
+    QPointF p3(c.x() - d / 2, c.y() + d / 2);
+    QPointF p4(c.x() + d / 2, c.y() - d / 2);
+
+    painter->drawLine(p1, p2);
+    painter->drawLine(p3, p4);
 }
 
 };  // namespace view

@@ -12,7 +12,7 @@ ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElemen
     , mOuterRect(-mW / 2, -mW / 2, mW, mW)
     , mShapeArrow(initShape(direction))
     , mArrowColor("green") {
-    qDebug() << "CREATE: ElementConnectionArrow: " << this;
+    // qDebug() << "CREATE: ElementConnectionArrow: " << this;
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
