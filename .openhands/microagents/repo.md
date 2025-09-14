@@ -62,3 +62,4 @@ The repository has the following key directories and files:
 ## 7. Development Guidelines
 - Before committing changes, code must be formatted with clang-format
 - Commit description must be made according to the description in `.clinerules/.projectrules.md`
+- Do not create commit or push anything without explicit request.
