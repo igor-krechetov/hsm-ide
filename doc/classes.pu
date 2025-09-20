@@ -1,7 +1,9 @@
 @startuml
 
 !theme plain
-skinparam groupInheritance 2
+' skinparam linetype polyline
+' skinparam linetype ortho
+skinparam groupInheritance 1
 skinparam Shadowing false
 skinparam Class {
     BackgroundColor White
@@ -9,45 +11,110 @@ skinparam Class {
     BorderColor #0078d7
 }
 
+sprite readOnly <svg viewBox="0 0 16 16">
+<circle cx="8" cy="8" r="8" fill="#61dafb"/>
+</svg>
+
+sprite readWrite <svg viewBox="0 0 16 16">
+<circle cx="8" cy="8" r="8" fill="#5fe038"/>
+</svg>
+
 title HSM IDE Class Diagram
 
 package "Model" {
   class StateMachineModel {
-    + addState()
-    + removeState()
-    + addTransition()
-    + validate()
-    + serialize()
+    + root(): RegularState
+    + createUniqueState(type: State::StateType ): State
+    + createUniqueTransition(sourceId, targetId): Transition
+    + createUniqueTransition(source, target): Transition
+    + moveElement(elementId, newParentId): bool
+    ' + validate()
+    ' + serialize()
+
+    - <$readOnly> name: string
   }
 
   class StateMachineEntity {
-    + getId(): string
-    + getName(): string
-    + getParent(): StateMachineEntity
+    - <$readOnly> id: EntityID_t
+    - <$readOnly> elementType: StateMachineEntity::Type
   }
 
   class State {
+    - <$readOnly> stateType: enum
+    - <$readWrite> name: string
+  }
+
+  class RegularState {
     + getChildStates()
     + addTransition()
+
+    + addChild(child)
+    + addChildState(child: State)
+    + addTransition(child: Transition)
+    + children(): list<StateMachineEntity>
+
+    + deleteChild(id: EntityID_t)
+    + deleteChild(child: StateMachineEntity)
+
+    + findParentState(childId): RegularState
+    + findChild(id, type): StateMachineEntity
+    + findState(id): State
+    + findRegularState(id): RegularState
+    + findTransition(id): Transition
+
+    - <$readWrite> onStateChangedCallback: string
+    - <$readWrite> onEnteringCallback: string
+    - <$readWrite> onExitingCallback: string
   }
 
   class Transition {
     + getSource()
     + getTarget()
-    + getEvent()
+
+    - <$readWrite> event: string
+    - <$readWrite> conditionCallback: string
+    - <$readWrite> expectedConditionValue: bool
   }
 
-  class FinalState
-  class HistoryState
-  class InitialState
+  class FinalState {
+    - <$readWrite> onStateChangedCallback: string
+  }
+
+  class HistoryState {
+    - <$readWrite> type: enum
+  }
+
+  ' class InitialState {
+  '   - outgoingState: State
+  ' }
+
+  class EntryPoint {
+    + addTransition(child)
+    + transitions(): list<Transition>
+  }
+
+  class ExitPoint {
+    - <$readWrite> name: string
+    - <$readWrite> event: string
+    - <$readWrite> onStateChangedCallback: string
+    - <$readWrite> onEnteringCallback: string
+    - <$readWrite> onExitingCallback: string
+  }
 
   StateMachineEntity <|-- State
   StateMachineEntity <|-- Transition
   State <|-- FinalState
   State <|-- HistoryState
-  State <|-- InitialState
+  State <|-- EntryPoint
 
-  StateMachineModel "1" *-- "*" StateMachineEntity : contains
+  RegularState  --|> State
+  ExitPoint --|> State
+  EntryPoint "1" --* "0..*" Transition: outgoing events
+
+  StateMachineModel "1" *-- "1" RegularState : contains
+  RegularState "1" --* "0..*" StateMachineEntity: contains
+
+  Transition "1" --o "2" State: references
 }
 
 package "View" {

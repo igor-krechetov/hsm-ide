@@ -10,7 +10,6 @@
 #include <QWheelEvent>
 
 #include "controllers/ProjectController.hpp"
-#include "model/StateMachineEntity.hpp"
 #include "view/common/ViewUtils.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 #include "view/elements/HsmStateElement.hpp"

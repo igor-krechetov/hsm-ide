@@ -5,7 +5,7 @@
 #include <QSharedPointer>
 #include <QString>
 
-#include "StateMachineEntity.hpp"
+#include "private/StateMachineEntity.hpp"
 
 namespace model {
 
@@ -13,34 +13,26 @@ class Transition;
 
 class State : public StateMachineEntity {
 public:
-    enum class Type { Root, Initial, Regular, Final, History };
+    enum class StateType { Invalid, Regular, EntryPoint, ExitPoint, Final, History };
+    // Root - single instance
+    // Initial - only outgoing state (only one instance per model)
+    //      -> EntryPoint - event, condition, state
+    // Regular - name, 3 callbacks
+    //      -> ExitPoint - name, 3 callbacks, auto event
+    // Final - onState callback
+    // History - type
 
-    explicit State(const QString& mName, const Type type = Type::Regular);
+    explicit State(const QString& mName, const StateType type = StateType::Regular);
     virtual ~State() = default;
 
-    Type stateType() const;
+    StateType stateType() const;
 
     const QString& name() const;
     void setName(const QString& name);
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child);
-    void addChildState(const QSharedPointer<State>& child);
-    void addTransition(const QSharedPointer<Transition>& child);
-    const QList<QSharedPointer<StateMachineEntity>>& children() const;
-
-    void deleteChild(const EntityID_t id);
-    void deleteChild(const QSharedPointer<StateMachineEntity> child);
-
-    QSharedPointer<State> findParentState(const EntityID_t childId);
-    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
-                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
-    QSharedPointer<State> findState(const EntityID_t id) const;
-    QSharedPointer<Transition> findTransition(const EntityID_t id) const;
-
 protected:
+    StateType mStateType = StateType::Invalid;
     QString mName;
-    Type mStateType;
-    QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 
 };  // namespace model

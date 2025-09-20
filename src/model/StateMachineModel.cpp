@@ -1,15 +1,16 @@
 #include "StateMachineModel.hpp"
 
+#include "RegularState.hpp"
 #include "State.hpp"
-#include "StateMachineEntity.hpp"
 #include "Transition.hpp"
+#include "private/StateMachineEntity.hpp"
 
 namespace model {
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent)
     , mName(name)
-    , mModelRoot(createUniqueState(State::Type::Root)) {
+    , mModelRoot(createUniqueState(State::StateType::Regular).dynamicCast<RegularState>()) {
     mModelRoot->setName(name);
 }
 
@@ -19,11 +20,11 @@ const QString& StateMachineModel::name() const {
     return mName;
 }
 
-QSharedPointer<State>& StateMachineModel::root() {
+QSharedPointer<RegularState>& StateMachineModel::root() {
     return mModelRoot;
 }
 
-QSharedPointer<State> StateMachineModel::createUniqueState(const State::Type type) {
+QSharedPointer<State> StateMachineModel::createUniqueState(const State::StateType type) {
     // TODO: generate unique ID
     return QSharedPointer<State>::create(QStringLiteral("new_element"), type);
 }
@@ -42,11 +43,12 @@ QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const QShar
 
 bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t newParentId) {
     bool moved = false;
-    QSharedPointer<State> currentParent = mModelRoot->findParentState(elementId);
+    QSharedPointer<RegularState> currentParent = mModelRoot->findParentState(elementId);
 
     if (currentParent && currentParent->id() != newParentId) {
         QSharedPointer<StateMachineEntity> element = currentParent->findChild(elementId);
-        QSharedPointer<State> newParent = (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findState(newParentId));
+        QSharedPointer<RegularState> newParent =
+            (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findRegularState(newParentId));
 
         if (element && newParent) {
             newParent->addChild(element);

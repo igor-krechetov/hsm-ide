@@ -7,10 +7,9 @@
 #include <QString>
 
 #include "State.hpp"
-// #include "Transition.hpp"
 
 namespace model {
-class StateMachineEntity;
+class RegularState;
 class Transition;
 
 class StateMachineModel : public QObject {
@@ -21,30 +20,18 @@ public:
 
     const QString& name() const;
 
-    QSharedPointer<State>& root();
+    QSharedPointer<RegularState>& root();
 
     // Creates a new State element with unique ID
-    QSharedPointer<State> createUniqueState(const State::Type type);
+    QSharedPointer<State> createUniqueState(const State::StateType type);
     QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
     QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source, const QSharedPointer<State>& target);
 
-    // void addChild(const QSharedPointer<StateMachineEntity>& child);
-    // void addChild(const QSharedPointer<Transition>& child);
-    // void addChild(const QSharedPointer<State>& child);
-
-    // void deleteChild(const EntityID_t id);
-
-    // const QList<QSharedPointer<StateMachineEntity>>& children() const;
-    // QSharedPointer<StateMachineEntity> findChild(const EntityID_t id) const;
-
-    // QSharedPointer<State> findState(const EntityID_t id) const;
-    // QSharedPointer<Transition> findTransition(const EntityID_t id) const;
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
 private:
     QString mName;
-    QSharedPointer<State> mModelRoot;
-    // QList<QSharedPointer<StateMachineEntity>> mChildren;
+    QSharedPointer<RegularState> mModelRoot;
 };
 
 };  // namespace model

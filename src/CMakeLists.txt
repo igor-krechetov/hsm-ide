@@ -11,13 +11,15 @@ set(PROJECT_SOURCES
         controllers/ProjectController.cpp
         # controllers/RecentFilesManager.cpp
         
-        model/StateMachineModel.cpp
-        model/State.cpp
-        model/StateMachineEntity.cpp
-        model/InitialState.cpp
-        model/HistoryState.cpp
+        model/EntryPoint.cpp
+        model/ExitPoint.cpp
         model/FinalState.cpp
+        model/HistoryState.cpp
+        model/RegularState.cpp
+        model/State.cpp
+        model/StateMachineModel.cpp
         model/Transition.cpp
+        model/private/StateMachineEntity.cpp
 
         view/MainWindow.cpp
         view/MainWindow.hpp

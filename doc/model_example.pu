@@ -1,0 +1,23 @@
+@startwbs
+
+* RegularState <root>
+** RegularState A
+*** Transition A-B
+*** Transition A-A
+*** Transition A-C
+** RegularState B
+*** Transition B-C-H1
+** RegularState C
+*** EntryPoint
+**** Transition i-D
+**** Transition i-E
+*** RegularState D
+**** Transition D-EP1
+*** RegularState E
+*** History H1
+*** ExitPoint EP1
+*** Transition C-F1
+
+** Final F1
+
+@endwbs

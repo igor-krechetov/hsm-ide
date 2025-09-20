@@ -4,7 +4,7 @@
 #include <QSharedPointer>
 #include <vector>
 
-#include "ModelTypes.hpp"
+#include "model/ModelTypes.hpp"
 
 // TODO: move StateMachineElement::ID_t to a common header
 
@@ -23,7 +23,7 @@ public:
 
 private:
     EntityID_t mId = 0;
-    Type mElementType;
+    Type mElementType = Type::Invalid;
 };
 
 };  // namespace model

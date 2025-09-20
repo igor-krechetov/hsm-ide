@@ -11,12 +11,13 @@ public:
 
     explicit HistoryState(const QString& id, const HistoryType historyType);
 
+    // Getters
     HistoryType historyType() const {
         return mHistoryType;
     }
 
-    // Initial states can't have children in SCXML
-    void addChildState(std::shared_ptr<State> child) = delete;
+    // Setters
+    void setHistoryType(HistoryType historyType);
 
 private:
     HistoryType mHistoryType;

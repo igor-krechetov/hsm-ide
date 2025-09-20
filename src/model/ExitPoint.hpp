@@ -1,0 +1,36 @@
+#ifndef EXITPOINT_HPP
+#define EXITPOINT_HPP
+
+#include <QString>
+
+#include "State.hpp"
+
+namespace model {
+
+class ExitPoint : public State {
+public:
+    explicit ExitPoint(const QString& id);
+    virtual ~ExitPoint() = default;
+
+    // Getters
+    const QString& event() const;
+    const QString& onStateChangedCallback() const;
+    const QString& onEnteringCallback() const;
+    const QString& onExitingCallback() const;
+
+    // Setters
+    void setEvent(const QString& event);
+    void setOnStateChangedCallback(const QString& callback);
+    void setOnEnteringCallback(const QString& callback);
+    void setOnExitingCallback(const QString& callback);
+
+private:
+    QString mEvent;
+    QString mOnStateChangedCallback;
+    QString mOnEnteringCallback;
+    QString mOnExitingCallback;
+};
+
+};  // namespace model
+
+#endif  // EXITPOINT_HPP

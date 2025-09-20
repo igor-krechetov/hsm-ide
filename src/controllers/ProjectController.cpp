@@ -5,6 +5,7 @@
 #include <QMimeData>
 
 #include "ObjectUtils.hpp"
+#include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
 #include "view/MainWindow.hpp"
@@ -111,18 +112,19 @@ void ProjectController::createElement(const QString& elementTypeId,
                                       const QPoint& pos,
                                       const model::EntityID_t parentElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
-    static std::map<QString, model::State::Type> sElementTypes = {{"start", model::State::Type::Initial},
-                                                                  {"final", model::State::Type::Final},
-                                                                  {"state", model::State::Type::Regular},
-                                                                  {"entrypoint", model::State::Type::Initial},
-                                                                  {"exitpoint", model::State::Type::Final},
-                                                                  {"history", model::State::Type::History}};
+    // TODO: decide how to handle start states. have them always added to the view?
+    static std::map<QString, model::State::StateType> sElementTypes = {// {"start", model::State::StateType::Initial},
+                                                                       {"final", model::State::StateType::Final},
+                                                                       {"state", model::State::StateType::Regular},
+                                                                       {"entrypoint", model::State::StateType::EntryPoint},
+                                                                       {"exitpoint", model::State::StateType::Final},
+                                                                       {"history", model::State::StateType::History}};
 
     auto it = sElementTypes.find(elementTypeId);
 
     if (sElementTypes.end() != it) {
         auto newModelElement = mModel->createUniqueState(it->second);
-        auto parentState = mModel->root()->findState(parentElementId);
+        auto parentState = mModel->root()->findRegularState(parentElementId);
         view::HsmElement* newViewElement =
             mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);
 

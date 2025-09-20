@@ -40,4 +40,34 @@ EntityID_t Transition::targetId() const {
     return (ptr ? ptr->id() : INVALID_MODEL_ID);
 }
 
+// Getters
+Transition::Type Transition::transitionType() const {
+    return mTransitionType;
+}
+
+const QString& Transition::conditionCallback() const {
+    return mConditionCallback;
+}
+
+bool Transition::expectedConditionValue() const {
+    return mExpectedConditionValue;
+}
+
+// Setters
+void Transition::setEvent(const QString& event) {
+    mEvent = event;
+}
+
+void Transition::setTransitionType(Transition::Type type) {
+    mTransitionType = type;
+}
+
+void Transition::setConditionCallback(const QString& callback) {
+    mConditionCallback = callback;
+}
+
+void Transition::setExpectedConditionValue(bool value) {
+    mExpectedConditionValue = value;
+}
+
 };  // namespace model

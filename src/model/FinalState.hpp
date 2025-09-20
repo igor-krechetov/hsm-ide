@@ -8,14 +8,16 @@ namespace model {
 class FinalState : public State {
 public:
     explicit FinalState(const QString& id);
-
     virtual ~FinalState() = default;
 
-    // Final states can't have children or transitions in SCXML
-    void addChildState(std::shared_ptr<State> child) = delete;
-    void addTransition(std::shared_ptr<Transition> child) = delete;
+    // Getters
+    const QString& onStateChangedCallback() const;
 
-    const std::vector<std::shared_ptr<StateMachineEntity>>& children() const = delete;
+    // Setters
+    void setOnStateChangedCallback(const QString& callback);
+
+private:
+    QString mOnStateChangedCallback;
 };
 
 };  // namespace model
