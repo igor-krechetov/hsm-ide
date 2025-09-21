@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QPen>
-#include <map>
+#include <QMap>
 
 #include "ElementBoundaryGripItem.hpp"
 #include "HsmConnectableElement.hpp"
@@ -35,6 +35,9 @@ public:
     void setGripVisibility(bool visible);
     QPointF gripPoint(GripDirection gripDirection);
 
+    void setMinSize(qreal minWidth, qreal minHeight);
+    QSizeF minSize() const;
+
 public slots:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
     void onGripLostFocus(ElementBoundaryGripItem* grip);
@@ -50,11 +53,12 @@ private:
 
 private:
     static constexpr int cChildPadding = 5;
-    // public:
-    // TODO: replace with QMap
-    std::map<GripDirection, ElementBoundaryGripItem*> mGrips;
+    
+    QMap<GripDirection, ElementBoundaryGripItem*> mGrips;
     bool mResizeMode = false;
     bool mGripSelected = false;
+    qreal mMinWidth = 10.0;
+    qreal mMinHeight = 10.0;
 };
 
 inline bool HsmResizableElement::isResizing() const {

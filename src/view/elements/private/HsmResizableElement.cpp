@@ -175,7 +175,7 @@ void HsmResizableElement::setGripVisibility(bool visible) {
     mResizeMode = visible;
 
     for (const auto& grip : mGrips) {
-        grip.second->setVisible(visible);
+        grip->setVisible(visible);
 
         // if (grip.second->scene() == nullptr) {
         //     qDebug() << "ERROR: grip is not attached to sceen";
@@ -190,7 +190,7 @@ void HsmResizableElement::onGripLostFocus(ElementBoundaryGripItem* grip) {
 
     if (false == mGripSelected) {
         for (const auto& curGrip : mGrips) {
-            if (curGrip.second->isUnderMouse()) {
+            if (curGrip->isUnderMouse()) {
                 mGripSelected = true;
                 break;
             }
@@ -306,20 +306,22 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
         (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
          childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
          childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left())) {
-        // TODO: implement min size concept
+
         if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
-            setPos(pos() + newPositionDelta);
-            updateBoundingRect(newOuterRect);
+            // Prevent resizing below min size
+            if (newOuterRect.width() < mMinWidth || newOuterRect.height() < mMinHeight) {
+                canResize = false;
+            } else {
+                setPos(pos() + newPositionDelta);
+                updateBoundingRect(newOuterRect);
 
-            // mOuterRect = newOuterRect;
-            updateGripsPosition(updateGrips);
+                updateGripsPosition(updateGrips);
 
-            // Update position of child items
-            forEachChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
-
-            update();
-            // self.scene().update()
-            notifyGeometryChanged();
+                // Update position of child items
+                forEachChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
+                update();
+                notifyGeometryChanged();
+            }
         } else {
             canResize = false;
         }
@@ -389,7 +391,7 @@ QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const 
 
         if (false == mGripSelected) {
             for (const auto& curGrip : mGrips) {
-                if (curGrip.second->isUnderMouse()) {
+                if (curGrip->isUnderMouse()) {
                     mGripSelected = true;
                     break;
                 }
@@ -415,6 +417,15 @@ ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction
     grip->setEnabled(true);
 
     return grip;
+}
+
+void HsmResizableElement::setMinSize(qreal minWidth, qreal minHeight) {
+    mMinWidth = minWidth;
+    mMinHeight = minHeight;
+}
+
+QSizeF HsmResizableElement::minSize() const {
+    return QSizeF(mMinWidth, mMinHeight);
 }
 
 };  // namespace view

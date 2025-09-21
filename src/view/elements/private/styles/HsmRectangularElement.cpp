@@ -12,7 +12,9 @@ HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType)
     , mPenSelectedBorder(QColor("lightblue"), 3.0, Qt::DotLine)
 
     , mBackgroundBrush(Qt::white)
-    , mMainBrush(Qt::darkGray) {}
+    , mMainBrush(Qt::darkGray) {
+        setMinSize(200, 100);
+    }
 
 void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     constexpr qreal cEdgeRadius = 5.0;

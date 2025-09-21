@@ -44,6 +44,9 @@
 *** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
+***** REQ-103b1: Resizable and non-resizable elements <<done>>
+***** REQ-103b2: Minimum size for resizable elements <<done>>
+***** REQ-103b2: Moving elements <<done>>
 **** REQ-103c: Multi-select operations <<partial>>
 ***** REQ-103c1: Copy <<prio_low>>
 ***** REQ-103c2: Cut <<prio_low>>
