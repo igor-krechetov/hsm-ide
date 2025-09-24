@@ -88,7 +88,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
     if (newTransition) {
         qDebug() << "transition created: " << newTransition;
         view::HsmTransition* newViewTransition =
-            mMainWindow->view()->createHsmTransition(newTransition->id(), fromElementId, toElementId);
+            mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
 
         mModel->root()->addTransition(newTransition);
         tryConnectSignal(newViewTransition,
@@ -139,7 +139,7 @@ void ProjectController::createElement(const QString& elementTypeId,
         auto newModelElement = model::ModelElementsFactory::createUniqueState(it->second);
         auto parentState = mModel->root()->findRegularState(parentElementId);
         view::HsmElement* newViewElement =
-            mMainWindow->view()->createHsmElement(newModelElement->id(), elementTypeId, pos, parentElementId);
+            mMainWindow->view()->createHsmElement(newModelElement, elementTypeId, pos, parentElementId);
 
         qDebug() << Q_FUNC_INFO << parentState;
 

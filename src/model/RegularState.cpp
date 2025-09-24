@@ -23,14 +23,17 @@ const QString& RegularState::onExitingCallback() const {
 // Setters
 void RegularState::setOnStateChangedCallback(const QString& callback) {
     mOnStateChangedCallback = callback;
+    emit modelDataChanged();
 }
 
 void RegularState::setOnEnteringCallback(const QString& callback) {
     mOnEnteringCallback = callback;
+    emit modelDataChanged();
 }
 
 void RegularState::setOnExitingCallback(const QString& callback) {
     mOnExitingCallback = callback;
+    emit modelDataChanged();
 }
 
 void RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {

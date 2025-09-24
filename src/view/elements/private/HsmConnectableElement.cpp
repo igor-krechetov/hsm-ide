@@ -28,8 +28,8 @@ HsmConnectableElement::~HsmConnectableElement() {
     mArrows.clear();
 }
 
-void HsmConnectableElement::init(const model::EntityID_t modelElementId) {
-    HsmElement::init(modelElementId);
+void HsmConnectableElement::init(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+    HsmElement::init(modelElement);
     updateHoverRect();
     setAcceptHoverEvents(true);
 }
@@ -242,7 +242,7 @@ void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const
     qDebug() << Q_FUNC_INFO;
     mDrawConnectionLine = true;
     mConnection = std::make_shared<HsmTransition>();
-    mConnection->init(model::INVALID_MODEL_ID);
+    mConnection->init(nullptr);
     mConnection->beginConnection(this, pos);
     scene()->addItem(mConnection.get());
 }

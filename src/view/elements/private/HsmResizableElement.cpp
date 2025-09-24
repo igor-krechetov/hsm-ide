@@ -17,8 +17,8 @@ HsmResizableElement::~HsmResizableElement() {
     qDebug() << "DELETE " << this;
 }
 
-void HsmResizableElement::init(const model::EntityID_t modelElementId) {
-    HsmConnectableElement::init(modelElementId);
+void HsmResizableElement::init(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+    HsmConnectableElement::init(modelElement);
     qDebug() << Q_FUNC_INFO << this << modelId();
 
     createBoundaryGrips();

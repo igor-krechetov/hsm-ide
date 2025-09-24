@@ -23,7 +23,7 @@ set(PROJECT_SOURCES
         model/StateMachineModel.cpp
         model/Transition.cpp
         model/ModelElementsFactory.cpp
-        model/private/StateMachineEntity.cpp
+        model/StateMachineEntity.cpp
 
 
         view/MainWindow.cpp

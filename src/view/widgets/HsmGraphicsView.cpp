@@ -33,11 +33,11 @@ void HsmGraphicsView::setProjectController(QPointer<ProjectController> controlle
 }
 
 // TODO: how can we add sub elements?
-view::HsmElement* HsmGraphicsView::createHsmElement(const model::EntityID_t modelElementId,
+view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                                     const QString& elementTypeId,
                                                     const QPoint& pos,
                                                     const model::EntityID_t parentElementId) {
-    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElementId);
+    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement);
     view::HsmElement* parentElement = findHsmElement(parentElementId);
 
     qDebug() << Q_FUNC_INFO << "ID=" << newElement->modelId() << ", pos=" << mapToScene(pos);
@@ -63,35 +63,35 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const model::EntityID_t mode
     connect(newElement, &view::HsmElement::dragElementEvent, this, &HsmGraphicsView::dragElementEvent);
     connect(newElement, &view::HsmElement::dropElementEvent, this, &HsmGraphicsView::dropElementEvent);
 
-    mElements[modelElementId] = QPointer(newElement);
+    mElements[modelElement->id()] = QPointer(newElement);
 
     return newElement;
 }
 
 // TODO: do we need to return the value?
-view::HsmTransition* HsmGraphicsView::createHsmTransition(const model::EntityID_t transitionId,
+view::HsmTransition* HsmGraphicsView::createHsmTransition(const QSharedPointer<model::StateMachineEntity>& transition,
                                                           const model::EntityID_t fromElementId,
                                                           const model::EntityID_t toElementId) {
     qDebug() << Q_FUNC_INFO;
-    view::HsmTransition* transition = nullptr;
+    view::HsmTransition* transitionElement = nullptr;
     QPointer<view::HsmElement> fromElement = findHsmElement(fromElementId);
     QPointer<view::HsmElement> toElement = findHsmElement(toElementId);
 
     // TODO: does QPointer have bool() operator?
     if (fromElement && toElement) {
-        transition = new view::HsmTransition();
+        transitionElement = new view::HsmTransition();
 
-        transition->init(transitionId);
-        transition->connectElements(fromElement, toElement);
+        transitionElement->init(transition);
+        transitionElement->connectElements(fromElement, toElement);
         // TODO: how do we add it to substates?
-        scene()->addItem(transition);
-        mElements[transitionId] = QPointer(transition);
+        scene()->addItem(transitionElement);
+        mElements[transition->id()] = QPointer(transitionElement);
         qDebug() << "transition added to view";
     } else {
         qWarning() << "Cant find elements with ID " << fromElementId << " or " << toElementId;
     }
 
-    return transition;
+    return transitionElement;
 }
 
 void HsmGraphicsView::reconnectHsmTransition(const model::EntityID_t transitionId,

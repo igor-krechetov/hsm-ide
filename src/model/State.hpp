@@ -5,7 +5,7 @@
 #include <QSharedPointer>
 #include <QString>
 
-#include "private/StateMachineEntity.hpp"
+#include "StateMachineEntity.hpp"
 
 namespace model {
 

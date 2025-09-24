@@ -13,6 +13,7 @@ const QString& FinalState::onStateChangedCallback() const {
 // Setters
 void FinalState::setOnStateChangedCallback(const QString& callback) {
     mOnStateChangedCallback = callback;
+    emit modelDataChanged();
 }
 
 };  // namespace model

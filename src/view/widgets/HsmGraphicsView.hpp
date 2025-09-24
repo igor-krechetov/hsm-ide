@@ -11,6 +11,10 @@ class QDragMoveEvent;
 class QDropEvent;
 class ProjectController;
 
+namespace model {
+class StateMachineEntity;
+}
+
 namespace view {
 class HsmElement;
 class HsmResizableElement;
@@ -33,11 +37,11 @@ public:
 
     void setProjectController(QPointer<ProjectController> controller);
 
-    view::HsmElement* createHsmElement(const model::EntityID_t modelElementId,
+    view::HsmElement* createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                        const QString& elementTypeId,
                                        const QPoint& pos,
                                        const model::EntityID_t parentElementId);
-    view::HsmTransition* createHsmTransition(const model::EntityID_t transitionId,
+    view::HsmTransition* createHsmTransition(const QSharedPointer<model::StateMachineEntity>& transition,
                                              const model::EntityID_t fromElementId,
                                              const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);

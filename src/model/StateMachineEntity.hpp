@@ -1,6 +1,7 @@
 #ifndef STATEMACHINEENTITY_HPP
 #define STATEMACHINEENTITY_HPP
 
+#include <QObject>
 #include <QSharedPointer>
 #include <vector>
 
@@ -10,7 +11,8 @@
 
 namespace model {
 
-class StateMachineEntity : public QEnableSharedFromThis<StateMachineEntity> {
+class StateMachineEntity : public QObject, public QEnableSharedFromThis<StateMachineEntity> {
+    Q_OBJECT
 public:
     enum class Type { Invalid, State, Transition };  // namespace model
 
@@ -20,6 +22,9 @@ public:
 
     EntityID_t id() const;
     Type type() const;
+
+signals:
+    void modelDataChanged();
 
 private:
     EntityID_t mId = 0;

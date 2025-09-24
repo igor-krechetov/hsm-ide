@@ -8,6 +8,7 @@ HistoryState::HistoryState(const QString& name, const HistoryState::HistoryType 
 
 void HistoryState::setHistoryType(HistoryState::HistoryType historyType) {
     mHistoryType = historyType;
+    emit modelDataChanged();
 }
 
 };  // namespace model

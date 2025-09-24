@@ -11,24 +11,13 @@
 
 class QEvent;
 
+namespace model {
+class StateMachineEntity;
+}
+
 namespace view {
 
 class ElementBoundaryGripItem;
-
-// class HsmConnectableElement;
-
-// class HsmConnectableElementEventFilter : public QObject {
-//     Q_OBJECT
-// public:
-//     HsmConnectableElementEventFilter(HsmConnectableElement* parent);
-//     virtual ~HsmConnectableElementEventFilter() = default;
-
-// protected:
-//     bool eventFilter(QObject* obj, QEvent* event) override;
-
-// private:
-//     HsmConnectableElement* mElement;
-// };
 
 class HsmConnectableElement : public HsmElement {
     Q_OBJECT
@@ -38,7 +27,7 @@ public:
     // virtual ~HsmConnectableElement() = default;
     virtual ~HsmConnectableElement();
 
-    void init(const model::EntityID_t modelElementId) override;
+    void init(const QSharedPointer<model::StateMachineEntity>& modelElement) override;
 
     bool isConnectable() const override;
 

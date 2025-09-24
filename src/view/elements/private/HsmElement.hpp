@@ -1,13 +1,19 @@
 #ifndef HSMELEMENT_HPP
 #define HSMELEMENT_HPP
 
-#include <QGraphicsObject>
 #include <QPen>
 #include <QPoint>
 #include <QString>
+#include <QSharedPointer>
+#include <QWeakPointer>
+#include <QGraphicsObject>
 #include <functional>
 
 #include "model/ModelTypes.hpp"
+
+namespace model {
+class StateMachineEntity;
+}
 
 class HsmGraphicsView;
 
@@ -39,10 +45,14 @@ public:
 
 public:
     explicit HsmElement(const HsmElementType elementType, const QSizeF& size);
-    explicit HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId, const QSizeF& size);
+    explicit HsmElement(const HsmElementType elementType, const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
     virtual ~HsmElement();
 
-    virtual void init(const model::EntityID_t modelElementId);
+    virtual void init(const QSharedPointer<model::StateMachineEntity>& modelElement);
+
+    // Slot for model data changes
+public slots:
+    virtual void onModelDataChanged();
 
     model::EntityID_t modelId() const;
     // void setModelId(const model::EntityID_t modelElementId);
@@ -104,7 +114,7 @@ protected:
 
 private:
     HsmElementType mType = HsmElementType::UNKNOWN;
-    model::EntityID_t mModelElementId = model::INVALID_MODEL_ID;
+    QWeakPointer<model::StateMachineEntity> mModelElement;
     DragState mDragState = DragState::NONE;
     DragMode mDragMode = DragMode::NONE;
     bool mHightlight = false;

@@ -8,14 +8,21 @@
 #include <QMimeData>
 
 #include "HsmResizableElement.hpp"
+#include "model/StateMachineEntity.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
 
 HsmElement::HsmElement(const HsmElementType elementType, const QSizeF& size)
+    : HsmElement(elementType, nullptr, size) {}
+
+HsmElement::HsmElement(const HsmElementType elementType,
+                       const QSharedPointer<model::StateMachineEntity>& modelElement,
+                       const QSizeF& size)
     : QGraphicsObject()
-    , mSize(size)
-    , mType(elementType) {
+    , mType(elementType)
+    , mModelElement(modelElement.toWeakRef())
+    , mSize(size) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
@@ -23,19 +30,19 @@ HsmElement::HsmElement(const HsmElementType elementType, const QSizeF& size)
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
 }
 
-HsmElement::HsmElement(const HsmElementType elementType, const model::EntityID_t modelElementId, const QSizeF& size)
-    : HsmElement(elementType, size) {
-    mModelElementId = modelElementId;
-    // setModelId(modelElementId);
-    qDebug() << "CREATE: HsmElement (2): " << (int)elementType << ": " << this;
-}
-
 HsmElement::~HsmElement() {
     qDebug() << "DELETE: HsmElement: " << this;
 }
 
 model::EntityID_t HsmElement::modelId() const {
-    return mModelElementId;
+    model::EntityID_t id = model::INVALID_MODEL_ID;
+    auto modelElementPtr = mModelElement.toStrongRef();
+
+    if (modelElementPtr) {
+        id = modelElementPtr->id();
+    }
+
+    return id;
 }
 
 void HsmElement::hightlight(const bool enable) {
@@ -79,9 +86,14 @@ QRectF HsmElement::elementRect() const {
     return mOuterRect;
 }
 
-void HsmElement::init(const model::EntityID_t modelElementId) {
-    mModelElementId = modelElementId;
+void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+    mModelElement = modelElement.toWeakRef();
     updateBoundingRect();
+    // Subscribe to modelDataChanged signal
+    if (modelElement) {
+        QObject::connect(modelElement.data(), &model::StateMachineEntity::modelDataChanged,
+                         this, &HsmElement::onModelDataChanged);
+    }
 }
 
 bool HsmElement::isConnectable() const {
@@ -270,6 +282,12 @@ void HsmElement::resizeParentToFitChildItem() {
     if (parent != nullptr) {
         parent->resizeToFitChildItem(this);
     }
+}
+
+// Slot implementation
+void HsmElement::onModelDataChanged() {
+    // Default: redraw element
+    update();
 }
 
 };  // namespace view

@@ -6,7 +6,7 @@
 #include "State.hpp"
 #include "Transition.hpp"
 #include "ModelElementsFactory.hpp"
-#include "private/StateMachineEntity.hpp"
+#include "StateMachineEntity.hpp"
 
 namespace model {
 

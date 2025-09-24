@@ -84,9 +84,8 @@ package "Model" {
     - <$readWrite> type: enum
   }
 
-  ' class InitialState {
-  '   - outgoingState: State
-  ' }
+  class InitialState {
+  }
 
   class EntryPoint {
     + addTransition(child)
@@ -106,15 +105,18 @@ package "Model" {
   State <|-- FinalState
   State <|-- HistoryState
   State <|-- EntryPoint
+  State <|-- InitialState
 
   RegularState  --|> State
   ExitPoint --|> State
-  EntryPoint "1" --* "0..*" Transition: outgoing events
+  EntryPoint "1" *-- "0..*" Transition: contains
+  InitialState "1" *-- "0..1" Transition: contains
 
   StateMachineModel "1" *-- "1" RegularState : contains
   RegularState "1" --* "0..*" StateMachineEntity: contains
 
-  Transition "1" --o "2" State: references
+  Transition "1" --> "2" State: references
+
 }
 
 package "View" {
@@ -149,31 +151,39 @@ package "View" {
     + updateConnectionArrowsPos()
   }
 
-  class HsmEntryPointElement
-  class HsmExitPointElement
-  class HsmFinalElement
-  class HsmHistoryElement
-  class HsmStartElement
-  class HsmStateElement
-
-  MainWindow "1" *-- "1" HsmGraphicsView : contains
-  HsmElement <|-- HsmResizableElement
-  HsmResizableElement <|-- HsmConnectableElement
-  HsmConnectableElement <|-- HsmEntryPointElement
-  HsmConnectableElement <|-- HsmExitPointElement
-  HsmConnectableElement <|-- HsmFinalElement
-  HsmConnectableElement <|-- HsmHistoryElement
-  HsmConnectableElement <|-- HsmStartElement
-  HsmConnectableElement <|-- HsmStateElement
-
   class HsmTransition {
     + beginConnection()
     + connectElements()
     + removeConnection()
     + recalculateLine()
   }
+
+  class HsmRectangularElement
+  class HsmRoundElement
+
+  class HsmEntryPointElement
+  class HsmExitPointElement
+  class HsmFinalElement
+  class HsmHistoryElement
+  class HsmStateElement
+  class HsmInitialElement
+
+  MainWindow "1" *-- "1" HsmGraphicsView : contains
+
+  HsmResizableElement -up-|> HsmElement
+  HsmConnectableElement -up-|> HsmResizableElement
+  HsmRectangularElement -up-|> HsmResizableElement
+  HsmRoundElement -up-|> HsmConnectableElement
+
+  HsmRoundElement <|-- HsmEntryPointElement
+  HsmRoundElement <|-- HsmExitPointElement
+  HsmRoundElement <|-- HsmFinalElement
+  HsmRoundElement <|-- HsmHistoryElement
+  HsmRectangularElement <|-- HsmStateElement
+  HsmRoundElement <|-- HsmInitialElement
   HsmElement <|-- HsmTransition
 }
+
 
 package "Controller" {
   class MainEditorController {
@@ -190,7 +200,11 @@ package "Controller" {
     + getRecentProjects()
   }
 
-  MainEditorController "1" *-- "1" ProjectController : uses
+  MainEditorController "1" *-- "1" ProjectController
+  MainEditorController "1" *-- "1" MainWindow
+
+  ProjectController ..> MainWindow: reference
+  ProjectController *.. StateMachineModel: owns
 }
 
 package "Supporting Elements" {
@@ -211,7 +225,7 @@ package "Supporting Elements" {
 
 ' Model-View-Controller Relationships
 MainEditorController --> StateMachineModel : manipulates
-MainEditorController --> MainWindow : updates
+' MainEditorController --> MainWindow : updates
 StateMachineModel ..> MainEditorController : notifies
 MainWindow ..> MainEditorController : sends events
 
@@ -221,8 +235,16 @@ HsmTransition "1" --> "1" HsmConnectableElement : to
 
 ' View-Model Mapping
 note "View elements represent\nmodel entities" as N1
-HsmStateElement ..|> State : represents
-HsmTransition ..|> Transition : represents
-HsmFinalElement ..|> FinalState : represents
+HsmElement "1" o-- "1" StateMachineEntity: references
+HsmTransition ..> Transition : uses
+HsmEntryPointElement ..> EntryPoint : uses
+HsmExitPointElement ..> ExitPoint : uses
+HsmFinalElement ..> FinalState : uses
+HsmHistoryElement ..> HistoryState : uses
+HsmStateElement ..> State : uses
+HsmInitialElement ..> InitialState : uses
+
+' View-Controller Mapping
+HsmGraphicsView ..> ProjectController: reference
 
 @enduml

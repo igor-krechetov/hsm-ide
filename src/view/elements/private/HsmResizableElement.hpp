@@ -10,6 +10,10 @@
 
 class QPainter;
 
+namespace model {
+class StateMachineEntity;
+}
+
 namespace view {
 
 class HsmResizableElement : public HsmConnectableElement {
@@ -20,7 +24,7 @@ public:
     // virtual ~HsmResizableElement() = default;
     virtual ~HsmResizableElement();
 
-    void init(const model::EntityID_t modelElementId) override;
+    void init(const QSharedPointer<model::StateMachineEntity>& modelElement) override;
     virtual bool isResizable() const;
 
     // Resizes current element and updates the bounding rect. New position can be genative.
@@ -53,7 +57,7 @@ private:
 
 private:
     static constexpr int cChildPadding = 5;
-    
+
     QMap<GripDirection, ElementBoundaryGripItem*> mGrips;
     bool mResizeMode = false;
     bool mGripSelected = false;

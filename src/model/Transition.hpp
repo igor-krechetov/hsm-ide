@@ -5,7 +5,7 @@
 #include <QString>
 #include <QWeakPointer>
 
-#include "private/StateMachineEntity.hpp"
+#include "StateMachineEntity.hpp"
 
 namespace model {
 class State;

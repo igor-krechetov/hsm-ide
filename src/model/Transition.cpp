@@ -56,18 +56,22 @@ bool Transition::expectedConditionValue() const {
 // Setters
 void Transition::setEvent(const QString& event) {
     mEvent = event;
+    emit modelDataChanged();
 }
 
 void Transition::setTransitionType(Transition::Type type) {
     mTransitionType = type;
+    emit modelDataChanged();
 }
 
 void Transition::setConditionCallback(const QString& callback) {
     mConditionCallback = callback;
+    emit modelDataChanged();
 }
 
 void Transition::setExpectedConditionValue(bool value) {
     mExpectedConditionValue = value;
+    emit modelDataChanged();
 }
 
 };  // namespace model

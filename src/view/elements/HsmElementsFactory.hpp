@@ -11,23 +11,27 @@
 
 class QListWidgetItem;
 
+namespace model {
+class StateMachineEntity;
+}
+
 namespace view {
 
 class HsmElementsFactory {
 public:
     static std::list<QListWidgetItem*> createElementsList();
-    static HsmElement* createElement(const QString& typeId, const model::EntityID_t modelElementId);
+    static HsmElement* createElement(const QString& typeId, const QSharedPointer<model::StateMachineEntity>& modelElement);
 
 private:
-    static HsmElement* _createElementState(const model::EntityID_t modelElementId);
-    static HsmElement* _createElementStart(const model::EntityID_t modelElementId);
-    static HsmElement* _createElementFinal(const model::EntityID_t modelElementId);
-    static HsmElement* _createElementEntryPoint(const model::EntityID_t modelElementId);
-    static HsmElement* _createElementExitPoint(const model::EntityID_t modelElementId);
-    static HsmElement* _createElementHistory(const model::EntityID_t modelElementId);
+    static HsmElement* createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    static HsmElement* createElementStart(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    static HsmElement* createElementFinal(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    static HsmElement* createElementEntryPoint(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    static HsmElement* createElementExitPoint(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    static HsmElement* createElementHistory(const QSharedPointer<model::StateMachineEntity>& modelElement);
 
 private:
-    static std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(model::EntityID_t)>>> mItemsCatalog;
+    static std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&)>>> mItemsCatalog;
 };
 
 };  // namespace view
