@@ -10,6 +10,10 @@ QT_END_NAMESPACE
 
 class HsmGraphicsView;
 
+namespace model {
+    class StateMachineModel;
+}
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -18,6 +22,8 @@ public:
     virtual ~MainWindow();
 
     QPointer<HsmGraphicsView> view();
+
+    void setModel(const QSharedPointer<model::StateMachineModel>& model);
 
 private:
     Ui_hsm_ide* ui;

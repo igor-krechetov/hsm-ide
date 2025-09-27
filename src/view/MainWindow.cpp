@@ -1,6 +1,8 @@
 #include "MainWindow.hpp"
 
 #include "./ui/ui_main.h"
+#include "view/models/StateMachineTreeModel.hpp"
+#include "model/StateMachineModel.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/elements/private/ElementGripItem.hpp"
@@ -28,6 +30,8 @@ MainWindow::MainWindow(QWidget* parent)
         ui->listHsmElements->addItem(newItem);
     }
 
+
+
     // std::shared_ptr<ElementGripItem> g1 = std::make_shared<ElementGripItem>(nullptr);
     // g1->setPos(10, 20);
     // scene->addItem(g1.get());
@@ -48,4 +52,9 @@ void MainWindow::deleteSelectedItems() {
     }
 
     ui->mainView->deleteSelectedItems();
+}
+
+void MainWindow::setModel(const QSharedPointer<model::StateMachineModel>& model) {
+    // Connect StateMachineTreeModel to modelTree
+    ui->modelTree->setModel(new view::StateMachineTreeModel(model, this));
 }

@@ -15,6 +15,13 @@ public:
     void setTransition(const QSharedPointer<Transition>& transition);
     QSharedPointer<Transition> transition() const;
 
+    void deleteChild(const EntityID_t id) override;
+    void deleteDirectChild(const QSharedPointer<StateMachineEntity> child) override;
+
+    QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
+    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
+                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
+
 private:
     QSharedPointer<Transition> mTransition;
 };

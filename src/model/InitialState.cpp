@@ -10,10 +10,31 @@ InitialState::InitialState(const QString& name)
 
 void InitialState::setTransition(const QSharedPointer<Transition>& transition) {
     mTransition = transition;
+    registerNewChild(transition);
 }
 
 QSharedPointer<Transition> InitialState::transition() const {
     return mTransition;
+}
+
+void InitialState::deleteChild(const EntityID_t id) {
+    if (mTransition && mTransition->id() == id) {
+        mTransition.reset();
+    }
+}
+
+void InitialState::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
+    if (child == mTransition) {
+        mTransition.reset();
+    }
+}
+
+QSharedPointer<StateMachineEntity> InitialState::findParentState(const EntityID_t childId) {
+    return (mTransition && mTransition->id() == childId ? sharedFromThis() : nullptr);
+}
+
+QSharedPointer<StateMachineEntity> InitialState::findChild(const EntityID_t id, const StateMachineEntity::Type type) const {
+    return (type == StateMachineEntity::Type::Transition && mTransition && mTransition->id() == id ? mTransition : nullptr);
 }
 
 };  // namespace model

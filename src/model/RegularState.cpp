@@ -39,6 +39,7 @@ void RegularState::setOnExitingCallback(const QString& callback) {
 void RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
         mChildren.push_back(child);
+        registerNewChild(child);
     }
 }
 
@@ -57,44 +58,42 @@ const QList<QSharedPointer<StateMachineEntity>>& RegularState::children() const 
 }
 
 void RegularState::deleteChild(const EntityID_t id) {
-    deleteChild(findChild(id));
-}
+    QSharedPointer<StateMachineEntity> parent = findParentState(id);
 
-void RegularState::deleteChild(const QSharedPointer<StateMachineEntity> child) {
-    if (child) {
-        mChildren.removeAll(child);
+    if (parent) {
+        if (parent.get() == this) {
+            deleteDirectChild(findChild(id));
+        } else {
+            parent->deleteChild(id);
+        }
     }
 }
 
-QSharedPointer<RegularState> RegularState::findParentState(const EntityID_t childId) {
-    QSharedPointer<RegularState> res;
+void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
+    if (child) {
+        mChildren.removeAll(child);
+        unregisterChild(child);
+    }
+}
+
+QSharedPointer<StateMachineEntity> RegularState::findParentState(const EntityID_t childId) {
+    QSharedPointer<StateMachineEntity> res;
 
     if (INVALID_MODEL_ID != childId) {
         for (const auto& element : mChildren) {
             if (element->id() == childId) {
-                res = sharedFromThis().dynamicCast<RegularState>();
-            } else if (element->type() == StateMachineEntity::Type::State) {
-                switch(element.dynamicCast<State>()->stateType()) {
-                    case State::StateType::Regular: {
-                        auto ptr = element.dynamicCast<RegularState>();
-                        if (nullptr != ptr) {
-                            res = ptr->findParentState(childId);
-                        } else {
-                            // TODO: error
-                        }
-                        break;
-                    }
-                    case State::StateType::EntryPoint:
-                        // TODO: implement
-                        break;
-                    default:
-                        // can't have children
-                        break;
-                }
-            }
-
-            if (res) {
+                res = sharedFromThis();
                 break;
+            }
+        }
+
+        if (!res) {
+            for (const auto& element : mChildren) {
+                res = element->findParentState(childId);
+
+                if (res) {
+                    break;
+                }
             }
         }
     }
@@ -109,23 +108,17 @@ QSharedPointer<StateMachineEntity> RegularState::findChild(const EntityID_t id, 
         for (const auto& element : mChildren) {
             if ((element->id() == id) && (type == StateMachineEntity::Type::Invalid || element->type() == type)) {
                 res = element;
-            } else if (element->type() == StateMachineEntity::Type::State) {
-                switch(element.dynamicCast<State>()->stateType()) {
-                    case State::StateType::Regular:
-                        // TODO: check dynamicCast result
-                        res = element.dynamicCast<RegularState>()->findChild(id, type);
-                        break;
-                    case State::StateType::EntryPoint:
-                        // TODO:
-                        break;
-                    default:
-                        // can't have children
-                        break;
-                }
-            }
-
-            if (res) {
                 break;
+            }
+        }
+
+        if (!res) {
+            for (const auto& element : mChildren) {
+                res = element->findChild(id, type);
+
+                if (res) {
+                    break;
+                }
             }
         }
     }

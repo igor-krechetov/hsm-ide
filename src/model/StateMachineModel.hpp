@@ -26,6 +26,10 @@ public:
 
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
+signals:
+    void modelChanged();
+    void modelDataChanged();
+
 private:
     QString mName;
     QSharedPointer<RegularState> mModelRoot;

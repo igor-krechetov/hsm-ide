@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
 
         view/widgets/HsmElementsList.cpp
         view/widgets/HsmGraphicsView.cpp
+        view/widgets/HsmTreeView.cpp
         view/widgets/QClickableSlider.cpp
         view/widgets/QImageViewArea.cpp
 
@@ -53,6 +54,8 @@ set(PROJECT_SOURCES
 
         view/elements/private/styles/HsmRectangularElement.cpp
         view/elements/private/styles/HsmRoundElement.cpp
+
+        view/models/StateMachineTreeModel.cpp
 
         view/ui/main.ui
         view/ui/settings.ui

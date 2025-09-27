@@ -38,6 +38,7 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // std::shared_ptr<HsmTransition> t = std::make_shared<HsmTransition>();
     // t->init();
     // e1->addTransition(t, e2);
+    mMainWindow->setModel(mModel);
 }
 
 void ProjectController::handleViewDropEvent(const QString& elementTypeId,

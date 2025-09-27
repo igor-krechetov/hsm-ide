@@ -1,0 +1,72 @@
+#ifndef STATEMACHINETREEMODEL_HPP
+#define STATEMACHINETREEMODEL_HPP
+
+#include <QAbstractItemModel>
+#include <QSharedPointer>
+
+#include "model/StateMachineEntity.hpp"
+
+namespace model {
+    class StateMachineModel;
+    class RegularState;
+    class EntryPoint;
+    class InitialState;
+};
+
+namespace view {
+class StateMachineTreeModel : public QAbstractItemModel {
+    Q_OBJECT
+
+private:
+    struct TreeNode {
+        TreeNode* parent = nullptr;
+        QList<TreeNode*> children;
+        QSharedPointer<model::StateMachineEntity> entity;
+
+        ~TreeNode() {
+            qDeleteAll(children);
+        }
+
+        model::StateMachineEntity::Type type() const {
+            return (nullptr != entity ? entity->type() : model::StateMachineEntity::Type::Invalid);
+        }
+
+        int row() const {
+            if (!parent) return 0;
+            return parent->children.indexOf(const_cast<TreeNode*>(this));
+        }
+    };
+
+public:
+    explicit StateMachineTreeModel(QSharedPointer<model::StateMachineModel> model, QObject* parent = nullptr);
+    ~StateMachineTreeModel() override;
+
+    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& index) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+
+private slots:
+    void onModelChanged();
+    void onModelDataChanged();
+
+private:
+    void setupModelData();
+    TreeNode* nodeFromIndex(const QModelIndex& index) const;
+    void addModelEntity(TreeNode* parentNode, const QSharedPointer<model::StateMachineEntity>& entity);
+    void addRegularState(TreeNode* parentNode, const QSharedPointer<model::RegularState>& state);
+    void addEntryPoint(TreeNode* parentNode, const QSharedPointer<model::EntryPoint>& state);
+    void addInitialState(TreeNode* parentNode, const QSharedPointer<model::InitialState>& state);
+
+private:
+    // TODO: make shared ptr
+    TreeNode* mRootNode = nullptr;
+
+    QSharedPointer<model::StateMachineModel> mModel;
+    // You may want to add a tree node structure here for mapping QModelIndex to model elements
+};
+} // namespace view
+
+#endif // STATEMACHINETREEMODEL_HPP

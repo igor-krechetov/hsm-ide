@@ -23,7 +23,22 @@ public:
     EntityID_t id() const;
     Type type() const;
 
+    virtual void deleteChild(const EntityID_t id);
+    virtual void deleteDirectChild(const QSharedPointer<StateMachineEntity> child);
+
+    virtual QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId);
+    virtual QSharedPointer<StateMachineEntity> findChild(
+        const EntityID_t id,
+        const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
+
+protected:
+    void registerNewChild(const QSharedPointer<StateMachineEntity>& child);
+    void unregisterChild(const QSharedPointer<StateMachineEntity>& child);
+
 signals:
+    void childAdded(QWeakPointer<StateMachineEntity> child);
+    // TODO: use id instead?
+    void childRemoved(QWeakPointer<StateMachineEntity> child);
     void modelDataChanged();
 
 private:

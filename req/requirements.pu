@@ -110,7 +110,7 @@
 **** REQ-204c: Undo/Redo
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list
-**** REQ-205b: HSM Tree View
+**** REQ-205b: HSM Tree View <<in_progress>>
 **** REQ-205c: Attributes editor
 
 ** REQ-300: Import/Export

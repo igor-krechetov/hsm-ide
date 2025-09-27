@@ -26,12 +26,12 @@ public:
     void addTransition(const QSharedPointer<Transition>& child);
     const QList<QSharedPointer<StateMachineEntity>>& children() const;
 
-    void deleteChild(const EntityID_t id);
-    void deleteChild(const QSharedPointer<StateMachineEntity> child);
+    void deleteChild(const EntityID_t id) override;
+    void deleteDirectChild(const QSharedPointer<StateMachineEntity> child) override;
 
-    QSharedPointer<RegularState> findParentState(const EntityID_t childId);
+    QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
     QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
-                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
+                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
     QSharedPointer<State> findState(const EntityID_t id) const;
     QSharedPointer<RegularState> findRegularState(const EntityID_t id) const;
     QSharedPointer<Transition> findTransition(const EntityID_t id) const;

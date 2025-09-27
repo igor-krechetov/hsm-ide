@@ -153,7 +153,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QTreeView" name="statesTree"/>
+          <widget class="HsmTreeView" name="modelTree" native="true"/>
          </item>
         </layout>
        </widget>
@@ -404,6 +404,11 @@
    <class>HsmElementsList</class>
    <extends>QListWidget</extends>
    <header>view/widgets/HsmElementsList.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>HsmTreeView</class>
+   <extends>QWidget</extends>
+   <header>view/widgets/HsmTreeView.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>
