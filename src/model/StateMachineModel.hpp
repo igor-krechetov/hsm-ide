@@ -28,7 +28,7 @@ public:
 
 signals:
     void modelChanged();
-    void modelDataChanged();
+    void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
     QString mName;

@@ -34,6 +34,10 @@ public:
     const QString& name() const;
     void setName(const QString& name);
 
+    virtual QStringList properties() const override;
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
+
 protected:
     StateType mStateType = StateType::Invalid;
     QString mName;

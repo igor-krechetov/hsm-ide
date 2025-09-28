@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include <vector>
+#include <QStringList>
+#include <QVariant>
 
 #include "model/ModelTypes.hpp"
 
@@ -31,15 +32,19 @@ public:
         const EntityID_t id,
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const;
 
+    virtual QStringList properties() const;
+    virtual bool setProperty(const QString& key, const QVariant& value);
+    virtual QVariant getProperty(const QString& key) const;
+
 protected:
     void registerNewChild(const QSharedPointer<StateMachineEntity>& child);
     void unregisterChild(const QSharedPointer<StateMachineEntity>& child);
 
 signals:
-    void childAdded(QWeakPointer<StateMachineEntity> child);
+    void childAdded(QWeakPointer<StateMachineEntity> entity);
     // TODO: use id instead?
-    void childRemoved(QWeakPointer<StateMachineEntity> child);
-    void modelDataChanged();
+    void childRemoved(QWeakPointer<StateMachineEntity> entity);
+    void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
     EntityID_t mId = 0;

@@ -36,6 +36,21 @@ QSharedPointer<StateMachineEntity> StateMachineEntity::findChild(const EntityID_
     return nullptr;
 }
 
+QStringList StateMachineEntity::properties() const {
+    return {};
+}
+
+bool StateMachineEntity::setProperty(const QString& key, const QVariant& value) {
+    Q_UNUSED(key);
+    Q_UNUSED(value);
+    return false;
+}
+
+QVariant StateMachineEntity::getProperty(const QString& key) const {
+    Q_UNUSED(key);
+    return {};
+}
+
 void StateMachineEntity::registerNewChild(const QSharedPointer<StateMachineEntity>& child) {
     // Propagate subscription: connect child's modelEntityAdded to this
     QObject::connect(child.get(), &StateMachineEntity::childAdded, this, &StateMachineEntity::childAdded);

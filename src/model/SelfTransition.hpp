@@ -18,13 +18,13 @@ public:
     virtual ~SelfTransition() = default;
 
     // Getters
-    Type type() const;
+    TransitionType type() const;
 
     // Setters
-    void setType(Type type);
+    void setType(TransitionType type);
 
 private:
-    Type mType = Type::EXTERNAL;
+    TransitionType mType = TransitionType::EXTERNAL;
 };
 
 };  // namespace model

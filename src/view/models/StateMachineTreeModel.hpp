@@ -48,9 +48,11 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+    QModelIndex findModelEntity(const model::EntityID_t id) const;
+
 private slots:
     void onModelChanged();
-    void onModelDataChanged();
+    void onModelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
 
 private:
     void setupModelData();

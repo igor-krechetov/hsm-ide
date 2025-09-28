@@ -8,13 +8,14 @@ SelfTransition::SelfTransition(QSharedPointer<State> state, const QString& event
     : Transition(state, state, event) {}
 
 // Getters
-Transition::Type SelfTransition::type() const {
+Transition::TransitionType SelfTransition::type() const {
     return mType;
 }
 
 // Setters
-void SelfTransition::setType(Transition::Type type) {
+void SelfTransition::setType(Transition::TransitionType type) {
     mType = type;
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 };  // namespace model

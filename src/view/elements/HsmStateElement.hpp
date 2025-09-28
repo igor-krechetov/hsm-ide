@@ -28,7 +28,6 @@ protected slots:
 
 private:
     QGraphicsTextItem* mTextItem = nullptr;
-
 };
 
 };  // namespace view

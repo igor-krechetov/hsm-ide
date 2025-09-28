@@ -12,9 +12,6 @@ class State;
 
 class Transition : public StateMachineEntity {
 public:
-    enum class Type { EXTERNAL, INTERNAL };
-
-public:
     Transition(QSharedPointer<State> source, QSharedPointer<State> target, const QString& event);
     virtual ~Transition() = default;
 
@@ -29,18 +26,25 @@ public:
 
     // Getters
     const QString& event() const;
-    Type transitionType() const;
+    TransitionType transitionType() const;
     const QString& conditionCallback() const;
     bool expectedConditionValue() const;
 
     // Setters
     void setEvent(const QString& event);
-    void setTransitionType(Type type);
+    void setTransitionType(TransitionType type);
     void setConditionCallback(const QString& callback);
     void setExpectedConditionValue(bool value);
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
+
+    QStringList properties() const override;
+
+public:
+    static constexpr char cKeyTransitionType[] = "transitionType";
 
 private:
-    Type mTransitionType = Type::EXTERNAL;
+    TransitionType mTransitionType = TransitionType::EXTERNAL;
     QWeakPointer<State> mSource;
     QWeakPointer<State> mTarget;
     QString mEvent;

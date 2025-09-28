@@ -36,6 +36,10 @@ public:
     QSharedPointer<RegularState> findRegularState(const EntityID_t id) const;
     QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 
+    QStringList properties() const override;
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
+
 private:
     QString mOnStateChangedCallback;
     QString mOnEnteringCallback;

@@ -21,6 +21,9 @@ public:
     QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
     QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
                                                  const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
+    QStringList properties() const override;
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
 
 private:
     QSharedPointer<Transition> mTransition;

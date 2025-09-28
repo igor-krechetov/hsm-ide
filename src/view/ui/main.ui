@@ -153,7 +153,11 @@
           </widget>
          </item>
          <item>
-          <widget class="HsmTreeView" name="modelTree" native="true"/>
+          <widget class="HsmTreeView" name="modelTree">
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -167,7 +171,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QTreeView" name="itemProperties"/>
+          <widget class="QTableView" name="entityProperties">
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -407,7 +415,7 @@
   </customwidget>
   <customwidget>
    <class>HsmTreeView</class>
-   <extends>QWidget</extends>
+   <extends>QTreeView</extends>
    <header>view/widgets/HsmTreeView.hpp</header>
   </customwidget>
  </customwidgets>

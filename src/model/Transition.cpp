@@ -41,7 +41,7 @@ EntityID_t Transition::targetId() const {
 }
 
 // Getters
-Transition::Type Transition::transitionType() const {
+TransitionType Transition::transitionType() const {
     return mTransitionType;
 }
 
@@ -56,22 +56,57 @@ bool Transition::expectedConditionValue() const {
 // Setters
 void Transition::setEvent(const QString& event) {
     mEvent = event;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
-void Transition::setTransitionType(Transition::Type type) {
+void Transition::setTransitionType(TransitionType type) {
     mTransitionType = type;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 void Transition::setConditionCallback(const QString& callback) {
     mConditionCallback = callback;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 void Transition::setExpectedConditionValue(bool value) {
     mExpectedConditionValue = value;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+QStringList Transition::properties() const {
+    return {"event", "conditionCallback", "expectedConditionValue", cKeyTransitionType};
+}
+
+bool Transition::setProperty(const QString& key, const QVariant& value) {
+    bool handled = true;
+
+    if (key == "event") {
+        setEvent(value.toString());
+    } else if (key == "conditionCallback") {
+        setConditionCallback(value.toString());
+    } else if (key == "expectedConditionValue") {
+        setExpectedConditionValue(value.toBool());
+    } else if (key == "transitionType") {
+        setTransitionType(transitionTypeFromInt(value.toInt()));
+    } else {
+        handled = StateMachineEntity::setProperty(key, value);
+    }
+    
+    return handled;
+}
+
+QVariant Transition::getProperty(const QString& key) const {
+    if (key == "event") {
+        return mEvent;
+    } else if (key == "conditionCallback") {
+        return mConditionCallback;
+    } else if (key == "expectedConditionValue") {
+        return mExpectedConditionValue;
+    } else if (key == "transitionType") {
+        return static_cast<int>(mTransitionType);
+    }
+    return StateMachineEntity::getProperty(key);
 }
 
 };  // namespace model

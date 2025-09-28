@@ -23,17 +23,17 @@ const QString& RegularState::onExitingCallback() const {
 // Setters
 void RegularState::setOnStateChangedCallback(const QString& callback) {
     mOnStateChangedCallback = callback;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 void RegularState::setOnEnteringCallback(const QString& callback) {
     mOnEnteringCallback = callback;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 void RegularState::setOnExitingCallback(const QString& callback) {
     mOnExitingCallback = callback;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 void RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
@@ -157,6 +157,41 @@ QSharedPointer<Transition> RegularState::findTransition(const EntityID_t id) con
     }
 
     return res;
+}
+
+QStringList RegularState::properties() const {
+    return {"name", "onStateChangedCallback", "onEnteringCallback", "onExitingCallback"};
+}
+
+bool RegularState::setProperty(const QString& key, const QVariant& value) {
+    bool handled = true;
+
+    if (key == "onStateChangedCallback") {
+        setOnStateChangedCallback(value.toString());
+    } else if (key == "onEnteringCallback") {
+        setOnEnteringCallback(value.toString());
+    } else if (key == "onExitingCallback") {
+        setOnExitingCallback(value.toString());
+    } else if (key == "name") {
+        setName(value.toString());
+    } else {
+        handled = State::setProperty(key, value);
+    }
+
+    return handled;
+}
+
+QVariant RegularState::getProperty(const QString& key) const {
+    if (key == "onStateChangedCallback") {
+        return mOnStateChangedCallback;
+    } else if (key == "onEnteringCallback") {
+        return mOnEnteringCallback;
+    } else if (key == "onExitingCallback") {
+        return mOnExitingCallback;
+    } else if (key == "name") {
+        return mName;
+    }
+    return State::getProperty(key);
 }
 
 };  // namespace model

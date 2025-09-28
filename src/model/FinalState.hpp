@@ -16,6 +16,11 @@ public:
     // Setters
     void setOnStateChangedCallback(const QString& callback);
 
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
+
+    QStringList properties() const override;
+
 private:
     QString mOnStateChangedCallback;
 };

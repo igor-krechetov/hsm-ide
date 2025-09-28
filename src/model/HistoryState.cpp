@@ -8,7 +8,7 @@ HistoryState::HistoryState(const QString& name, const HistoryState::HistoryType 
 
 void HistoryState::setHistoryType(HistoryState::HistoryType historyType) {
     mHistoryType = historyType;
-    emit modelDataChanged();
+    emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
 };  // namespace model

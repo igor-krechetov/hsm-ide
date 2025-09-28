@@ -19,6 +19,7 @@ void EntryPoint::deleteChild(const EntityID_t id) {
 void EntryPoint::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
     if (child) {
         mTransitions.removeAll(child.dynamicCast<Transition>());
+        unregisterChild(child);
     }
 }
 
@@ -50,6 +51,29 @@ QSharedPointer<StateMachineEntity> EntryPoint::findChild(const EntityID_t id, co
     }
 
     return res;
+}
+
+QStringList EntryPoint::properties() const {
+    return {"name"};
+}
+
+bool EntryPoint::setProperty(const QString& key, const QVariant& value) {
+    bool handled = true;
+
+    if (key == "name") {
+        setName(value.toString());
+    } else {
+        handled = State::setProperty(key, value);
+    }
+
+    return handled;
+}
+
+QVariant EntryPoint::getProperty(const QString& key) const {
+    if (key == "name") {
+        return mName;
+    }
+    return State::getProperty(key);
 }
 
 };  // namespace model

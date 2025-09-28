@@ -13,6 +13,7 @@ set(PROJECT_SOURCES
         controllers/ProjectController.cpp
         # controllers/RecentFilesManager.cpp
 
+        model/ModelTypes.cpp
         model/EntryPoint.cpp
         model/ExitPoint.cpp
         model/FinalState.cpp
@@ -35,6 +36,7 @@ set(PROJECT_SOURCES
         view/widgets/HsmTreeView.cpp
         view/widgets/QClickableSlider.cpp
         view/widgets/QImageViewArea.cpp
+        view/widgets/HsmEntityPropertyDelegate.cpp
 
         view/elements/HsmElementsFactory.cpp
         view/elements/HsmEntryPointElement.cpp
@@ -56,6 +58,7 @@ set(PROJECT_SOURCES
         view/elements/private/styles/HsmRoundElement.cpp
 
         view/models/StateMachineTreeModel.cpp
+        view/models/StateMachineEntityViewModel.cpp
 
         view/ui/main.ui
         view/ui/settings.ui

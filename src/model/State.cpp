@@ -1,6 +1,7 @@
 #include "State.hpp"
 
 #include <QDebug>
+#include <QStringList>
 
 #include "Transition.hpp"
 
@@ -25,6 +26,29 @@ const QString& State::name() const {
 
 void State::setName(const QString& name) {
     mName = name;
+    emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+bool State::setProperty(const QString& key, const QVariant& value) {
+    bool handled = false;
+
+    if (key == "name") {
+        setName(value.toString());
+        handled = true;
+    }
+
+    return handled;
+}
+
+QVariant State::getProperty(const QString& key) const {
+    if (key == "name") {
+        return mName;
+    }
+    return {};
+}
+
+QStringList State::properties() const {
+    return {"name"};
 }
 
 };  // namespace model

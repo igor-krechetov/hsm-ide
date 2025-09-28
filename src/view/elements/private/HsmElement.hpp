@@ -35,6 +35,8 @@ enum class HsmElementType {
 
 constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
 
+// TODO: subscribe to model data chages and redraw HsmElement
+
 class HsmElement : public QGraphicsObject {
     Q_OBJECT
 public:

@@ -15,7 +15,10 @@ StateMachineTreeModel::StateMachineTreeModel(QSharedPointer<model::StateMachineM
     , mModel(model) {
     if (mModel) {
         QObject::connect(mModel.data(), &model::StateMachineModel::modelChanged, this, &StateMachineTreeModel::onModelChanged);
-        QObject::connect(mModel.data(), &model::StateMachineModel::modelDataChanged, this, &StateMachineTreeModel::onModelDataChanged);
+        QObject::connect(mModel.data(),
+                         &model::StateMachineModel::modelDataChanged,
+                         this,
+                         &StateMachineTreeModel::onModelDataChanged);
     }
     setupModelData();
 }
@@ -36,9 +39,18 @@ void StateMachineTreeModel::onModelChanged() {
     endResetModel();
 }
 
-void StateMachineTreeModel::onModelDataChanged() {
+void StateMachineTreeModel::onModelDataChanged(QWeakPointer<model::StateMachineEntity> entity) {
     qDebug() << "-----------" << Q_FUNC_INFO;
-    // TODO: implement
+    // Find the QModelIndex for the changed entity and emit dataChanged for that row
+    auto entityPtr = entity.lock();
+
+    if (entityPtr) {
+        QModelIndex idx = findModelEntity(entityPtr->id());
+
+        if (idx.isValid()) {
+            emit dataChanged(idx, idx, {Qt::DisplayRole});
+        }
+    }
 }
 
 void StateMachineTreeModel::setupModelData() {
@@ -85,30 +97,38 @@ int StateMachineTreeModel::columnCount(const QModelIndex& /*parent*/) const {
 QVariant StateMachineTreeModel::data(const QModelIndex& index, int role) const {
     QVariant res;
 
-    if (index.isValid() && role == Qt::DisplayRole) {
+    if (index.isValid()) {
         TreeNode* node = nodeFromIndex(index);
 
         if (nullptr != node) {
-            if (model::StateMachineEntity::Type::State == node->type() && node->entity) {
-                auto state = node->entity.dynamicCast<model::State>();
+            if (Qt::DisplayRole == role) {
+                if (model::StateMachineEntity::Type::State == node->type() && node->entity) {
+                    auto state = node->entity.dynamicCast<model::State>();
 
-                if (state) {
-                    res = state->name();
+                    if (state) {
+                        res = state->name();
+                    }
+                } else if (model::StateMachineEntity::Type::Transition == node->type() && node->entity) {
+                    auto transition = node->entity.dynamicCast<model::Transition>();
+                    QString sourceName;
+                    QString targetName;
+
+                    if (transition) {
+                        if (transition->source()) {
+                            sourceName = transition->source()->name();
+                        }
+                        if (transition->target()) {
+                            targetName = transition->target()->name();
+                        }
+
+                        res = QString("Transition %1 -> %2").arg(sourceName, targetName);
+                    }
                 }
-            } else if (model::StateMachineEntity::Type::Transition == node->type() && node->entity) {
-                auto transition = node->entity.dynamicCast<model::Transition>();
-                QString sourceName;
-                QString targetName;
-
-                if (transition) {
-                    if (transition->source()) {
-                        sourceName = transition->source()->name();
-                    }
-                    if (transition->target()) {
-                        targetName = transition->target()->name();
-                    }
-
-                    res = QString("Transition %1 -> %2").arg(sourceName, targetName);
+            } else if (Qt::UserRole == role) {
+                if (node->entity) {
+                    res = node->entity->id();
+                } else {
+                    // TODO: error
                 }
             }
         }
@@ -121,6 +141,23 @@ Qt::ItemFlags StateMachineTreeModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
         return Qt::NoItemFlags;
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+QModelIndex StateMachineTreeModel::findModelEntity(const model::EntityID_t id) const {
+    QModelIndex res;
+    QModelIndex start = index(0, 0);  // start from top-left
+    QModelIndexList matches = match(start,
+                                    Qt::UserRole,
+                                    QVariant(id),
+                                    1,  // only need 1 match
+                                    Qt::MatchExactly | Qt::MatchRecursive);
+
+    if (false == matches.isEmpty()) {
+        res = matches.first();
+        qDebug() << "Found at row" << res.row();
+    }
+
+    return res;
 }
 
 // TODO: following entities can have children: RegularState, EntryPoint, InitialState

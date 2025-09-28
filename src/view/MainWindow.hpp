@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QPointer>
 
+#include "model/ModelTypes.hpp"
+
 QT_BEGIN_NAMESPACE
 class Ui_hsm_ide;
 QT_END_NAMESPACE
@@ -39,6 +41,11 @@ private:
 
 public slots:
     void deleteSelectedItems();
+    void onGraphicsViewSelectionChanged();
+    void onModelTreeSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+
+private:
+    void selectModelEntityById(const model::EntityID_t id);
 };
 
 #endif  // MAINWINDOW_HPP
