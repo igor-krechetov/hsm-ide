@@ -389,11 +389,9 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 
         if (gripIndex >= 0) {
             // Inner grips changed
-            qDebug() << "conditions";
             if ((gripIndex > 0 && gripIndex < (mLinePath.size() - 1)) ||
                 (isConnecting() == true &&
                  ((mFromElement == nullptr && grip == mSrcGrip) || (mToElement == nullptr && grip == mDestGrip)))) {
-                qDebug() << "recalc, mLinePath.size=" << mLinePath.size();
                 mLinePath[gripIndex] = pos;
                 recalculateLine();
                 updateBoundingRect();
@@ -401,11 +399,9 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
         }
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
-            qDebug() << "highlight";
             // Check if there is an element under cursor and highlight it
-            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), pos, true, false);
+            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), pos, false, true, false, nullptr);
 
-            qDebug() << "cond2";
             if (mLastConnectionTarget != element) {
                 if (mLastConnectionTarget) {
                     mLastConnectionTarget->hightlight(false);
@@ -463,7 +459,8 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
     if (isConnecting() == true) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
             QPointF pos = gripItem->pos();
-            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), pos, true, false);
+            // check if there is an element which accepts connections
+            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), pos, false, true, false, nullptr);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;

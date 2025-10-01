@@ -30,6 +30,7 @@ public:
     void init(const QSharedPointer<model::StateMachineEntity>& modelElement) override;
 
     bool isConnectable() const override;
+    bool acceptsConnections() const override;
 
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);

@@ -5,8 +5,14 @@
 
 namespace view {
 
+// TODO: block outgoing connections
+
 HsmFinalElement::HsmFinalElement()
     : HsmRoundElement(HsmElementType::FINAL) {}
+
+bool HsmFinalElement::isConnectable() const {
+    return false;
+}
 
 void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);

@@ -5,8 +5,14 @@
 
 namespace view {
 
+// TODO: block outgoing connections
+
 HsmExitPointElement::HsmExitPointElement()
     : HsmRoundElement(HsmElementType::EXIT_POINT) {}
+
+bool HsmExitPointElement::isConnectable() const {
+    return false;
+}
 
 void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);

@@ -5,10 +5,12 @@
 #include <QMimeData>
 
 #include "ObjectUtils.hpp"
+#include "model/EntryPoint.hpp"
+#include "model/InitialState.hpp"
+#include "model/ModelElementsFactory.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
-#include "model/ModelElementsFactory.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 // TODO: move out from private
@@ -80,22 +82,59 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
 
 void ProjectController::connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
     qDebug() << Q_FUNC_INFO << fromElementId << " -> " << toElementId;
-
-    // TODO: substate support
     auto source = mModel->root()->findState(fromElementId);
     auto target = mModel->root()->findState(toElementId);
     auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
 
     if (newTransition) {
-        qDebug() << "transition created: " << newTransition;
-        view::HsmTransition* newViewTransition =
-            mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
+        switch (source->stateType()) {
+            case model::State::StateType::Regular: {
+                auto regularStatePtr = source.dynamicCast<model::RegularState>();
 
-        mModel->root()->addTransition(newTransition);
-        tryConnectSignal(newViewTransition,
-                         "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                         this,
-                         "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                if (regularStatePtr) {
+                    regularStatePtr->addTransition(newTransition);
+                }
+                break;
+            }
+            case model::State::StateType::EntryPoint: {
+                auto entryPointPtr = source.dynamicCast<model::EntryPoint>();
+
+                if (entryPointPtr) {
+                    entryPointPtr->addTransition(newTransition);
+                }
+                break;
+            }
+            case model::State::StateType::Initial: {
+                auto initialStatePtr = source.dynamicCast<model::InitialState>();
+
+                if (initialStatePtr) {
+                    auto oldTransition = initialStatePtr->transition();
+
+                    if (oldTransition) {
+                        // delete old transition from scene since initial state can only have one outgoing transition
+                        mMainWindow->view()->deleteHsmElement(oldTransition->id());
+                    }
+
+                    source.dynamicCast<model::InitialState>()->setTransition(newTransition);
+                }
+                break;
+            }
+            default:
+                // TODO: error (should not happen)
+                qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());
+                newTransition.reset();
+                break;
+        }
+
+        if (newTransition) {
+            view::HsmTransition* newViewTransition =
+                mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
+
+            tryConnectSignal(newViewTransition,
+                             "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                             this,
+                             "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+        }
     } else {
         qCritical() << "Failed to create new transition";
     }
@@ -123,16 +162,14 @@ void ProjectController::createElement(const QString& elementTypeId,
                                       const QPoint& pos,
                                       const model::EntityID_t parentElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
-    
-    static std::map<QString, model::State::StateType> sElementTypes = {
-        // TODO: decide what to do with start type
-        {"initial", model::State::StateType::Initial},
-        {"final", model::State::StateType::Final},
-        {"state", model::State::StateType::Regular},
-        {"entrypoint", model::State::StateType::EntryPoint},
-        {"exitpoint", model::State::StateType::ExitPoint},
-        {"history", model::State::StateType::History}
-    };
+
+    static std::map<QString, model::State::StateType> sElementTypes = {// TODO: decide what to do with start type
+                                                                       {"initial", model::State::StateType::Initial},
+                                                                       {"final", model::State::StateType::Final},
+                                                                       {"state", model::State::StateType::Regular},
+                                                                       {"entrypoint", model::State::StateType::EntryPoint},
+                                                                       {"exitpoint", model::State::StateType::ExitPoint},
+                                                                       {"history", model::State::StateType::History}};
 
     auto it = sElementTypes.find(elementTypeId);
 

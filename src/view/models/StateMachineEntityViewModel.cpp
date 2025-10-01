@@ -75,6 +75,20 @@ void StateMachineEntityViewModel::selectEntityById(const model::EntityID_t id) {
 void StateMachineEntityViewModel::selectEntity(const QSharedPointer<model::StateMachineEntity>& entity) {
     beginResetModel();
     mSelectedEntity = entity;
+
+    // Disconnect previous connection if any
+    if (mEntitySignalConnection) {
+        QObject::disconnect(mEntitySignalConnection);
+    }
+
+    if (mSelectedEntity) {
+        mEntitySignalConnection = QObject::connect(mSelectedEntity.get(), &model::StateMachineEntity::modelDataChanged, this,
+            [this](QWeakPointer<model::StateMachineEntity> changedEntity) {
+                emit dataChanged(index(0,0), index(rowCount()-1, columnCount()-1));
+            }
+        );
+    }
+
     // TODO: handle empty element
     endResetModel();
 }

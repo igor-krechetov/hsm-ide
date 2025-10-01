@@ -13,6 +13,8 @@ public:
     HsmInitialElement();
     virtual ~HsmInitialElement() = default;
 
+    bool acceptsConnections() const override;
+
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };

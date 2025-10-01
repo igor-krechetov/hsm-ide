@@ -6,15 +6,9 @@
 namespace view {
 
 HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType)
-    : HsmResizableElement(elementType, QSizeF(240, 140))
-    , mPenNormalMode(Qt::black, 2.0, Qt::SolidLine)
-    , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine)
-    , mPenSelectedBorder(QColor("lightblue"), 3.0, Qt::DotLine)
-
-    , mBackgroundBrush(Qt::white)
-    , mMainBrush(Qt::darkGray) {
-        setMinSize(200, 100);
-    }
+    : HsmResizableElement(elementType, QSizeF(240, 140)) {
+    setMinSize(200, 100);
+}
 
 void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     constexpr qreal cEdgeRadius = 5.0;
@@ -39,7 +33,7 @@ void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsI
 #ifdef DEBUG_RENDERING
     painter->drawEllipse(QPointF(0, 0), 5, 5);
     painter->drawPoint(0, 0);
-#endif // DEBUG_RENDERING
+#endif  // DEBUG_RENDERING
 }
 
 };  // namespace view

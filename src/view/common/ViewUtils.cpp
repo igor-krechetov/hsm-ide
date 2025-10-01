@@ -10,6 +10,7 @@ namespace view {
 HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                                        const QPointF& scenePos,
                                        const bool onlyConnectable,
+                                       const bool onlyAcceptsConnections,
                                        const bool onlyAcceptsChildren,
                                        const HsmElement* ignoreElement) {
     HsmElement* element = nullptr;
@@ -32,6 +33,10 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                             element = nullptr;
                         } else if (onlyConnectable && element->isConnectable() == false) {
                             qDebug() << "Target is not connectable: " << element->modelId()
+                                     << " | viewElementType=" << elementType << " | " << element;
+                            element = nullptr;
+                        } else if (onlyAcceptsConnections && element->acceptsConnections() == false) {
+                            qDebug() << "Target does not accept connections: " << element->modelId()
                                      << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
                         } else if (onlyAcceptsChildren && element->acceptsChildren() == false) {

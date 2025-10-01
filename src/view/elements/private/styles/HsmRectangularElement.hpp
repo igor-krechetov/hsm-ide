@@ -19,13 +19,6 @@ public:
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-
-protected:
-    QPen mPenNormalMode;
-    QPen mPenHighlightMode;
-    QPen mPenSelectedBorder;
-    QBrush mBackgroundBrush;
-    QBrush mMainBrush;
 };
 
 };  // namespace view

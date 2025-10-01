@@ -41,17 +41,20 @@ QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const Entit
 // TODO: this probably will not work with transitions. decide how transitions will be moved
 bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t newParentId) {
     bool moved = false;
-    QSharedPointer<StateMachineEntity> currentParent = mModelRoot->findParentState(elementId);
 
-    if (currentParent && currentParent->id() != newParentId) {
-        QSharedPointer<StateMachineEntity> element = currentParent->findChild(elementId);
-        QSharedPointer<RegularState> newParent =
-            (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findRegularState(newParentId));
+    if (elementId != newParentId) {
+        QSharedPointer<StateMachineEntity> currentParent = mModelRoot->findParentState(elementId);
 
-        if (element && newParent) {
-            newParent->addChild(element);
-            currentParent->deleteDirectChild(element);
-            moved = true;
+        if (currentParent && currentParent->id() != newParentId) {
+            QSharedPointer<StateMachineEntity> element = currentParent->findChild(elementId);
+            QSharedPointer<RegularState> newParent =
+                (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findRegularState(newParentId));
+
+            if (element && newParent) {
+                newParent->addChild(element);
+                currentParent->deleteDirectChild(element);
+                moved = true;
+            }
         }
     }
 

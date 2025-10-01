@@ -13,6 +13,8 @@ public:
     HsmHistoryElement();
     virtual ~HsmHistoryElement() = default;
 
+    bool isConnectable() const override;
+
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };
 

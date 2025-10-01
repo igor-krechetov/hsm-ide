@@ -52,10 +52,6 @@ public:
 
     virtual void init(const QSharedPointer<model::StateMachineEntity>& modelElement);
 
-    // Slot for model data changes
-public slots:
-    virtual void onModelDataChanged();
-
     model::EntityID_t modelId() const;
     // void setModelId(const model::EntityID_t modelElementId);
 
@@ -69,7 +65,11 @@ public slots:
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
+    template <typename T>
+    QSharedPointer<T> modelElement();
+
     virtual bool isConnectable() const;
+    virtual bool acceptsConnections() const;
     virtual bool isResizable() const;
     // HsmElement* connectableElementAt(const QPointF& pos) const;
 
@@ -80,6 +80,10 @@ public slots:
 
     // TODO: move to an interface
     virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
+
+// Slot for model data changes
+public slots:
+    virtual void onModelDataChanged();
 
 signals:
     void dragElementBegin(HsmElement* element, const QPointF& scenePos);
@@ -112,7 +116,11 @@ protected:
     QSizeF mSize;
     QRectF mOuterRect;
 
+    QPen mPenNormalMode;
     QPen mPenHighlightMode;
+    QPen mPenSelectedBorder;
+    QBrush mBackgroundBrush;
+    QBrush mMainBrush;
 
 private:
     HsmElementType mType = HsmElementType::UNKNOWN;
@@ -121,6 +129,18 @@ private:
     DragMode mDragMode = DragMode::NONE;
     bool mHightlight = false;
 };
+
+template <typename T>
+QSharedPointer<T> HsmElement::modelElement() {
+    QSharedPointer<T> res;
+    auto entitySharedPtr = mModelElement.lock();
+
+    if (entitySharedPtr) {
+        res = entitySharedPtr.dynamicCast<T>();
+    }
+
+    return res;
+}
 
 };  // namespace view
 

@@ -8,6 +8,10 @@ namespace view {
 HsmHistoryElement::HsmHistoryElement()
     : HsmRoundElement(HsmElementType::HISTORY) {}
 
+bool HsmHistoryElement::isConnectable() const {
+    return false;
+}
+
 void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);
 

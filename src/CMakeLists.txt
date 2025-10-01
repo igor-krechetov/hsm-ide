@@ -53,6 +53,7 @@ set(PROJECT_SOURCES
         view/elements/private/HsmConnectableElement.cpp
         view/elements/private/HsmElement.cpp
         view/elements/private/HsmResizableElement.cpp
+        view/elements/private/HsmStateTextItem.cpp
 
         view/elements/private/styles/HsmRectangularElement.cpp
         view/elements/private/styles/HsmRoundElement.cpp

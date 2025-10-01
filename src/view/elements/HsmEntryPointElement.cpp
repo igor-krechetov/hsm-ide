@@ -8,6 +8,10 @@ namespace view {
 HsmEntryPointElement::HsmEntryPointElement()
     : HsmRoundElement(HsmElementType::ENTRY_POINT) {}
 
+bool HsmEntryPointElement::acceptsConnections() const {
+    return false;
+}
+
 void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);
 

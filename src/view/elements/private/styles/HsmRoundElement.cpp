@@ -17,6 +17,12 @@ void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     pen.setWidth(2);
     painter->setPen(pen);
     painter->setRenderHint(QPainter::Antialiasing, true);
+
+    if (isHighligted() == true) {
+        painter->setPen(mPenHighlightMode);
+    } else {
+        painter->setPen(mPenNormalMode);
+    }
 }
 
 qreal HsmRoundElement::radius() const {

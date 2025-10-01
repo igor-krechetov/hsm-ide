@@ -123,26 +123,30 @@ void HsmGraphicsView::deleteHsmElement(const model::EntityID_t modelElementId) {
 }
 
 void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId) {
-    view::HsmElement* element = findHsmElement(elementId);
+    if (elementId != newParentId) {
+        view::HsmElement* element = findHsmElement(elementId);
 
-    if (nullptr != element) {
-        QPointF oldPos = element->scenePos();
-        view::HsmElement* newParent = findHsmElement(newParentId);
+        if (nullptr != element) {
+            QPointF oldPos = element->scenePos();
+            view::HsmElement* newParent = findHsmElement(newParentId);
 
-        if (nullptr != newParent) {
-            auto newPos = newParent->mapFromScene(oldPos);
-            element->setParentItem(newParent);
-            element->setPos(newPos);
+            if (nullptr != newParent) {
+                auto newPos = newParent->mapFromScene(oldPos);
+                element->setParentItem(newParent);
+                element->setPos(newPos);
 
-            auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(newParent);
+                auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(newParent);
 
-            if (resizableParent) {
-                resizableParent->resizeToFitChildItem(element);
+                if (resizableParent) {
+                    resizableParent->resizeToFitChildItem(element);
+                }
+            } else {
+                element->setParentItem(nullptr);
+                element->setPos(oldPos);
             }
-        } else {
-            element->setParentItem(nullptr);
-            element->setPos(oldPos);
         }
+    } else {
+        qCritical() << Q_FUNC_INFO << "elementId == newParentId";
     }
 }
 
@@ -201,7 +205,7 @@ void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
 }
 
 void HsmGraphicsView::handleElementDragEvent(view::HsmElement* element, const QPointF& scenePos) {
-    QPointer<view::HsmElement> targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, true, element);
+    QPointer<view::HsmElement> targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, element);
 
     // qDebug() << "handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : -1)
     //          << "target=" << (targetElement ? targetElement->modelId() : -1);

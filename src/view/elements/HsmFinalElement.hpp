@@ -13,6 +13,8 @@ public:
     HsmFinalElement();
     virtual ~HsmFinalElement() = default;
 
+    bool isConnectable() const override;
+
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };

@@ -21,7 +21,7 @@
 
 * REQ-000: SCXML State Machine Editor
 ** REQ-100: Core Editor Functionality
-*** REQ-101: Support all SCXML state types <<in_progress>>
+*** REQ-101: SCXML domain model <<in_progress>>
 **** REQ-101a: Atomic states <<in_progress>>
 **** REQ-101b: Parallel states
 **** REQ-101c: Compound states <<in_progress>>
@@ -30,6 +30,7 @@
 **** REQ-101f: Exit points <<in_progress>>
 **** REQ-101g: Final states <<in_progress>>
 **** REQ-101h: Initial states <<in_progress>>
+**** REQ-101i: model infrastructure <<in_progress>>
 *** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
@@ -90,6 +91,20 @@
 ***** REQ-106d2: Included file existence verification  <<prio_low>>
 ***** REQ-106d3: Interface compatibility validation (entry/exit points)  <<prio_low>>
 
+*** REQ-107: Elements Rendering <<in_progress>>
+**** REQ-107a: Atomic states <<done>>
+**** REQ-107b: Parallel states
+**** REQ-107c: Compound states <<in_progress>>
+**** REQ-107d: History states <<done>>
+**** REQ-107e: Entry points <<done>>
+**** REQ-107f: Exit points <<done>>
+**** REQ-107g: Final states <<done>>
+**** REQ-107h: Initial states <<done>>
+**** REQ-107i: model view widget <<done>>
+**** REQ-107i: generic element <<done>>
+***** REQ-107i1: common element functionality <<done>>
+***** REQ-107i2: redraw on model data change <<done>>
+
 ** REQ-200: UI/UX Requirements
 *** REQ-201: Workspace layout
 **** REQ-201a: Element palette (toolbox)
@@ -114,7 +129,7 @@
 ***** REQ-205b1: model and elements update <<done>>
 ***** REQ-205b2: delete tree elements <<todo>>
 ***** REQ-205b2: select tree elements and focus update <<done>>
-***** REQ-205b3: icons and styling
+***** REQ-205b3: icons and styling <<prio_low>>
 **** REQ-205c: Attributes editor <<prio_low>>
 ***** REQ-205c1: custom view model <<done>>
 ***** REQ-205c2: show a list of attributes per element type <<done>>

@@ -31,6 +31,7 @@ public:
 private:
     QSharedPointer<model::StateMachineModel> mModel;
     QSharedPointer<model::StateMachineEntity> mSelectedEntity;
+    QMetaObject::Connection mEntitySignalConnection;
 };
 
 }  // namespace view

@@ -22,7 +22,12 @@ HsmElement::HsmElement(const HsmElementType elementType,
     : QGraphicsObject()
     , mType(elementType)
     , mModelElement(modelElement.toWeakRef())
-    , mSize(size) {
+    , mSize(size)
+    , mPenNormalMode(Qt::black, 2.0, Qt::SolidLine)
+    , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine)
+    , mPenSelectedBorder(QColor("lightblue"), 3.0, Qt::DotLine)
+    , mBackgroundBrush(Qt::white)
+    , mMainBrush(Qt::darkGray) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
@@ -91,12 +96,18 @@ void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelElem
     updateBoundingRect();
     // Subscribe to modelDataChanged signal
     if (modelElement) {
-        QObject::connect(modelElement.data(), &model::StateMachineEntity::modelDataChanged,
-                         this, &HsmElement::onModelDataChanged);
+        QObject::connect(modelElement.data(),
+                         &model::StateMachineEntity::modelDataChanged,
+                         this,
+                         &HsmElement::onModelDataChanged);
     }
 }
 
 bool HsmElement::isConnectable() const {
+    return false;
+}
+
+bool HsmElement::acceptsConnections() const {
     return false;
 }
 
@@ -286,6 +297,7 @@ void HsmElement::resizeParentToFitChildItem() {
 
 // Slot implementation
 void HsmElement::onModelDataChanged() {
+    qDebug() << "---- HsmElement::onModelDataChanged";
     // Default: redraw element
     update();
 }

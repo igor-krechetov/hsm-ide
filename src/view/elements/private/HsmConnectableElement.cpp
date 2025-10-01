@@ -38,6 +38,10 @@ bool HsmConnectableElement::isConnectable() const {
     return true;
 }
 
+bool HsmConnectableElement::acceptsConnections() const {
+    return true;
+}
+
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
     qreal arrowOffset = 0.0;
@@ -177,7 +181,7 @@ QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arr
 }
 
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    if (hasVisibleArrows() == false) {
+    if (isConnectable() == true && hasVisibleArrows() == false) {
         const QRectF sceneRect = mapRectToScene(mOuterRect);
         const QPointF sceneMousePos = mapToScene(event->pos());
 

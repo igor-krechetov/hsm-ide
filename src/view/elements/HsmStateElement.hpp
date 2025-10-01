@@ -7,6 +7,8 @@ class QPainter;
 class QWidget;
 
 namespace view {
+    
+class HsmStateTextItem;
 
 class HsmStateElement : public HsmRectangularElement {
     Q_OBJECT
@@ -25,9 +27,11 @@ protected:
 
 protected slots:
     void onTextChanged();
+    void onTextEditFinished();
+    void onModelDataChanged() override;
 
 private:
-    QGraphicsTextItem* mTextItem = nullptr;
+    HsmStateTextItem* mTextItem = nullptr;
 };
 
 };  // namespace view

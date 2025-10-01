@@ -10,6 +10,8 @@ public:
     HsmExitPointElement();
     virtual ~HsmExitPointElement() = default;
 
+    bool isConnectable() const override;
+
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };
