@@ -18,19 +18,17 @@ namespace view {
 
 std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&)>>>
     HsmElementsFactory::mItemsCatalog = {
-        {"initial", {"initial", "/../../res/element_start.png", &HsmElementsFactory::createElementStart}},
-        {"final", {"Final", "/../../res/element_final.png", &HsmElementsFactory::createElementFinal}},
-        {"state", {"State", "/../../res/element_state.png", &HsmElementsFactory::createElementState}},
-        {"entrypoint", {"Entry Point", "/../../res/element_entrypoint.png", &HsmElementsFactory::createElementEntryPoint}},
-        {"exitpoint", {"Exit Point", "/../../res/element_exitpoint.png", &HsmElementsFactory::createElementExitPoint}},
-        {"history", {"History", "/../../res/element_history.png", &HsmElementsFactory::createElementHistory}}};
+        {"initial", {"initial", ":/icons/element_start.png", &HsmElementsFactory::createElementStart}},
+        {"final", {"Final", ":/icons/element_final.png", &HsmElementsFactory::createElementFinal}},
+        {"state", {"State", ":/icons/element_state.png", &HsmElementsFactory::createElementState}},
+        {"entrypoint", {"Entry Point", ":/icons/element_entrypoint.png", &HsmElementsFactory::createElementEntryPoint}},
+        {"exitpoint", {"Exit Point", ":/icons/element_exitpoint.png", &HsmElementsFactory::createElementExitPoint}},
+        {"history", {"History", ":/icons/element_history.png", &HsmElementsFactory::createElementHistory}}};
 
 std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
     std::list<QListWidgetItem*> elements;
-    QString appDir = QCoreApplication::applicationDirPath();
-
     for (const auto& itemInfo : mItemsCatalog) {
-        QIcon icon(appDir + std::get<1>(itemInfo.second));
+        QIcon icon(std::get<1>(itemInfo.second));
         QString itemName = std::get<0>(itemInfo.second);
         QListWidgetItem* newItem = new QListWidgetItem(icon, itemName);
 

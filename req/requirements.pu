@@ -107,7 +107,7 @@
 
 ** REQ-200: UI/UX Requirements
 *** REQ-201: Workspace layout
-**** REQ-201a: Element palette (toolbox)
+**** REQ-201a: Element palette (toolbox) <<in_progress>>
 **** REQ-201b: Properties editor panel
 **** REQ-201c: Canvas workspace
 *** REQ-202: Visualization features

@@ -5,6 +5,8 @@ add_definitions(-DDEBUG_RENDERING=1)
 
 set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
+set(RESOURCE_FILES view/res/resources.qrc)
+
 set(PROJECT_SOURCES
         main.cpp
         common/ObjectUtils.cpp
@@ -67,6 +69,8 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
+    list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     qt_add_executable(hsm_ide
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -78,6 +82,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
+    qt5_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
+    list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     if(ANDROID)
         add_library(hsm_ide SHARED
             ${PROJECT_SOURCES}
