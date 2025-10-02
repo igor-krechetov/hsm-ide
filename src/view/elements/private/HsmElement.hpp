@@ -50,7 +50,7 @@ public:
     explicit HsmElement(const HsmElementType elementType, const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
     virtual ~HsmElement();
 
-    virtual void init(const QSharedPointer<model::StateMachineEntity>& modelElement);
+    virtual void init(const QSharedPointer<model::StateMachineEntity>& modelEntity);
 
     model::EntityID_t modelId() const;
     // void setModelId(const model::EntityID_t modelElementId);

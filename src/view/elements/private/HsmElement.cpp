@@ -91,12 +91,12 @@ QRectF HsmElement::elementRect() const {
     return mOuterRect;
 }
 
-void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelElement) {
-    mModelElement = modelElement.toWeakRef();
+void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
+    mModelElement = modelEntity.toWeakRef();
     updateBoundingRect();
     // Subscribe to modelDataChanged signal
-    if (modelElement) {
-        QObject::connect(modelElement.data(),
+    if (modelEntity) {
+        QObject::connect(modelEntity.data(),
                          &model::StateMachineEntity::modelDataChanged,
                          this,
                          &HsmElement::onModelDataChanged);

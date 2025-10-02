@@ -6,6 +6,7 @@
 #include <QPointer>
 
 #include "private/HsmElement.hpp"
+#include "private/HsmStateTextItem.hpp"
 
 class QPainter;
 class QWidget;
@@ -22,6 +23,8 @@ public:
     HsmTransition();
     // virtual ~HsmTransition() = default;
     virtual ~HsmTransition();
+
+    void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
 
     void beginConnection(HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;
@@ -66,6 +69,9 @@ protected slots:
     void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
 protected slots:
+    void onEventEditFinished();
+    void onEventLabelPositionChanged();
+    void onModelDataChanged() override;
     void recalculateLine();
 
 private:
@@ -85,9 +91,11 @@ private:
     bool mConnecting = false;
     QPointer<HsmElement> mPrevConnectedElement;
 
-    ElementGripItem* mSrcGrip = nullptr;
-    ElementGripItem* mDestGrip = nullptr;
+    QPointer<ElementGripItem> mSrcGrip;
+    QPointer<ElementGripItem> mDestGrip;
     QPointer<HsmElement> mLastConnectionTarget;
+    QPointer<HsmStateTextItem> mLabel;
+    QPointF mLabelOffset = QPointF(0, 0);
 };
 
 };  // namespace view

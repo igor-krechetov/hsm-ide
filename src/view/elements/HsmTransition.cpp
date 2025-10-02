@@ -6,10 +6,14 @@
 #include <QPainterPath>
 #include <QPointF>
 #include <QPolygonF>
+#include <QSignalBlocker>
 #include <cmath>
 
+#include "model/Transition.hpp"
 #include "private/ElementGripItem.hpp"
+#include "private/HsmStateTextItem.hpp"
 #include "view/common/ViewUtils.hpp"
+
 namespace view {
 
 HsmTransition::HsmTransition()
@@ -18,7 +22,7 @@ HsmTransition::HsmTransition()
     , mToElement(nullptr)
     , mDebugShowSelectionPolygon(false) {
     qDebug() << "CREATE: HsmTransition: " << this;
-    // NOTE: there are no grips at the beginning and and of the poly-line
+    // NOTE: there are no grips at the beginning and end of the poly-line
     // TODO: fix me
     // self.lineGrips = [None, None]
 
@@ -33,12 +37,25 @@ HsmTransition::HsmTransition()
     mDestGrip->setVisible(false);
     mSrcGrip->init();
     mDestGrip->init();
-
     mLineGrips = {mSrcGrip, mDestGrip};
 }
 
 HsmTransition::~HsmTransition() {
     qDebug() << "DELETE: HsmTransition: " << this;
+}
+
+void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
+    HsmElement::init(modelEntity);
+
+    // Create label
+    mLabel = new HsmStateTextItem(this);
+    mLabel->makeMovable(true);
+
+    connect(mLabel, &HsmStateTextItem::editingFinished, this, &HsmTransition::onEventEditFinished);
+    connect(mLabel, &HsmStateTextItem::positionChanged, this, &HsmTransition::onEventLabelPositionChanged);
+
+    // Pull latest data from the model
+    onModelDataChanged();
 }
 
 void HsmTransition::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
@@ -271,6 +288,40 @@ QPointF HsmTransition::findStartingPointFromRect(const QRectF& rectFrom, const Q
     return pointFrom;
 }
 
+void HsmTransition::onEventEditFinished() {
+    auto entityPtr = modelElement<model::Transition>();
+
+    if (mLabel && entityPtr) {
+        entityPtr->setEvent(mLabel->toPlainText());
+    }
+}
+
+void HsmTransition::onEventLabelPositionChanged() {
+    // Update offset when label is moved manually
+    if (mLinePath.size() >= 2) {
+        QPointF mid;
+        int n = mLinePath.size();
+        if (n % 2 == 0) {
+            int midIdx = n / 2 - 1;
+            mid = (mLinePath[midIdx] + mLinePath[midIdx + 1]) / 2.0;
+        } else {
+            mid = mLinePath[n / 2];
+        }
+        mLabelOffset = mLabel->pos() - mid;
+    }
+}
+
+void HsmTransition::onModelDataChanged() {
+    auto entityPtr = modelElement<model::Transition>();
+
+    if (mLabel && entityPtr) {
+        QSignalBlocker block(mLabel);
+        mLabel->setPlainText(entityPtr->event());
+    }
+
+    update();  // trigger repaint
+}
+
 void HsmTransition::recalculateLine() {
     qDebug() << Q_FUNC_INFO;
     QPointF currentMovePos;
@@ -282,8 +333,6 @@ void HsmTransition::recalculateLine() {
 
     // TODO: decide how to snap transition to items
     if ((nullptr != mFromElement) && (nullptr != mToElement)) {
-        // posFrom = self.fromElement.mapToScene(self.fromElement.pos())
-        // posTo = self.fromElement.mapToScene(self.toElement.pos())
         QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
         QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
 
@@ -301,23 +350,6 @@ void HsmTransition::recalculateLine() {
         //
         // 1, 3, 6, 8: angle line
         // others: Z-line
-        // rectFrom = QRectF()
-        // rectTo = QRectF()
-
-        // cout << "from: " << rectFrom << ", to: " << rectTo << endl;
-        // cout << "from.b=" << rectFrom.bottom() << ", to.t=" << rectTo.top() << endl;
-
-        // if (mLinePath.size() > 0) {
-        //     mLinePath.removeFirst();
-        //     mLinePath.removeLast();
-        // }
-        // mLinePath.clear();
-
-        // for (auto& grip: mLineGrips) {
-        //     mLinePath.append(grip->pos());
-        // }
-        // mLinePath.removeFirst();
-        // mLinePath.removeLast();
 
         QPointF pointFrom;
         QPointF pointTo;
@@ -373,6 +405,23 @@ void HsmTransition::recalculateLine() {
     }
 
     updateBoundingRect();
+
+    // Always position label as central point plus offset
+    if (mLabel && mLinePath.size() >= 2) {
+        QPointF mid;
+        const int n = mLinePath.size();
+
+        if (n % 2 == 0) {
+            const int midIdx = n / 2 - 1;
+
+            mid = (mLinePath[midIdx] + mLinePath[midIdx + 1]) / 2.0;
+        } else {
+            mid = mLinePath[n / 2];
+        }
+
+        QSignalBlocker block(mLabel);
+        mLabel->setPos(mid + mLabelOffset);
+    }
 }
 
 // =================================================================================================================
@@ -420,19 +469,16 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 }
 
 void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
-    qDebug() << Q_FUNC_INFO;
-    // const int gripIndex = findGripIndex(grip);
     auto it = std::find(mLineGrips.begin(), mLineGrips.end(), grip);
 
     if (it != mLineGrips.end()) {
         grip->setParentItem(nullptr);
-        // TODO:validate
         mLinePath.removeAt(it - mLineGrips.begin());
-        // TODO: check for memory leaks
-        // delete mLineGrips.takeAt(gripIndex);
-        delete grip;
+        // Dont delete it right away because this signal is sent from a context of ElementGripItem
+        grip->deleteLater();
         mLineGrips.erase(it);
-        updateBoundingRect();
+
+        recalculateLine();
     }
 }
 
@@ -504,7 +550,7 @@ QVariant HsmTransition::itemChange(GraphicsItemChange change, const QVariant& va
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
         setConnectionGripsVisibility(isSelected());
     }
-
+    // No need to connect to xChanged/yChanged
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -522,6 +568,8 @@ void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
         mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
         // TODO: validate
         mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
+        // Recalculate line in case label position needs to be changed
+        recalculateLine();
     }
 
     QGraphicsItem::mouseDoubleClickEvent(event);

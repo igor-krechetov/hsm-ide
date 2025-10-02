@@ -14,25 +14,25 @@ namespace view {
 
 HsmStateElement::HsmStateElement()
     : HsmRectangularElement(HsmElementType::STATE) {
-    QFont font;
-    font.setBold(true);
-
-    mTextItem = new HsmStateTextItem(this);
-    mTextItem->setTextInteractionFlags(Qt::TextEditorInteraction);
-    mTextItem->setPlainText("State Name");
-    mTextItem->setFont(font);
-    mTextItem->setPos(10, 10);     // Adjust position as needed
-    mTextItem->setTextWidth(120);  // Adjust width as needed
-    connect(mTextItem->document(), &QTextDocument::contentsChanged, this, &HsmStateElement::onTextChanged);
-    connect(mTextItem, &HsmStateTextItem::editingFinished, this, &HsmStateElement::onTextEditFinished);
 }
 
-void HsmStateElement::onTextChanged() {
+void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
+    HsmRectangularElement::init(modelEntity);
+
+    mTextItem = new HsmStateTextItem(this);
+    connect(mTextItem->document(), &QTextDocument::contentsChanged, this, &HsmStateElement::onStateNameChanged);
+    connect(mTextItem, &HsmStateTextItem::editingFinished, this, &HsmStateElement::onStateNameEditFinished);
+
+    // update label with current state name
+    onModelDataChanged();
+}
+
+void HsmStateElement::onStateNameChanged() {
     // Only update header position, do not update model here
     centerHeader();
 }
 
-void HsmStateElement::onTextEditFinished() {
+void HsmStateElement::onStateNameEditFinished() {
     auto entityPtr = modelElement<model::RegularState>();
 
     if (mTextItem && entityPtr) {

@@ -37,7 +37,7 @@
 ***** REQ-102a2: Highlight for connectable elements <<done>>
 ***** REQ-102a3: Transition rendering <<done>>
 ***** REQ-102a4: Change transition source/target <<done>>
-**** REQ-102b: Event labeling
+**** REQ-102b: Event labeling <<done>>
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions
 **** REQ-102e: Self-transitions

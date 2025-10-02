@@ -17,6 +17,7 @@ public:
     HsmStateElement();
     virtual ~HsmStateElement() = default;
 
+    void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
     virtual bool acceptsChildren() const;
 
 protected:
@@ -26,8 +27,8 @@ protected:
     void centerHeader();
 
 protected slots:
-    void onTextChanged();
-    void onTextEditFinished();
+    void onStateNameChanged();
+    void onStateNameEditFinished();
     void onModelDataChanged() override;
 
 private:

@@ -7,7 +7,23 @@
 namespace view {
 
 HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent)
-    : QGraphicsTextItem(parent) {}
+    : QGraphicsTextItem(parent) {
+    QFont font;
+    font.setBold(true);
+
+    setFont(font);
+
+    setDefaultTextColor(Qt::darkBlue);
+    // setZValue(10);
+    setTextInteractionFlags(Qt::TextEditorInteraction);
+
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+}
+
+void HsmStateTextItem::makeMovable(const bool enable) {
+    setFlag(QGraphicsItem::ItemIsMovable, enable);
+    setFlag(QGraphicsItem::ItemIsSelectable, enable);
+}
 
 void HsmStateTextItem::focusInEvent(QFocusEvent* event) {
     QGraphicsTextItem::focusInEvent(event);
@@ -43,6 +59,14 @@ void HsmStateTextItem::keyPressEvent(QKeyEvent* event) {
         QGraphicsTextItem::keyPressEvent(event);
     }
     // Ignore newline
+}
+
+QVariant HsmStateTextItem::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemPositionHasChanged) {
+        emit positionChanged();
+    }
+
+    return QGraphicsTextItem::itemChange(change, value);
 }
 
 }  // namespace view
