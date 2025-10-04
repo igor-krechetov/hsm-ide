@@ -3,7 +3,7 @@
 namespace model {
 
 ExitPoint::ExitPoint(const QString& name)
-    : State(name, StateType::ExitPoint) {}
+    : State(name, StateType::EXITPOINT) {}
 
 // Getters
 const QString& ExitPoint::event() const {
@@ -44,7 +44,7 @@ void ExitPoint::setOnExitingCallback(const QString& callback) {
 }
 
 QStringList ExitPoint::properties() const {
-    return {"name", "event", "onStateChangedCallback", "onEnteringCallback", "onExitingCallback"};
+    return State::properties() + QStringList{"event", "onStateChangedCallback", "onEnteringCallback", "onExitingCallback"};
 }
 
 bool ExitPoint::setProperty(const QString& key, const QVariant& value) {
@@ -58,8 +58,6 @@ bool ExitPoint::setProperty(const QString& key, const QVariant& value) {
         setOnEnteringCallback(value.toString());
     } else if (key == "onExitingCallback") {
         setOnExitingCallback(value.toString());
-    } else if (key == "name") {
-        setName(value.toString());
     } else {
         handled = State::setProperty(key, value);
     }
@@ -76,9 +74,8 @@ QVariant ExitPoint::getProperty(const QString& key) const {
         return mOnEnteringCallback;
     } else if (key == "onExitingCallback") {
         return mOnExitingCallback;
-    } else if (key == "name") {
-        return mName;
     }
+
     return State::getProperty(key);
 }
 

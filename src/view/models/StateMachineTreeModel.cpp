@@ -243,13 +243,13 @@ void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPo
 
             if (state) {
                 switch (state->stateType()) {
-                    case model::StateType::Regular:
+                    case model::StateType::REGULAR:
                         addRegularState(childNode, state.dynamicCast<model::RegularState>());
                         break;
-                    case model::StateType::EntryPoint:
+                    case model::StateType::ENTRYPOINT:
                         addEntryPoint(childNode, state.dynamicCast<model::EntryPoint>());
                         break;
-                    case model::StateType::Initial:
+                    case model::StateType::INITIAL:
                         addInitialState(childNode, state.dynamicCast<model::InitialState>());
                         break;
                     default:

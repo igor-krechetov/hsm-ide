@@ -25,7 +25,7 @@ public:
     // Final - onState callback
     // History - type
 
-    explicit State(const QString& name, const StateType type = StateType::Regular);
+    explicit State(const QString& name, const StateType type = StateType::REGULAR);
     virtual ~State() = default;
 
     StateType stateType() const;
@@ -38,7 +38,7 @@ public:
     QVariant getProperty(const QString& key) const override;
 
 protected:
-    StateType mStateType = StateType::Invalid;
+    StateType mStateType = StateType::INVALID;
     QString mName;
 };
 

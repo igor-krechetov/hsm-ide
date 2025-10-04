@@ -5,7 +5,7 @@
 namespace model {
 
 RegularState::RegularState(const QString& name)
-    : State(name, StateType::Regular) {}
+    : State(name, StateType::REGULAR) {}
 
 // Getters
 const QString& RegularState::onStateChangedCallback() const {
@@ -160,7 +160,7 @@ QSharedPointer<Transition> RegularState::findTransition(const EntityID_t id) con
 }
 
 QStringList RegularState::properties() const {
-    return {"name", "onStateChangedCallback", "onEnteringCallback", "onExitingCallback"};
+    return State::properties() + QStringList{"onStateChangedCallback", "onEnteringCallback", "onExitingCallback"};
 }
 
 bool RegularState::setProperty(const QString& key, const QVariant& value) {
@@ -172,8 +172,6 @@ bool RegularState::setProperty(const QString& key, const QVariant& value) {
         setOnEnteringCallback(value.toString());
     } else if (key == "onExitingCallback") {
         setOnExitingCallback(value.toString());
-    } else if (key == "name") {
-        setName(value.toString());
     } else {
         handled = State::setProperty(key, value);
     }
@@ -188,9 +186,8 @@ QVariant RegularState::getProperty(const QString& key) const {
         return mOnEnteringCallback;
     } else if (key == "onExitingCallback") {
         return mOnExitingCallback;
-    } else if (key == "name") {
-        return mName;
     }
+
     return State::getProperty(key);
 }
 

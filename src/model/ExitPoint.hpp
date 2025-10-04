@@ -26,7 +26,6 @@ public:
 
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
-
     QStringList properties() const override;
 
 private:

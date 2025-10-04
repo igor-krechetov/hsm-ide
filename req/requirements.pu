@@ -21,16 +21,16 @@
 
 * REQ-000: SCXML State Machine Editor
 ** REQ-100: Core Editor Functionality
-*** REQ-101: SCXML domain model <<in_progress>>
-**** REQ-101a: Atomic states <<in_progress>>
-**** REQ-101b: Parallel states
-**** REQ-101c: Compound states <<in_progress>>
-**** REQ-101d: History states (shallow/deep) <<in_progress>>
-**** REQ-101e: Entry points <<in_progress>>
-**** REQ-101f: Exit points <<in_progress>>
-**** REQ-101g: Final states <<in_progress>>
-**** REQ-101h: Initial states <<in_progress>>
-**** REQ-101i: model infrastructure <<in_progress>>
+*** REQ-101: SCXML domain model <<done>>
+**** REQ-101a: Atomic states <<done>>
+**** REQ-101b: Parallel states <<done>>
+**** REQ-101c: Compound states <<done>>
+**** REQ-101d: History states (shallow/deep) <<done>>
+**** REQ-101e: Entry points <<done>>
+**** REQ-101f: Exit points <<done>>
+**** REQ-101g: Final states <<done>>
+**** REQ-101h: Initial states <<done>>
+**** REQ-101i: model infrastructure <<done>>
 *** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
@@ -91,10 +91,10 @@
 ***** REQ-106d2: Included file existence verification  <<prio_low>>
 ***** REQ-106d3: Interface compatibility validation (entry/exit points)  <<prio_low>>
 
-*** REQ-107: Elements Rendering <<in_progress>>
+*** REQ-107: Elements Rendering <<done>>
 **** REQ-107a: Atomic states <<done>>
-**** REQ-107b: Parallel states
-**** REQ-107c: Compound states <<in_progress>>
+**** REQ-107b: Parallel states <<done>>
+**** REQ-107c: Compound states <<done>>
 **** REQ-107d: History states <<done>>
 **** REQ-107e: Entry points <<done>>
 **** REQ-107f: Exit points <<done>>

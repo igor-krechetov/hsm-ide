@@ -1,5 +1,7 @@
 #include "StateMachineEntityViewModel.hpp"
 #include "model/RegularState.hpp"
+#include "model/Transition.hpp"
+#include "model/HistoryState.hpp"
 
 #include <QStringList>
 #include <QVariant>
@@ -44,6 +46,8 @@ QVariant StateMachineEntityViewModel::data(const QModelIndex& index, int role) c
 
                     if ((role == Qt::DisplayRole) && (key == model::Transition::cKeyTransitionType)) {
                         res = model::transitionTypeToString(model::transitionTypeFromInt(res.toInt()));
+                    } else if ((role == Qt::DisplayRole) && (key == model::HistoryState::cKeyHistoryType)) {
+                        res = model::historyTypeToString(model::historyTypeFromInt(res.toInt()));
                     }
                 } else if (role == Qt::UserRole) {
                     res = key;

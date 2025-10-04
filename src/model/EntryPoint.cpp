@@ -5,7 +5,7 @@
 namespace model {
 
 EntryPoint::EntryPoint(const QString& name)
-    : State(name, StateType::EntryPoint) {}
+    : State(name, StateType::ENTRYPOINT) {}
 
 void EntryPoint::addTransition(const QSharedPointer<Transition>& transition) {
     mTransitions.append(transition);
@@ -51,29 +51,6 @@ QSharedPointer<StateMachineEntity> EntryPoint::findChild(const EntityID_t id, co
     }
 
     return res;
-}
-
-QStringList EntryPoint::properties() const {
-    return {"name"};
-}
-
-bool EntryPoint::setProperty(const QString& key, const QVariant& value) {
-    bool handled = true;
-
-    if (key == "name") {
-        setName(value.toString());
-    } else {
-        handled = State::setProperty(key, value);
-    }
-
-    return handled;
-}
-
-QVariant EntryPoint::getProperty(const QString& key) const {
-    if (key == "name") {
-        return mName;
-    }
-    return State::getProperty(key);
 }
 
 };  // namespace model

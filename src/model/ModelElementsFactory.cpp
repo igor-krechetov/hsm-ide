@@ -24,23 +24,23 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
     QString uniqueName = QString("State_%1").arg(s_stateCounter);
 
     switch (type) {
-        case StateType::Initial:
+        case StateType::INITIAL:
             res = QSharedPointer<State>(new InitialState(uniqueName));
             break;
-        case StateType::Regular:
+        case StateType::REGULAR:
             res = QSharedPointer<State>(new RegularState(uniqueName));
             break;
-        case StateType::EntryPoint:
+        case StateType::ENTRYPOINT:
             res = QSharedPointer<State>(new EntryPoint(uniqueName));
             break;
-        case StateType::ExitPoint:
+        case StateType::EXITPOINT:
             res = QSharedPointer<State>(new ExitPoint(uniqueName));
             break;
-        case StateType::Final:
+        case StateType::FINAL:
             res = QSharedPointer<State>(new FinalState(uniqueName));
             break;
-        case StateType::History:
-            res = QSharedPointer<State>(new HistoryState(uniqueName, HistoryState::HistoryType::Shallow));
+        case StateType::HISTORY:
+            res = QSharedPointer<State>(new HistoryState(uniqueName, HistoryType::SHALLOW));
             break;
         default:
             qCritical() << "Unexpected element type:" << static_cast<int>(type);

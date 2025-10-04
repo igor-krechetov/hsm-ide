@@ -10,11 +10,15 @@ namespace model {
 using EntityID_t = uint32_t;
 constexpr EntityID_t INVALID_MODEL_ID = 0xFFFFFFFF;
 
-enum class StateType { Invalid, Initial, Regular, EntryPoint, ExitPoint, Final, History };
+enum class StateType { INVALID, INITIAL, REGULAR, ENTRYPOINT, EXITPOINT, FINAL, HISTORY };
 enum class TransitionType { INVALID, EXTERNAL, INTERNAL };
+enum class HistoryType { INVALID, SHALLOW, DEEP };
 
 QString transitionTypeToString(const TransitionType type);
 TransitionType transitionTypeFromInt(const int value);
+
+QString historyTypeToString(const HistoryType type);
+HistoryType historyTypeFromInt(const int value);
 
 };  // namespace model
 

@@ -90,7 +90,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
 
     if (newTransition) {
         switch (source->stateType()) {
-            case model::StateType::Regular: {
+            case model::StateType::REGULAR: {
                 auto regularStatePtr = source.dynamicCast<model::RegularState>();
 
                 if (regularStatePtr) {
@@ -98,7 +98,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
                 }
                 break;
             }
-            case model::StateType::EntryPoint: {
+            case model::StateType::ENTRYPOINT: {
                 auto entryPointPtr = source.dynamicCast<model::EntryPoint>();
 
                 if (entryPointPtr) {
@@ -106,7 +106,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
                 }
                 break;
             }
-            case model::StateType::Initial: {
+            case model::StateType::INITIAL: {
                 auto initialStatePtr = source.dynamicCast<model::InitialState>();
 
                 if (initialStatePtr) {
@@ -177,12 +177,12 @@ void ProjectController::createElement(const QString& elementTypeId,
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
 
     static std::map<QString, model::StateType> sElementTypes = {// TODO: decide what to do with start type
-                                                                       {"initial", model::StateType::Initial},
-                                                                       {"final", model::StateType::Final},
-                                                                       {"state", model::StateType::Regular},
-                                                                       {"entrypoint", model::StateType::EntryPoint},
-                                                                       {"exitpoint", model::StateType::ExitPoint},
-                                                                       {"history", model::StateType::History}};
+                                                                       {"initial", model::StateType::INITIAL},
+                                                                       {"final", model::StateType::FINAL},
+                                                                       {"state", model::StateType::REGULAR},
+                                                                       {"entrypoint", model::StateType::ENTRYPOINT},
+                                                                       {"exitpoint", model::StateType::EXITPOINT},
+                                                                       {"history", model::StateType::HISTORY}};
 
     auto it = sElementTypes.find(elementTypeId);
 

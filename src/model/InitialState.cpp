@@ -6,7 +6,7 @@ namespace model {
 
 // TODO: does it make sence to generate an ID here?
 InitialState::InitialState(const QString& name)
-    : State(name, StateType::Initial) {}
+    : State(name, StateType::INITIAL) {}
 
 void InitialState::setTransition(const QSharedPointer<Transition>& transition) {
     mTransition = transition;
@@ -37,29 +37,6 @@ QSharedPointer<StateMachineEntity> InitialState::findParentState(const EntityID_
 
 QSharedPointer<StateMachineEntity> InitialState::findChild(const EntityID_t id, const StateMachineEntity::Type type) const {
     return (type == StateMachineEntity::Type::Transition && mTransition && mTransition->id() == id ? mTransition : nullptr);
-}
-
-QStringList InitialState::properties() const {
-    return {"name"};
-}
-
-bool InitialState::setProperty(const QString& key, const QVariant& value) {
-    bool handled = true;
-
-    if (key == "name") {
-        setName(value.toString());
-    } else {
-        handled = State::setProperty(key, value);
-    }
-
-    return handled;
-}
-
-QVariant InitialState::getProperty(const QString& key) const {
-    if (key == "name") {
-        return mName;
-    }
-    return State::getProperty(key);
 }
 
 };  // namespace model

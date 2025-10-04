@@ -54,22 +54,22 @@ QString HsmElementsFactory::getStateIcon(const model::StateType type) {
     QString iconPath;
 
     switch(type) {
-        case model::StateType::Regular:
+        case model::StateType::REGULAR:
             iconPath = getElementIcon("state");
             break;
-        case model::StateType::EntryPoint:
+        case model::StateType::ENTRYPOINT:
             iconPath = getElementIcon("entrypoint");
             break;
-        case model::StateType::ExitPoint:
+        case model::StateType::EXITPOINT:
             iconPath = getElementIcon("exitpoint");
             break;
-        case model::StateType::Initial:
+        case model::StateType::INITIAL:
             iconPath = getElementIcon("initial");
             break;
-        case model::StateType::Final:
+        case model::StateType::FINAL:
             iconPath = getElementIcon("final");
             break;
-        case model::StateType::History:
+        case model::StateType::HISTORY:
             iconPath = getElementIcon("history");
             break;
         default:

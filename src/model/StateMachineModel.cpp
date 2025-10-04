@@ -14,7 +14,7 @@ namespace model {
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent)
     , mName(name)
-    , mModelRoot(ModelElementsFactory::createUniqueState(StateType::Regular).dynamicCast<RegularState>()) {
+    , mModelRoot(ModelElementsFactory::createUniqueState(StateType::REGULAR).dynamicCast<RegularState>()) {
     mModelRoot->setName(name);
     // Subscribe to modelEntityAdded for mModelRoot
     QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);

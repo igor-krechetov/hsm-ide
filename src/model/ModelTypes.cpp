@@ -30,4 +30,32 @@ TransitionType transitionTypeFromInt(const int value) {
     return res;
 }
 
+QString historyTypeToString(const HistoryType type) {
+    switch(type) {
+        case HistoryType::SHALLOW:
+            return "Shallow";
+        case HistoryType::DEEP:
+            return "Deep";
+        default:
+            break;
+    }
+
+    return "";
+}
+
+HistoryType historyTypeFromInt(const int value) {
+    HistoryType res = static_cast<HistoryType>(value);
+
+    switch (res) {
+        case HistoryType::SHALLOW:
+        case HistoryType::DEEP:
+            break;
+        default:
+            res = HistoryType::INVALID;
+            break;
+    }
+
+    return res;
+}
+
 };  // namespace model

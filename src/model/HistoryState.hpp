@@ -7,8 +7,6 @@ namespace model {
 
 class HistoryState : public State {
 public:
-    enum class HistoryType { Shallow, Deep };
-
     explicit HistoryState(const QString& name, const HistoryType historyType);
     virtual ~HistoryState() = default;
 
@@ -19,6 +17,13 @@ public:
 
     // Setters
     void setHistoryType(HistoryType historyType);
+
+    bool setProperty(const QString& key, const QVariant& value) override;
+    QVariant getProperty(const QString& key) const override;
+    QStringList properties() const override;
+
+public:
+    static constexpr char cKeyHistoryType[] = "historyType";
 
 private:
     HistoryType mHistoryType;

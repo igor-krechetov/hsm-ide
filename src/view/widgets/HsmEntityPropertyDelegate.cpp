@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QVariant>
 
+#include "model/HistoryState.hpp"
 #include "model/Transition.hpp"
 
 namespace view {
@@ -21,6 +22,14 @@ QWidget* HsmEntityPropertyDelegate::createEditor(QWidget* parent,
                        static_cast<int>(model::TransitionType::EXTERNAL));
         combo->addItem(model::transitionTypeToString(model::TransitionType::INTERNAL),
                        static_cast<int>(model::TransitionType::INTERNAL));
+
+        return combo;
+    } else if (index.data(Qt::UserRole).toString() == model::HistoryState::cKeyHistoryType) {
+        QComboBox* combo = new QComboBox(parent);
+
+        combo->addItem(model::historyTypeToString(model::HistoryType::SHALLOW), static_cast<int>(model::HistoryType::SHALLOW));
+        combo->addItem(model::historyTypeToString(model::HistoryType::DEEP), static_cast<int>(model::HistoryType::DEEP));
+
         return combo;
     }
 

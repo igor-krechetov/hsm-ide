@@ -3,7 +3,7 @@
 namespace model {
 
 FinalState::FinalState(const QString& name)
-    : State(name, StateType::Final) {}
+    : State(name, StateType::FINAL) {}
 
 // Getters
 const QString& FinalState::onStateChangedCallback() const {
@@ -17,7 +17,7 @@ void FinalState::setOnStateChangedCallback(const QString& callback) {
 }
 
 QStringList FinalState::properties() const {
-    return {"name", "onStateChangedCallback"};
+    return State::properties() + QStringList{"onStateChangedCallback"};
 }
 
 bool FinalState::setProperty(const QString& key, const QVariant& value) {
@@ -25,8 +25,6 @@ bool FinalState::setProperty(const QString& key, const QVariant& value) {
 
     if (key == "onStateChangedCallback") {
         setOnStateChangedCallback(value.toString());
-    } else if (key == "name") {
-        setName(value.toString());
     } else {
         handled = State::setProperty(key, value);
     }
@@ -37,9 +35,8 @@ bool FinalState::setProperty(const QString& key, const QVariant& value) {
 QVariant FinalState::getProperty(const QString& key) const {
     if (key == "onStateChangedCallback") {
         return mOnStateChangedCallback;
-    } else if (key == "name") {
-        return mName;
     }
+
     return State::getProperty(key);
 }
 
