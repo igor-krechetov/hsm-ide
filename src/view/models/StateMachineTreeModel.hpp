@@ -50,6 +50,8 @@ public:
 
     QModelIndex findModelEntity(const model::EntityID_t id) const;
 
+    bool removeRows(int row, int count, const QModelIndex &parent) override;
+
 private slots:
     void onModelChanged();
     void onModelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
@@ -67,6 +69,7 @@ private:
     TreeNode* mRootNode = nullptr;
 
     QSharedPointer<model::StateMachineModel> mModel;
+    bool mUpdatingModel = false;
     // You may want to add a tree node structure here for mapping QModelIndex to model elements
 };
 } // namespace view

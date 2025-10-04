@@ -37,6 +37,8 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
 
     // createTransition("e1", "e2");
 
+    QObject::connect(mModel.get(), &model::StateMachineModel::modelEntityDeleted, this, &ProjectController::modelEntityDeleted);
+
     // std::shared_ptr<HsmTransition> t = std::make_shared<HsmTransition>();
     // t->init();
     // e1->addTransition(t, e2);
@@ -88,7 +90,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
 
     if (newTransition) {
         switch (source->stateType()) {
-            case model::State::StateType::Regular: {
+            case model::StateType::Regular: {
                 auto regularStatePtr = source.dynamicCast<model::RegularState>();
 
                 if (regularStatePtr) {
@@ -96,7 +98,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
                 }
                 break;
             }
-            case model::State::StateType::EntryPoint: {
+            case model::StateType::EntryPoint: {
                 auto entryPointPtr = source.dynamicCast<model::EntryPoint>();
 
                 if (entryPointPtr) {
@@ -104,7 +106,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
                 }
                 break;
             }
-            case model::State::StateType::Initial: {
+            case model::StateType::Initial: {
                 auto initialStatePtr = source.dynamicCast<model::InitialState>();
 
                 if (initialStatePtr) {
@@ -158,18 +160,29 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
     }
 }
 
+void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntity> entity) {
+    qDebug() << Q_FUNC_INFO;
+    auto ptr = entity.lock();
+
+    if (ptr) {
+        mMainWindow->view()->deleteHsmElement(ptr->id());
+    } else {
+        qCritical() << "StateMachineEntity doesnt exist!";
+    }
+}
+
 void ProjectController::createElement(const QString& elementTypeId,
                                       const QPoint& pos,
                                       const model::EntityID_t parentElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
 
-    static std::map<QString, model::State::StateType> sElementTypes = {// TODO: decide what to do with start type
-                                                                       {"initial", model::State::StateType::Initial},
-                                                                       {"final", model::State::StateType::Final},
-                                                                       {"state", model::State::StateType::Regular},
-                                                                       {"entrypoint", model::State::StateType::EntryPoint},
-                                                                       {"exitpoint", model::State::StateType::ExitPoint},
-                                                                       {"history", model::State::StateType::History}};
+    static std::map<QString, model::StateType> sElementTypes = {// TODO: decide what to do with start type
+                                                                       {"initial", model::StateType::Initial},
+                                                                       {"final", model::StateType::Final},
+                                                                       {"state", model::StateType::Regular},
+                                                                       {"entrypoint", model::StateType::EntryPoint},
+                                                                       {"exitpoint", model::StateType::ExitPoint},
+                                                                       {"history", model::StateType::History}};
 
     auto it = sElementTypes.find(elementTypeId);
 

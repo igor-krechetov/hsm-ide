@@ -16,7 +16,7 @@ State::State(const QString& name, const StateType type)
 //     return mId;
 // }
 
-State::StateType State::stateType() const {
+StateType State::stateType() const {
     return mStateType;
 }
 

@@ -20,6 +20,8 @@ namespace view {
 class HsmElementsFactory {
 public:
     static std::list<QListWidgetItem*> createElementsList();
+    static QString getElementIcon(const QString& typeId);
+    static QString getStateIcon(const model::StateType type);
     static HsmElement* createElement(const QString& typeId, const QSharedPointer<model::StateMachineEntity>& modelElement);
 
 private:

@@ -1,6 +1,7 @@
 #include "StateMachineModel.hpp"
 
 #include <QDebug>
+#include <QSignalBlocker>
 
 #include "ModelElementsFactory.hpp"
 #include "RegularState.hpp"
@@ -13,11 +14,12 @@ namespace model {
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent)
     , mName(name)
-    , mModelRoot(ModelElementsFactory::createUniqueState(State::StateType::Regular).dynamicCast<RegularState>()) {
+    , mModelRoot(ModelElementsFactory::createUniqueState(StateType::Regular).dynamicCast<RegularState>()) {
     mModelRoot->setName(name);
     // Subscribe to modelEntityAdded for mModelRoot
     QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
     QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelChanged);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelEntityDeleted);
     QObject::connect(mModelRoot.data(), &StateMachineEntity::modelDataChanged, this, &StateMachineModel::modelDataChanged);
 }
 
@@ -52,6 +54,8 @@ bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t
 
             if (element && newParent) {
                 newParent->addChild(element);
+
+                QSignalBlocker block(currentParent.get());
                 currentParent->deleteDirectChild(element);
                 moved = true;
             }

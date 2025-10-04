@@ -16,7 +16,7 @@ namespace model {
 // Static member definition
 quint32 ModelElementsFactory::s_stateCounter = 0;
 
-QSharedPointer<State> ModelElementsFactory::createUniqueState(const State::StateType type) {
+QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType type) {
     qDebug() << "------ createUniqueState" << (int)type;
     QSharedPointer<State> res;
 
@@ -24,22 +24,22 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const State::State
     QString uniqueName = QString("State_%1").arg(s_stateCounter);
 
     switch (type) {
-        case State::StateType::Initial:
+        case StateType::Initial:
             res = QSharedPointer<State>(new InitialState(uniqueName));
             break;
-        case State::StateType::Regular:
+        case StateType::Regular:
             res = QSharedPointer<State>(new RegularState(uniqueName));
             break;
-        case State::StateType::EntryPoint:
+        case StateType::EntryPoint:
             res = QSharedPointer<State>(new EntryPoint(uniqueName));
             break;
-        case State::StateType::ExitPoint:
+        case StateType::ExitPoint:
             res = QSharedPointer<State>(new ExitPoint(uniqueName));
             break;
-        case State::StateType::Final:
+        case StateType::Final:
             res = QSharedPointer<State>(new FinalState(uniqueName));
             break;
-        case State::StateType::History:
+        case StateType::History:
             res = QSharedPointer<State>(new HistoryState(uniqueName, HistoryState::HistoryType::Shallow));
             break;
         default:

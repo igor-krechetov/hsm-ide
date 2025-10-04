@@ -13,7 +13,6 @@ class Transition;
 
 class State : public StateMachineEntity {
 public:
-    enum class StateType { Invalid, Initial, Regular, EntryPoint, ExitPoint, Final, History };
     // Root - single instance
     // Initial - outgoing state (only one instance per model)
     //         - can only be added to top level

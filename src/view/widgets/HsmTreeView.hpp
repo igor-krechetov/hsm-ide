@@ -13,6 +13,12 @@ public:
 
     void setModel(QAbstractItemModel* model) override;
 
+signals:
+    void deleteRequested(const QModelIndex& index);
+
+protected:
+    void contextMenuEvent(QContextMenuEvent* event) override;
+
 protected slots:
     void onModelReset();
     void onModelAboutToBeReset();

@@ -2,6 +2,9 @@
 
 #include <QAbstractItemModel>
 #include <QDebug>
+#include <QKeyEvent>
+#include <QMenu>
+#include <QContextMenuEvent>
 
 HsmTreeView::HsmTreeView(QWidget* parent)
     : QTreeView(parent) {}
@@ -145,4 +148,26 @@ QModelIndex HsmTreeView::findIndexByPath(const QString& path) const {
     }
 
     return currentIndex;
+}
+
+void HsmTreeView::contextMenuEvent(QContextMenuEvent* event) {
+    QMenu menu(this);
+    // TODO: add translation
+    QAction* expandAllAction = menu.addAction("Expand All");
+    QAction* collapseAllAction = menu.addAction("Collapse All");
+    // TODO: add separator
+    QAction* removeAction = menu.addAction("Remove");
+
+    QAction* selectedAction = menu.exec(event->globalPos());
+    QModelIndex idx = indexAt(event->pos());
+
+    if (selectedAction == expandAllAction) {
+        expandAll();
+    } else if (selectedAction == collapseAllAction) {
+        collapseAll();
+    } else if (selectedAction == removeAction) {
+        if (idx.isValid() && model()) {
+            model()->removeRow(idx.row(), idx.parent());
+        }
+    }
 }

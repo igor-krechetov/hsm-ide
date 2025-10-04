@@ -3,7 +3,7 @@
 namespace model {
 
 ExitPoint::ExitPoint(const QString& name)
-    : State(name, State::StateType::ExitPoint) {}
+    : State(name, StateType::ExitPoint) {}
 
 // Getters
 const QString& ExitPoint::event() const {

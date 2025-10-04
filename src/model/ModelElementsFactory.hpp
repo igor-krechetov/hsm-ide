@@ -9,7 +9,7 @@ namespace model {
 
 class ModelElementsFactory {
 public:
-    static QSharedPointer<State> createUniqueState(const State::StateType type);
+    static QSharedPointer<State> createUniqueState(const StateType type);
     static QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source,
                                                               const QSharedPointer<State>& target);
 

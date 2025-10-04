@@ -39,6 +39,46 @@ std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
     return elements;
 }
 
+QString HsmElementsFactory::getElementIcon(const QString& typeId) {
+    QString iconPath;
+    auto itItem = mItemsCatalog.find(typeId);
+
+    if (mItemsCatalog.end() != itItem) {
+        iconPath = std::get<1>(itItem->second);
+    }
+
+    return iconPath;
+}
+
+QString HsmElementsFactory::getStateIcon(const model::StateType type) {
+    QString iconPath;
+
+    switch(type) {
+        case model::StateType::Regular:
+            iconPath = getElementIcon("state");
+            break;
+        case model::StateType::EntryPoint:
+            iconPath = getElementIcon("entrypoint");
+            break;
+        case model::StateType::ExitPoint:
+            iconPath = getElementIcon("exitpoint");
+            break;
+        case model::StateType::Initial:
+            iconPath = getElementIcon("initial");
+            break;
+        case model::StateType::Final:
+            iconPath = getElementIcon("final");
+            break;
+        case model::StateType::History:
+            iconPath = getElementIcon("history");
+            break;
+        default:
+            break;
+    }
+
+    return iconPath;
+}
+
 HsmElement* HsmElementsFactory::createElement(const QString& typeId, const QSharedPointer<model::StateMachineEntity>& modelElement) {
     HsmElement* element = nullptr;
     auto itItem = mItemsCatalog.find(typeId);

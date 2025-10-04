@@ -3,7 +3,7 @@
 namespace model {
 
 FinalState::FinalState(const QString& name)
-    : State(name, State::StateType::Final) {}
+    : State(name, StateType::Final) {}
 
 // Getters
 const QString& FinalState::onStateChangedCallback() const {

@@ -108,8 +108,8 @@
 ** REQ-200: UI/UX Requirements
 *** REQ-201: Workspace layout
 **** REQ-201a: Element palette (toolbox) <<in_progress>>
-**** REQ-201b: Properties editor panel
-**** REQ-201c: Canvas workspace
+**** REQ-201b: Properties editor panel <<in_progress>>
+**** REQ-201c: Canvas workspace <<in_progress>>
 *** REQ-202: Visualization features
 **** REQ-202a: Zoom/pan controls <<in_progress>>
 ***** REQ-202a1: Custom cursor when zooming <<prio_low>>
@@ -124,12 +124,16 @@
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
 *** REQ-205: Custom Widgets
-**** REQ-205a: HSM Elements list
+**** REQ-205a: HSM Elements list <<in_progress>>
 **** REQ-205b: HSM Tree View <<in_progress>>
 ***** REQ-205b1: model and elements update <<done>>
-***** REQ-205b2: delete tree elements <<todo>>
+***** REQ-205b2: delete tree elements <<done>>
 ***** REQ-205b2: select tree elements and focus update <<done>>
-***** REQ-205b3: icons and styling <<prio_low>>
+***** REQ-205b3: icons and styling <<done>>
+***** REQ-205b4: context menu<<done>>
+***** REQ-205b4.1: expand all action <<done>>
+***** REQ-205b4.2: colapse all action <<done>>
+***** REQ-205b4.3: remove item action <<done>>
 **** REQ-205c: Attributes editor <<prio_low>>
 ***** REQ-205c1: custom view model <<done>>
 ***** REQ-205c2: show a list of attributes per element type <<done>>

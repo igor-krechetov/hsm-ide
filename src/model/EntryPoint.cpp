@@ -5,7 +5,7 @@
 namespace model {
 
 EntryPoint::EntryPoint(const QString& name)
-    : State(name, State::StateType::EntryPoint) {}
+    : State(name, StateType::EntryPoint) {}
 
 void EntryPoint::addTransition(const QSharedPointer<Transition>& transition) {
     mTransitions.append(transition);

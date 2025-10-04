@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QWeakPointer>
 
 #include "model/StateMachineModel.hpp"
 
@@ -10,6 +11,7 @@ class MainWindow;
 
 namespace model {
 class State;
+class StateMachineEntity;
 };
 namespace view {
 class HsmElement;
@@ -24,11 +26,12 @@ public:
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
 
-public slots:
+private slots:
     void connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
     void reconnectElements(const model::EntityID_t transitionId,
                            const model::EntityID_t newFromElementId,
                            const model::EntityID_t newToElementId);
+    void modelEntityDeleted(QWeakPointer<model::StateMachineEntity> entity);
 
 private:
     void createElement(const QString& elementTypeId,

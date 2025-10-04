@@ -5,7 +5,7 @@
 namespace model {
 
 RegularState::RegularState(const QString& name)
-    : State(name, State::StateType::Regular) {}
+    : State(name, StateType::Regular) {}
 
 // Getters
 const QString& RegularState::onStateChangedCallback() const {

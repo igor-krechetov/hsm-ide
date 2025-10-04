@@ -1,12 +1,14 @@
 #include "StateMachineTreeModel.hpp"
 
 #include <QVariant>
+#include <QIcon>
 
 #include "model/EntryPoint.hpp"
 #include "model/InitialState.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
+#include "view/elements/HsmElementsFactory.hpp"
 
 namespace view {
 
@@ -30,13 +32,16 @@ StateMachineTreeModel::~StateMachineTreeModel() {
 
 void StateMachineTreeModel::onModelChanged() {
     qDebug() << "-----------" << Q_FUNC_INFO;
-    beginResetModel();
 
-    delete mRootNode;
-    mRootNode = nullptr;
-    setupModelData();
+    if (false == mUpdatingModel) {
+        beginResetModel();
 
-    endResetModel();
+        delete mRootNode;
+        mRootNode = nullptr;
+        setupModelData();
+
+        endResetModel();
+    }
 }
 
 void StateMachineTreeModel::onModelDataChanged(QWeakPointer<model::StateMachineEntity> entity) {
@@ -70,18 +75,27 @@ StateMachineTreeModel::TreeNode* StateMachineTreeModel::nodeFromIndex(const QMod
 
 QModelIndex StateMachineTreeModel::index(int row, int column, const QModelIndex& parent) const {
     TreeNode* parentNode = nodeFromIndex(parent);
-    if (!parentNode || row < 0 || row >= parentNode->children.size())
+
+    if (!parentNode || row < 0 || row >= parentNode->children.size()) {
         return QModelIndex();
+    }
+
     TreeNode* childNode = parentNode->children.at(row);
+
     return createIndex(row, column, childNode);
 }
 
 QModelIndex StateMachineTreeModel::parent(const QModelIndex& index) const {
-    if (!index.isValid())
+    if (!index.isValid()) {
         return QModelIndex();
+    }
+
     TreeNode* node = nodeFromIndex(index);
-    if (!node || !node->parent)
+
+    if (!node || !node->parent) {
         return QModelIndex();
+    }
+
     return createIndex(node->parent->row(), 0, node->parent);
 }
 
@@ -130,6 +144,29 @@ QVariant StateMachineTreeModel::data(const QModelIndex& index, int role) const {
                 } else {
                     // TODO: error
                 }
+            } else if (Qt::DecorationRole == role) {
+                // Icon logic based on type
+                if (node->entity) {
+                    switch (node->entity->type()) {
+                        case model::StateMachineEntity::Type::State: {
+                            auto state = node->entity.dynamicCast<model::State>();
+                            if (state) {
+                                QString iconPath = HsmElementsFactory::getStateIcon(state->stateType());
+
+                                if (iconPath.isEmpty() == false) {
+                                    res = QIcon(iconPath);
+                                }
+                            }
+                            break;
+                        }
+                        case model::StateMachineEntity::Type::Transition:
+                            // res = QIcon(":/icons/transition.png");
+                            break;
+                        default:
+                            // res = QIcon(":/icons/default.png");
+                            break;
+                    }
+                }
             }
         }
     }
@@ -160,6 +197,35 @@ QModelIndex StateMachineTreeModel::findModelEntity(const model::EntityID_t id) c
     return res;
 }
 
+bool StateMachineTreeModel::removeRows(int row, int count, const QModelIndex& parent) {
+    qDebug() << "StateMachineTreeModel::removeRows" << row << count;
+    bool res = false;
+
+    if (parent.isValid()) {
+        QModelIndex idx = index(row, count, parent);
+        TreeNode* node = nodeFromIndex(idx);
+
+        if (node && node != mRootNode) {
+            mUpdatingModel = true;
+            beginRemoveRows(parent, row, row);
+
+            mModel->root()->deleteChild(node->entity->id());
+
+            if (node->parent) {
+                node->parent->children.removeAt(row);
+            }
+
+            delete node;
+            endRemoveRows();
+            mUpdatingModel = false;
+
+            res = true;
+        }
+    }
+
+    return res;
+}
+
 // TODO: following entities can have children: RegularState, EntryPoint, InitialState
 // modify arg to be of State
 void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPointer<model::StateMachineEntity>& entity) {
@@ -177,13 +243,13 @@ void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPo
 
             if (state) {
                 switch (state->stateType()) {
-                    case model::State::StateType::Regular:
+                    case model::StateType::Regular:
                         addRegularState(childNode, state.dynamicCast<model::RegularState>());
                         break;
-                    case model::State::StateType::EntryPoint:
+                    case model::StateType::EntryPoint:
                         addEntryPoint(childNode, state.dynamicCast<model::EntryPoint>());
                         break;
-                    case model::State::StateType::Initial:
+                    case model::StateType::Initial:
                         addInitialState(childNode, state.dynamicCast<model::InitialState>());
                         break;
                     default:

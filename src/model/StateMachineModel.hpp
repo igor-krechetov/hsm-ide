@@ -28,6 +28,7 @@ public:
 
 signals:
     void modelChanged();
+    void modelEntityDeleted(QWeakPointer<StateMachineEntity> entity);
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:

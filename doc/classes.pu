@@ -120,6 +120,11 @@ package "Model" {
 }
 
 package "View" {
+  package "Models" {
+    class StateMachineEntityViewModel
+    class StateMachineTreeModel
+  }
+
   class MainWindow {
     + setupUi()
     + connectSignals()
@@ -130,6 +135,10 @@ package "View" {
     + removeElement()
     + clearScene()
   }
+
+  class HsmTreeView
+  class HsmEntityPropertyDelegate
+  class HsmElementsList
 
   class HsmElement {
     + elementType(): HsmElementType
@@ -169,6 +178,11 @@ package "View" {
   class HsmInitialElement
 
   MainWindow "1" *-- "1" HsmGraphicsView : contains
+  MainWindow "1" *-- "1" HsmTreeView : contains
+  MainWindow "1" *-- "1" HsmElementsList : contains
+
+  HsmTreeView "1" *-- "1" StateMachineTreeModel : contains
+  HsmElementsList "1" *-- "1" StateMachineEntityViewModel : contains
 
   HsmResizableElement -up-|> HsmElement
   HsmConnectableElement -up-|> HsmResizableElement
@@ -228,6 +242,9 @@ MainEditorController --> StateMachineModel : manipulates
 ' MainEditorController --> MainWindow : updates
 StateMachineModel ..> MainEditorController : notifies
 MainWindow ..> MainEditorController : sends events
+
+StateMachineEntityViewModel "1" o-- "1" StateMachineEntity: references
+StateMachineTreeModel "1" o-- "1" StateMachineEntity: references
 
 ' Element Connections
 HsmTransition "1" --> "1" HsmConnectableElement : from
