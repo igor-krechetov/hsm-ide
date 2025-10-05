@@ -91,9 +91,15 @@ QRectF HsmElement::elementRect() const {
     return mOuterRect;
 }
 
+QPointF HsmElement::mapFromSceneToBody(const QPointF &point) const {
+    return mapFromScene(point);
+}
+
 void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
+    qDebug() << __LINE__;
     mModelElement = modelEntity.toWeakRef();
     updateBoundingRect();
+    qDebug() << __LINE__;
     // Subscribe to modelDataChanged signal
     if (modelEntity) {
         QObject::connect(modelEntity.data(),
@@ -101,6 +107,7 @@ void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEnti
                          this,
                          &HsmElement::onModelDataChanged);
     }
+    qDebug() << __LINE__;
 }
 
 bool HsmElement::isConnectable() const {
@@ -153,14 +160,18 @@ bool HsmElement::acceptsChildren() const {
     return false;
 }
 
+QList<QGraphicsItem*> HsmElement::hsmChildItems() const {
+    return childItems();
+}
+
 bool HsmElement::isDirectChild(HsmElement* item) const {
-    return childItems().contains(item);
+    return hsmChildItems().contains(item);
 }
 
 QRectF HsmElement::childrenRect() const {
     QRectF rect;
 
-    for (QGraphicsItem* child : childItems()) {
+    for (QGraphicsItem* child : hsmChildItems()) {
         QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
 
         if (userType.isValid()) {
@@ -169,6 +180,23 @@ QRectF HsmElement::childrenRect() const {
     }
 
     return rect;
+}
+
+void HsmElement::addChildItem(HsmElement* child) {
+    if (nullptr != child) {
+        child->setParentItem(this);
+    }
+}
+
+void HsmElement::setHsmParentItem(HsmElement* parent) {
+    if (nullptr != parent) {
+        parent->addChildItem(this);
+    } else {
+        // reset parent
+        setParentItem(nullptr);
+    }
+
+    mHsmParent = parent;
 }
 
 bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
@@ -180,7 +208,7 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
     prepareGeometryChange();
 
     if (newRect.isNull()) {
-        qDebug() << Q_FUNC_INFO << "RECT is NULL";
+        qDebug() << Q_FUNC_INFO << "RECT is NULL" << this;
         constexpr qreal penWidth = 1.0;
 
         // mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
@@ -205,7 +233,7 @@ HsmGraphicsView* HsmElement::hsmView() const {
 }
 
 void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback, const int depth) {
-    for (QGraphicsItem* child : childItems()) {
+    for (QGraphicsItem* child : hsmChildItems()) {
         QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
 
         if (userType.isValid()) {
@@ -287,7 +315,7 @@ void HsmElement::notifyGeometryChanged() {
 }
 
 void HsmElement::resizeParentToFitChildItem() {
-    auto parent = dynamic_cast<HsmResizableElement*>(parentItem());
+    auto parent = dynamic_cast<HsmResizableElement*>(hsmParentItem().get());
 
     // TODO: check if parent is also resizable
     if (parent != nullptr) {

@@ -23,11 +23,17 @@ QSharedPointer<State> Transition::target() const {
 }
 
 void Transition::setSource(QSharedPointer<State> source) {
-    mSource = source;
+    if (mSource != source) {
+        mSource = source;
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
 }
 
 void Transition::setTarget(QSharedPointer<State> target) {
-    mTarget = target;
+    if (mTarget != target) {
+        mTarget = target;
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
 }
 
 EntityID_t Transition::sourceId() const {

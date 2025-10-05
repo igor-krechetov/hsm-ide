@@ -52,7 +52,21 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
 
 QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QSharedPointer<State>& source,
                                                                         const QSharedPointer<State>& target) {
-    return QSharedPointer<Transition>(new Transition(source, target, "new_event"));
+    QSharedPointer<Transition> newTransition(new Transition(source, target, "new_event"));
+
+    switch (source->stateType()) {
+        case model::StateType::REGULAR:
+        case model::StateType::ENTRYPOINT:
+        case model::StateType::INITIAL:
+            source->addChild(newTransition);
+            break;
+        default:
+            qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());
+            newTransition.reset();
+            break;
+    }
+
+    return newTransition;
 }
 
 }  // namespace model

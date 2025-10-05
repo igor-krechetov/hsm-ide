@@ -37,15 +37,18 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::
                                                     const QString& elementTypeId,
                                                     const QPoint& pos,
                                                     const model::EntityID_t parentElementId) {
+    qDebug() << __LINE__;
     view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement);
+    qDebug() << __LINE__;
     view::HsmElement* parentElement = findHsmElement(parentElementId);
+    qDebug() << __LINE__;
 
     qDebug() << Q_FUNC_INFO << "ID=" << newElement->modelId() << ", pos=" << mapToScene(pos);
     qDebug() << Q_FUNC_INFO << newElement;
     newElement->setPos(mapToScene(pos));
 
     if (nullptr != parentElement) {
-        newElement->setParentItem(parentElement);
+        newElement->setHsmParentItem(parentElement);
         newElement->setPos(parentElement->mapFromScene(mapToScene(pos)));
 
         // Resize parent item to fit new child if necessary
@@ -131,8 +134,9 @@ void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const mo
             view::HsmElement* newParent = findHsmElement(newParentId);
 
             if (nullptr != newParent) {
-                auto newPos = newParent->mapFromScene(oldPos);
-                element->setParentItem(newParent);
+                auto newPos = newParent->mapFromSceneToBody(oldPos);
+
+                element->setHsmParentItem(newParent);
                 element->setPos(newPos);
 
                 auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(newParent);
@@ -141,7 +145,7 @@ void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const mo
                     resizableParent->resizeToFitChildItem(element);
                 }
             } else {
-                element->setParentItem(nullptr);
+                element->setHsmParentItem(nullptr);
                 element->setPos(oldPos);
             }
         }
@@ -244,10 +248,10 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
 
     mDraggedElement = element;
 
-    qDebug() << "mDraggedElement->parentItem" << mDraggedElement->parentItem();
+    qDebug() << "mDraggedElement->parentItem" << mDraggedElement->hsmParentItem();
     qDebug() << "keyboardCtrlPressed" << keyboardCtrlPressed();
 
-    if ((mDraggedElement->parentItem() == nullptr) || keyboardCtrlPressed()) {
+    if ((mDraggedElement->hsmParentItem() == nullptr) || keyboardCtrlPressed()) {
         qDebug() << "dragElementBegin: DRAG";
         QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
         mDraggedElement->setDragMode(true);
@@ -265,13 +269,14 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
     qDebug() << Q_FUNC_INFO << element << scenePos
              << "target: " << (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId());
 
-    if (mDraggedElement && (mDraggedElement->parentItem() == nullptr) || keyboardCtrlPressed()) {
+    if (mDraggedElement && (mDraggedElement->hsmParentItem() == nullptr) || keyboardCtrlPressed()) {
         // If we are dragging element into a new parent or to a top level
         if (mProjectController) {
             qDebug() << "mDragTargetElement" << mDragTargetElement;
             forEachSelectedElement([&](view::HsmElement* element) {
                 qDebug() << element->modelId();
-                view::HsmResizableElement* currentParent = itemToHsmResizableElement(element->parentItem());
+                // TODO: fix parentItem() call
+                view::HsmResizableElement* currentParent = elementToHsmResizableElement(element->hsmParentItem());
 
                 if (nullptr != currentParent) {
                     // NOTE: need to normalize parent bounding rect and position since it might have gone negative
@@ -293,7 +298,7 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
     } else {
         // if we a moving element within current parent or top level
         forEachSelectedElement([&](view::HsmElement* element) {
-            view::HsmResizableElement* currentParent = itemToHsmResizableElement(element->parentItem());
+            view::HsmResizableElement* currentParent = elementToHsmResizableElement(element->hsmParentItem());
 
             element->setGroupDragMode(false);
 
@@ -368,7 +373,7 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
         // }
     } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
         qDebug() << "PRESS: CTRL";
-        if (mDraggedElement && mDraggedElement->parentItem() != nullptr) {
+        if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
             qDebug() << "---- QGuiApplication::setOverrideCursor(Qt::DragMoveCursor)";
             QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
             forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
@@ -394,7 +399,7 @@ void HsmGraphicsView::keyReleaseEvent(QKeyEvent* event) {
         event->accept();
     } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
         qDebug() << "RELEASE: CTRL";
-        if (mDraggedElement && mDraggedElement->parentItem() != nullptr) {
+        if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
             qDebug() << "---- QGuiApplication::restoreOverrideCursor()";
             QGuiApplication::restoreOverrideCursor();
             forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
@@ -521,9 +526,19 @@ view::HsmElement* HsmGraphicsView::itemToHsmElement(QGraphicsItem* item) const {
     return element;
 }
 
-view::HsmResizableElement* HsmGraphicsView::itemToHsmResizableElement(QGraphicsItem* item) const {
+// view::HsmResizableElement* HsmGraphicsView::itemToHsmResizableElement(QGraphicsItem* item) const {
+//     view::HsmResizableElement* resizableElement = nullptr;
+//     view::HsmElement* element = itemToHsmElement(item);
+
+//     if (nullptr != element && element->isResizable()) {
+//         resizableElement = dynamic_cast<view::HsmResizableElement*>(element);
+//     }
+
+//     return resizableElement;
+// }
+
+view::HsmResizableElement* HsmGraphicsView::elementToHsmResizableElement(view::HsmElement* element) const {
     view::HsmResizableElement* resizableElement = nullptr;
-    view::HsmElement* element = itemToHsmElement(item);
 
     if (nullptr != element && element->isResizable()) {
         resizableElement = dynamic_cast<view::HsmResizableElement*>(element);

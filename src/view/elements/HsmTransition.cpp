@@ -323,7 +323,6 @@ void HsmTransition::onModelDataChanged() {
 }
 
 void HsmTransition::recalculateLine() {
-    qDebug() << Q_FUNC_INFO;
     QPointF currentMovePos;
 
     if (mLinePath.size() >= 2) {
@@ -434,7 +433,7 @@ void HsmTransition::setConnectionGripsVisibility(const bool visible) {
 bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
     if (mLinePath.isEmpty() == false) {
         const int gripIndex = findGripIndex(grip);
-        qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
+        // qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
 
         if (gripIndex >= 0) {
             // Inner grips changed

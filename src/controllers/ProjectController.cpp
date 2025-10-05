@@ -77,8 +77,8 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
     qDebug() << Q_FUNC_INFO << elementIDs;
 
     for (model::EntityID_t id : elementIDs) {
-        mMainWindow->view()->deleteHsmElement(id);
         mModel->root()->deleteChild(id);
+        // NOTE: model will send signal which will trigger view update
     }
 }
 
@@ -89,58 +89,16 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
     auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
 
     if (newTransition) {
-        switch (source->stateType()) {
-            case model::StateType::REGULAR: {
-                auto regularStatePtr = source.dynamicCast<model::RegularState>();
+        view::HsmTransition* newViewTransition =
+            mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
 
-                if (regularStatePtr) {
-                    regularStatePtr->addTransition(newTransition);
-                }
-                break;
-            }
-            case model::StateType::ENTRYPOINT: {
-                auto entryPointPtr = source.dynamicCast<model::EntryPoint>();
-
-                if (entryPointPtr) {
-                    entryPointPtr->addTransition(newTransition);
-                }
-                break;
-            }
-            case model::StateType::INITIAL: {
-                auto initialStatePtr = source.dynamicCast<model::InitialState>();
-
-                if (initialStatePtr) {
-                    auto oldTransition = initialStatePtr->transition();
-
-                    if (oldTransition) {
-                        // delete old transition from scene since initial state can only have one outgoing transition
-                        mMainWindow->view()->deleteHsmElement(oldTransition->id());
-                    }
-
-                    source.dynamicCast<model::InitialState>()->setTransition(newTransition);
-                }
-                break;
-            }
-            default:
-                // TODO: error (should not happen)
-                qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());
-                newTransition.reset();
-                break;
-        }
-
-        if (newTransition) {
-            view::HsmTransition* newViewTransition =
-                mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
-
-            tryConnectSignal(newViewTransition,
-                             "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                             this,
-                             "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
-        }
+        tryConnectSignal(newViewTransition,
+                            "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                            this,
+                            "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
     } else {
         qCritical() << "Failed to create new transition";
     }
-    // }
 }
 
 void ProjectController::reconnectElements(const model::EntityID_t transitionId,
@@ -148,15 +106,10 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
                                           const model::EntityID_t newToElementId) {
     qDebug() << Q_FUNC_INFO << transitionId << ": " << newFromElementId << " -> " << newToElementId;
 
-    auto transitionPtr = mModel->root()->findTransition(transitionId);
-
-    if (transitionPtr) {
-        transitionPtr->setSource(mModel->root()->findState(newFromElementId));
-        transitionPtr->setTarget(mModel->root()->findState(newToElementId));
-
+    if (mModel->reconnectElements(transitionId, newFromElementId, newToElementId) == true) {
         mMainWindow->view()->reconnectHsmTransition(transitionId, newFromElementId, newToElementId);
     } else {
-        qCritical() << "Failed to find transition with id " << transitionId;
+        qCritical() << "Failed to reconnect transition with id " << transitionId << newFromElementId << newToElementId;
     }
 }
 

@@ -69,8 +69,11 @@ void RegularState::deleteChild(const EntityID_t id) {
     }
 }
 
-void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
+void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
+        child->forEachChildElement([this](QSharedPointer<StateMachineEntity> element){
+            unregisterChild(element);
+        });
         mChildren.removeAll(child);
         unregisterChild(child);
     }
@@ -189,6 +192,16 @@ QVariant RegularState::getProperty(const QString& key) const {
     }
 
     return State::getProperty(key);
+}
+
+void RegularState::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+    for (QSharedPointer<StateMachineEntity>& child : mChildren) {
+        if (depth == DEPTH_INFINITE || depth > 1) {
+            child->forEachChildElement(callback, (depth != DEPTH_INFINITE ? depth - 1 : depth));
+        }
+
+        callback(child);
+    }
 }
 
 };  // namespace model

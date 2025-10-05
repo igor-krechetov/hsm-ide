@@ -42,7 +42,6 @@ void ElementGripItem::init() {
 }
 
 HsmElement* ElementGripItem::annotationElement() const {
-    // return dynamic_cast<HsmElement*>(parentItem());
     return mAnnotationElement;
 }
 
@@ -115,7 +114,7 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
             qDebug() << pos() << " -> " << value;
             res = pos();
         } else {
-            qDebug() << "GRIP MOVE:" << pos() << " -> " << value;
+            // qDebug() << "GRIP MOVE:" << pos() << " -> " << value;
             res = value;
         }
     } else {

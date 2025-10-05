@@ -17,11 +17,15 @@ EntityID_t StateMachineEntity::id() const {
     return mId;
 }
 
+void StateMachineEntity::addChild(const QSharedPointer<StateMachineEntity>& child) {
+    // do nothing
+}
+
 void StateMachineEntity::deleteChild(const EntityID_t id) {
     // do nothing
 }
 
-void StateMachineEntity::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
+void StateMachineEntity::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     // do nothing
 }
 
@@ -62,6 +66,10 @@ void StateMachineEntity::registerNewChild(const QSharedPointer<StateMachineEntit
 
 void StateMachineEntity::unregisterChild(const QSharedPointer<StateMachineEntity>& child) {
     emit childRemoved(child.toWeakRef());
+}
+
+void StateMachineEntity::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+    // do nothing
 }
 
 };  // namespace model

@@ -26,6 +26,8 @@ public:
 
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
+    bool reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId);
+
 signals:
     void modelChanged();
     void modelEntityDeleted(QWeakPointer<StateMachineEntity> entity);

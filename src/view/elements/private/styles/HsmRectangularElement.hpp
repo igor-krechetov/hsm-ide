@@ -19,6 +19,9 @@ public:
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+protected:
+    static constexpr int cOuterBorderAdjustment = 2;
 };
 
 };  // namespace view

@@ -31,6 +31,7 @@ bool HsmResizableElement::isResizable() const {
 
 void HsmResizableElement::updateBoundingRect(const QRectF& newRect) {
     HsmConnectableElement::updateBoundingRect(newRect);
+    qDebug() << Q_FUNC_INFO;
     // Resize parent to fit new size of current item
     resizeParentToFitChildItem();
 }
@@ -67,13 +68,6 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
         // qDebug() << Q_FUNC_INFO << parentRect << resizableParent->childrenBoundingRect();
 
         // Calculate required size to fit child
-        // qreal requiredWidth = qMax(parentRect.width(), childRect.right() - parentRect.left());
-        // qreal requiredHeight = qMax(parentRect.height(), childRect.bottom() - parentRect.top());
-
-        // parentRect.setLeft(qMin(parentRect.left(), childRect.left() - 5));
-        // parentRect.setTop(qMin(parentRect.top(), childRect.top() - 5));
-        // parentRect.setRight(qMax(parentRect.right(), childRect.right() + 5));
-        // parentRect.setBottom(qMax(parentRect.bottom(), childRect.bottom() + 5));
         QRectF parentNewRect = parentRect.united(childRect);
 
         // parentRect = resizableParent->childrenBoundingRect();
@@ -92,22 +86,7 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
                 parentNewRect.adjust(0, 0, 0, cChildPadding);
             }
 
-            // Expand parent if needed
-            // if (requiredWidth > parentRect.width() || requiredHeight > parentRect.height()) {
-            // Update parent size by moving the bottom-right grip
-            // QPointF newSizePoint(parentRect.left() + requiredWidth, parentRect.top() + requiredHeight);
-
-            // parentRect.setWidth(requiredWidth);
-            // parentRect.setHeight(requiredHeight);
             resizeElement(parentNewRect);
-            // parentElement->onGripMoved(
-            //     nullptr, // No specific grip selected
-            //     newSizePoint
-            // );
-
-            // Emit geometry changed signal
-            // emit resizableParent->geometryChanged(resizableParent);
-            // }
             resizeParentToFitChildItem();
         }
     }
@@ -162,12 +141,18 @@ void HsmResizableElement::createBoundaryGrips() {
 }
 
 void HsmResizableElement::updateGripsPosition(const QList<GripDirection>& directionsList) {
-    for (const auto& direction : directionsList) {
-        ElementBoundaryGripItem* g = mGrips[direction];  // TODO: add safety logic
+    if (mGrips.isEmpty() == false) {
+        for (const auto& direction : directionsList) {
+            auto it = mGrips.find(direction);
 
-        g->setEnabled(false);
-        g->setPos(gripPoint(direction));
-        g->setEnabled(true);
+            if (it != mGrips.end()) {
+                ElementBoundaryGripItem* g = *it;
+
+                g->setEnabled(false);
+                g->setPos(gripPoint(direction));
+                g->setEnabled(true);
+            }
+        }
     }
 }
 
@@ -420,8 +405,54 @@ ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction
 }
 
 void HsmResizableElement::setMinSize(qreal minWidth, qreal minHeight) {
+    qDebug() << "----------- setMinSize" << minWidth << minHeight;
+    QRectF newRect = mOuterRect;
+
     mMinWidth = minWidth;
     mMinHeight = minHeight;
+
+    if (mOuterRect.width() < mMinWidth) {
+        newRect.setWidth(mMinWidth);
+    }
+    if (mOuterRect.height() < mMinHeight) {
+        newRect.setHeight(mMinHeight);
+    }
+
+    if (newRect != mOuterRect) {
+        resizeElement(newRect);
+    }
+}
+
+void HsmResizableElement::setMinWidth(qreal minWidth) {
+    if (minWidth >= 0.0) {
+        QRectF newRect = mOuterRect;
+
+        mMinWidth = minWidth;
+
+        if (mOuterRect.width() < mMinWidth) {
+            newRect.setWidth(mMinWidth);
+        }
+
+        if (newRect != mOuterRect) {
+            resizeElement(newRect);
+        }
+    }
+}
+
+void HsmResizableElement::setMinHeight(qreal minHeight) {
+    if (minHeight >= 0.0) {
+        QRectF newRect = mOuterRect;
+
+        mMinHeight = minHeight;
+
+        if (mOuterRect.height() < mMinHeight) {
+        newRect.setHeight(mMinHeight);
+    }
+
+        if (newRect != mOuterRect) {
+            resizeElement(newRect);
+        }
+    }
 }
 
 QSizeF HsmResizableElement::minSize() const {

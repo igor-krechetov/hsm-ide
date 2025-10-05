@@ -3,6 +3,7 @@
 
 #include <QPen>
 #include <QPoint>
+#include <QPointer>
 #include <QString>
 #include <QSharedPointer>
 #include <QWeakPointer>
@@ -65,6 +66,8 @@ public:
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
+    virtual QPointF mapFromSceneToBody(const QPointF &point) const;
+
     template <typename T>
     QSharedPointer<T> modelElement();
 
@@ -74,9 +77,18 @@ public:
     // HsmElement* connectableElementAt(const QPointF& pos) const;
 
     virtual bool acceptsChildren() const;
+    virtual QList<QGraphicsItem*> hsmChildItems() const;
     bool isDirectChild(HsmElement* item) const;
-
     QRectF childrenRect() const;
+
+    // By default just calls setParentItem for the child, but can be overriden for custom logic
+    // Only use setParentItem(nullptr) to disconnect child elements
+    virtual void addChildItem(HsmElement* child);
+
+    // Sets items as a child of parent item both logically and physically (QObject relationship)
+    // manages pointer to a logical item parent (which is could be different from Qt child-parent hierarchy)
+    void setHsmParentItem(HsmElement* parent);
+    inline QPointer<HsmElement> hsmParentItem() const;
 
     // TODO: move to an interface
     virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
@@ -123,12 +135,17 @@ protected:
     QBrush mMainBrush;
 
 private:
+    QPointer<HsmElement> mHsmParent;
     HsmElementType mType = HsmElementType::UNKNOWN;
     QWeakPointer<model::StateMachineEntity> mModelElement;
     DragState mDragState = DragState::NONE;
     DragMode mDragMode = DragMode::NONE;
     bool mHightlight = false;
 };
+
+inline QPointer<HsmElement> HsmElement::hsmParentItem() const {
+    return mHsmParent;
+}
 
 template <typename T>
 QSharedPointer<T> HsmElement::modelElement() {

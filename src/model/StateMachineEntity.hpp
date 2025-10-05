@@ -14,6 +14,10 @@ namespace model {
 
 class StateMachineEntity : public QObject, public QEnableSharedFromThis<StateMachineEntity> {
     Q_OBJECT
+
+protected:
+    constexpr static int DEPTH_INFINITE = -1;
+
 public:
     enum class Type { Invalid, State, Transition };  // namespace model
 
@@ -24,8 +28,9 @@ public:
     EntityID_t id() const;
     Type type() const;
 
+    virtual void addChild(const QSharedPointer<StateMachineEntity>& child);
     virtual void deleteChild(const EntityID_t id);
-    virtual void deleteDirectChild(const QSharedPointer<StateMachineEntity> child);
+    virtual void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child);
 
     virtual QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId);
     virtual QSharedPointer<StateMachineEntity> findChild(
@@ -35,6 +40,8 @@ public:
     virtual QStringList properties() const;
     virtual bool setProperty(const QString& key, const QVariant& value);
     virtual QVariant getProperty(const QString& key) const;
+
+    virtual void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth = DEPTH_INFINITE);
 
 protected:
     void registerNewChild(const QSharedPointer<StateMachineEntity>& child);

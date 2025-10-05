@@ -12,11 +12,17 @@ void EntryPoint::addTransition(const QSharedPointer<Transition>& transition) {
     registerNewChild(transition);
 }
 
+void EntryPoint::addChild(const QSharedPointer<StateMachineEntity>& child) {
+    if (child && (child->type() == StateMachineEntity::Type::Transition)) {
+        addTransition(child.dynamicCast<Transition>());
+    }
+}
+
 void EntryPoint::deleteChild(const EntityID_t id) {
     deleteDirectChild(findChild(id));
 }
 
-void EntryPoint::deleteDirectChild(const QSharedPointer<StateMachineEntity> child) {
+void EntryPoint::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
         mTransitions.removeAll(child.dynamicCast<Transition>());
         unregisterChild(child);
@@ -51,6 +57,14 @@ QSharedPointer<StateMachineEntity> EntryPoint::findChild(const EntityID_t id, co
     }
 
     return res;
+}
+
+void EntryPoint::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+    Q_UNUSED(depth);
+
+    for (QSharedPointer<Transition>& child : mTransitions) {
+        callback(child.dynamicCast<StateMachineEntity>());
+    }
 }
 
 };  // namespace model

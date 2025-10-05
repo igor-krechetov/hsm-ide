@@ -65,4 +65,43 @@ bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t
     return moved;
 }
 
+bool StateMachineModel::reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId) {
+    bool res = false;
+
+    if (mModelRoot) {
+        QSharedPointer<model::Transition> transitionPtr = mModelRoot->findTransition(transitionId);
+
+        if (transitionPtr) {
+            QSharedPointer<model::State> currentSourceElement = transitionPtr->source();
+            QSharedPointer<model::State> newSourceElement = mModelRoot->findState(newFromElementId);
+
+            if (currentSourceElement && (currentSourceElement->id() != newFromElementId)) {
+                // Need to move transition to a new parent and change source
+                qDebug() << "---- reset old source";
+                QSignalBlocker block(currentSourceElement.get());
+
+                currentSourceElement->deleteChild(transitionId);
+            }
+
+            qDebug() << "---- setSource";
+            transitionPtr->setSource(mModelRoot->findState(newFromElementId));
+            transitionPtr->setTarget(mModelRoot->findState(newToElementId));
+            qDebug() << transitionPtr->sourceId() << transitionPtr->targetId();
+
+            if (newSourceElement) {
+                newSourceElement->addChild(transitionPtr);
+            }
+
+            auto transitionPtr2 = mModelRoot->findTransition(transitionId);
+            qDebug() << transitionPtr2 << (transitionPtr == transitionPtr2);
+
+            res = true;
+        } else {
+            qCritical() << "Failed to find transition with id " << transitionId;
+        }
+    }
+
+    return res;
+}
+
 };  // namespace model

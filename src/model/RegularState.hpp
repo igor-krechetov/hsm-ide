@@ -21,13 +21,13 @@ public:
     void setOnEnteringCallback(const QString& callback);
     void setOnExitingCallback(const QString& callback);
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child);
+    void addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void addChildState(const QSharedPointer<State>& child);
     void addTransition(const QSharedPointer<Transition>& child);
     const QList<QSharedPointer<StateMachineEntity>>& children() const;
 
     void deleteChild(const EntityID_t id) override;
-    void deleteDirectChild(const QSharedPointer<StateMachineEntity> child) override;
+    void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;
 
     QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
     QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
@@ -39,6 +39,9 @@ public:
     QStringList properties() const override;
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
+
+protected:
+    void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth = DEPTH_INFINITE) override;
 
 private:
     QString mOnStateChangedCallback;

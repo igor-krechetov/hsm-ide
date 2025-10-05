@@ -40,7 +40,7 @@
 **** REQ-102b: Event labeling <<done>>
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions
-**** REQ-102e: Self-transitions
+**** REQ-102e: Self-transitions <<in_progress>>
 **** REQ-102f: Transition actions
 *** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
@@ -107,8 +107,8 @@
 
 ** REQ-200: UI/UX Requirements
 *** REQ-201: Workspace layout
-**** REQ-201a: Element palette (toolbox) <<in_progress>>
-**** REQ-201b: Properties editor panel <<in_progress>>
+**** REQ-201a: Element palette (toolbox) <<done>>
+**** REQ-201b: Properties editor panel <<done>>
 **** REQ-201c: Canvas workspace <<in_progress>>
 *** REQ-202: Visualization features
 **** REQ-202a: Zoom/pan controls <<in_progress>>
@@ -124,8 +124,8 @@
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
 *** REQ-205: Custom Widgets
-**** REQ-205a: HSM Elements list <<in_progress>>
-**** REQ-205b: HSM Tree View <<in_progress>>
+**** REQ-205a: HSM Elements list <<done>>
+**** REQ-205b: HSM Tree View <<done>>
 ***** REQ-205b1: model and elements update <<done>>
 ***** REQ-205b2: delete tree elements <<done>>
 ***** REQ-205b2: select tree elements and focus update <<done>>

@@ -28,7 +28,10 @@ void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsI
         painter->setPen(mPenNormalMode);
     }
 
-    painter->drawRoundedRect(mOuterRect.adjusted(2, 2, -2, -2), cEdgeRadius, cEdgeRadius);
+    painter->drawRoundedRect(
+        mOuterRect.adjusted(cOuterBorderAdjustment, cOuterBorderAdjustment, -cOuterBorderAdjustment, -cOuterBorderAdjustment),
+        cEdgeRadius,
+        cEdgeRadius);
 
 #ifdef DEBUG_RENDERING
     painter->drawEllipse(QPointF(0, 0), 5, 5);

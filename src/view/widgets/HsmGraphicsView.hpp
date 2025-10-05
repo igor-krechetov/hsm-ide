@@ -91,7 +91,8 @@ private:
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
-    view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
+    // view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
+    view::HsmResizableElement* elementToHsmResizableElement(view::HsmElement* element) const;
 
     void forEachSelectedElement(std::function<void(view::HsmElement*)> callback);
 

@@ -44,6 +44,7 @@ bool HsmConnectableElement::acceptsConnections() const {
 
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
+    qDebug() << Q_FUNC_INFO;
     qreal arrowOffset = 0.0;
 
     // update();// TODO: why wasw this needed?
@@ -139,7 +140,7 @@ bool HsmConnectableElement::hasVisibleArrows() const {
 
 void HsmConnectableElement::updateBoundingRect(const QRectF& newRect) {
     HsmElement::updateBoundingRect(newRect);
-
+    qDebug() << Q_FUNC_INFO;
     updateHoverRect();
     updateConnectionArrowsPos();
 }
@@ -189,7 +190,7 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
             createConnectionArrows();
         }
 
-        auto parentConnectable = qgraphicsitem_cast<HsmConnectableElement*>(parentItem());
+        auto parentConnectable = dynamic_cast<HsmConnectableElement*>(hsmParentItem().get());
         if (parentConnectable) {
             parentConnectable->removeConnectionArrows();
         }

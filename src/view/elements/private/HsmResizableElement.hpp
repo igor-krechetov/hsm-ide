@@ -30,9 +30,9 @@ public:
     // Resizes current element and updates the bounding rect. New position can be genative.
     // Clients must call normalizeElementRect() to tormalize the coordinates
     virtual void resizeElement(const QRectF& newRect);
-    void resizeToFitChildItem(HsmElement* child);
+    virtual void resizeToFitChildItem(HsmElement* child);
     // Normalizes bounding rect to start at 0,0 position
-    void normalizeElementRect();
+    virtual void normalizeElementRect();
 
     void createBoundaryGrips();
     void updateGripsPosition(const QList<GripDirection>& directionsList);
@@ -40,6 +40,8 @@ public:
     QPointF gripPoint(GripDirection gripDirection);
 
     void setMinSize(qreal minWidth, qreal minHeight);
+    void setMinWidth(qreal minWidth);
+    void setMinHeight(qreal minHeight);
     QSizeF minSize() const;
 
 public slots:
@@ -55,9 +57,10 @@ protected:
 private:
     ElementBoundaryGripItem* createGrip(GripDirection direction);
 
-private:
+protected:
     static constexpr int cChildPadding = 5;
 
+private:
     QMap<GripDirection, ElementBoundaryGripItem*> mGrips;
     bool mResizeMode = false;
     bool mGripSelected = false;
