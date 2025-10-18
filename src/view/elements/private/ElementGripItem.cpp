@@ -114,8 +114,7 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
             qDebug() << pos() << " -> " << value;
             res = pos();
         } else {
-            // qDebug() << "GRIP MOVE:" << pos() << " -> " << value;
-            res = value;
+            res = QGraphicsObject::itemChange(change, value);
         }
     } else {
         res = QGraphicsObject::itemChange(change, value);

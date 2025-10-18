@@ -20,6 +20,12 @@ class HsmTransition : public HsmElement {
     Q_OBJECT
 
 public:
+    static constexpr qreal SELECTION_DISTANCE = 2.0;
+    static constexpr qreal SELFTRANSITION_X_OFFSET = 10.0;
+    static constexpr qreal SELFTRANSITION_Y_OFFSET = 15.0;
+    static constexpr qreal SELFTRANSITION_LENGTH = 40.0;
+
+public:
     HsmTransition();
     // virtual ~HsmTransition() = default;
     virtual ~HsmTransition();
@@ -31,6 +37,8 @@ public:
     void moveConnectionTo(const QPointF& pos);
     void connectElements(HsmElement* fromElement, HsmElement* toElement);
     void disconnectElements();
+
+    inline bool isSelfTransition() const;
 
     QPointer<HsmElement> connectionCandidate() const;
 
@@ -68,18 +76,17 @@ protected slots:
     void onGripMoveEnterEvent(ElementGripItem* gripItem);
     void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
-protected slots:
     void onEventEditFinished();
     void onEventLabelPositionChanged();
     void onModelDataChanged() override;
+
+public slots:
     void recalculateLine();
 
 private:
     void setConnectionGripsVisibility(const bool visible);
 
 private:
-    static constexpr qreal SELECTION_DISTANCE = 2.0;
-
     bool mDebugShowSelectionPolygon = false;
 
     QPointer<HsmElement> mFromElement;
@@ -97,6 +104,10 @@ private:
     QPointer<HsmStateTextItem> mLabel;
     QPointF mLabelOffset = QPointF(0, 0);
 };
+
+inline bool HsmTransition::isSelfTransition() const {
+    return ((nullptr != mFromElement) && (mFromElement == mToElement));
+}
 
 };  // namespace view
 

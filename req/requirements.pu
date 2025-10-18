@@ -40,7 +40,7 @@
 **** REQ-102b: Event labeling <<done>>
 **** REQ-102c: Guard condition specification
 **** REQ-102d: Internal/External transitions
-**** REQ-102e: Self-transitions <<in_progress>>
+**** REQ-102e: Self-transitions <<done>>
 **** REQ-102f: Transition actions
 *** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
@@ -144,7 +144,7 @@
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling
 **** REQ-301a: Import SCXML 1.0 files
-**** REQ-301b: Export SCXML 1.0 files
+**** REQ-301b: Export SCXML 1.0 files <<todo>>
 *** REQ-302: Image export
 **** REQ-302a: PNG export
 **** REQ-302b: SVG export

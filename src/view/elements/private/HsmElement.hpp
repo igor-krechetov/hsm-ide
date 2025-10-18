@@ -84,6 +84,7 @@ public:
     // By default just calls setParentItem for the child, but can be overriden for custom logic
     // Only use setParentItem(nullptr) to disconnect child elements
     virtual void addChildItem(HsmElement* child);
+    virtual void removeChildItem(HsmElement* child);
 
     // Sets items as a child of parent item both logically and physically (QObject relationship)
     // manages pointer to a logical item parent (which is could be different from Qt child-parent hierarchy)
@@ -106,7 +107,7 @@ signals:
 
 protected:
     HsmGraphicsView* hsmView() const;
-    void forEachChildElement(std::function<void(HsmElement*)> callback, const int depth = DEPTH_INFINITE);
+    void forEachHsmChildElement(std::function<void(HsmElement*)> callback, const int depth = DEPTH_INFINITE);
 
     virtual void updateBoundingRect(const QRectF& newRect = QRectF());
     void notifyGeometryChanged();

@@ -112,7 +112,7 @@ void HsmResizableElement::normalizeElementRect() {
     updateGripsPosition(updateGrips);
 
     // Update position of child items
-    forEachChildElement(
+    forEachHsmChildElement(
         [&](HsmElement* child) {
             qDebug() << "child:" << child->pos() << " -> " << (child->pos() - newPositionDelta);
             child->setPos(child->pos() - newPositionDelta);
@@ -274,7 +274,6 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
     // qDebug() << childrenSize << newOuterRect << elementRect();
     if (childrenSize.isNull() == false) {
         childrenSize.adjust(-newPositionDelta.x(), -newPositionDelta.y(), -newPositionDelta.x(), -newPositionDelta.y());
-        childrenSize.adjust(-cChildPadding, -cChildPadding, cChildPadding, cChildPadding);
     }
 
     // qDebug() << "CHILD RECT:" << childrenSize << "NEW RECT:" << newOuterRect << "DELTA:" << newPositionDelta;
@@ -303,7 +302,7 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
                 updateGripsPosition(updateGrips);
 
                 // Update position of child items
-                forEachChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
+                forEachHsmChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
                 update();
                 notifyGeometryChanged();
             }

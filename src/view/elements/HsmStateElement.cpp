@@ -10,6 +10,7 @@
 
 #include "model/RegularState.hpp"
 #include "private/HsmStateTextItem.hpp"
+#include "HsmTransition.hpp"
 
 namespace view {
 
@@ -93,8 +94,35 @@ QList<QGraphicsItem*> HsmStateElement::hsmChildItems() const {
 
 void HsmStateElement::addChildItem(HsmElement* child) {
     if (nullptr != child && nullptr != mBodySection) {
-        child->setParentItem(mBodySection);
+        if (child->elementType() == HsmElementType::TRANSITION) {
+            HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
+
+            if (transition) {
+                if (transition->isSelfTransition()) {
+                    qDebug() << "add SELF TRANSITION";
+                    connect(child, &QObject::destroyed, this, [this, child]() {
+                        layoutSections();
+                    });
+
+                    child->setParentItem(mSelfTransitionsSection);
+                    layoutSections();
+                } else {
+                    qDebug() << "add regular TRANSITION";
+                    child->setParentItem(mBodySection);
+                }
+            } else {
+                qCritical() << Q_FUNC_INFO << "mismatch between HsmElement type is TRANSIOTION, but it's not an instance of HsmTransition";
+            }
+        } else {
+            child->setParentItem(mBodySection);
+        }
     }
+}
+
+void HsmStateElement::removeChildItem(HsmElement* child) {
+    qDebug() << "HsmStateElement::removeChildItem" << child;
+    HsmRectangularElement::removeChildItem(child);
+    layoutSections();
 }
 
 void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
@@ -132,6 +160,14 @@ void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
             resizeParentToFitChildItem();
         }
     }
+
+    layoutSections();
+}
+
+void HsmStateElement::normalizeElementRect() {
+    HsmRectangularElement::normalizeElementRect();
+
+    layoutSections();
 }
 
 void HsmStateElement::onModelDataChanged() {
@@ -146,6 +182,7 @@ void HsmStateElement::onModelDataChanged() {
 
             // Update properties section text
             QStringList actions;
+
             if (!entityPtr->onEnteringCallback().isEmpty()) {
                 actions << "onEntry: " + entityPtr->onEnteringCallback();
             }
@@ -160,7 +197,6 @@ void HsmStateElement::onModelDataChanged() {
         }
 
         layoutSections();
-        update();  // trigger repaint
     }
 }
 
@@ -170,6 +206,8 @@ void HsmStateElement::layoutSections() {
         const qreal w = rect.width();
         qreal y = rect.top();
 
+        layoutSelfTransitions();
+
         // Header section
         // mHeaderSection->setPos(rect.left(), y);
         qreal headerHeight = HEADER_HEIGHT;
@@ -178,9 +216,10 @@ void HsmStateElement::layoutSections() {
         y += SECTION_SPACING;
 
         // Self-Transitions section
-        qreal selfTransHeight = 0.0;
+        const int transitionsCount = getSelfTransitionsCount();
+        qreal selfTransHeight = (transitionsCount > 0 ? (transitionsCount + 1) * HsmTransition::SELFTRANSITION_Y_OFFSET : 0.0);
 
-        // TODO: calculate space for self-transitions
+        qDebug() << "------------- mSelfTransitionsSection->setRect";
         mSelfTransitionsSection->setRect(rect.left(), y, w, selfTransHeight);
         y += selfTransHeight;
 
@@ -204,12 +243,31 @@ void HsmStateElement::layoutSections() {
         y += SECTION_SPACING;
 
         // Body section
+        qDebug() << "------------- mBodySection->setRect";
         mBodySection->setRect(rect.left(), y, w, rect.bottom() - y);
 
         // Calculate minimum height based on content
         setMinHeight(headerHeight + SECTION_SPACING + selfTransHeight + SECTION_SPACING + propsHeight + SECTION_SPACING +
                      BODY_MIN_HEIGHT);
     }
+
+    update();
+}
+
+void HsmStateElement::layoutSelfTransitions() {
+    if (mSelfTransitionsSection) {
+        for (auto child: mSelfTransitionsSection->childItems()) {
+            HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
+
+            if (transition) {
+                transition->recalculateLine();
+            }
+        }
+    }
+}
+
+int HsmStateElement::getSelfTransitionsCount() const {
+    return (nullptr != mSelfTransitionsSection ? mSelfTransitionsSection->childItems().size() : 0);
 }
 
 bool HsmStateElement::isInitialized() const {

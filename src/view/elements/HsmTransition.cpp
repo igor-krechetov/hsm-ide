@@ -4,6 +4,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QGraphicsScene>
 #include <QPointF>
 #include <QPolygonF>
 #include <QSignalBlocker>
@@ -13,6 +14,11 @@
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"
 #include "view/common/ViewUtils.hpp"
+#include "HsmStateElement.hpp"
+
+/*
+TODO: sometimes self-transitions get positioned incorrectly (shifted to the left or right) when moving them around
+*/
 
 namespace view {
 
@@ -49,7 +55,6 @@ void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelE
 
     // Create label
     mLabel = new HsmStateTextItem(this);
-    mLabel->makeMovable(true);
 
     connect(mLabel, &HsmStateTextItem::editingFinished, this, &HsmTransition::onEventEditFinished);
     connect(mLabel, &HsmStateTextItem::positionChanged, this, &HsmTransition::onEventLabelPositionChanged);
@@ -176,30 +181,62 @@ void HsmTransition::moveConnectionTo(const QPointF& pos) {
 }
 
 void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toElement) {
-    qDebug() << Q_FUNC_INFO;
     disconnectElements();
-    mFromElement = fromElement;
-    mToElement = toElement;
-    connect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
-    connect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
-    recalculateLine();
+
+    if (nullptr != fromElement && nullptr != toElement) {
+        mFromElement = fromElement;
+        mToElement = toElement;
+
+        // NOTE: we always add transition to the parent state of fromElement
+        auto parent = fromElement->hsmParentItem();
+
+        // TODO: how do we add it to substates?
+        if (nullptr != fromElement && fromElement == toElement) {
+            qDebug() << "---- added SELF TRANSITION to " << fromElement;
+            fromElement->addChildItem(this);
+        } else if (nullptr == parent) {
+            qDebug() << "---- added TRANSITION to SCEENE" << scene();
+            fromElement->scene()->addItem(this);
+        } else {
+            qDebug() << "---- added TRANSITION to " << parent;
+            parent->addChildItem(this);
+        }
+
+        if (isSelfTransition() == false) {
+            connect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
+            connect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
+        }
+
+        recalculateLine();
+
+        if (mLabel) {
+            mLabel->makeMovable(mFromElement != mToElement);
+        }
+    }
 }
 
 void HsmTransition::disconnectElements() {
     qDebug() << Q_FUNC_INFO;
-    if (mFromElement != nullptr) {
-        try {
-            QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
-        } catch (...) {
-            qDebug() << "from not connected";
+
+    if (isSelfTransition() == false) {
+        if (mFromElement != nullptr) {
+            try {
+                QObject::disconnect(mFromElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
+            } catch (...) {
+                qDebug() << "from not connected";
+            }
+        }
+        if (mToElement != nullptr) {
+            try {
+                QObject::disconnect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
+            } catch (...) {
+                qDebug() << "to not connected";
+            }
         }
     }
-    if (mToElement != nullptr) {
-        try {
-            QObject::disconnect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
-        } catch (...) {
-            qDebug() << "to not connected";
-        }
+
+    if (nullptr != mFromElement) {
+        mFromElement->removeChildItem(this);
     }
 
     mFromElement = nullptr;
@@ -323,6 +360,8 @@ void HsmTransition::onModelDataChanged() {
 }
 
 void HsmTransition::recalculateLine() {
+    qDebug() << "---- recalculateLine" << this;
+    // TODO: fix connection incorectly attaching to the center of elements when they are too close
     QPointF currentMovePos;
 
     if (mLinePath.size() >= 2) {
@@ -332,41 +371,64 @@ void HsmTransition::recalculateLine() {
 
     // TODO: decide how to snap transition to items
     if ((nullptr != mFromElement) && (nullptr != mToElement)) {
-        QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
-        QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
+        if (mFromElement != mToElement) {
+            QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
+            QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
 
-        // determine relative position of elements against each other
-        // if can be one of these 8 positions or a combination of them
-        //     1 2 3
-        //     4 @ 5
-        //     6 7 8
-        //
-        //    12 23
-        //  14 @@@ 35
-        //     @@@
-        //  46 @@@ 58
-        //    67 78
-        //
-        // 1, 3, 6, 8: angle line
-        // others: Z-line
+            // determine relative position of elements against each other
+            // if can be one of these 8 positions or a combination of them
+            //     1 2 3
+            //     4 @ 5
+            //     6 7 8
+            //
+            //    12 23
+            //  14 @@@ 35
+            //     @@@
+            //  46 @@@ 58
+            //    67 78
+            //
+            // 1, 3, 6, 8: angle line
+            // others: Z-line
 
-        QPointF pointFrom;
-        QPointF pointTo;
+            QPointF pointFrom;
+            QPointF pointTo;
 
-        if (false == mLinePath.isEmpty()) {
-            pointFrom = findStartingPointFromPoint(rectFrom, mLinePath.first());
-            pointTo = findStartingPointFromPoint(rectTo, mLinePath.last());
-        } else {
-            pointFrom = findStartingPointFromRect(rectFrom, rectTo);
-            pointTo = findStartingPointFromRect(rectTo, rectFrom);
+            if (false == mLinePath.isEmpty()) {
+                pointFrom = findStartingPointFromPoint(rectFrom, mLinePath.first());
+                pointTo = findStartingPointFromPoint(rectTo, mLinePath.last());
+            } else {
+                pointFrom = findStartingPointFromRect(rectFrom, rectTo);
+                pointTo = findStartingPointFromRect(rectTo, rectFrom);
+            }
+
+            mLinePath.prepend(pointFrom);
+            mLinePath.append(pointTo);
+            // qDebug() << "mLinePath: " << mLinePath.size() << ": " << mLinePath;
+        } else if (parentItem() != nullptr) {
+            // self transitions
+            const QRectF rectParent = parentItem()->boundingRect();
+            QPointF pointFrom = rectParent.topLeft();
+            QPointF pointTo;
+            const int selfTransitionsIndex = parentItem()->childItems().indexOf(this);
+
+            pointFrom.setX(pointFrom.x() + SELFTRANSITION_X_OFFSET);
+            pointFrom.setY(pointFrom.y() + SELFTRANSITION_Y_OFFSET * (selfTransitionsIndex + 1));
+            pointTo.setX(pointFrom.x() + SELFTRANSITION_LENGTH);
+            pointTo.setY(pointFrom.y());
+
+            // qDebug() << "parentItem()->boundingRect()" << rectParent;
+            // qDebug() << pointFrom << pointTo;
+
+            mLinePath.prepend(pointFrom);
+            mLinePath.append(pointTo);
+
+            mLabel->setPos(QPoint(pointTo.x() + 10, pointTo.y() - mLabel->boundingRect().height() / 2));
         }
 
-        mLinePath.prepend(pointFrom);
-        mLinePath.append(pointTo);
-        // qDebug() << "mLinePath: " << mLinePath.size() << ": " << mLinePath;
-
-        mSrcGrip->setPos(mLinePath.first());
-        mDestGrip->setPos(mLinePath.last());
+        if (mLinePath.size() >= 2) {
+            mSrcGrip->setPos(mLinePath.first());
+            mDestGrip->setPos(mLinePath.last());
+        }
     } else if (nullptr != mFromElement) {
         currentMovePos = mDestGrip->pos();
 
@@ -405,8 +467,9 @@ void HsmTransition::recalculateLine() {
 
     updateBoundingRect();
 
-    // Always position label as central point plus offset
-    if (mLabel && mLinePath.size() >= 2) {
+    // Don't position label for self-transitions
+    if (isSelfTransition() == false && mLabel && mLinePath.size() >= 2) {
+        // Always position label as central point plus offset
         QPointF mid;
         const int n = mLinePath.size();
 
@@ -448,7 +511,7 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
             // Check if there is an element under cursor and highlight it
-            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), pos, false, true, false, nullptr);
+            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, nullptr);
 
             if (mLastConnectionTarget != element) {
                 if (mLastConnectionTarget) {
@@ -505,13 +568,14 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
             QPointF pos = gripItem->pos();
             // check if there is an element which accepts connections
-            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), pos, false, true, false, nullptr);
+            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, nullptr);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;
             }
 
             targetElement->hightlight(false);
+
 
             mConnecting = false;
             mLastConnectionTarget.clear();
@@ -526,10 +590,6 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
     }
 }
 
-// # def onGripLostFocus(self, grip):
-// #     # TODO
-// #     return True
-
 int HsmTransition::findGripIndex(const ElementGripItem* grip) {
     int gripIndex = -1;
 
@@ -541,7 +601,6 @@ int HsmTransition::findGripIndex(const ElementGripItem* grip) {
         }
     }
 
-    // return (gripIndex > 0 && gripIndex < (mLineGrips.size()-1) ? gripIndex : -1);
     return gripIndex;
 }
 
@@ -555,20 +614,24 @@ QVariant HsmTransition::itemChange(GraphicsItemChange change, const QVariant& va
 
 void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
     qDebug() << "HsmTransition::mouseDoubleClickEvent";
-    std::tuple<bool, QPointF, int> result = isPointOnTheLine(event->pos());
 
-    if (true == std::get<0>(result)) {
-        // TODO: use smart pointer
-        ElementGripItem* grip = new ElementGripItem(this);
-        QPointF gripPos = mapToScene(std::get<1>(result));
+    // block creation of intermediate points for self-transitions
+    if (isSelfTransition() == false) {
+        std::tuple<bool, QPointF, int> result = isPointOnTheLine(event->pos());
 
-        grip->init();
-        grip->setPos(std::get<1>(result));
-        mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
-        // TODO: validate
-        mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
-        // Recalculate line in case label position needs to be changed
-        recalculateLine();
+        if (true == std::get<0>(result)) {
+            // TODO: use smart pointer
+            ElementGripItem* grip = new ElementGripItem(this);
+            QPointF gripPos = mapToScene(std::get<1>(result));
+
+            grip->init();
+            grip->setPos(std::get<1>(result));
+            mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
+            // TODO: validate
+            mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
+            // Recalculate line in case label position needs to be changed
+            recalculateLine();
+        }
     }
 
     QGraphicsItem::mouseDoubleClickEvent(event);

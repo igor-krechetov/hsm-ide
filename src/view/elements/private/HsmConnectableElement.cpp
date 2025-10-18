@@ -44,7 +44,6 @@ bool HsmConnectableElement::acceptsConnections() const {
 
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
-    qDebug() << Q_FUNC_INFO;
     qreal arrowOffset = 0.0;
 
     // update();// TODO: why wasw this needed?
@@ -89,15 +88,12 @@ void HsmConnectableElement::createConnectionArrows() {
             mArrows[direction] = newArrow;
         }
     } else {
-        qDebug() << Q_FUNC_INFO << "REATTACH";
         for (const auto& direction : mArrows.keys()) {
             // TODO: find then use
             // mArrows[direction]->setParentItem(nullptr);
-            // qDebug() << Q_FUNC_INFO << __LINE__;
             mArrows[direction]->setPos(getArrowPos(direction));
             scene()->addItem(mArrows[direction]);
             mArrows[direction]->show();
-            // qDebug() << Q_FUNC_INFO << __LINE__;
             // mArrows[direction]->deleteLater();
         }
     }
@@ -114,10 +110,8 @@ void HsmConnectableElement::removeConnectionArrows() {
         for (const auto& direction : mArrows.keys()) {
             // TODO: find then use
             // mArrows[direction]->setParentItem(nullptr);
-            // qDebug() << Q_FUNC_INFO << __LINE__;
             mArrows[direction]->hide();
             scene()->removeItem(mArrows[direction]);
-            // qDebug() << Q_FUNC_INFO << __LINE__;
             // mArrows[direction]->deleteLater();
         }
 
@@ -212,7 +206,7 @@ QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVar
         // TODO: Hide grips
 
         // Hide arrows for child elements (if any)
-        forEachChildElement([](HsmElement* child) {
+        forEachHsmChildElement([](HsmElement* child) {
             if (child && child->isConnectable()) {
                 qgraphicsitem_cast<HsmConnectableElement*>(child)->removeConnectionArrows();
             }

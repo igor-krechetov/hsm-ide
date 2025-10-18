@@ -83,17 +83,16 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId, const E
                 currentSourceElement->deleteChild(transitionId);
             }
 
-            qDebug() << "---- setSource";
-            transitionPtr->setSource(mModelRoot->findState(newFromElementId));
+            if (currentSourceElement != newSourceElement) {
+                qDebug() << "---- setSource";
+                transitionPtr->setSource(newSourceElement);
+
+                if (newSourceElement) {
+                    newSourceElement->addChild(transitionPtr);
+                }
+            }
             transitionPtr->setTarget(mModelRoot->findState(newToElementId));
             qDebug() << transitionPtr->sourceId() << transitionPtr->targetId();
-
-            if (newSourceElement) {
-                newSourceElement->addChild(transitionPtr);
-            }
-
-            auto transitionPtr2 = mModelRoot->findTransition(transitionId);
-            qDebug() << transitionPtr2 << (transitionPtr == transitionPtr2);
 
             res = true;
         } else {

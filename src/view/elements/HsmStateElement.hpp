@@ -23,8 +23,10 @@ public:
     // bool isDirectChild(HsmElement* item) const override;
     // QRectF childrenRect() const override;
     void addChildItem(HsmElement* child) override;
+    void removeChildItem(HsmElement* child) override;
 
     void resizeToFitChildItem(HsmElement* child) override;
+    void normalizeElementRect() override;
 
     QPointF mapFromSceneToBody(const QPointF &point) const override {
         return mBodySection->mapFromScene(point);
@@ -37,6 +39,10 @@ protected:
 
     void centerHeader();
     void layoutSections(); // New: lays out all sections vertically
+
+    void layoutSelfTransitions();
+
+    int getSelfTransitionsCount() const;
 
 protected slots:
     void onStateNameChanged();

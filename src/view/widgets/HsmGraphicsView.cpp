@@ -37,11 +37,8 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::
                                                     const QString& elementTypeId,
                                                     const QPoint& pos,
                                                     const model::EntityID_t parentElementId) {
-    qDebug() << __LINE__;
     view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement);
-    qDebug() << __LINE__;
     view::HsmElement* parentElement = findHsmElement(parentElementId);
-    qDebug() << __LINE__;
 
     qDebug() << Q_FUNC_INFO << "ID=" << newElement->modelId() << ", pos=" << mapToScene(pos);
     qDebug() << Q_FUNC_INFO << newElement;
@@ -80,14 +77,10 @@ view::HsmTransition* HsmGraphicsView::createHsmTransition(const QSharedPointer<m
     QPointer<view::HsmElement> fromElement = findHsmElement(fromElementId);
     QPointer<view::HsmElement> toElement = findHsmElement(toElementId);
 
-    // TODO: does QPointer have bool() operator?
-    if (fromElement && toElement) {
+    if (nullptr != fromElement && nullptr != toElement) {
         transitionElement = new view::HsmTransition();
-
         transitionElement->init(transition);
         transitionElement->connectElements(fromElement, toElement);
-        // TODO: how do we add it to substates?
-        scene()->addItem(transitionElement);
         mElements[transition->id()] = QPointer(transitionElement);
         qDebug() << "transition added to view";
     } else {

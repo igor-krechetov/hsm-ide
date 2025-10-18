@@ -1,0 +1,78 @@
+@startuml
+
+!theme plain
+' skinparam linetype polyline
+' skinparam linetype ortho
+skinparam groupInheritance 1
+skinparam Shadowing false
+skinparam Class {
+    BackgroundColor White
+    ArrowColor #0078d7
+    BorderColor #0078d7
+}
+
+sprite readOnly <svg viewBox="0 0 16 16">
+<circle cx="8" cy="8" r="8" fill="#61dafb"/>
+</svg>
+
+sprite readWrite <svg viewBox="0 0 16 16">
+<circle cx="8" cy="8" r="8" fill="#5fe038"/>
+</svg>
+
+title HSM IDE Signals Map
+
+package "Model" {
+  class StateMachineModel
+  class StateMachineEntity
+  class State
+  class RegularState
+  class Transition
+  class FinalState
+  class HistoryState
+  class InitialState
+  class EntryPoint
+  class ExitPoint
+
+}
+
+package "View" {
+  package "Models" {
+    class StateMachineEntityViewModel
+    class StateMachineTreeModel
+  }
+
+  class MainWindow
+  class HsmGraphicsView
+  class HsmTreeView
+  class HsmEntityPropertyDelegate
+  class HsmElementsList
+  class HsmElement
+  class HsmResizableElement
+  class HsmConnectableElement
+  class HsmTransition
+  class HsmRectangularElement
+  class HsmRoundElement
+  class HsmEntryPointElement
+  class HsmExitPointElement
+  class HsmFinalElement
+  class HsmHistoryElement
+  class HsmStateElement
+  class HsmInitialElement
+}
+
+
+package "Controller" {
+  class MainEditorController
+  class ProjectController
+}
+
+package "Supporting Elements" {
+  class ElementGripItem
+  class ElementBoundaryGripItem
+  class ElementConnectionArrow
+  class HsmElementsFactory
+}
+
+HsmConnectableElement --> ProjectController: "elementConnected->connectElements"
+
+@enduml

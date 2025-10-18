@@ -91,15 +91,14 @@ QRectF HsmElement::elementRect() const {
     return mOuterRect;
 }
 
-QPointF HsmElement::mapFromSceneToBody(const QPointF &point) const {
+QPointF HsmElement::mapFromSceneToBody(const QPointF& point) const {
     return mapFromScene(point);
 }
 
 void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
-    qDebug() << __LINE__;
     mModelElement = modelEntity.toWeakRef();
     updateBoundingRect();
-    qDebug() << __LINE__;
+
     // Subscribe to modelDataChanged signal
     if (modelEntity) {
         QObject::connect(modelEntity.data(),
@@ -107,7 +106,6 @@ void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEnti
                          this,
                          &HsmElement::onModelDataChanged);
     }
-    qDebug() << __LINE__;
 }
 
 bool HsmElement::isConnectable() const {
@@ -188,6 +186,13 @@ void HsmElement::addChildItem(HsmElement* child) {
     }
 }
 
+void HsmElement::removeChildItem(HsmElement* child) {
+    qDebug() << "HsmElement::removeChildItem" << child;
+    if (nullptr != child) {
+        child->setParentItem(nullptr);
+    }
+}
+
 void HsmElement::setHsmParentItem(HsmElement* parent) {
     if (nullptr != parent) {
         parent->addChildItem(this);
@@ -232,13 +237,13 @@ HsmGraphicsView* HsmElement::hsmView() const {
     return view;
 }
 
-void HsmElement::forEachChildElement(std::function<void(HsmElement*)> callback, const int depth) {
+void HsmElement::forEachHsmChildElement(std::function<void(HsmElement*)> callback, const int depth) {
     for (QGraphicsItem* child : hsmChildItems()) {
         QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
 
         if (userType.isValid()) {
             if (depth == DEPTH_INFINITE || depth > 1) {
-                qgraphicsitem_cast<HsmElement*>(child)->forEachChildElement(callback,
+                qgraphicsitem_cast<HsmElement*>(child)->forEachHsmChildElement(callback,
                                                                             (depth != DEPTH_INFINITE ? depth - 1 : depth));
             }
             callback(qgraphicsitem_cast<HsmElement*>(child));
@@ -290,7 +295,7 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
 
         notifyGeometryChanged();
 
-        forEachChildElement([&](HsmElement* child) {
+        forEachHsmChildElement([&](HsmElement* child) {
             if (child) {
                 child->notifyGeometryChanged();
             }

@@ -191,7 +191,6 @@ QModelIndex StateMachineTreeModel::findModelEntity(const model::EntityID_t id) c
 
     if (false == matches.isEmpty()) {
         res = matches.first();
-        qDebug() << "Found at row" << res.row();
     }
 
     return res;
