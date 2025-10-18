@@ -12,6 +12,8 @@ public:
     explicit ExitPoint(const QString& name);
     virtual ~ExitPoint() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
     // Getters
     const QString& event() const;
     const QString& onStateChangedCallback() const;

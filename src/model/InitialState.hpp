@@ -12,10 +12,14 @@ public:
     explicit InitialState(const QString& name);
     virtual ~InitialState() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
     void setTransition(const QSharedPointer<Transition>& transition);
     QSharedPointer<Transition> transition() const;
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child) override;
+    QStringList properties() const override;
+
+    bool addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void deleteChild(const EntityID_t id) override;
     void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;
 

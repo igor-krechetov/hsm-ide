@@ -1,12 +1,19 @@
 #include "InitialState.hpp"
 
 #include "Transition.hpp"
+#include "private/IModelVisitor.hpp"
 
 namespace model {
 
 // TODO: does it make sence to generate an ID here?
 InitialState::InitialState(const QString& name)
     : State(name, StateType::INITIAL) {}
+
+void InitialState::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitInitialState(this);
+    }
+}
 
 void InitialState::setTransition(const QSharedPointer<Transition>& transition) {
     if (mTransition) {
@@ -20,12 +27,18 @@ QSharedPointer<Transition> InitialState::transition() const {
     return mTransition;
 }
 
-void InitialState::addChild(const QSharedPointer<StateMachineEntity>& child) {
+QStringList InitialState::properties() const {
+    return {};
+}
+
+bool InitialState::addChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child && (child->type() == StateMachineEntity::Type::Transition)) {
         setTransition(child.dynamicCast<Transition>());
     } else {
         setTransition(nullptr);
     }
+
+    return true;
 }
 
 void InitialState::deleteChild(const EntityID_t id) {
@@ -47,7 +60,10 @@ QSharedPointer<StateMachineEntity> InitialState::findParentState(const EntityID_
 }
 
 QSharedPointer<StateMachineEntity> InitialState::findChild(const EntityID_t id, const StateMachineEntity::Type type) const {
-    return (type == StateMachineEntity::Type::Transition && mTransition && mTransition->id() == id ? mTransition : nullptr);
+    return ((type == StateMachineEntity::Type::Invalid || type == StateMachineEntity::Type::Transition) && mTransition &&
+                    (mTransition->id() == id)
+                ? mTransition
+                : nullptr);
 }
 
 void InitialState::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {

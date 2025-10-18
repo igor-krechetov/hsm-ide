@@ -15,6 +15,8 @@ public:
     Transition(QSharedPointer<State> source, QSharedPointer<State> target, const QString& event);
     virtual ~Transition() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
     QSharedPointer<State> source() const;
     QSharedPointer<State> target() const;
 
@@ -27,12 +29,14 @@ public:
     // Getters
     const QString& event() const;
     TransitionType transitionType() const;
+    const QString& transitionCallback() const;
     const QString& conditionCallback() const;
     bool expectedConditionValue() const;
 
     // Setters
     void setEvent(const QString& event);
     void setTransitionType(TransitionType type);
+    void setTransitionCallback(const QString& callback);
     void setConditionCallback(const QString& callback);
     void setExpectedConditionValue(bool value);
     bool setProperty(const QString& key, const QVariant& value) override;
@@ -48,6 +52,7 @@ private:
     QWeakPointer<State> mSource;
     QWeakPointer<State> mTarget;
     QString mEvent;
+    QString mTransitionCallback;
     QString mConditionCallback;
     bool mExpectedConditionValue = false;
 };

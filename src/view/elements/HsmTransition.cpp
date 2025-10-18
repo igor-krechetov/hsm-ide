@@ -190,12 +190,11 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
         // NOTE: we always add transition to the parent state of fromElement
         auto parent = fromElement->hsmParentItem();
 
-        // TODO: how do we add it to substates?
         if (nullptr != fromElement && fromElement == toElement) {
             qDebug() << "---- added SELF TRANSITION to " << fromElement;
             fromElement->addChildItem(this);
         } else if (nullptr == parent) {
-            qDebug() << "---- added TRANSITION to SCEENE" << scene();
+            qDebug() << "---- added TRANSITION to SCENE" << scene();
             fromElement->scene()->addItem(this);
         } else {
             qDebug() << "---- added TRANSITION to " << parent;

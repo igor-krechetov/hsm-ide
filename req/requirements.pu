@@ -31,17 +31,17 @@
 **** REQ-101g: Final states <<done>>
 **** REQ-101h: Initial states <<done>>
 **** REQ-101i: model infrastructure <<done>>
-*** REQ-102: Transition management
+*** REQ-102: Transition management <<in_progress>>
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
 ***** REQ-102a2: Highlight for connectable elements <<done>>
 ***** REQ-102a3: Transition rendering <<done>>
 ***** REQ-102a4: Change transition source/target <<done>>
 **** REQ-102b: Event labeling <<done>>
-**** REQ-102c: Guard condition specification
-**** REQ-102d: Internal/External transitions
+**** REQ-102c: Guard condition specification <<todo>>
+**** REQ-102d: Internal/External transitions <<done>>
 **** REQ-102e: Self-transitions <<done>>
-**** REQ-102f: Transition actions
+**** REQ-102f: Transition actions <<done>>
 *** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
@@ -65,11 +65,11 @@
 ****** REQ-103e3b: Move substate to top level (hold Ctrl) <<done>>
 ****** REQ-103e3c: Move substate to another parent (hold Ctrl) <<done>>
 ****** REQ-103e3b: Move multiple elements <<done>>
-*** REQ-104: State Behavior Configuration
-**** REQ-104a: Entry actions (onentry)
-**** REQ-104b: Exit actions (onexit)
-**** REQ-104c: State change callbacks
-**** REQ-104d: Editing state name
+*** REQ-104: State Behavior Configuration <<done>>
+**** REQ-104a: Entry actions (onentry) <<done>>
+**** REQ-104b: Exit actions (onexit) <<done>>
+**** REQ-104c: State change callbacks <<done>>
+**** REQ-104d: Editing state name <<done>>
 *** REQ-105: Timing Features
 **** REQ-105a: Timer event configuration
 **** REQ-105b: Timeout transitions
@@ -105,6 +105,11 @@
 ***** REQ-107i1: common element functionality <<done>>
 ***** REQ-107i2: redraw on model data change <<done>>
 
+*** REQ-108: Callbacks management
+**** REQ-108a: Callbacks auto-suggestion
+**** REQ-108b: Callbacks renaming across existing elements
+**** REQ-108c: Callbacks name validation
+
 ** REQ-200: UI/UX Requirements
 *** REQ-201: Workspace layout
 **** REQ-201a: Element palette (toolbox) <<done>>
@@ -123,6 +128,10 @@
 **** REQ-204a: Copy/Paste/Cut
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
+**** REQ-204d: File menu <<in_progress>>
+***** REQ-204d1: Open <<todo>>
+***** REQ-204d2: Save <<in_progress>>
+***** REQ-204d3: Save As <<todo>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
@@ -141,10 +150,14 @@
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
 
-** REQ-300: Import/Export
-*** REQ-301: SCXML file handling
-**** REQ-301a: Import SCXML 1.0 files
-**** REQ-301b: Export SCXML 1.0 files <<todo>>
+** REQ-300: Import/Export <<in_progress>>
+*** REQ-301: SCXML file handling <<in_progress>>
+**** REQ-301a: Import SCXML 1.0 files <<todo>>
+***** REQ-301a1: Model structure import <<todo>>
+***** REQ-301a2: Model layout import <<todo>>
+**** REQ-301b: Export SCXML 1.0 files <<in_progress>>
+***** REQ-301b1: Model structure export <<done>>
+***** REQ-301b2: Model layout export <<todo>>
 *** REQ-302: Image export
 **** REQ-302a: PNG export
 **** REQ-302b: SVG export

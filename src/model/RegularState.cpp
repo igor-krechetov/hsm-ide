@@ -1,4 +1,5 @@
 #include "RegularState.hpp"
+#include "private/IModelVisitor.hpp"
 
 #include <QDebug>
 
@@ -6,6 +7,12 @@ namespace model {
 
 RegularState::RegularState(const QString& name)
     : State(name, StateType::REGULAR) {}
+
+void RegularState::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitRegularState(this);
+    }
+}
 
 // Getters
 const QString& RegularState::onStateChangedCallback() const {
@@ -36,11 +43,16 @@ void RegularState::setOnExitingCallback(const QString& callback) {
     emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
-void RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
+bool RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
+    bool res = false;
+
     if (child) {
         mChildren.push_back(child);
         registerNewChild(child);
+        res = true;
     }
+
+    return res;
 }
 
 void RegularState::addChildState(const QSharedPointer<State>& child) {
@@ -53,7 +65,7 @@ void RegularState::addTransition(const QSharedPointer<Transition>& child) {
     addChild(qSharedPointerCast<StateMachineEntity>(child));
 }
 
-const QList<QSharedPointer<StateMachineEntity>>& RegularState::children() const {
+const QList<QSharedPointer<StateMachineEntity>>& RegularState::childrenEntities() const {
     return mChildren;
 }
 

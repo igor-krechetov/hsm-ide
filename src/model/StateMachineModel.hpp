@@ -18,7 +18,8 @@ public:
     explicit StateMachineModel(const QString& name, QObject* parent = nullptr);
     virtual ~StateMachineModel();
 
-    const QString& name() const;
+    QString name() const;
+    void setName(const QString& name);
 
     QSharedPointer<RegularState>& root();
 
@@ -34,7 +35,6 @@ signals:
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
-    QString mName;
     QSharedPointer<RegularState> mModelRoot;
 };
 

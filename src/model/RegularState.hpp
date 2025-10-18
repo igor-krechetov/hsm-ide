@@ -11,6 +11,8 @@ public:
     explicit RegularState(const QString& name);
     virtual ~RegularState() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
     // Getters
     const QString& onStateChangedCallback() const;
     const QString& onEnteringCallback() const;
@@ -21,10 +23,10 @@ public:
     void setOnEnteringCallback(const QString& callback);
     void setOnExitingCallback(const QString& callback);
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child) override;
+    bool addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void addChildState(const QSharedPointer<State>& child);
     void addTransition(const QSharedPointer<Transition>& child);
-    const QList<QSharedPointer<StateMachineEntity>>& children() const;
+    const QList<QSharedPointer<StateMachineEntity>>& childrenEntities() const;
 
     void deleteChild(const EntityID_t id) override;
     void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;

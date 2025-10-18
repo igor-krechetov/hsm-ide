@@ -11,6 +11,7 @@ namespace model {
     class RegularState;
     class EntryPoint;
     class InitialState;
+    class HistoryState;
 };
 
 namespace view {
@@ -63,6 +64,7 @@ private:
     void addRegularState(TreeNode* parentNode, const QSharedPointer<model::RegularState>& state);
     void addEntryPoint(TreeNode* parentNode, const QSharedPointer<model::EntryPoint>& state);
     void addInitialState(TreeNode* parentNode, const QSharedPointer<model::InitialState>& state);
+    void addHistoryState(TreeNode* parentNode, const QSharedPointer<model::HistoryState>& state);
 
 private:
     // TODO: make shared ptr

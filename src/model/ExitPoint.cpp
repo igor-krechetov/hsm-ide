@@ -1,9 +1,17 @@
 #include "ExitPoint.hpp"
 
+#include "private/IModelVisitor.hpp"
+
 namespace model {
 
 ExitPoint::ExitPoint(const QString& name)
     : State(name, StateType::EXITPOINT) {}
+
+void ExitPoint::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitExitPoint(this);
+    }
+}
 
 // Getters
 const QString& ExitPoint::event() const {

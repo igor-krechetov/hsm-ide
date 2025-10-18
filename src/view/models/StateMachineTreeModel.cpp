@@ -5,6 +5,7 @@
 
 #include "model/EntryPoint.hpp"
 #include "model/InitialState.hpp"
+#include "model/HistoryState.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
@@ -225,7 +226,7 @@ bool StateMachineTreeModel::removeRows(int row, int count, const QModelIndex& pa
     return res;
 }
 
-// TODO: following entities can have children: RegularState, EntryPoint, InitialState
+// TODO: following entities can have children: RegularState, EntryPoint, InitialState, HistoryState
 // modify arg to be of State
 void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPointer<model::StateMachineEntity>& entity) {
     if (entity) {
@@ -251,6 +252,9 @@ void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPo
                     case model::StateType::INITIAL:
                         addInitialState(childNode, state.dynamicCast<model::InitialState>());
                         break;
+                    case model::StateType::HISTORY:
+                        addHistoryState(childNode, state.dynamicCast<model::HistoryState>());
+                        break;
                     default:
                         // TODO: error
                         break;
@@ -263,7 +267,7 @@ void StateMachineTreeModel::addModelEntity(TreeNode* parentNode, const QSharedPo
 }
 
 void StateMachineTreeModel::addRegularState(TreeNode* parentNode, const QSharedPointer<model::RegularState>& state) {
-    for (const auto& child : state->children()) {
+    for (const auto& child : state->childrenEntities()) {
         addModelEntity(parentNode, child);
 
         // if (child->type() == model::StateMachineEntity::Type::State) {
@@ -291,6 +295,10 @@ void StateMachineTreeModel::addEntryPoint(TreeNode* parentNode, const QSharedPoi
 
 void StateMachineTreeModel::addInitialState(TreeNode* parentNode, const QSharedPointer<model::InitialState>& state) {
     addModelEntity(parentNode, state->transition());
+}
+
+void StateMachineTreeModel::addHistoryState(TreeNode* parentNode, const QSharedPointer<model::HistoryState>& state) {
+    addModelEntity(parentNode, state->defaultTransition());
 }
 
 }  // namespace view

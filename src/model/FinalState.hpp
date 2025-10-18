@@ -10,6 +10,8 @@ public:
     explicit FinalState(const QString& name);
     virtual ~FinalState() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
     // Getters
     const QString& onStateChangedCallback() const;
 

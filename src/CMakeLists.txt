@@ -7,6 +7,23 @@ set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
 set(RESOURCE_FILES view/res/resources.qrc)
 
+# Create a model library target
+set(MODEL_SOURCES
+    model/ModelTypes.cpp
+    model/EntryPoint.cpp
+    model/ExitPoint.cpp
+    model/FinalState.cpp
+    model/HistoryState.cpp
+    model/InitialState.cpp
+    model/RegularState.cpp
+    model/State.cpp
+    model/StateMachineModel.cpp
+    model/Transition.cpp
+    model/ModelElementsFactory.cpp
+    model/StateMachineEntity.cpp
+    model/StateMachineSerializer.cpp
+)
+
 set(PROJECT_SOURCES
         main.cpp
         common/ObjectUtils.cpp
@@ -14,20 +31,6 @@ set(PROJECT_SOURCES
         controllers/MainEditorController.cpp
         controllers/ProjectController.cpp
         # controllers/RecentFilesManager.cpp
-
-        model/ModelTypes.cpp
-        model/EntryPoint.cpp
-        model/ExitPoint.cpp
-        model/FinalState.cpp
-        model/HistoryState.cpp
-        model/InitialState.cpp
-        model/RegularState.cpp
-        model/State.cpp
-        model/StateMachineModel.cpp
-        model/Transition.cpp
-        model/ModelElementsFactory.cpp
-        model/StateMachineEntity.cpp
-
 
         view/MainWindow.cpp
 
@@ -69,6 +72,8 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_library(model STATIC ${MODEL_SOURCES})
+
     qt_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
     list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     qt_add_executable(hsm_ide
@@ -82,6 +87,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
+    add_library(model STATIC ${MODEL_SOURCES})
+
     qt5_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
     list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     if(ANDROID)
@@ -99,9 +106,16 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
+target_include_directories(model PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
+)
+
+target_link_libraries(model PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                            ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets model)
 
 set_target_properties(hsm_ide PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

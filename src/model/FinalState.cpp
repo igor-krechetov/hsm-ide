@@ -1,9 +1,17 @@
 #include "FinalState.hpp"
 
+#include "private/IModelVisitor.hpp"
+
 namespace model {
 
 FinalState::FinalState(const QString& name)
     : State(name, StateType::FINAL) {}
+
+void FinalState::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitFinalState(this);
+    }
+}
 
 // Getters
 const QString& FinalState::onStateChangedCallback() const {

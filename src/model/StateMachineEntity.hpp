@@ -12,6 +12,8 @@
 
 namespace model {
 
+class IModelVisitor;
+
 class StateMachineEntity : public QObject, public QEnableSharedFromThis<StateMachineEntity> {
     Q_OBJECT
 
@@ -28,7 +30,9 @@ public:
     EntityID_t id() const;
     Type type() const;
 
-    virtual void addChild(const QSharedPointer<StateMachineEntity>& child);
+    virtual void accept(class IModelVisitor* visitor) = 0;
+
+    virtual bool addChild(const QSharedPointer<StateMachineEntity>& child);
     virtual void deleteChild(const EntityID_t id);
     virtual void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child);
 
@@ -41,7 +45,8 @@ public:
     virtual bool setProperty(const QString& key, const QVariant& value);
     virtual QVariant getProperty(const QString& key) const;
 
-    virtual void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth = DEPTH_INFINITE);
+    virtual void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback,
+                                     const int depth = DEPTH_INFINITE);
 
 protected:
     void registerNewChild(const QSharedPointer<StateMachineEntity>& child);

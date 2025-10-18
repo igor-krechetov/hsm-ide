@@ -22,6 +22,9 @@ class ProjectController : public QObject {
 public:
     explicit ProjectController(QPointer<MainWindow> mainWindow, QObject* parent = nullptr);
 
+    bool importModel(const QString& path);
+    bool exportModel(const QString& path);
+
     void handleViewDropEvent(const QString& elementTypeId, const QPoint& pos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
@@ -42,6 +45,24 @@ private:
 private:
     QPointer<MainWindow> mMainWindow;
     QSharedPointer<model::StateMachineModel> mModel;
+    // TODO
+    //     2. Create a scene per project
+    // Each project gets its own QGraphicsScene (which encapsulates your state machine graph, connections, etc.).
+    // auto* scene = new QGraphicsScene(this);
+    // scene->addItem(...); // populate
+    // m_openProjects.insert(projectName, scene);
+    //     3. On project switch
+
+    // Just swap the scene pointer:
+
+    // void EditorWindow::switchToProject(const QString& name)
+    // {
+    //     if (!m_openProjects.contains(name))
+    //         return;
+
+    //     m_view->setScene(m_openProjects[name]);
+    //     m_currentProject = name;
+    // }
 };
 
 #endif  // PROJECTCONTROLLER_HPP

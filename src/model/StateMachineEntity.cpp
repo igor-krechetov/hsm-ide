@@ -17,8 +17,9 @@ EntityID_t StateMachineEntity::id() const {
     return mId;
 }
 
-void StateMachineEntity::addChild(const QSharedPointer<StateMachineEntity>& child) {
+bool StateMachineEntity::addChild(const QSharedPointer<StateMachineEntity>& child) {
     // do nothing
+    return false;
 }
 
 void StateMachineEntity::deleteChild(const EntityID_t id) {

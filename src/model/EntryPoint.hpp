@@ -12,11 +12,15 @@ public:
     explicit EntryPoint(const QString& name);
     virtual ~EntryPoint() = default;
 
+    void accept(class IModelVisitor* visitor) override;
+
+    QStringList properties() const override;
+
     inline const QList<QSharedPointer<Transition>>& transitions() const;
 
     void addTransition(const QSharedPointer<Transition>& transition);
 
-    void addChild(const QSharedPointer<StateMachineEntity>& child) override;
+    bool addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void deleteChild(const EntityID_t id) override;
     void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;
 

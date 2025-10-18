@@ -13,7 +13,6 @@ namespace model {
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent)
-    , mName(name)
     , mModelRoot(ModelElementsFactory::createUniqueState(StateType::REGULAR).dynamicCast<RegularState>()) {
     mModelRoot->setName(name);
     // Subscribe to modelEntityAdded for mModelRoot
@@ -25,8 +24,14 @@ StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
 
 StateMachineModel::~StateMachineModel() = default;
 
-const QString& StateMachineModel::name() const {
-    return mName;
+QString StateMachineModel::name() const {
+    return (mModelRoot ? mModelRoot->name() : QString());
+}
+
+void StateMachineModel::setName(const QString& name) {
+    if (mModelRoot) {
+        mModelRoot->setName(name);
+    }
 }
 
 QSharedPointer<RegularState>& StateMachineModel::root() {

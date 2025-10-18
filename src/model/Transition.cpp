@@ -1,6 +1,7 @@
 #include "Transition.hpp"
 
 #include "State.hpp"
+#include "private/IModelVisitor.hpp"
 
 namespace model {
 
@@ -9,6 +10,12 @@ Transition::Transition(QSharedPointer<State> source, QSharedPointer<State> targe
     , mSource(source)
     , mTarget(target)
     , mEvent(event) {}
+
+void Transition::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitTransition(this);
+    }
+}
 
 const QString& Transition::event() const {
     return mEvent;
@@ -51,6 +58,10 @@ TransitionType Transition::transitionType() const {
     return mTransitionType;
 }
 
+const QString& Transition::transitionCallback() const {
+    return mTransitionCallback;
+}
+
 const QString& Transition::conditionCallback() const {
     return mConditionCallback;
 }
@@ -70,6 +81,11 @@ void Transition::setTransitionType(TransitionType type) {
     emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
+void Transition::setTransitionCallback(const QString& callback) {
+    mTransitionCallback = callback;
+    emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
 void Transition::setConditionCallback(const QString& callback) {
     mConditionCallback = callback;
     emit modelDataChanged(sharedFromThis().toWeakRef());
@@ -81,7 +97,7 @@ void Transition::setExpectedConditionValue(bool value) {
 }
 
 QStringList Transition::properties() const {
-    return {"event", "conditionCallback", "expectedConditionValue", cKeyTransitionType};
+    return {"event", "transitionCallback", "conditionCallback", "expectedConditionValue", cKeyTransitionType};
 }
 
 bool Transition::setProperty(const QString& key, const QVariant& value) {
@@ -89,6 +105,8 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
 
     if (key == "event") {
         setEvent(value.toString());
+    } else if (key == "transitionCallback") {
+        setTransitionCallback(value.toString());
     } else if (key == "conditionCallback") {
         setConditionCallback(value.toString());
     } else if (key == "expectedConditionValue") {
@@ -105,6 +123,8 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
 QVariant Transition::getProperty(const QString& key) const {
     if (key == "event") {
         return mEvent;
+    } else if (key == "transitionCallback") {
+        return mTransitionCallback;
     } else if (key == "conditionCallback") {
         return mConditionCallback;
     } else if (key == "expectedConditionValue") {

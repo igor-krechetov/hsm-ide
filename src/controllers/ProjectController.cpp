@@ -1,8 +1,10 @@
 #include "ProjectController.hpp"
 
 #include <QDebug>
+#include <QFile>
 #include <QLoggingCategory>
 #include <QMimeData>
+#include <QTextStream>
 
 #include "ObjectUtils.hpp"
 #include "model/EntryPoint.hpp"
@@ -10,12 +12,12 @@
 #include "model/ModelElementsFactory.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
+#include "model/StateMachineSerializer.hpp"
 #include "model/Transition.hpp"
 #include "view/MainWindow.hpp"
-#include "view/widgets/HsmGraphicsView.hpp"
-// TODO: move out from private
 #include "view/elements/HsmTransition.hpp"
-#include "view/elements/private/HsmElement.hpp"
+#include "view/elements/private/HsmElement.hpp"  // TODO: move out from private
+#include "view/widgets/HsmGraphicsView.hpp"
 
 Q_DECLARE_LOGGING_CATEGORY(ProjectController)
 
@@ -43,6 +45,30 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // t->init();
     // e1->addTransition(t, e2);
     mMainWindow->setModel(mModel);
+}
+
+bool ProjectController::importModel(const QString& path) {
+    return false;
+}
+
+bool ProjectController::exportModel(const QString& path) {
+    bool res = false;
+    model::StateMachineSerializer serializer;
+    const QString scxmlContent = serializer.serializeToScxml(mModel);
+
+    if (scxmlContent.isEmpty() == false) {
+        QFile file(path);
+
+        if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            QTextStream out(&file);
+
+            out << scxmlContent;
+            file.close();
+            res = true;
+        }
+    }
+
+    return res;
 }
 
 void ProjectController::handleViewDropEvent(const QString& elementTypeId,
@@ -93,9 +119,9 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
             mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
 
         tryConnectSignal(newViewTransition,
-                            "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                            this,
-                            "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                         "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                         this,
+                         "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
     } else {
         qCritical() << "Failed to create new transition";
     }
@@ -130,12 +156,12 @@ void ProjectController::createElement(const QString& elementTypeId,
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
 
     static std::map<QString, model::StateType> sElementTypes = {// TODO: decide what to do with start type
-                                                                       {"initial", model::StateType::INITIAL},
-                                                                       {"final", model::StateType::FINAL},
-                                                                       {"state", model::StateType::REGULAR},
-                                                                       {"entrypoint", model::StateType::ENTRYPOINT},
-                                                                       {"exitpoint", model::StateType::EXITPOINT},
-                                                                       {"history", model::StateType::HISTORY}};
+                                                                {"initial", model::StateType::INITIAL},
+                                                                {"final", model::StateType::FINAL},
+                                                                {"state", model::StateType::REGULAR},
+                                                                {"entrypoint", model::StateType::ENTRYPOINT},
+                                                                {"exitpoint", model::StateType::EXITPOINT},
+                                                                {"history", model::StateType::HISTORY}};
 
     auto it = sElementTypes.find(elementTypeId);
 

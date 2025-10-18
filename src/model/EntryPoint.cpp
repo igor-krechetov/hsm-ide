@@ -1,21 +1,37 @@
 #include "EntryPoint.hpp"
 
 #include "Transition.hpp"
+#include "private/IModelVisitor.hpp"
 
 namespace model {
 
 EntryPoint::EntryPoint(const QString& name)
     : State(name, StateType::ENTRYPOINT) {}
 
+void EntryPoint::accept(class IModelVisitor* visitor) {
+    if (visitor) {
+        visitor->visitEntryPoint(this);
+    }
+}
+
+QStringList EntryPoint::properties() const {
+    return {};
+}
+
 void EntryPoint::addTransition(const QSharedPointer<Transition>& transition) {
     mTransitions.append(transition);
     registerNewChild(transition);
 }
 
-void EntryPoint::addChild(const QSharedPointer<StateMachineEntity>& child) {
+bool EntryPoint::addChild(const QSharedPointer<StateMachineEntity>& child) {
+    bool res = false;
+
     if (child && (child->type() == StateMachineEntity::Type::Transition)) {
         addTransition(child.dynamicCast<Transition>());
+        res = true;
     }
+
+    return res;
 }
 
 void EntryPoint::deleteChild(const EntityID_t id) {

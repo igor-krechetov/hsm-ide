@@ -60,12 +60,14 @@ QVariant StateMachineEntityViewModel::data(const QModelIndex& index, int role) c
 }
 
 QVariant StateMachineEntityViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    if (role != Qt::DisplayRole || orientation != Qt::Horizontal) {
         return QVariant();
-    if (section == 0)
+    } else if (section == 0) {
         return QStringLiteral("Property");
-    if (section == 1)
+    } else if (section == 1) {
         return QStringLiteral("Value");
+    }
+
     return QVariant();
 }
 
@@ -98,10 +100,14 @@ void StateMachineEntityViewModel::selectEntity(const QSharedPointer<model::State
 }
 
 Qt::ItemFlags StateMachineEntityViewModel::flags(const QModelIndex& index) const {
-    if (!index.isValid()) return Qt::NoItemFlags;
+    if (!index.isValid()) {
+        return Qt::NoItemFlags;
+    }
+
     if (index.column() == 1) {
         return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
     }
+
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
@@ -111,10 +117,13 @@ bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVaria
     if (!mSelectedEntity || !index.isValid() || index.column() != 1 || role != Qt::EditRole) {
         return false;
     }
+
     const auto& props = mSelectedEntity->properties();
+
     if (index.row() < 0 || index.row() >= props.size()) {
         return false;
     }
+
     QString propName = props.at(index.row());
     bool res = mSelectedEntity->setProperty(propName, value);
 
@@ -123,6 +132,7 @@ bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVaria
     if (false == res) {
         return false;
     }
+
     emit dataChanged(index, index, {role});
     return true;
 }

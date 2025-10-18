@@ -9,7 +9,7 @@ HsmHistoryElement::HsmHistoryElement()
     : HsmRoundElement(HsmElementType::HISTORY) {}
 
 bool HsmHistoryElement::isConnectable() const {
-    return false;
+    return true;
 }
 
 void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {

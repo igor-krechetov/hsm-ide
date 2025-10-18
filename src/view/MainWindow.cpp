@@ -3,6 +3,8 @@
 #include <QSignalBlocker>
 
 #include "./ui/ui_main.h"
+#include "controllers/ProjectController.hpp"
+
 #include "model/StateMachineModel.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 #include "view/elements/HsmStateElement.hpp"
@@ -48,12 +50,28 @@ QPointer<HsmGraphicsView> MainWindow::view() {
     return ui->mainView;
 }
 
+void MainWindow::handleOpen() {}
+
+void MainWindow::handleSave() {
+    if (nullptr != mActiveProject) {
+        mActiveProject->exportModel("./test.scxml");
+    }
+}
+
+void MainWindow::handleSaveAs() {}
+
+
 void MainWindow::deleteSelectedItems() {
     if (!ui || !ui->mainView || !ui->mainView->scene()) {
         return;
     }
 
     ui->mainView->deleteSelectedItems();
+}
+
+void MainWindow::setProjectController(QPointer<ProjectController> controller) {
+    mActiveProject = controller;
+    ui->mainView->setProjectController(mActiveProject);
 }
 
 void MainWindow::setModel(const QSharedPointer<model::StateMachineModel>& model) {
@@ -90,6 +108,7 @@ void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const Q
 }
 
 void MainWindow::selectModelEntityById(model::EntityID_t id) {
+    qDebug() << Q_FUNC_INFO << "Selecting entity id=" << id;
     // Select in entityProperties
     auto* entityModel = qobject_cast<view::StateMachineEntityViewModel*>(ui->entityProperties->model());
     if (entityModel) {

@@ -9,7 +9,7 @@
 MainEditorController::MainEditorController()
     : QObject(nullptr)
     , mProjectController(new ProjectController(&mMainWindow, this)) {
-    mMainWindow.view()->setProjectController(mProjectController);
+    mMainWindow.setProjectController(mProjectController);
 }
 
 int MainEditorController::start() {

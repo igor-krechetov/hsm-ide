@@ -11,6 +11,7 @@ class Ui_hsm_ide;
 QT_END_NAMESPACE
 
 class HsmGraphicsView;
+class ProjectController;
 
 namespace model {
     class StateMachineModel;
@@ -25,7 +26,20 @@ public:
 
     QPointer<HsmGraphicsView> view();
 
+    void setProjectController(QPointer<ProjectController> controller);
     void setModel(const QSharedPointer<model::StateMachineModel>& model);
+
+public slots:
+    void handleOpen();
+    void handleSave();
+    void handleSaveAs();
+
+    void deleteSelectedItems();
+    void onGraphicsViewSelectionChanged();
+    void onModelTreeSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+
+private:
+    void selectModelEntityById(const model::EntityID_t id);
 
 private:
     Ui_hsm_ide* ui;
@@ -39,13 +53,7 @@ private:
     QString mAppTitle;
     QString mConfigPath;
 
-public slots:
-    void deleteSelectedItems();
-    void onGraphicsViewSelectionChanged();
-    void onModelTreeSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
-
-private:
-    void selectModelEntityById(const model::EntityID_t id);
+    QPointer<ProjectController> mActiveProject;
 };
 
 #endif  // MAINWINDOW_HPP
