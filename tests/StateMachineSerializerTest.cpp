@@ -20,7 +20,8 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void testSerialization();
-    void testDeserialization();
+    void testDeserializationSimple();
+    void testDeserializationFull();
     void testValidation();
 
 private:
@@ -80,14 +81,14 @@ void StateMachineSerializerTest::testSerialization()
     qDebug() << scxml;
 }
 
-void StateMachineSerializerTest::testDeserialization()
+void StateMachineSerializerTest::testDeserializationSimple()
 {
     // Create a simple SCXML string
     QString scxml = R"(
         <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="TestMachine">
             <state id="RootState">
-                <state id="ChildState"/>
                 <transition event="event1" target="ChildState"/>
+                <state id="ChildState"/>
             </state>
         </scxml>
     )";
@@ -113,17 +114,83 @@ void StateMachineSerializerTest::testDeserialization()
     QVERIFY(childStateL1->name() == "RootState");
 
     QCOMPARE(childStateL1->childrenEntities().size(), 2);
-    auto ptrChildStateL2 = childStateL1->childrenEntities().first();
+    auto ptrChildStateL2 = childStateL1->childrenEntities().last();
     QVERIFY(ptrChildStateL2);
     QSharedPointer<model::RegularState> childStateL2 = ptrChildStateL2.dynamicCast<model::RegularState>();
     QVERIFY(childStateL2);
     QVERIFY(childStateL2->name() == "ChildState");
 
     // Check if the transition exists
-    QSharedPointer<model::Transition> transition = childStateL1->childrenEntities().last().dynamicCast<model::Transition>();
+    QSharedPointer<model::Transition> transition = childStateL1->childrenEntities().first().dynamicCast<model::Transition>();
     QVERIFY(transition);
     QVERIFY(transition->event() == "event1");
     QVERIFY(transition->target()->name() == "ChildState");
+}
+
+void StateMachineSerializerTest::testDeserializationFull()
+{
+    // Create a simple SCXML string
+    QString scxml = R"(
+        <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="TestMachine">
+            <state id="State_2">
+                <transition event="event_1" type="external" target="State_9"/>
+                <transition event="event_2" type="external" target="State_8"/>
+                <transition event="event_4" type="internal" target="State_2"/>
+            </state>
+            <state id="State_3">
+                <history id="State_9" type="shallow">
+                    <transition event="event_2" type="external" target="State_4"/>
+                </history>
+                <state id="State_4"/>
+                <initial>
+                    <transition event="event_3" type="external" target="State_7" cond="cond_1 is false">
+                        <script>tr_cb</script>
+                    </transition>
+                </initial>
+                <final id="State_7" event="event_4">
+                    <onentry>
+                        <script>f_cb2</script>
+                    </onentry>
+                    <onexit>
+                        <script>f_cb3</script>
+                    </onexit>
+                    <invoke srcexpr="f_cb1"/>
+                </final>
+                <transition type="external" event="event_4" target="State_2"/>
+            </state>
+            <initial>
+                <transition type="external" target="State_3"/>
+            </initial>
+            <final id="State_8"/>
+        </scxml>
+    )";
+
+    // Deserialize the SCXML
+    QSharedPointer<model::StateMachineModel> modelPtr = serializer->deserializeFromScxml(scxml);
+
+    // Check if deserialization was successful
+    QVERIFY(modelPtr);
+    QVERIFY(modelPtr->name() == "TestMachine");
+
+    // Check if the root state exists
+    QSharedPointer<model::RegularState> rootState = modelPtr->root();
+    QVERIFY(rootState);
+    QVERIFY(rootState->name() == modelPtr->name());
+    QCOMPARE(rootState->childrenEntities().size(), 4);
+
+    auto ptrChildState2 = rootState->childrenEntities().at(0);
+    QVERIFY(ptrChildState2);
+    QSharedPointer<model::RegularState> childState2 = ptrChildState2.dynamicCast<model::RegularState>();
+    QVERIFY(childState2);
+    QCOMPARE(childState2->childrenEntities().size(), 3);
+
+    auto ptrChildState3 = rootState->childrenEntities().at(1);
+    QVERIFY(ptrChildState3);
+    QSharedPointer<model::RegularState> childState3 = ptrChildState3.dynamicCast<model::RegularState>();
+    QVERIFY(childState3);
+    QCOMPARE(childState3->childrenEntities().size(), 5);
+
+    modelPtr->dump();
 }
 
 void StateMachineSerializerTest::testValidation()

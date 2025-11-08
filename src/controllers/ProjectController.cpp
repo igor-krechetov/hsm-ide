@@ -27,27 +27,47 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     , mModel(new model::StateMachineModel("Default Model", this)) {
     // ---------------------
     // TODO: debug
-    createElement("state", QPoint(10, 10));
-    createElement("state", QPoint(-150, 170));
-    createElement("state", QPoint(250, 170));
 
-    createElement("initial", QPoint(-150, -120));
-    createElement("entrypoint", QPoint(-100, -120));
-    createElement("exitpoint", QPoint(-20, -120));
-    createElement("final", QPoint(75, -120));
-    createElement("history", QPoint(175, -120));
+    // createElement("state", QPoint(10, 10));
+    // createElement("state", QPoint(-150, 170));
+    // createElement("state", QPoint(250, 170));
+
+    // createElement("initial", QPoint(-150, -120));
+    // createElement("entrypoint", QPoint(-100, -120));
+    // createElement("exitpoint", QPoint(-20, -120));
+    // createElement("final", QPoint(75, -120));
+    // createElement("history", QPoint(175, -120));
 
     // createTransition("e1", "e2");
 
+    QObject::connect(mModel.get(), &model::StateMachineModel::modelEntityAdded, this, &ProjectController::modelEntityAdded);
     QObject::connect(mModel.get(), &model::StateMachineModel::modelEntityDeleted, this, &ProjectController::modelEntityDeleted);
+    QObject::connect(mModel.get(), &model::StateMachineModel::modelDataChanged, this, &ProjectController::modelDataChanged);
 
     // std::shared_ptr<HsmTransition> t = std::make_shared<HsmTransition>();
     // t->init();
     // e1->addTransition(t, e2);
     mMainWindow->setModel(mModel);
+
+    importModel("./test.scxml");
 }
 
 bool ProjectController::importModel(const QString& path) {
+    model::StateMachineSerializer serializer;
+    QString scxmlContent;
+    QFile file(path);
+
+    if (file.open(QIODevice::ReadOnly)) {
+        QTextStream in(&file);
+        scxmlContent = in.readAll();
+        file.close();
+    } else {
+        qCritical() << "Failed to open file for reading: " << path;
+        return false;
+    }
+
+    serializer.deserializeFromScxml(scxmlContent, mModel);
+
     return false;
 }
 
@@ -72,7 +92,7 @@ bool ProjectController::exportModel(const QString& path) {
 }
 
 void ProjectController::handleViewDropEvent(const QString& elementTypeId,
-                                            const QPoint& pos,
+                                            const QPointF& pos,
                                             const model::EntityID_t targetElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << pos;
 
@@ -108,23 +128,57 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
     }
 }
 
+void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
+                                               QSharedPointer<model::StateMachineEntity> entity) {
+    qDebug() << "handleModelEntityAdded"
+             << "parent=" << parent->id() << " child=" << entity->id();
+
+    if (entity->type() == model::StateMachineEntity::Type::State) {
+        static std::map<model::StateType, QString> sElementTypes = {{model::StateType::INITIAL, "initial"},
+                                                                    {model::StateType::FINAL, "final"},
+                                                                    {model::StateType::REGULAR, "state"},
+                                                                    {model::StateType::ENTRYPOINT, "entrypoint"},
+                                                                    {model::StateType::EXITPOINT, "exitpoint"},
+                                                                    {model::StateType::HISTORY, "history"}};
+
+        auto ptrState = entity.dynamicCast<model::State>();
+        auto itType = sElementTypes.find(ptrState->stateType());
+
+        if (itType != sElementTypes.end()) {
+            view::HsmElement* newViewElement =
+                mMainWindow->view()->createHsmElement(entity, itType->second, entity->getPos(), entity->getSize(), parent->id());
+
+            tryConnectSignal(newViewElement,
+                             "elementConnected(model::EntityID_t,model::EntityID_t)",
+                             this,
+                             "connectElements(model::EntityID_t,model::EntityID_t)");
+        }
+    } else if (entity->type() == model::StateMachineEntity::Type::Transition) {
+        auto ptrTransition = entity.dynamicCast<model::Transition>();
+
+        if (ptrTransition->source() && ptrTransition->target()) {
+            view::HsmTransition* newViewTransition =
+                mMainWindow->view()->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
+
+            tryConnectSignal(newViewTransition,
+                             "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                             this,
+                             "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+        }
+    }
+
+    entity->forEachChildElement(
+        [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
+            handleModelEntityAdded(parent, element);
+            return true;
+        });
+}
+
 void ProjectController::connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
     qDebug() << Q_FUNC_INFO << fromElementId << " -> " << toElementId;
     auto source = mModel->root()->findState(fromElementId);
     auto target = mModel->root()->findState(toElementId);
     auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
-
-    if (newTransition) {
-        view::HsmTransition* newViewTransition =
-            mMainWindow->view()->createHsmTransition(newTransition, fromElementId, toElementId);
-
-        tryConnectSignal(newViewTransition,
-                         "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                         this,
-                         "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
-    } else {
-        qCritical() << "Failed to create new transition";
-    }
 }
 
 void ProjectController::reconnectElements(const model::EntityID_t transitionId,
@@ -139,19 +193,57 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
     }
 }
 
-void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntity> entity) {
+void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity> parent,
+                                         QWeakPointer<model::StateMachineEntity> entity) {
     qDebug() << Q_FUNC_INFO;
-    auto ptr = entity.lock();
+    auto ptrChild = entity.lock();
+    auto ptrParent = parent.lock();
 
-    if (ptr) {
-        mMainWindow->view()->deleteHsmElement(ptr->id());
+    if (ptrChild && ptrParent) {
+        handleModelEntityAdded(ptrParent, ptrChild);
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";
     }
 }
 
+void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntity> parent,
+                                           QWeakPointer<model::StateMachineEntity> entity) {
+    qDebug() << Q_FUNC_INFO;
+    auto ptrEntity = entity.lock();
+
+    if (ptrEntity) {
+        mMainWindow->view()->deleteHsmElement(ptrEntity->id());
+    } else {
+        qCritical() << "StateMachineEntity doesnt exist!";
+    }
+}
+
+void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity> entity) {
+    auto ptrEntity = entity.lock();
+
+    if (ptrEntity && ptrEntity->type() == model::StateMachineEntity::Type::Transition) {
+        auto ptrTransition = ptrEntity.dynamicCast<model::Transition>();
+
+        // if transition has both source and destination and it doesnt exist yet - create it
+        if (ptrTransition->source() && ptrTransition->target()) {
+            if (mMainWindow->view()->findHsmTransition(ptrTransition->id()).isNull() == true) {
+                view::HsmTransition* newViewTransition = mMainWindow->view()->createHsmTransition(ptrTransition,
+                                                                                                  ptrTransition->sourceId(),
+                                                                                                  ptrTransition->targetId());
+
+                tryConnectSignal(newViewTransition,
+                                 "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                                 this,
+                                 "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+            }
+        }
+
+        // TODO: do we need a case when source or target changes directly in the model? maybe through the tree?
+    }
+}
+
 void ProjectController::createElement(const QString& elementTypeId,
-                                      const QPoint& pos,
+                                      const QPointF& pos,
                                       const model::EntityID_t parentElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
 
@@ -168,8 +260,6 @@ void ProjectController::createElement(const QString& elementTypeId,
     if (sElementTypes.end() != it) {
         auto newModelElement = model::ModelElementsFactory::createUniqueState(it->second);
         auto parentState = mModel->root()->findRegularState(parentElementId);
-        view::HsmElement* newViewElement =
-            mMainWindow->view()->createHsmElement(newModelElement, elementTypeId, pos, parentElementId);
 
         qDebug() << Q_FUNC_INFO << parentState;
 
@@ -177,16 +267,14 @@ void ProjectController::createElement(const QString& elementTypeId,
             parentState = mModel->root();
         }
 
+        newModelElement->setPos(pos);
         parentState->addChildState(newModelElement);
-
-        tryConnectSignal(newViewElement,
-                         "elementConnected(model::EntityID_t,model::EntityID_t)",
-                         this,
-                         "connectElements(model::EntityID_t,model::EntityID_t)");
     } else {
         qCritical() << Q_FUNC_INFO << "Unsupported element type:" << elementTypeId;
     }
 }
 
 void ProjectController::createTransition(const QSharedPointer<model::State>& fromElement,
-                                         const QSharedPointer<model::State>& toElement) {}
+                                         const QSharedPointer<model::State>& toElement) {
+    // TODO: implement
+}

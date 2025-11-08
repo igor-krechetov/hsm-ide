@@ -15,13 +15,13 @@ class IModelVisitor {
 public:
     virtual ~IModelVisitor() = default;
 
-    virtual void visitRegularState(class RegularState* state) = 0;
-    virtual void visitEntryPoint(class EntryPoint* entryPoint) = 0;
-    virtual void visitExitPoint(class ExitPoint* exitPoint) = 0;
-    virtual void visitFinalState(class FinalState* finalState) = 0;
-    virtual void visitHistoryState(class HistoryState* historyState) = 0;
-    virtual void visitInitialState(class InitialState* historyState) = 0;
-    virtual void visitTransition(class Transition* transition) = 0;
+    virtual void visitRegularState(const RegularState* state) = 0;
+    virtual void visitEntryPoint(const EntryPoint* entryPoint) = 0;
+    virtual void visitExitPoint(const ExitPoint* exitPoint) = 0;
+    virtual void visitFinalState(const FinalState* finalState) = 0;
+    virtual void visitHistoryState(const HistoryState* historyState) = 0;
+    virtual void visitInitialState(const InitialState* historyState) = 0;
+    virtual void visitTransition(const Transition* transition) = 0;
 };
 
 }  // namespace model

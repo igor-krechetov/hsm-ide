@@ -22,7 +22,6 @@ HsmElement::HsmElement(const HsmElementType elementType,
     : QGraphicsObject()
     , mType(elementType)
     , mModelElement(modelElement.toWeakRef())
-    , mSize(size)
     , mPenNormalMode(Qt::black, 2.0, Qt::SolidLine)
     , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine)
     , mPenSelectedBorder(QColor("lightblue"), 3.0, Qt::DotLine)
@@ -33,6 +32,7 @@ HsmElement::HsmElement(const HsmElementType elementType,
              QGraphicsItem::ItemSendsGeometryChanges);
     setZValue(3);
     setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
+    updateBoundingRect(QRect(0, 0, size.width(), size.height()));
 }
 
 HsmElement::~HsmElement() {
@@ -224,6 +224,13 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
     } else {
         mOuterRect = newRect;
         mSize = mOuterRect.size();
+        qDebug() << "----------------- RECT changed" << modelId();
+    }
+
+    // update model element metadata
+    auto ptrElement = mModelElement.toStrongRef();
+    if (ptrElement) {
+        ptrElement->setSize(mOuterRect.size().toSize());
     }
 }
 
@@ -291,6 +298,12 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
         if (isDragged() == false) {
             // if item is moved inside of the parent element
             resizeParentToFitChildItem();
+        }
+
+        // update model element metadata
+        auto ptrElement = mModelElement.toStrongRef();
+        if (ptrElement) {
+            ptrElement->setPos(pos());
         }
 
         notifyGeometryChanged();

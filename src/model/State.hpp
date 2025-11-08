@@ -37,6 +37,8 @@ public:
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
 
+    virtual QSharedPointer<State> findChildStateByName(const QString& name);
+
 protected:
     StateType mStateType = StateType::INVALID;
     QString mName;

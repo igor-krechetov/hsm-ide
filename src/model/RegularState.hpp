@@ -32,9 +32,11 @@ public:
     void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;
 
     QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
-    QSharedPointer<StateMachineEntity> findChild(const EntityID_t id,
-                                                 const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
+    QSharedPointer<StateMachineEntity> findChild(
+        const EntityID_t id,
+        const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
     QSharedPointer<State> findState(const EntityID_t id) const;
+    QSharedPointer<State> findChildStateByName(const QString& name) override;
     QSharedPointer<RegularState> findRegularState(const EntityID_t id) const;
     QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 
@@ -42,8 +44,9 @@ public:
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
 
-protected:
-    void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth = DEPTH_INFINITE) override;
+    bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
+                             const int depth = DEPTH_INFINITE,
+                             const bool postOrderTraversal = true) override;
 
 private:
     QString mOnStateChangedCallback;

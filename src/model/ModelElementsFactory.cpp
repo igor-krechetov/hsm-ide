@@ -25,7 +25,7 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
 
     switch (type) {
         case StateType::INITIAL:
-            res = QSharedPointer<State>(new InitialState(uniqueName));
+            res = QSharedPointer<State>(new InitialState());
             break;
         case StateType::REGULAR:
             res = QSharedPointer<State>(new RegularState(uniqueName));

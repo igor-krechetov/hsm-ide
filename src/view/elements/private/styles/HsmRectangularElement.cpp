@@ -6,7 +6,10 @@
 namespace view {
 
 HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType)
-    : HsmResizableElement(elementType, QSizeF(240, 140)) {
+    : HsmRectangularElement(elementType, QSizeF(240, 140)) {}
+
+HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType, const QSizeF& size)
+    : HsmResizableElement(elementType, size) {
     setMinSize(200, 100);
 }
 

@@ -3,6 +3,7 @@
 
 #include <QGraphicsView>
 #include <QPointer>
+#include <QSize>
 
 #include "model/ModelTypes.hpp"
 
@@ -39,7 +40,8 @@ public:
 
     view::HsmElement* createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                        const QString& elementTypeId,
-                                       const QPoint& pos,
+                                       const QPointF& pos,
+                                       const QSizeF& size,
                                        const model::EntityID_t parentElementId);
     view::HsmTransition* createHsmTransition(const QSharedPointer<model::StateMachineEntity>& transition,
                                              const model::EntityID_t fromElementId,
@@ -59,6 +61,9 @@ public:
     bool keyboardSpacePressed() const;
     bool keyboardCtrlPressed() const;
     bool keyboardAltPressed() const;
+
+    QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
+    QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
 
 protected:
     void focusOutEvent(QFocusEvent* event) override;
@@ -88,8 +93,7 @@ private:
 
     // view::HsmElement* acceptsChildrenElementAt(const QPointF& pos) const;
     void setPanningMode(const bool enable);
-    QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
-    QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
+
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
     // view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
     view::HsmResizableElement* elementToHsmResizableElement(view::HsmElement* element) const;

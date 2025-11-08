@@ -30,8 +30,9 @@ public:
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
 
 protected:
-    void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback,
-                             const int depth = DEPTH_INFINITE) override;
+    bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
+                             const int depth = DEPTH_INFINITE,
+                             const bool postOrderTraversal = true) override;
 
 private:
     QList<QSharedPointer<Transition>> mTransitions;

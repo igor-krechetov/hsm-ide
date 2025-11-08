@@ -14,7 +14,8 @@ namespace view {
 
 class HsmRectangularElement : public HsmResizableElement {
 public:
-    HsmRectangularElement(const HsmElementType elementType);
+    explicit HsmRectangularElement(const HsmElementType elementType);
+    HsmRectangularElement(const HsmElementType elementType, const QSizeF& size);
     virtual ~HsmRectangularElement() = default;
 
 protected:

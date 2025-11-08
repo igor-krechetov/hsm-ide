@@ -51,4 +51,8 @@ QStringList State::properties() const {
     return {"name"};
 }
 
+QSharedPointer<State> State::findChildStateByName(const QString& name) {
+    return nullptr;
+}
+
 };  // namespace model

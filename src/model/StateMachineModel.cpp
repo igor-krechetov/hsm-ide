@@ -12,14 +12,8 @@
 namespace model {
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
-    : QObject(parent)
-    , mModelRoot(ModelElementsFactory::createUniqueState(StateType::REGULAR).dynamicCast<RegularState>()) {
-    mModelRoot->setName(name);
-    // Subscribe to modelEntityAdded for mModelRoot
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelChanged);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelEntityDeleted);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::modelDataChanged, this, &StateMachineModel::modelDataChanged);
+    : QObject(parent) {
+    clearModel();
 }
 
 StateMachineModel::~StateMachineModel() = default;
@@ -36,6 +30,20 @@ void StateMachineModel::setName(const QString& name) {
 
 QSharedPointer<RegularState>& StateMachineModel::root() {
     return mModelRoot;
+}
+
+void StateMachineModel::clearModel() {
+    QString oldName = name();
+
+    mModelRoot = ModelElementsFactory::createUniqueState(StateType::REGULAR).dynamicCast<RegularState>();
+    mModelRoot->setName(oldName);
+
+    // Subscribe to modelEntityAdded for mModelRoot
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelChanged);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelEntityAdded);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelEntityDeleted);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::modelDataChanged, this, &StateMachineModel::modelDataChanged);
 }
 
 QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const EntityID_t source, const EntityID_t target) {
@@ -106,6 +114,61 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId, const E
     }
 
     return res;
+}
+
+void StateMachineModel::dump() {
+    int indent = 0;
+
+    mModelRoot->forEachChildElement([&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+        if (entity->type() == StateMachineEntity::Type::State) {
+            QString stateType;
+            QSharedPointer<State> state = entity.dynamicCast<State>();
+
+            switch (state->stateType()) {
+                case StateType::INITIAL:
+                    stateType = "INITIAL";
+                    break;
+                case StateType::REGULAR:
+                    stateType = "REGULAR";
+                    break;
+                case StateType::ENTRYPOINT:
+                    stateType = "ENTRYPOINT";
+                    break;
+                case StateType::EXITPOINT:
+                    stateType = "EXITPOINT";
+                    break;
+                case StateType::FINAL:
+                    stateType = "FINAL";
+                    break;
+                case StateType::HISTORY:
+                    stateType = "HISTORY";
+                    break;
+                default:
+                    stateType = "UNKNOWN";
+                    break;
+            }
+
+
+            qDebug() << "[" << stateType << "] id:" << entity->id() << "name:" << entity->getProperty("name").toString();
+        } else if (entity->type() == StateMachineEntity::Type::Transition) {
+            QSharedPointer<Transition> transition = entity.dynamicCast<Transition>();
+            auto sourceState = transition->source();
+            auto targetState = transition->target();
+            QString sourceName = "<null>";
+            QString targetName = "<null>";
+
+            if (sourceState) {
+                sourceName = sourceState->name();
+            }
+            if (targetState) {
+                targetName = targetState->name();
+            }
+
+            qDebug() << "[TRANSITION] id:" << entity->id() << "src:" << sourceName << " target:" << targetName
+                     << "event:" << transition->event();
+        }
+        return true;
+    }, StateMachineEntity::DEPTH_INFINITE, false);
 }
 
 };  // namespace model

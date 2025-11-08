@@ -1,6 +1,8 @@
 #ifndef HSMSTATEELEMENT_HPP
 #define HSMSTATEELEMENT_HPP
 
+#include <QSize>
+
 #include "private/styles/HsmRectangularElement.hpp"
 
 class QPainter;
@@ -15,6 +17,7 @@ class HsmStateElement : public HsmRectangularElement {
 
 public:
     HsmStateElement();
+    explicit HsmStateElement(const QSizeF& size);
     virtual ~HsmStateElement() = default;
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;

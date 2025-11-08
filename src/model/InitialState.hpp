@@ -9,8 +9,11 @@ class Transition;
 
 class InitialState : public State {
 public:
-    explicit InitialState(const QString& name);
+    // TODO: remove name. Initial states can't have names
+    explicit InitialState();
     virtual ~InitialState() = default;
+
+    void setName(const QString& name) = delete;
 
     void accept(class IModelVisitor* visitor) override;
 
@@ -29,8 +32,9 @@ public:
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
 
 protected:
-    void forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback,
-                             const int depth = DEPTH_INFINITE) override;
+    bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
+                             const int depth = DEPTH_INFINITE,
+                             const bool postOrderTraversal = true) override;
 
 private:
     QSharedPointer<Transition> mTransition;

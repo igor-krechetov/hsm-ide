@@ -1,5 +1,3 @@
-
-
 #include "StateMachineSerializer.hpp"
 
 #include <QDebug>
@@ -11,8 +9,8 @@
 #include "EntryPoint.hpp"
 #include "ExitPoint.hpp"
 #include "FinalState.hpp"
-#include "InitialState.hpp"
 #include "HistoryState.hpp"
+#include "InitialState.hpp"
 #include "ModelElementsFactory.hpp"
 #include "RegularState.hpp"
 #include "StateMachineModel.hpp"
@@ -46,6 +44,7 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
     mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
     mXmlWriter->writeAttribute("encoding", "UTF-8");
     mXmlWriter->writeAttribute("version", "1.0");
+    mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
 
     if (!modelPtr->name().isEmpty()) {
         mXmlWriter->writeAttribute("name", modelPtr->name());
@@ -76,215 +75,71 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
  * @return The deserialized StateMachineModel
  */
 QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFromScxml(const QString& scxml) {
-    // Create a model with a default name
-    QSharedPointer<model::StateMachineModel> model(new model::StateMachineModel("DeserializedModel"));
-    QXmlStreamReader xmlReader(scxml);
+    QSharedPointer<model::StateMachineModel> resModel = QSharedPointer<model::StateMachineModel>(new model::StateMachineModel("DeserializedModel"));
 
-    // Process SCXML attributes first
-    while (!xmlReader.atEnd() && !xmlReader.hasError()) {
-        QXmlStreamReader::TokenType token = xmlReader.readNext();
+    if (false == deserializeFromScxml(scxml, resModel)) {
+        resModel.clear();
+    }
+
+    return resModel;
+}
+
+bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel) {
+    mModel = outModel;
+    mModel->clearModel();
+    mXmlReader = QSharedPointer<QXmlStreamReader>::create(scxml);
+
+    while (!mXmlReader->atEnd() && !mXmlReader->hasError()) {
+        QXmlStreamReader::TokenType token = mXmlReader->readNext();
+        qDebug() << __LINE__ << "Token type:" << token << "Name:" << mXmlReader->name();
 
         if (token == QXmlStreamReader::StartDocument) {
             continue;
         }
 
         if (token == QXmlStreamReader::StartElement) {
-            if (xmlReader.name() == QStringView(u"scxml")) {
-                // Process SCXML attributes
-                QString name = xmlReader.attributes().value("name").toString();
+            qDebug() << __LINE__ << "StartElement:" << mXmlReader->name();
+            if (mXmlReader->name() == QStringView(u"scxml")) {
+                // TODO: check if "name" attribute exists
+                QString name = mXmlReader->attributes().value("name").toString();
                 qDebug() << __LINE__ << "SCXML name:" << name;
+
                 if (!name.isEmpty()) {
-                    // Set the name of the existing model
-                    qDebug() << __LINE__ << "Setting model name to" << name;
-                    model->setName(name);
+                    mModel->setName(name);
                 }
-                // Skip the rest of the scxml element
-                xmlReader.skipCurrentElement();
+            } else {
+                QSharedPointer<StateMachineEntity> entity = parseChildEntity(mModel->root());
+
+                if (!entity) {
+                    qWarning() << "Failed to parse entity at line" << mXmlReader->lineNumber();
+                    mXmlReader->skipCurrentElement();  // DO we need this?
+                }
             }
         }
     }
 
-    // Reset the reader to the beginning of the document
-    xmlReader.clear();
-    xmlReader.addData(scxml);
+    if (mXmlReader->hasError()) {
+        handleParseError(mXmlReader->errorString());
+    }
 
-    // Process the content
-    QMap<QString, QSharedPointer<model::State>> stateMap;
-    QStack<QSharedPointer<model::State>> parentStack;
+    // Set targets for parsed transitions. We do this after all states are created.
+    // because transitions can reference states that are defined later in the SCXML.
+    for (const EntityID_t transitionId : mTransitionTargets.keys()) {
+        QString targetStateId = mTransitionTargets.value(transitionId);
+        QSharedPointer<model::State> targetState = mModel->root()->findChildStateByName(targetStateId);
+        QSharedPointer<model::Transition> transition = mModel->root()->findTransition(transitionId);
 
-    // The model already has a root state, so we'll use that
-    QSharedPointer<model::RegularState> rootState = model->root();
-    rootState->setName("RootState");  // Set the root state name to match the test
-    parentStack.push(rootState);      // Start with the root state
-
-    qDebug() << __LINE__ << "Starting XML parsing";
-    while (!xmlReader.atEnd() && !xmlReader.hasError()) {
-        QXmlStreamReader::TokenType token = xmlReader.readNext();
-        qDebug() << __LINE__ << "Token type:" << token << "Name:" << xmlReader.name();
-
-        if (token == QXmlStreamReader::StartDocument) {
-            continue;
-        }
-
-        if (token == QXmlStreamReader::StartElement) {
-            qDebug() << __LINE__ << "StartElement:" << xmlReader.name();
-            if (xmlReader.name() == QStringView(u"scxml")) {
-                // Process the scxml element
-                QString name = xmlReader.attributes().value("name").toString();
-                qDebug() << __LINE__ << "SCXML name:" << name;
-                if (!name.isEmpty()) {
-                    model->setName(name);
-                    qDebug() << __LINE__ << "Setting model name to" << name;
-                }
-                xmlReader.skipCurrentElement();
-            } else if (xmlReader.name() == QStringView(u"state")) {
-                // Process state
-                QString stateId = xmlReader.attributes().value("id").toString();
-                qDebug() << __LINE__ << "Found state with id:" << stateId;
-                if (stateId.isEmpty()) {
-                    handleParseError("State element without id attribute");
-                    continue;
-                }
-
-                // Create the state if it doesn't already exist
-                QSharedPointer<model::State> state = stateMap.value(stateId);
-                if (!state) {
-                    state =
-                        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::State>();
-                    state->setName(stateId);
-                    stateMap[stateId] = state;
-
-                    // Add to current parent
-                    QSharedPointer<model::State> parentState = parentStack.top();
-                    QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
-                    if (parentRegState) {
-                        qDebug() << __LINE__ << "Adding state" << stateId << "to parent" << parentState->name();
-                        parentRegState->addChildState(state);
-                    }
-                }
-
-                // Process state attributes and nested elements
-                bool isProcessingState = true;
-                while (isProcessingState &&
-                       !(xmlReader.tokenType() == QXmlStreamReader::EndElement && xmlReader.name() == QStringView(u"state"))) {
-                    qDebug() << __LINE__ << "Processing state element, current token:" << xmlReader.tokenType()
-                             << "name:" << xmlReader.name();
-                    if (xmlReader.tokenType() == QXmlStreamReader::StartElement) {
-                        qDebug() << __LINE__ << "StartElement inside state:" << xmlReader.name();
-                        if (xmlReader.name() == QStringView(u"onEntering")) {
-                            xmlReader.readNext();
-                            QSharedPointer<model::RegularState> regState = state.dynamicCast<model::RegularState>();
-                            if (regState) {
-                                regState->setOnEnteringCallback(xmlReader.text().toString());
-                            }
-                        } else if (xmlReader.name() == QStringView(u"onExiting")) {
-                            xmlReader.readNext();
-                            QSharedPointer<model::RegularState> regState = state.dynamicCast<model::RegularState>();
-                            if (regState) {
-                                regState->setOnExitingCallback(xmlReader.text().toString());
-                            }
-                        } else if (xmlReader.name() == QStringView(u"onStateChanged")) {
-                            xmlReader.readNext();
-                            QSharedPointer<model::RegularState> regState = state.dynamicCast<model::RegularState>();
-                            if (regState) {
-                                regState->setOnStateChangedCallback(xmlReader.text().toString());
-                            }
-                        } else if (xmlReader.name() == QStringView(u"transition")) {
-                            // Process transitions
-                            QString event = xmlReader.attributes().value("event").toString();
-                            QString target = xmlReader.attributes().value("target").toString();
-                            qDebug() << __LINE__ << "Found transition with event:" << event << "target:" << target;
-
-                            if (event.isEmpty() || target.isEmpty()) {
-                                handleParseError("Transition without event or target attribute");
-                                xmlReader.skipCurrentElement();
-                                continue;
-                            }
-
-                            // Find the parent state (the one containing the transition)
-                            QSharedPointer<model::State> parentState = parentStack.top();
-
-                            // Find target state
-                            QSharedPointer<model::State> targetState = stateMap.value(target);
-                            if (!targetState) {
-                                // If target state is not found, create it
-                                targetState = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR)
-                                                  .dynamicCast<model::State>();
-                                targetState->setName(target);
-                                stateMap[target] = targetState;
-                            }
-
-                            // Create the transition
-                            QSharedPointer<model::Transition> transition =
-                                model::ModelElementsFactory::createUniqueTransition(parentState, targetState);
-                            transition->setEvent(event);
-
-                            // Add the transition to the parent state
-                            QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
-                            if (parentRegState) {
-                                parentRegState->addTransition(transition);
-                            }
-
-                            // Process nested elements
-                            QString condition;
-
-                            bool isProcessingTransition = true;
-                            while (isProcessingTransition && !(xmlReader.tokenType() == QXmlStreamReader::EndElement &&
-                                                               xmlReader.name() == QStringView(u"transition"))) {
-                                if (xmlReader.tokenType() == QXmlStreamReader::StartElement) {
-                                    if (xmlReader.name() == QStringView(u"condition")) {
-                                        xmlReader.readNext();
-                                        condition = xmlReader.text().toString();
-                                    } else {
-                                        xmlReader.skipCurrentElement();
-                                    }
-                                }
-                                xmlReader.readNext();
-                            }
-
-                            if (!condition.isEmpty()) {
-                                transition->setConditionCallback(condition);
-                            }
-                        } else {
-                            // Skip other elements
-                            xmlReader.skipCurrentElement();
-                        }
-                    } else if (xmlReader.tokenType() == QXmlStreamReader::EndElement &&
-                               xmlReader.name() == QStringView(u"state")) {
-                        // We don't need to pop the state from the stack when we're done processing it
-                        // because we want to maintain the parent-child relationship
-                        isProcessingState = false;  // Exit the loop
-                    }
-                    xmlReader.readNext();
-                }
-            } else if (xmlReader.name() == QStringView(u"final")) {
-                // Process final state
-                QString finalStateId = xmlReader.attributes().value("id").toString();
-                if (!finalStateId.isEmpty()) {
-                    QSharedPointer<model::State> finalState =
-                        model::ModelElementsFactory::createUniqueState(model::StateType::FINAL).dynamicCast<model::State>();
-                    finalState->setName(finalStateId);
-                    // Add it as a child of the current parent
-                    QSharedPointer<model::State> parentState = parentStack.top();
-                    QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
-                    if (parentRegState) {
-                        parentRegState->addChildState(finalState);
-                    }
-                }
-                // Initial state is handled implicitly by the state machine implementation
-                // We don't need to do anything special for it else {
-                // Skip other elements
-                xmlReader.skipCurrentElement();
-            }
+        if (transition && targetState) {
+            transition->setTarget(targetState);
+        } else {
+            qWarning() << "Failed to find target (" << targetStateId << ") for transition" << transitionId;
+            // TODO: handleParseError
         }
     }
 
-    if (xmlReader.hasError()) {
-        handleParseError(xmlReader.errorString());
-    }
-
-    // Return the model
-    return model;
+    mModel.clear();
+    // TODO: handle parsing errors
+    return true;
 }
 
 /**
@@ -333,11 +188,13 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     return isValid;
 }
 
-void StateMachineSerializer::visitRegularState(class RegularState* state) {
+void StateMachineSerializer::visitRegularState(const RegularState* state) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != state) {
         mXmlWriter->writeStartElement("state");
         mXmlWriter->writeAttribute("id", state->name());
+
+        serializeEntryMetadata(state);
 
         if (!state->onEnteringCallback().isEmpty()) {
             mXmlWriter->writeStartElement("onentry");
@@ -363,7 +220,7 @@ void StateMachineSerializer::visitRegularState(class RegularState* state) {
     }
 }
 
-void StateMachineSerializer::visitEntryPoint(class EntryPoint* entryPoint) {
+void StateMachineSerializer::visitEntryPoint(const EntryPoint* entryPoint) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != entryPoint) {
         /*
@@ -373,6 +230,7 @@ void StateMachineSerializer::visitEntryPoint(class EntryPoint* entryPoint) {
         </initial>
         */
         mXmlWriter->writeStartElement("initial");
+        serializeEntryMetadata(entryPoint);
 
         for (const auto& transition : entryPoint->transitions()) {
             transition->accept(this);
@@ -382,11 +240,12 @@ void StateMachineSerializer::visitEntryPoint(class EntryPoint* entryPoint) {
     }
 }
 
-void StateMachineSerializer::visitExitPoint(class ExitPoint* exitPoint) {
+void StateMachineSerializer::visitExitPoint(const ExitPoint* exitPoint) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != exitPoint) {
         mXmlWriter->writeStartElement("final");
         mXmlWriter->writeAttribute("id", exitPoint->name());
+        serializeEntryMetadata(exitPoint);
 
         if (exitPoint->event().isEmpty() == false) {
             mXmlWriter->writeAttribute("event", exitPoint->event());
@@ -412,11 +271,12 @@ void StateMachineSerializer::visitExitPoint(class ExitPoint* exitPoint) {
     }
 }
 
-void StateMachineSerializer::visitFinalState(class FinalState* finalState) {
+void StateMachineSerializer::visitFinalState(const FinalState* finalState) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != finalState) {
         mXmlWriter->writeStartElement("final");
         mXmlWriter->writeAttribute("id", finalState->name());
+        serializeEntryMetadata(finalState);
 
         if (finalState->onStateChangedCallback().isEmpty() == false) {
             mXmlWriter->writeStartElement("onentry");
@@ -428,7 +288,7 @@ void StateMachineSerializer::visitFinalState(class FinalState* finalState) {
     }
 }
 
-void StateMachineSerializer::visitHistoryState(class HistoryState* historyState) {
+void StateMachineSerializer::visitHistoryState(const HistoryState* historyState) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != historyState) {
         QSharedPointer<model::Transition> defaultTransition = historyState->defaultTransition();
@@ -447,6 +307,8 @@ void StateMachineSerializer::visitHistoryState(class HistoryState* historyState)
                 break;
         }
 
+        serializeEntryMetadata(historyState);
+
         if (defaultTransition) {
             defaultTransition->accept(this);
         }
@@ -455,12 +317,13 @@ void StateMachineSerializer::visitHistoryState(class HistoryState* historyState)
     }
 }
 
-void StateMachineSerializer::visitInitialState(class InitialState* initialState) {
+void StateMachineSerializer::visitInitialState(const InitialState* initialState) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != initialState) {
         auto transition = initialState->transition();
 
         mXmlWriter->writeStartElement("initial");
+        serializeEntryMetadata(initialState);
 
         if (nullptr != transition) {
             transition->accept(this);
@@ -470,7 +333,7 @@ void StateMachineSerializer::visitInitialState(class InitialState* initialState)
     }
 }
 
-void StateMachineSerializer::visitTransition(class Transition* transition) {
+void StateMachineSerializer::visitTransition(const Transition* transition) {
     qDebug() << Q_FUNC_INFO;
     if (nullptr != transition) {
         // <transition type="external" event="NEXT_STATE" target="Red">
@@ -505,11 +368,48 @@ void StateMachineSerializer::visitTransition(class Transition* transition) {
             mXmlWriter->writeAttribute("cond", transition->conditionCallback() + conditionValue);
         }
 
+        serializeEntryMetadata(transition);
+
         if (transition->transitionCallback().isEmpty() == false) {
             mXmlWriter->writeTextElement("script", transition->transitionCallback());
         }
 
         mXmlWriter->writeEndElement();  // transition
+    }
+}
+
+void StateMachineSerializer::serializeEntryMetadata(const StateMachineEntity* entity) {
+    qDebug() << "serializeEntryMetadata" << entity->id() << entity->getPos();
+    // Store as string with 2 decimal places
+    QString geometryValue = QString("%1;%2;0;0;%3;%4")
+                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble(), 'f', 2))
+                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble(), 'f', 2))
+                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::WIDTH).toDouble(), 'f', 2))
+                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::HEIGHT).toDouble(), 'f', 2));
+    mXmlWriter->writeStartElement("qt:editorinfo");
+    mXmlWriter->writeAttribute("geometry", geometryValue);
+    mXmlWriter->writeEndElement();
+}
+
+void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity) {
+    qDebug() << "deserializeEntryMetadata" << mXmlReader->name();
+    if (nullptr != entity) {
+        if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"editorinfo"))) {
+            QString geometryValue = mXmlReader->attributes().value("geometry").toString();
+            QStringList geometryParts = geometryValue.split(';');
+            qDebug() << "Deserializing geometry:" << geometryValue << geometryParts;
+            if (geometryParts.size() == 6) {
+                entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, geometryParts[0].toDouble());
+                entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, geometryParts[1].toDouble());
+                entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, geometryParts[4].toDouble());
+                entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, geometryParts[5].toDouble());
+            } else {
+                handleParseError("Invalid geometry format in qt:editorinfo");
+            }
+            mXmlReader->readNext();
+        }
+    } else {
+        qCritical() << "entity is null";
     }
 }
 
@@ -521,4 +421,417 @@ void StateMachineSerializer::handleParseError(const QString& errorMessage) {
     qWarning() << "Parse error:" << errorMessage;
 }
 
-};  // namespace model
+bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent) {
+    bool res = false;
+
+    QXmlStreamReader::TokenType token = mXmlReader->readNext();
+
+    while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
+        if (QXmlStreamReader::StartElement == token) {
+            if (mXmlReader->name() == QStringView(u"editorinfo")) {
+                deserializeEntryMetadata(parent.get());
+            } else {
+                // TODO: handle errors if can't parse child entities
+                parseChildEntity(parent);
+            }
+        }
+
+        token = mXmlReader->readNext();
+    }
+
+    return res;
+}
+
+QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(const QSharedPointer<StateMachineEntity>& parent) {
+    qDebug() << "parseChildEntity:" << mXmlReader->name();
+    QSharedPointer<StateMachineEntity> entity;
+
+    if (mXmlReader->name() == QStringView(u"state")) {
+        entity = parseRegularState();
+    } else if (mXmlReader->name() == QStringView(u"initial")) {
+        entity = parseInitialState();
+    } else if (mXmlReader->name() == QStringView(u"history")) {
+        entity = parseHistoryState();
+    } else if (mXmlReader->name() == QStringView(u"transition")) {
+        entity = parseTransition();
+    } else if (mXmlReader->name() == QStringView(u"final")) {
+        if (parent == mModel->root()) {
+            // Root final state
+            entity = parseFinalState();
+        } else {
+            entity = parseExitPoint();
+        }
+    }
+    // TODO: parallel
+    // TODO: include
+
+    if (entity) {
+        if (entity->type() == StateMachineEntity::Type::Transition) {
+            QSharedPointer<Transition> transition = entity.dynamicCast<Transition>();
+
+            if (transition) {
+                transition->setSource(parent.dynamicCast<State>());
+            } else {
+                // TODO: handleParseError
+                qCritical() << "Failed to cast child entity to Transition";
+            }
+        }
+
+        parent->addChild(entity);
+    }
+
+    return entity;
+}
+
+QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<RegularState> entity;
+
+    // TODO: remove
+    // QMap<QString, QSharedPointer<model::State>> stateMap;
+
+    // Process state
+    QString stateId = mXmlReader->attributes().value("id").toString();
+    qDebug() << __LINE__ << "Found state with id:" << stateId;
+
+    if (stateId.isEmpty() == false) {
+        // Create the state if it doesn't already exist
+        // QSharedPointer<model::State> state = stateMap.value(stateId);
+
+        // if (!state) {
+        entity = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+        entity->setName(stateId);
+        // stateMap[stateId] = state;// todo: delete
+
+        // // Add to current parent
+        // QSharedPointer<model::State> parentState = parentStack.top();
+        // QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
+        // if (parentRegState) {
+        //     qDebug() << __LINE__ << "Adding state" << stateId << "to parent" << parentState->name();
+        //     parentRegState->addChildState(state);
+        // }
+
+        // Process state attributes and nested elements
+        // bool isProcessingState = true;
+        // while (isProcessingState &&
+        //     !(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"state"))) {
+        //     qDebug() << __LINE__ << "Processing state element, current token:" << mXmlReader->tokenType()
+        //             << "name:" << mXmlReader->name();
+        QXmlStreamReader::TokenType token = mXmlReader->readNext();
+
+        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
+            if (QXmlStreamReader::StartElement == token) {
+                qDebug() << __LINE__ << "Found" << mXmlReader->name();
+                if (mXmlReader->name() == QStringView(u"onentry")) {
+                    entity->setOnEnteringCallback(parseOnEntry());
+                } else if (mXmlReader->name() == QStringView(u"onexit")) {
+                    entity->setOnEnteringCallback(parseOnExit());
+                } else if (mXmlReader->name() == QStringView(u"invoke")) {
+                    entity->setOnEnteringCallback(parseInvoke());
+                } else if (mXmlReader->name() == QStringView(u"editorinfo")) {
+                    deserializeEntryMetadata(entity.get());
+                } else {
+                    // TODO: handle errors if can't parse child entities
+                    parseChildEntity(entity);
+                }
+            }
+
+            token = mXmlReader->readNext();
+        }
+    }
+    else {
+        handleParseError("State element without id attribute");
+    }
+
+    return entity;
+}
+
+QSharedPointer<EntryPoint> StateMachineSerializer::parseEntryPoint() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<EntryPoint> entity;
+    // TODO
+    mXmlReader->skipCurrentElement();
+    return entity;
+}
+
+QSharedPointer<ExitPoint> StateMachineSerializer::parseExitPoint() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<ExitPoint> entity;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"final"))) {
+        const QString stateId = mXmlReader->attributes().value("id").toString();
+        const QString eventAttr = tryGetElementAttribute("event");
+
+        entity = QSharedPointer<ExitPoint>::create(stateId);
+        entity->setEvent(eventAttr);
+
+        QXmlStreamReader::TokenType token = mXmlReader->readNext();
+
+        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
+            if (QXmlStreamReader::StartElement == token) {
+                if (mXmlReader->name() == QStringView(u"onentry")) {
+                    entity->setOnEnteringCallback(parseOnEntry());
+                } else if (mXmlReader->name() == QStringView(u"onexit")) {
+                    entity->setOnEnteringCallback(parseOnExit());
+                } else if (mXmlReader->name() == QStringView(u"invoke")) {
+                    entity->setOnEnteringCallback(parseInvoke());
+                } else if (mXmlReader->name() == QStringView(u"editorinfo")) {
+                    deserializeEntryMetadata(entity.get());
+                } else {
+                    // TODO: handle errors if can't parse child entities
+                    parseChildEntity(entity);
+                }
+            }
+
+            token = mXmlReader->readNext();
+        }
+    }
+
+    return entity;
+}
+
+QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<FinalState> entity;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"final"))) {
+        const QString stateId = mXmlReader->attributes().value("id").toString();
+
+        entity = QSharedPointer<FinalState>::create(stateId);
+
+        // TODO: handle errors
+        parseAllChildEntities(entity);
+    }
+
+    return entity;
+}
+
+QSharedPointer<HistoryState> StateMachineSerializer::parseHistoryState() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<HistoryState> entity;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"history"))) {
+        const QString stateId = mXmlReader->attributes().value("id").toString();
+        HistoryType historyType = HistoryType::INVALID;
+        const QString typeAttr = mXmlReader->attributes().value("type").toString();
+
+        if (typeAttr == "deep") {
+            historyType = HistoryType::DEEP;
+        } else if (typeAttr == "shallow") {
+            historyType = HistoryType::SHALLOW;
+        } else {
+            handleParseError("Invalid history state type attribute: " + typeAttr);
+        }
+
+        if (historyType != HistoryType::INVALID) {
+            entity = QSharedPointer<HistoryState>::create(stateId, historyType);
+
+            // TODO: handle errors
+            parseAllChildEntities(entity);
+        }
+    }
+
+    return entity;
+}
+
+QSharedPointer<InitialState> StateMachineSerializer::parseInitialState() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<InitialState> entity;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"initial"))) {
+        entity = QSharedPointer<InitialState>::create();
+
+        // TODO: handle errors
+        parseAllChildEntities(entity);
+    }
+
+    return entity;
+}
+
+QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
+    qDebug() << Q_FUNC_INFO;
+    QSharedPointer<Transition> entity;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"transition"))) {
+        // Process transitions
+        QString event = tryGetElementAttribute("event");
+        QString target = tryGetElementAttribute("target");
+
+        qDebug() << __LINE__ << "Found transition with event:" << event << "target:" << target;
+
+        if (event.isEmpty() || target.isEmpty()) {
+            handleParseError("Transition without event or target attribute");
+            mXmlReader->skipCurrentElement();
+            return nullptr;
+        }
+
+        // TODO: transition can reference a state that is not yet created
+        // Need to parse all staes first before parsing transitions
+
+        // // Find the parent state (the one containing the transition)
+        // QSharedPointer<model::State> parentState = parentStack.top();
+
+        // // Find target state
+        // QSharedPointer<model::State> targetState = stateMap.value(target);
+        // if (!targetState) {
+        //     // If target state is not found, create it
+        //     targetState = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR)
+        //                     .dynamicCast<model::State>();
+        //     targetState->setName(target);
+        //     stateMap[target] = targetState;
+        // }
+
+        // entity = model::ModelElementsFactory::createUniqueTransition(parentState, targetState);
+        // TODO: fixme
+        // entity = model::ModelElementsFactory::createUniqueTransition(nullptr, nullptr);
+        entity = QSharedPointer<Transition>::create(nullptr, nullptr, event);
+
+        mTransitionTargets.insert(entity->id(), target);
+
+        // Add the transition to the parent state
+        // QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
+        // if (parentRegState) {
+        //     parentRegState->addTransition(transition);
+        // }
+
+        // condition is defined as "callback is true|false"
+        QString condition = tryGetElementAttribute("cond");
+        QString type = tryGetElementAttribute("type");
+
+        if (type == "external") {
+            entity->setTransitionType(TransitionType::EXTERNAL);
+        } else if (type == "internal") {
+            entity->setTransitionType(TransitionType::INTERNAL);
+        }
+
+        if (condition.isEmpty() == false) {
+            // TODO: account for multiple spaces and formatting issues
+            if (condition.endsWith(" is true")) {
+                condition.chop(QString(" is true").length());
+                entity->setExpectedConditionValue(true);
+            } else if (condition.endsWith(" is false")) {
+                condition.chop(QString(" is false").length());
+                entity->setExpectedConditionValue(false);
+            }
+
+            entity->setConditionCallback(condition);
+        }
+
+        mXmlReader->readNext();
+
+        // TODO: parse metadata. handle different order of nodes
+        // TODO: script or invoke?
+        entity->setTransitionCallback(parseInvoke());
+    }
+
+    qDebug() << "current element" << mXmlReader->name() << tryGetElementAttribute("id");
+
+    if (mXmlReader->tokenType() != QXmlStreamReader::EndElement) {
+        qDebug() << "skip the rest of <transition> node";
+        mXmlReader->skipCurrentElement();// skip the rest of <transition> node
+    }
+
+    qDebug() << "current element" << mXmlReader->name() << tryGetElementAttribute("id");
+
+    return entity;
+}
+
+QString StateMachineSerializer::parseOnEntry() {
+    qDebug() << Q_FUNC_INFO;
+    QString content;
+
+    // Keep reading until we reach the closing </onentry> tag
+    while (!(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"onentry"))) {
+        mXmlReader->readNext();
+
+        if (mXmlReader->tokenType() == QXmlStreamReader::StartElement) {
+            if (mXmlReader->name() == QStringView(u"script")) {
+                content = mXmlReader->readElementText();
+            } else {
+                // Skip entire element (and its children) that isn’t <script>
+                mXmlReader->skipCurrentElement();
+            }
+        }
+
+        if (mXmlReader->atEnd() || mXmlReader->hasError()) {
+            break;
+        }
+    }
+
+    if (content.isEmpty()) {
+        handleParseError("onentry element without script or with invalid content");
+    }
+
+    return content;
+}
+
+// TODO: unify with parseOnEntry
+QString StateMachineSerializer::parseOnExit() {
+    qDebug() << Q_FUNC_INFO;
+    QString content;
+
+    // Keep reading until we reach the closing </onexit> tag
+    while (!(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"onexit"))) {
+        mXmlReader->readNext();
+
+        if (mXmlReader->tokenType() == QXmlStreamReader::StartElement) {
+            if (mXmlReader->name() == QStringView(u"script")) {
+                content = mXmlReader->readElementText();
+            } else {
+                // Skip entire element (and its children) that isn’t <script>
+                mXmlReader->skipCurrentElement();
+            }
+        }
+
+        if (mXmlReader->atEnd() || mXmlReader->hasError()) {
+            break;
+        }
+    }
+
+    if (content.isEmpty()) {
+        handleParseError("onexit element without script or with invalid content");
+    }
+
+    return content;
+}
+
+QString StateMachineSerializer::parseInvoke() {
+    qDebug() << "parseInvoke:" << mXmlReader->name();
+    QString content;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"invoke"))) {
+        content = tryGetElementAttribute("srcexpr");
+
+        if (content.isEmpty() == true) {
+            content = tryGetElementAttribute("src");
+        }
+
+        // Keep reading until we reach the closing </invoke> tag
+        while (!(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"invoke"))) {
+            mXmlReader->readNext();
+
+            if (mXmlReader->atEnd() || mXmlReader->hasError()) {
+                break;
+            }
+        }
+
+        if (content.isEmpty() == true) {
+            handleParseError("invoke element without script or with invalid content");
+        }
+    }
+
+    return content;
+}
+
+QString StateMachineSerializer::tryGetElementAttribute(const QString& name) {
+    QString attributeValue;
+
+    if (mXmlReader->attributes().hasAttribute(name) == true) {
+        attributeValue = mXmlReader->attributes().value(name).toString();
+    }
+
+    return attributeValue;
+}
+
+}
+;  // namespace model

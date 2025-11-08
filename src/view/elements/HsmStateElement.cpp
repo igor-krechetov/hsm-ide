@@ -17,6 +17,9 @@ namespace view {
 HsmStateElement::HsmStateElement()
     : HsmRectangularElement(HsmElementType::STATE) {}
 
+HsmStateElement::HsmStateElement(const QSizeF& size)
+    : HsmRectangularElement(HsmElementType::STATE, size) {}
+
 void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
     HsmRectangularElement::init(modelEntity);
 

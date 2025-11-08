@@ -4,13 +4,24 @@
 
 #include <QSharedPointer>
 #include <QString>
+#include <QMap>
 
 #include "private/IModelVisitor.hpp"
+#include "ModelTypes.hpp"
 
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 namespace model {
 class StateMachineModel;
+class StateMachineEntity;
+class RegularState;
+class EntryPoint;
+class ExitPoint;
+class FinalState;
+class HistoryState;
+class InitialState;
+class Transition;
 
 class StateMachineSerializer : public IModelVisitor {
 public:
@@ -31,6 +42,8 @@ public:
      */
     QSharedPointer<model::StateMachineModel> deserializeFromScxml(const QString& scxml);
 
+    bool deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel);
+
     /**
      * @brief Validates the structure of SCXML content
      * @param scxml The SCXML string to validate
@@ -40,13 +53,17 @@ public:
 
     // from IModelVisitor
 protected:
-    void visitRegularState(class RegularState* state) override;
-    void visitEntryPoint(class EntryPoint* entryPoint) override;
-    void visitExitPoint(class ExitPoint* exitPoint) override;
-    void visitFinalState(class FinalState* finalState) override;
-    void visitHistoryState(class HistoryState* historyState) override;
-    void visitInitialState(class InitialState* initialState) override;
-    void visitTransition(class Transition* transition) override;
+    void visitRegularState(const RegularState* state) override;
+    void visitEntryPoint(const EntryPoint* entryPoint) override;
+    void visitExitPoint(const ExitPoint* exitPoint) override;
+    void visitFinalState(const FinalState* finalState) override;
+    void visitHistoryState(const HistoryState* historyState) override;
+    void visitInitialState(const InitialState* initialState) override;
+    void visitTransition(const Transition* transition) override;
+
+protected:
+    void serializeEntryMetadata(const StateMachineEntity* entity);
+    void deserializeEntryMetadata(StateMachineEntity* entity);
 
 private:
     /**
@@ -55,8 +72,29 @@ private:
      */
     void handleParseError(const QString& errorMessage);
 
+    bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
+
+    QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent);
+    QSharedPointer<RegularState> parseRegularState();
+    QSharedPointer<EntryPoint> parseEntryPoint();
+    QSharedPointer<ExitPoint> parseExitPoint();
+    QSharedPointer<FinalState> parseFinalState();
+    QSharedPointer<HistoryState> parseHistoryState();
+    QSharedPointer<InitialState> parseInitialState();
+    QSharedPointer<Transition> parseTransition();
+
+    QString parseOnEntry();
+    QString parseOnExit();
+    QString parseInvoke();
+
+    QString tryGetElementAttribute(const QString& name);
+
 private:
     QSharedPointer<QXmlStreamWriter> mXmlWriter;
+    QSharedPointer<QXmlStreamReader> mXmlReader;
+
+    QMap<EntityID_t, QString> mTransitionTargets;
+    QSharedPointer<model::StateMachineModel> mModel;
 };
 
 };  // namespace model

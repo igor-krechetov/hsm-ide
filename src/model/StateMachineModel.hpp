@@ -23,15 +23,20 @@ public:
 
     QSharedPointer<RegularState>& root();
 
+    void clearModel();
+
     QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
 
     bool moveElement(const EntityID_t elementId, const EntityID_t newParentId);
 
     bool reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId);
 
+    void dump();
+
 signals:
     void modelChanged();
-    void modelEntityDeleted(QWeakPointer<StateMachineEntity> entity);
+    void modelEntityAdded(QWeakPointer<StateMachineEntity> parent, QWeakPointer<StateMachineEntity> entity);
+    void modelEntityDeleted(QWeakPointer<StateMachineEntity> parent, QWeakPointer<StateMachineEntity> entity);
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:

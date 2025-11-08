@@ -31,7 +31,7 @@
 **** REQ-101g: Final states <<done>>
 **** REQ-101h: Initial states <<done>>
 **** REQ-101i: model infrastructure <<done>>
-*** REQ-102: Transition management <<in_progress>>
+*** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
 ***** REQ-102a2: Highlight for connectable elements <<done>>
@@ -128,7 +128,7 @@
 **** REQ-204a: Copy/Paste/Cut
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
-**** REQ-204d: File menu <<in_progress>>
+**** REQ-204d: File menu
 ***** REQ-204d1: Open <<todo>>
 ***** REQ-204d2: Save <<in_progress>>
 ***** REQ-204d3: Save As <<todo>>
@@ -150,14 +150,14 @@
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
 
-** REQ-300: Import/Export <<in_progress>>
-*** REQ-301: SCXML file handling <<in_progress>>
-**** REQ-301a: Import SCXML 1.0 files <<todo>>
-***** REQ-301a1: Model structure import <<todo>>
-***** REQ-301a2: Model layout import <<todo>>
-**** REQ-301b: Export SCXML 1.0 files <<in_progress>>
+** REQ-300: Import/Export
+*** REQ-301: SCXML file handling
+**** REQ-301a: Import SCXML 1.0 files
+***** REQ-301a1: Model structure import <<in_progress>>
+***** REQ-301a2: Model layout import <<in_progress>>
+**** REQ-301b: Export SCXML 1.0 files
 ***** REQ-301b1: Model structure export <<done>>
-***** REQ-301b2: Model layout export <<todo>>
+***** REQ-301b2: Model layout export <<in_progress>>
 *** REQ-302: Image export
 **** REQ-302a: PNG export
 **** REQ-302b: SVG export

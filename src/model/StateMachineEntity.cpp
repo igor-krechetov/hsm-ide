@@ -17,6 +17,44 @@ EntityID_t StateMachineEntity::id() const {
     return mId;
 }
 
+void StateMachineEntity::setMetadata(const MetadataKey key, const QVariant& value) {
+    mMetadata[key] = value;
+}
+
+QVariant StateMachineEntity::getMetadata(const MetadataKey key) const {
+    QVariant result;
+    auto it = mMetadata.find(key);
+
+    if (it != mMetadata.end()) {
+        result = it.value();
+    }
+
+    return result;
+}
+
+void StateMachineEntity::setPos(const QPointF& pos) {
+    setMetadata(MetadataKey::POSITION_X, pos.x());
+    setMetadata(MetadataKey::POSITION_Y, pos.y());
+}
+
+QPointF StateMachineEntity::getPos() const {
+    const double x = getMetadata(MetadataKey::POSITION_X).toDouble();
+    const double y = getMetadata(MetadataKey::POSITION_Y).toDouble();
+    return QPointF(x, y);
+}
+
+void StateMachineEntity::setSize(const QSizeF& size) {
+    setMetadata(MetadataKey::WIDTH, size.width());
+    setMetadata(MetadataKey::HEIGHT, size.height());
+}
+
+QSizeF StateMachineEntity::getSize() const {
+    const double width = getMetadata(MetadataKey::WIDTH).toDouble();
+    const double height = getMetadata(MetadataKey::HEIGHT).toDouble();
+    return QSizeF(width, height);
+}
+
+
 bool StateMachineEntity::addChild(const QSharedPointer<StateMachineEntity>& child) {
     // do nothing
     return false;
@@ -62,15 +100,18 @@ void StateMachineEntity::registerNewChild(const QSharedPointer<StateMachineEntit
     QObject::connect(child.get(), &StateMachineEntity::childRemoved, this, &StateMachineEntity::childRemoved);
     QObject::connect(child.get(), &StateMachineEntity::modelDataChanged, this, &StateMachineEntity::modelDataChanged);
 
-    emit childAdded(child.toWeakRef());
+    emit childAdded(sharedFromThis().toWeakRef(), child.toWeakRef());
 }
 
 void StateMachineEntity::unregisterChild(const QSharedPointer<StateMachineEntity>& child) {
-    emit childRemoved(child.toWeakRef());
+    emit childRemoved(sharedFromThis().toWeakRef(), child.toWeakRef());
 }
 
-void StateMachineEntity::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+bool StateMachineEntity::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
+                                             const int depth,
+                                             const bool postOrderTraversal) {
     // do nothing
+    return true;
 }
 
 };  // namespace model

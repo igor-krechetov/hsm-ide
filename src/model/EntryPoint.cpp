@@ -75,12 +75,19 @@ QSharedPointer<StateMachineEntity> EntryPoint::findChild(const EntityID_t id, co
     return res;
 }
 
-void EntryPoint::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+bool EntryPoint::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback, const int depth, const bool postOrderTraversal) {
     Q_UNUSED(depth);
+    bool processedAllChildren = true;
 
     for (QSharedPointer<Transition>& child : mTransitions) {
-        callback(child.dynamicCast<StateMachineEntity>());
+        processedAllChildren = callback(sharedFromThis(), child.dynamicCast<StateMachineEntity>());
+
+        if (false == processedAllChildren) {
+            break;
+        }
     }
+
+    return processedAllChildren;
 }
 
 };  // namespace model

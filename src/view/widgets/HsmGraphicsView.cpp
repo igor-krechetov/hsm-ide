@@ -30,23 +30,35 @@ HsmGraphicsView::HsmGraphicsView(QWidget* parent)
 
 void HsmGraphicsView::setProjectController(QPointer<ProjectController> controller) {
     mProjectController = controller;
+
+#ifdef DEBUG_RENDERING
+    // and two crossed lines at the 0,0 point using graphics items
+    QGraphicsLineItem* hLine = new QGraphicsLineItem(-1000, 0, 1000, 0);
+    QGraphicsLineItem* vLine = new QGraphicsLineItem(0, -1000, 0, 1000);
+    QPen pen(Qt::lightGray);
+    pen.setStyle(Qt::DashLine);
+    hLine->setPen(pen);
+    vLine->setPen(pen);
+    scene()->addItem(hLine);
+    scene()->addItem(vLine);
+#endif // DEBUG_RENDERING
 }
 
-// TODO: how can we add sub elements?
 view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                                     const QString& elementTypeId,
-                                                    const QPoint& pos,
+                                                    const QPointF& pos,
+                                                    const QSizeF& size,
                                                     const model::EntityID_t parentElementId) {
-    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement);
+    view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement, size);
     view::HsmElement* parentElement = findHsmElement(parentElementId);
 
-    qDebug() << Q_FUNC_INFO << "ID=" << newElement->modelId() << ", pos=" << mapToScene(pos);
-    qDebug() << Q_FUNC_INFO << newElement;
-    newElement->setPos(mapToScene(pos));
+    qDebug() << "HsmGraphicsView::createHsmElement" << "ID=" << newElement->modelId() << ", pos=" << pos << "size" << size;
+    qDebug() << "HsmGraphicsView::createHsmElement" << newElement;
+    newElement->setPos(pos);
 
     if (nullptr != parentElement) {
         newElement->setHsmParentItem(parentElement);
-        newElement->setPos(parentElement->mapFromScene(mapToScene(pos)));
+        newElement->setPos(pos);
 
         // Resize parent item to fit new child if necessary
         auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(parentElement);
@@ -324,14 +336,16 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
 void HsmGraphicsView::dropEvent(QDropEvent* event) {
     qDebug() << Q_FUNC_INFO << "mDragTargetElement=" << mDragTargetElement;
 
+    // event contains position of the drop in the local coordinate system of the receiving widget
+
     if (mProjectController) {
         mProjectController->handleViewDropEvent(
             event->mimeData()->data("hsm/element").data(),
-            event->position().toPoint(),
+            mapToScene(event->position().toPoint()),
             (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
     }
 
-    handleElementDropEvent(nullptr, event->position().toPoint());
+    handleElementDropEvent(nullptr, mapToScene(event->position().toPoint()));
 
     event->setDropAction(Qt::CopyAction);
     event->accept();

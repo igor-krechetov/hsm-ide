@@ -6,8 +6,8 @@
 namespace model {
 
 // TODO: does it make sence to generate an ID here?
-InitialState::InitialState(const QString& name)
-    : State(name, StateType::INITIAL) {}
+InitialState::InitialState()
+    : State("", StateType::INITIAL) {}
 
 void InitialState::accept(class IModelVisitor* visitor) {
     if (visitor) {
@@ -66,12 +66,15 @@ QSharedPointer<StateMachineEntity> InitialState::findChild(const EntityID_t id, 
                 : nullptr);
 }
 
-void InitialState::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+bool InitialState::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback, const int depth, const bool postOrderTraversal) {
     Q_UNUSED(depth);
+    bool processedAllChildren = true;
 
     if (mTransition) {
-        callback(mTransition.dynamicCast<StateMachineEntity>());
+        processedAllChildren = callback(sharedFromThis(), mTransition.dynamicCast<StateMachineEntity>());
     }
+
+    return processedAllChildren;
 }
 
 };  // namespace model

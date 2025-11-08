@@ -91,12 +91,15 @@ QSharedPointer<StateMachineEntity> HistoryState::findChild(const EntityID_t id, 
                 : nullptr);
 }
 
-void HistoryState::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+bool HistoryState::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback, const int depth, const bool postOrderTraversal) {
     Q_UNUSED(depth);
+    bool processedAllChildren = true;
 
     if (mDefaultTransition) {
-        callback(mDefaultTransition.dynamicCast<StateMachineEntity>());
+        processedAllChildren = callback(sharedFromThis(), mDefaultTransition.dynamicCast<StateMachineEntity>());
     }
+
+    return processedAllChildren;
 }
 
 };  // namespace model

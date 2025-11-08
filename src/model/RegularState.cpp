@@ -1,7 +1,8 @@
 #include "RegularState.hpp"
-#include "private/IModelVisitor.hpp"
 
 #include <QDebug>
+
+#include "private/IModelVisitor.hpp"
 
 namespace model {
 
@@ -83,8 +84,9 @@ void RegularState::deleteChild(const EntityID_t id) {
 
 void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
-        child->forEachChildElement([this](QSharedPointer<StateMachineEntity> element){
+        child->forEachChildElement([this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
             unregisterChild(element);
+            return true;
         });
         mChildren.removeAll(child);
         unregisterChild(child);
@@ -152,6 +154,26 @@ QSharedPointer<State> RegularState::findState(const EntityID_t id) const {
     return res;
 }
 
+QSharedPointer<State> RegularState::findChildStateByName(const QString& name) {
+    QSharedPointer<State> res;
+
+    forEachChildElement([&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
+        bool continueSearch = true;
+
+        if (element->type() == StateMachineEntity::Type::State) {
+            QSharedPointer<State> statePtr = element.dynamicCast<State>();
+            if (statePtr && statePtr->name() == name) {
+                res = statePtr;
+                continueSearch = false;
+            }
+        }
+
+        return continueSearch;
+    });
+
+    return res;
+}
+
 QSharedPointer<RegularState> RegularState::findRegularState(const EntityID_t id) const {
     QSharedPointer<RegularState> res;
     QSharedPointer<StateMachineEntity> childPtr = findChild(id, StateMachineEntity::Type::State);
@@ -206,14 +228,34 @@ QVariant RegularState::getProperty(const QString& key) const {
     return State::getProperty(key);
 }
 
-void RegularState::forEachChildElement(std::function<void(QSharedPointer<StateMachineEntity>)> callback, const int depth) {
+bool RegularState::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
+                                       const int depth,
+                                       const bool postOrderTraversal) {
+    bool processedAllChildren = true;
+
     for (QSharedPointer<StateMachineEntity>& child : mChildren) {
-        if (depth == DEPTH_INFINITE || depth > 1) {
-            child->forEachChildElement(callback, (depth != DEPTH_INFINITE ? depth - 1 : depth));
+        if (false == postOrderTraversal) {
+            if ((processedAllChildren = callback(sharedFromThis(), child)) == false) {
+                break;
+            }
         }
 
-        callback(child);
+        if (depth == DEPTH_INFINITE || depth > 1) {
+            processedAllChildren = child->forEachChildElement(callback, (depth != DEPTH_INFINITE ? depth - 1 : depth), postOrderTraversal);
+
+            if (false == processedAllChildren) {
+                break;
+            }
+        }
+
+        if (true == postOrderTraversal) {
+            if ((processedAllChildren = callback(sharedFromThis(), child)) == false) {
+                break;
+            }
+        }
     }
+
+    return processedAllChildren;
 }
 
 };  // namespace model

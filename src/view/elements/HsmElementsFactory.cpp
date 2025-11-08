@@ -16,7 +16,9 @@
 
 namespace view {
 
-std::map<QString, std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&)>>>
+std::map<
+    QString,
+    std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&, const QSizeF&)>>>
     HsmElementsFactory::mItemsCatalog = {
         {"initial", {"initial", ":/icons/element_start.png", &HsmElementsFactory::createElementStart}},
         {"final", {"Final", ":/icons/element_final.png", &HsmElementsFactory::createElementFinal}},
@@ -53,7 +55,7 @@ QString HsmElementsFactory::getElementIcon(const QString& typeId) {
 QString HsmElementsFactory::getStateIcon(const model::StateType type) {
     QString iconPath;
 
-    switch(type) {
+    switch (type) {
         case model::StateType::REGULAR:
             iconPath = getElementIcon("state");
             break;
@@ -79,56 +81,75 @@ QString HsmElementsFactory::getStateIcon(const model::StateType type) {
     return iconPath;
 }
 
-HsmElement* HsmElementsFactory::createElement(const QString& typeId, const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElement(const QString& typeId,
+                                              const QSharedPointer<model::StateMachineEntity>& modelElement) {
+    return createElement(typeId, modelElement, QSizeF());
+}
+
+HsmElement* HsmElementsFactory::createElement(const QString& typeId,
+                                              const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                              const QSizeF& size) {
     HsmElement* element = nullptr;
     auto itItem = mItemsCatalog.find(typeId);
 
     if (mItemsCatalog.end() != itItem) {
         const auto& callback = std::get<2>(itItem->second);
 
-        element = callback(modelElement);
-        // element->setModelId(modelElement);
+        element = callback(modelElement, size);
     }
 
     return element;
 }
 
-HsmElement* HsmElementsFactory::createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement) {
-    HsmElement* elem = new HsmStateElement();
+HsmElement* HsmElementsFactory::createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                   const QSizeF& size) {
+    HsmElement* elem = nullptr;
+
+    if (size.isNull() == false) {
+        elem = new HsmStateElement(size);
+    } else {
+        elem = new HsmStateElement();
+    }
 
     elem->init(modelElement);
+
     return elem;
 }
 
-HsmElement* HsmElementsFactory::createElementStart(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElementStart(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                   const QSizeF& size) {
     HsmElement* elem = new HsmInitialElement();
 
     elem->init(modelElement);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::createElementFinal(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElementFinal(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                   const QSizeF& size) {
     HsmElement* elem = new HsmFinalElement();
 
     elem->init(modelElement);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::createElementEntryPoint(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElementEntryPoint(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                        const QSizeF& size) {
     HsmElement* elem = new HsmEntryPointElement();
 
     elem->init(modelElement);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::createElementExitPoint(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElementExitPoint(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                       const QSizeF& size) {
     HsmElement* elem = new HsmExitPointElement();
 
     elem->init(modelElement);
     return elem;
 }
 
-HsmElement* HsmElementsFactory::createElementHistory(const QSharedPointer<model::StateMachineEntity>& modelElement) {
+HsmElement* HsmElementsFactory::createElementHistory(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                     const QSizeF& size) {
     HsmElement* elem = new HsmHistoryElement();
 
     elem->init(modelElement);
