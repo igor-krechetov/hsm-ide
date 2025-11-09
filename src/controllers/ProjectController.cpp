@@ -49,7 +49,7 @@ ProjectController::ProjectController(QPointer<MainWindow> mainWindow, QObject* p
     // e1->addTransition(t, e2);
     mMainWindow->setModel(mModel);
 
-    importModel("./test.scxml");
+    // importModel("./test.scxml");
 }
 
 bool ProjectController::importModel(const QString& path) {

@@ -43,17 +43,11 @@ private:
 
 private:
     Ui_hsm_ide* ui;
-    // QSettingsDialog mSettings;
-    // HsmGraphicsView* mMainView;
-    // HsmElementsList* mListHsmElements;
-    // QLabel* mStatusBarFrame;
-    // QLabel* mStatusBarLog;
-    // QWidget* mWindow;
     QString mLastDirectory;
     QString mAppTitle;
     QString mConfigPath;
-
     QPointer<ProjectController> mActiveProject;
+    QString mCurrentFilePath; // Tracks the current file path for Save/SaveAs
 };
 
 #endif  // MAINWINDOW_HPP

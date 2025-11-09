@@ -1,6 +1,7 @@
 #include "MainWindow.hpp"
 
 #include <QSignalBlocker>
+#include <QFileDialog>
 
 #include "./ui/ui_main.h"
 #include "controllers/ProjectController.hpp"
@@ -18,10 +19,6 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui_hsm_ide) {
     ui->setupUi(this);
-
-    if (QString::compare(QSysInfo::productType(), "win32", Qt::CaseInsensitive) != 0) {
-        mLastDirectory = "~/";
-    }
 
     QGraphicsScene* scene = new QGraphicsScene();
     ui->mainView->setScene(scene);
@@ -50,23 +47,45 @@ QPointer<HsmGraphicsView> MainWindow::view() {
     return ui->mainView;
 }
 
-void MainWindow::handleOpen() {}
-
-void MainWindow::handleSave() {
-    if (nullptr != mActiveProject) {
-        mActiveProject->exportModel("./test.scxml");
+void MainWindow::handleOpen() {
+    QString initialDir = mCurrentFilePath.isEmpty() ? QString("~") : QFileInfo(mCurrentFilePath).absolutePath();
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open SCXML File"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
+    if (!fileName.isEmpty() && mActiveProject) {
+        mCurrentFilePath = fileName;
+        mActiveProject->importModel(fileName);
+        // Optionally update the UI/model here
     }
 }
 
-void MainWindow::handleSaveAs() {}
+void MainWindow::handleSave() {
+    if (nullptr != mActiveProject) {
+        if (mCurrentFilePath.isEmpty()) {
+            handleSaveAs();
+        } else {
+            mActiveProject->exportModel(mCurrentFilePath);
+        }
+    }
+}
+
+void MainWindow::handleSaveAs() {
+    QString initialDir = mCurrentFilePath.isEmpty() ? QString("~") : QFileInfo(mCurrentFilePath).absolutePath();
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save SCXML File As"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
+
+    if (!fileName.isEmpty() && mActiveProject) {
+        if (!fileName.endsWith(".scxml", Qt::CaseInsensitive)) {
+            fileName += ".scxml";
+        }
+
+        mCurrentFilePath = fileName;
+        mActiveProject->exportModel(fileName);
+    }
+}
 
 
 void MainWindow::deleteSelectedItems() {
-    if (!ui || !ui->mainView || !ui->mainView->scene()) {
-        return;
+    if ((nullptr != ui) && (nullptr != ui->mainView) && (nullptr != ui->mainView->scene())) {
+        ui->mainView->deleteSelectedItems();
     }
-
-    ui->mainView->deleteSelectedItems();
 }
 
 void MainWindow::setProjectController(QPointer<ProjectController> controller) {

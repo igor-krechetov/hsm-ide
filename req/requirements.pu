@@ -129,9 +129,10 @@
 **** REQ-204b: Delete
 **** REQ-204c: Undo/Redo
 **** REQ-204d: File menu
-***** REQ-204d1: Open <<todo>>
-***** REQ-204d2: Save <<in_progress>>
-***** REQ-204d3: Save As <<todo>>
+***** REQ-204d1: Open <<done>>
+***** REQ-204d2: Save <<done>>
+***** REQ-204d3: Save As <<done>>
+***** REQ-204d4: List of recent files <<prio_low>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
