@@ -206,6 +206,37 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
             connect(mToElement, SIGNAL(geometryChanged(HsmElement*)), this, SLOT(recalculateLine()));
         }
 
+        // Update geometry if available
+        auto ptrElement = modelElement<model::Transition>();
+
+        if (ptrElement) {
+            QVariant geometryVar = ptrElement->getMetadata(model::StateMachineEntity::MetadataKey::GEOMETRY);
+
+            if (geometryVar.isValid()) {
+                QPolygonF geometry = geometryVar.value<QPolygonF>();
+                int gripIndex = 0;
+
+                mLinePath.clear();
+
+                for (const QPointF& gripPos : geometry) {
+                    if (gripIndex != 0 && gripIndex != (geometry.size() - 1)) {
+                        // First and last grips are source and destination grips
+                        ElementGripItem* grip = new ElementGripItem(this);
+
+                        grip->init();
+                        grip->setPos(gripPos);
+                        mLineGrips.insert(mLineGrips.begin() + gripIndex, grip);
+                    }
+
+                    mLinePath.insert(gripIndex, gripPos);
+                    ++gripIndex;
+                }
+            }
+        } else {
+            qCritical() << "failed to get model element for transition";
+        }
+
+        // Recalculate line in case label position needs to be changed
         recalculateLine();
 
         if (mLabel) {
@@ -359,7 +390,6 @@ void HsmTransition::onModelDataChanged() {
 }
 
 void HsmTransition::recalculateLine() {
-    qDebug() << "---- recalculateLine" << this;
     // TODO: fix connection incorectly attaching to the center of elements when they are too close
     QPointF currentMovePos;
 
@@ -462,6 +492,13 @@ void HsmTransition::recalculateLine() {
         // qDebug() << "SRC changed: " << mLinePath;
     } else {
         mLinePath.clear();
+    }
+
+    // store new geometry in the model
+    auto ptrElement = modelElement<model::Transition>();
+
+    if (ptrElement) {
+        ptrElement->setMetadata(model::StateMachineEntity::MetadataKey::GEOMETRY, mLinePath);
     }
 
     updateBoundingRect();

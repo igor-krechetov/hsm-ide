@@ -92,11 +92,11 @@ bool ProjectController::exportModel(const QString& path) {
 }
 
 void ProjectController::handleViewDropEvent(const QString& elementTypeId,
-                                            const QPointF& pos,
+                                            const QPointF& parentPos,
                                             const model::EntityID_t targetElementId) {
-    qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << pos;
+    qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << parentPos;
 
-    createElement(elementTypeId, pos, targetElementId);
+    createElement(elementTypeId, parentPos, targetElementId);
 }
 
 void ProjectController::handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId) {
@@ -243,9 +243,9 @@ void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity>
 }
 
 void ProjectController::createElement(const QString& elementTypeId,
-                                      const QPointF& pos,
+                                      const QPointF& posParent,
                                       const model::EntityID_t parentElementId) {
-    qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << pos;
+    qDebug() << Q_FUNC_INFO << elementTypeId << parentElementId << posParent;
 
     static std::map<QString, model::StateType> sElementTypes = {// TODO: decide what to do with start type
                                                                 {"initial", model::StateType::INITIAL},
@@ -267,7 +267,7 @@ void ProjectController::createElement(const QString& elementTypeId,
             parentState = mModel->root();
         }
 
-        newModelElement->setPos(pos);
+        newModelElement->setPos(posParent);
         parentState->addChildState(newModelElement);
     } else {
         qCritical() << Q_FUNC_INFO << "Unsupported element type:" << elementTypeId;

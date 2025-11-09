@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/build/src/hsm_ide",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/build",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QStack>
+#include <QPolygonF>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
@@ -380,32 +381,88 @@ void StateMachineSerializer::visitTransition(const Transition* transition) {
 
 void StateMachineSerializer::serializeEntryMetadata(const StateMachineEntity* entity) {
     qDebug() << "serializeEntryMetadata" << entity->id() << entity->getPos();
-    // Store as string with 2 decimal places
-    QString geometryValue = QString("%1;%2;0;0;%3;%4")
-                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble(), 'f', 2))
-                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble(), 'f', 2))
-                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::WIDTH).toDouble(), 'f', 2))
-                                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::HEIGHT).toDouble(), 'f', 2));
-    mXmlWriter->writeStartElement("qt:editorinfo");
-    mXmlWriter->writeAttribute("geometry", geometryValue);
-    mXmlWriter->writeEndElement();
+
+    if (entity->type() == StateMachineEntity::Type::Transition) {
+        // for transitions
+        // <qt:editorinfo localGeometry="0;117.63;238.86;117.63"/>
+        QVariant geometryData = entity->getMetadata(StateMachineEntity::MetadataKey::GEOMETRY);
+
+        if (geometryData.isValid()) {
+            QPolygonF linePath = geometryData.value<QPolygonF>();
+            QStringList pointStrings;
+
+            // remove first and last points
+            if (linePath.size() >= 2) {
+                linePath.removeFirst();
+                linePath.removeLast();
+            }
+
+            for (const QPointF& point : linePath) {
+                pointStrings.append(QString("%1;%2")
+                                       .arg(QString::number(point.x(), 'f', 2))
+                                       .arg(QString::number(point.y(), 'f', 2)));
+            }
+
+            mXmlWriter->writeStartElement("qt:editorinfo");
+            mXmlWriter->writeAttribute("localGeometry", pointStrings.join(';'));
+            mXmlWriter->writeEndElement();
+        }
+    } else {
+        // for states
+        // Store as string with 2 decimal places
+        QString geometryValue = QString("%1;%2;0;0;%3;%4")
+                                    .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble(), 'f', 2))
+                                    .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble(), 'f', 2))
+                                    .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::WIDTH).toDouble(), 'f', 2))
+                                    .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::HEIGHT).toDouble(), 'f', 2));
+        mXmlWriter->writeStartElement("qt:editorinfo");
+        mXmlWriter->writeAttribute("geometry", geometryValue);
+        mXmlWriter->writeEndElement();
+    }
 }
 
 void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity) {
     qDebug() << "deserializeEntryMetadata" << mXmlReader->name();
     if (nullptr != entity) {
         if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"editorinfo"))) {
-            QString geometryValue = mXmlReader->attributes().value("geometry").toString();
-            QStringList geometryParts = geometryValue.split(';');
-            qDebug() << "Deserializing geometry:" << geometryValue << geometryParts;
-            if (geometryParts.size() == 6) {
-                entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, geometryParts[0].toDouble());
-                entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, geometryParts[1].toDouble());
-                entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, geometryParts[4].toDouble());
-                entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, geometryParts[5].toDouble());
+            QString localGeometryValue = tryGetElementAttribute("localGeometry");
+
+            if (localGeometryValue.isEmpty() == false) {
+                const QStringList pointParts = localGeometryValue.split(';');
+                QPolygonF linePath;
+
+                // start and end points are recalculated by the HsmTransition element so we set them to 0
+                linePath.append(QPointF(0, 0));  // start point
+
+                for (int i = 0; i + 1 < pointParts.size(); i += 2) {
+                    bool okX = false;
+                    bool okY = false;
+                    const double x = pointParts[i].toDouble(&okX);
+                    const double y = pointParts[i + 1].toDouble(&okY);
+
+                    if (okX && okY) {
+                        linePath.append(QPointF(x, y));
+                    } else {
+                        handleParseError("Invalid point format in qt:editorinfo localGeometry");
+                    }
+                }
+
+                linePath.append(QPointF(0, 0));  // end point
+                entity->setMetadata(StateMachineEntity::MetadataKey::GEOMETRY, linePath);
             } else {
-                handleParseError("Invalid geometry format in qt:editorinfo");
+                QString geometryValue = tryGetElementAttribute("geometry");
+                QStringList geometryParts = geometryValue.split(';');
+
+                if (geometryParts.size() == 6) {
+                    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, geometryParts[0].toDouble());
+                    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, geometryParts[1].toDouble());
+                    entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, geometryParts[4].toDouble());
+                    entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, geometryParts[5].toDouble());
+                } else {
+                    handleParseError("Invalid geometry format in qt:editorinfo");
+                }
             }
+
             mXmlReader->readNext();
         }
     } else {
@@ -428,12 +485,12 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
 
     while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
         if (QXmlStreamReader::StartElement == token) {
-            if (mXmlReader->name() == QStringView(u"editorinfo")) {
-                deserializeEntryMetadata(parent.get());
-            } else {
+            // if (mXmlReader->name() == QStringView(u"editorinfo")) {
+            //     deserializeEntryMetadata(parent.get());
+            // } else {
                 // TODO: handle errors if can't parse child entities
                 parseChildEntity(parent);
-            }
+            // }
         }
 
         token = mXmlReader->readNext();
@@ -461,6 +518,19 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
         } else {
             entity = parseExitPoint();
         }
+    } else if (mXmlReader->name() == QStringView(u"script")) {
+        if (parent->type() == StateMachineEntity::Type::Transition) {
+            QSharedPointer<Transition> ptrParent = parent.dynamicCast<Transition>();
+
+            if (ptrParent) {
+                ptrParent->setTransitionCallback(parseInvoke());
+            } else {
+                qWarning() << "script elements outside of transition nodes are not supported. skipping";
+            }
+        }
+    }
+    else if (mXmlReader->name() == QStringView(u"editorinfo")) {
+        deserializeEntryMetadata(parent.get());
     }
     // TODO: parallel
     // TODO: include
@@ -528,8 +598,6 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
                     entity->setOnEnteringCallback(parseOnExit());
                 } else if (mXmlReader->name() == QStringView(u"invoke")) {
                     entity->setOnEnteringCallback(parseInvoke());
-                } else if (mXmlReader->name() == QStringView(u"editorinfo")) {
-                    deserializeEntryMetadata(entity.get());
                 } else {
                     // TODO: handle errors if can't parse child entities
                     parseChildEntity(entity);
@@ -575,8 +643,6 @@ QSharedPointer<ExitPoint> StateMachineSerializer::parseExitPoint() {
                     entity->setOnEnteringCallback(parseOnExit());
                 } else if (mXmlReader->name() == QStringView(u"invoke")) {
                     entity->setOnEnteringCallback(parseInvoke());
-                } else if (mXmlReader->name() == QStringView(u"editorinfo")) {
-                    deserializeEntryMetadata(entity.get());
                 } else {
                     // TODO: handle errors if can't parse child entities
                     parseChildEntity(entity);
@@ -717,11 +783,8 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
             entity->setConditionCallback(condition);
         }
 
-        mXmlReader->readNext();
-
-        // TODO: parse metadata. handle different order of nodes
-        // TODO: script or invoke?
-        entity->setTransitionCallback(parseInvoke());
+        // TODO: handle errors
+        parseAllChildEntities(entity);
     }
 
     qDebug() << "current element" << mXmlReader->name() << tryGetElementAttribute("id");

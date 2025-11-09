@@ -334,18 +334,20 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
 }
 
 void HsmGraphicsView::dropEvent(QDropEvent* event) {
-    qDebug() << Q_FUNC_INFO << "mDragTargetElement=" << mDragTargetElement;
-
+    qDebug() << "HsmGraphicsView::dropEvent" << "mDragTargetElement=" << mDragTargetElement << "pos" << event->position() << "scenePos" << mapToScene(event->position().toPoint());
     // event contains position of the drop in the local coordinate system of the receiving widget
+    const QPointF scenePos = mapToScene(event->position().toPoint());
 
     if (mProjectController) {
+        const QPointF parentPos = (mDragTargetElement == nullptr ? scenePos : mDragTargetElement->mapFromSceneToBody(scenePos));
+
         mProjectController->handleViewDropEvent(
             event->mimeData()->data("hsm/element").data(),
-            mapToScene(event->position().toPoint()),
+            parentPos,
             (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
     }
 
-    handleElementDropEvent(nullptr, mapToScene(event->position().toPoint()));
+    handleElementDropEvent(nullptr, scenePos);
 
     event->setDropAction(Qt::CopyAction);
     event->accept();

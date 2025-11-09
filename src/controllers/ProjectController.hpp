@@ -25,7 +25,7 @@ public:
     bool importModel(const QString& path);
     bool exportModel(const QString& path);
 
-    void handleViewDropEvent(const QString& elementTypeId, const QPointF& pos, const model::EntityID_t targetElementId);
+    void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
 
@@ -42,8 +42,9 @@ private slots:
     void modelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
 
 private:
+    // posParent - position in parent coordinate system
     void createElement(const QString& elementTypeId,
-                       const QPointF& pos,
+                       const QPointF& posParent,
                        const model::EntityID_t parentElementId = model::INVALID_MODEL_ID);
     void createTransition(const QSharedPointer<model::State>& fromElement, const QSharedPointer<model::State>& toElement);
 

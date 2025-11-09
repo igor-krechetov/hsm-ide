@@ -149,15 +149,24 @@
 ***** REQ-205c3: edit element values <<done>>
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
+**** REQ-205d: Multi-projects support <<todo>>
+***** REQ-205d1: opening multiple projects simultaniously
+***** REQ-205d2: switching between open projects
+***** REQ-205d3: closing individual open project
+***** REQ-205d4: closing all open projects
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling
 **** REQ-301a: Import SCXML 1.0 files
-***** REQ-301a1: Model structure import <<in_progress>>
-***** REQ-301a2: Model layout import <<in_progress>>
+***** REQ-301a1: Model structure import
+****** REQ-301a1.1: Basic structure import <<done>>
+****** REQ-301a1.2: Support for parsing import element
+***** REQ-301a2: Model layout import <<done>>
 **** REQ-301b: Export SCXML 1.0 files
 ***** REQ-301b1: Model structure export <<done>>
-***** REQ-301b2: Model layout export <<in_progress>>
+****** REQ-301b1.1: Basic structure import <<done>>
+****** REQ-301b1.2: Support for exporting import element
+***** REQ-301b2: Model layout export <<done>>
 *** REQ-302: Image export
 **** REQ-302a: PNG export
 **** REQ-302b: SVG export

@@ -71,9 +71,9 @@ set(PROJECT_SOURCES
         ${TS_FILES}
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_library(model STATIC ${MODEL_SOURCES})
+qt_add_library(model STATIC ${MODEL_SOURCES})
 
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
     list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     qt_add_executable(hsm_ide
@@ -87,8 +87,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
-    add_library(model STATIC ${MODEL_SOURCES})
-
     qt5_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
     list(APPEND PROJECT_SOURCES ${GENERATED_RESOURCE_FILES})
     if(ANDROID)
@@ -111,7 +109,7 @@ target_include_directories(model PRIVATE
     ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
 )
 
-target_link_libraries(model PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(model PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                            ${CMAKE_SOURCE_DIR}/include)
