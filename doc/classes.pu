@@ -209,12 +209,12 @@ package "Controller" {
   }
 
   class ProjectController {
-    + loadProject()
-    + saveProject()
+    + importModel()
+    + exportModel()
     + getRecentProjects()
   }
 
-  MainEditorController "1" *-- "1" ProjectController
+  MainEditorController "1" *-- "0..*" ProjectController
   MainEditorController "1" *-- "1" MainWindow
 
   ProjectController ..> MainWindow: reference

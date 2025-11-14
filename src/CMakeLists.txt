@@ -15,6 +15,7 @@ set(MODEL_SOURCES
     model/FinalState.cpp
     model/HistoryState.cpp
     model/InitialState.cpp
+    model/ModelRootState.cpp
     model/RegularState.cpp
     model/State.cpp
     model/StateMachineModel.cpp

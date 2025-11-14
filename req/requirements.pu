@@ -150,11 +150,11 @@
 ***** REQ-205c3: edit element values <<done>>
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
-**** REQ-205d: Multi-projects support <<todo>>
-***** REQ-205d1: opening multiple projects simultaniously
-***** REQ-205d2: switching between open projects
-***** REQ-205d3: closing individual open project
-***** REQ-205d4: closing all open projects
+**** REQ-205d: Support for viewing multiple state machines <<in_progress>>
+***** REQ-205d1: opening multiple projects simultaniously <<done>>
+***** REQ-205d2: switching between open projects <<done>>
+***** REQ-205d3: closing individual open project <<todo>>
+***** REQ-205d4: closing all open projects <<todo>>
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling

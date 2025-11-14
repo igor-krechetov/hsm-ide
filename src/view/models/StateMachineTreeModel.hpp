@@ -20,9 +20,16 @@ class StateMachineTreeModel : public QAbstractItemModel {
 
 private:
     struct TreeNode {
+        enum NodeType {
+            Entity,  // Regular entity (state, transition)
+            Root,    // Root state of the model
+            Invalid
+        };
+
         TreeNode* parent = nullptr;
         QList<TreeNode*> children;
         QSharedPointer<model::StateMachineEntity> entity;
+        NodeType nodeType = NodeType::Entity;
 
         ~TreeNode() {
             qDeleteAll(children);
@@ -32,15 +39,22 @@ private:
             return (nullptr != entity ? entity->type() : model::StateMachineEntity::Type::Invalid);
         }
 
+        bool isRoot() const {
+            return (NodeType::Root == nodeType);
+        }
+
         int row() const {
-            if (!parent) return 0;
+            if (nullptr == parent) {
+                return 0;
+            }
+
             return parent->children.indexOf(const_cast<TreeNode*>(this));
         }
     };
 
 public:
     explicit StateMachineTreeModel(QSharedPointer<model::StateMachineModel> model, QObject* parent = nullptr);
-    ~StateMachineTreeModel() override;
+    virtual ~StateMachineTreeModel() override;
 
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex& index) const override;

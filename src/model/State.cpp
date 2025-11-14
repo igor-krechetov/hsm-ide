@@ -20,6 +20,10 @@ StateType State::stateType() const {
     return mStateType;
 }
 
+void State::setStateType(const StateType newType) {
+    mStateType = newType;
+}
+
 const QString& State::name() const {
     return mName;
 }

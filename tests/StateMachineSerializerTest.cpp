@@ -7,6 +7,7 @@
 #include "model/ModelElementsFactory.hpp"
 #include "model/RegularState.hpp"
 #include "model/Transition.hpp"
+#include "model/ModelRootState.hpp"
 
 class StateMachineSerializerTest : public QObject
 {

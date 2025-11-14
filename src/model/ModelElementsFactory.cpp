@@ -3,6 +3,7 @@
 #include <QString>
 #include <QDebug>
 
+#include "ModelRootState.hpp"
 #include "InitialState.hpp"
 #include "EntryPoint.hpp"
 #include "ExitPoint.hpp"
@@ -24,6 +25,9 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
     QString uniqueName = QString("State_%1").arg(s_stateCounter);
 
     switch (type) {
+        case StateType::MODEL_ROOT:
+            res = QSharedPointer<State>(new ModelRootState(uniqueName));
+            break;
         case StateType::INITIAL:
             res = QSharedPointer<State>(new InitialState());
             break;

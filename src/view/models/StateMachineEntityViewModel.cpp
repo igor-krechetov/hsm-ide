@@ -1,5 +1,5 @@
 #include "StateMachineEntityViewModel.hpp"
-#include "model/RegularState.hpp"
+#include "model/ModelRootState.hpp"
 #include "model/Transition.hpp"
 #include "model/HistoryState.hpp"
 
@@ -12,6 +12,13 @@ namespace view {
 StateMachineEntityViewModel::StateMachineEntityViewModel(const QSharedPointer<model::StateMachineModel>& model, QObject* parent)
     : QAbstractTableModel(parent)
     , mModel(model) {}
+
+StateMachineEntityViewModel::~StateMachineEntityViewModel() {
+    // Disconnect previous connection if any
+    if (mEntitySignalConnection) {
+        QObject::disconnect(mEntitySignalConnection);
+    }
+}
 
 int StateMachineEntityViewModel::rowCount(const QModelIndex& /*parent*/) const {
     int res = 0;
@@ -73,8 +80,12 @@ QVariant StateMachineEntityViewModel::headerData(int section, Qt::Orientation or
 
 void StateMachineEntityViewModel::selectEntityById(const model::EntityID_t id) {
     if (mModel && mModel->root()) {
-        auto entity = mModel->root()->findChild(id);
-        selectEntity(entity);
+        // Check if id matches root entity
+        if (mModel->root()->id() == id) {
+            selectEntity(mModel->root());
+        } else {
+            selectEntity(mModel->root()->findChild(id));
+        }
     }
 }
 
@@ -88,6 +99,7 @@ void StateMachineEntityViewModel::selectEntity(const QSharedPointer<model::State
     }
 
     if (mSelectedEntity) {
+        // Connect to entity changes
         mEntitySignalConnection = QObject::connect(mSelectedEntity.get(), &model::StateMachineEntity::modelDataChanged, this,
             [this](QWeakPointer<model::StateMachineEntity> changedEntity) {
                 emit dataChanged(index(0,0), index(rowCount()-1, columnCount()-1));
@@ -95,7 +107,6 @@ void StateMachineEntityViewModel::selectEntity(const QSharedPointer<model::State
         );
     }
 
-    // TODO: handle empty element
     endResetModel();
 }
 

@@ -7,4 +7,9 @@
         <file>element_start.png</file>
         <file>element_state.png</file>
     </qresource>
+    <qresource prefix="/icons/side-bar">
+        <file>side-bar/debug.png</file>
+        <file>side-bar/edit.png</file>
+        <file>side-bar/workdir.png</file>
+    </qresource>
 </RCC>

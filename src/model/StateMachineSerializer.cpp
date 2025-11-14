@@ -13,6 +13,7 @@
 #include "HistoryState.hpp"
 #include "InitialState.hpp"
 #include "ModelElementsFactory.hpp"
+#include "ModelRootState.hpp"
 #include "RegularState.hpp"
 #include "StateMachineModel.hpp"
 #include "Transition.hpp"
@@ -52,7 +53,7 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
     }
 
     // Get the root state
-    QSharedPointer<model::RegularState> rootState = modelPtr->root();
+    QSharedPointer<model::ModelRootState> rootState = modelPtr->root();
 
     if (rootState) {
         // TODO: find initial state among children

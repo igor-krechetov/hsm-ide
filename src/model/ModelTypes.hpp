@@ -10,7 +10,7 @@ namespace model {
 using EntityID_t = uint32_t;
 constexpr EntityID_t INVALID_MODEL_ID = 0xFFFFFFFF;
 
-enum class StateType { INVALID, INITIAL, REGULAR, ENTRYPOINT, EXITPOINT, FINAL, HISTORY };
+enum class StateType { INVALID, MODEL_ROOT, INITIAL, REGULAR, ENTRYPOINT, EXITPOINT, FINAL, HISTORY };
 enum class TransitionType { INVALID, EXTERNAL, INTERNAL };
 enum class HistoryType { INVALID, SHALLOW, DEEP };
 

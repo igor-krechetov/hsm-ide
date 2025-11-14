@@ -13,6 +13,7 @@ class StateMachineEntityViewModel : public QAbstractTableModel {
     Q_OBJECT
 public:
     explicit StateMachineEntityViewModel(const QSharedPointer<model::StateMachineModel>& model, QObject* parent = nullptr);
+    virtual ~StateMachineEntityViewModel() override;
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;

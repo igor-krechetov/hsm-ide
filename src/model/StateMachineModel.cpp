@@ -4,7 +4,7 @@
 #include <QSignalBlocker>
 
 #include "ModelElementsFactory.hpp"
-#include "RegularState.hpp"
+#include "ModelRootState.hpp"
 #include "State.hpp"
 #include "StateMachineEntity.hpp"
 #include "Transition.hpp"
@@ -14,9 +14,12 @@ namespace model {
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent) {
     clearModel();
+    setName(name);
 }
 
-StateMachineModel::~StateMachineModel() = default;
+StateMachineModel::~StateMachineModel() {
+    qDebug() << "DELETE: " << this;
+}
 
 QString StateMachineModel::name() const {
     return (mModelRoot ? mModelRoot->name() : QString());
@@ -28,14 +31,14 @@ void StateMachineModel::setName(const QString& name) {
     }
 }
 
-QSharedPointer<RegularState>& StateMachineModel::root() {
+QSharedPointer<ModelRootState>& StateMachineModel::root() {
     return mModelRoot;
 }
 
 void StateMachineModel::clearModel() {
     QString oldName = name();
 
-    mModelRoot = ModelElementsFactory::createUniqueState(StateType::REGULAR).dynamicCast<RegularState>();
+    mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT).dynamicCast<ModelRootState>();
     mModelRoot->setName(oldName);
 
     // Subscribe to modelEntityAdded for mModelRoot

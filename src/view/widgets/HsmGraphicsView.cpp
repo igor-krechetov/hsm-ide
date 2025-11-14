@@ -28,6 +28,10 @@ HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     // translate(100, 0);
 }
 
+QPointer<ProjectController> HsmGraphicsView::projectController() const {
+    return mProjectController;
+}
+
 void HsmGraphicsView::setProjectController(QPointer<ProjectController> controller) {
     mProjectController = controller;
 

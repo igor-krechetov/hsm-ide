@@ -9,7 +9,7 @@
 #include "State.hpp"
 
 namespace model {
-class RegularState;
+class ModelRootState;
 class Transition;
 
 class StateMachineModel : public QObject {
@@ -21,7 +21,7 @@ public:
     QString name() const;
     void setName(const QString& name);
 
-    QSharedPointer<RegularState>& root();
+    QSharedPointer<ModelRootState>& root();
 
     void clearModel();
 
@@ -40,7 +40,7 @@ signals:
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
-    QSharedPointer<RegularState> mModelRoot;
+    QSharedPointer<ModelRootState> mModelRoot;
 };
 
 };  // namespace model

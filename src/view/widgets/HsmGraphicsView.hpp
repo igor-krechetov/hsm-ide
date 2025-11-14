@@ -23,6 +23,7 @@ class HsmTransition;
 };  // namespace view
 
 class HsmGraphicsView : public QGraphicsView {
+    Q_OBJECT
 public:
     enum KeyboardModifier {
         NoModifier = 0x00000000,
@@ -33,9 +34,10 @@ public:
     };
 
 public:
-    HsmGraphicsView(QWidget* parent);
+    HsmGraphicsView(QWidget* parent = nullptr);
     virtual ~HsmGraphicsView() = default;
 
+    QPointer<ProjectController> projectController() const;
     void setProjectController(QPointer<ProjectController> controller);
 
     view::HsmElement* createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,

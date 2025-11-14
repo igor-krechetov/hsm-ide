@@ -40,6 +40,9 @@ public:
     virtual QSharedPointer<State> findChildStateByName(const QString& name);
 
 protected:
+    void setStateType(const StateType newType);
+
+protected:
     StateType mStateType = StateType::INVALID;
     QString mName;
 };
