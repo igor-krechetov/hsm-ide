@@ -28,11 +28,15 @@ HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     // translate(100, 0);
 }
 
-QPointer<ProjectController> HsmGraphicsView::projectController() const {
+HsmGraphicsView::~HsmGraphicsView() {
+    qDebug() << "DELETE HsmGraphicsView:" << this;
+}
+
+QWeakPointer<ProjectController> HsmGraphicsView::projectController() const {
     return mProjectController;
 }
 
-void HsmGraphicsView::setProjectController(QPointer<ProjectController> controller) {
+void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>& controller) {
     mProjectController = controller;
 
 #ifdef DEBUG_RENDERING
@@ -189,10 +193,9 @@ QList<model::EntityID_t> HsmGraphicsView::getSelectedElements() const {
 }
 
 void HsmGraphicsView::deleteSelectedItems() {
-    // TODO: need to re-think how to handle transition
-    //       What to do when one of the states is deleted? Delete transition too?
-    //       Do we want to allow dangling transitions?
-    mProjectController->handleDeleteElements(getSelectedElements());
+    if (auto controller = mProjectController.toStrongRef()) {
+        controller->handleDeleteElements(getSelectedElements());
+    }
 }
 
 bool HsmGraphicsView::keyboardShiftPressed() const {
@@ -280,7 +283,7 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
 
     if (mDraggedElement && (mDraggedElement->hsmParentItem() == nullptr) || keyboardCtrlPressed()) {
         // If we are dragging element into a new parent or to a top level
-        if (mProjectController) {
+        if (auto controller = mProjectController.toStrongRef()) {
             qDebug() << "mDragTargetElement" << mDragTargetElement;
             forEachSelectedElement([&](view::HsmElement* element) {
                 qDebug() << element->modelId();
@@ -295,7 +298,7 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
                 // NOTE: no need to do it for the target because it will be done automatically in handleViewMoveEvent
 
                 element->setGroupDragMode(false);
-                mProjectController->handleViewMoveEvent(
+                controller->handleViewMoveEvent(
                     element->modelId(),
                     (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
             });
@@ -342,10 +345,10 @@ void HsmGraphicsView::dropEvent(QDropEvent* event) {
     // event contains position of the drop in the local coordinate system of the receiving widget
     const QPointF scenePos = mapToScene(event->position().toPoint());
 
-    if (mProjectController) {
+    if (auto controller = mProjectController.toStrongRef()) {
         const QPointF parentPos = (mDragTargetElement == nullptr ? scenePos : mDragTargetElement->mapFromSceneToBody(scenePos));
 
-        mProjectController->handleViewDropEvent(
+        controller->handleViewDropEvent(
             event->mimeData()->data("hsm/element").data(),
             parentPos,
             (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));

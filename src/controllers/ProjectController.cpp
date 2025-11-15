@@ -35,11 +35,16 @@ ProjectController::ProjectController(const QString& id, QObject* parent)
     mHsmEntityViewModel = new view::StateMachineEntityViewModel(mModel, this);
 }
 
+ProjectController::~ProjectController() {
+    qDebug() << "DELETE ProjectController:" << this << mView;
+}
+
 void ProjectController::registerView(QPointer<HsmGraphicsView> view) {
+    qDebug() << "---- ProjectController::registerView:" << view;
     mView = view;
 
     if (mView) {
-        mView->setProjectController(this);
+        mView->setProjectController(sharedFromThis().toWeakRef());
     }
 }
 
@@ -62,6 +67,7 @@ bool ProjectController::importModel(const QString& path) {
         QSignalBlocker blocker(this);
         
         serializer.deserializeFromScxml(scxmlContent, mModel);
+        mModelPath = path;
         mModified = false;
     }
 

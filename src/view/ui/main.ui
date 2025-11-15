@@ -817,6 +817,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCloseCurrent</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleCloseCurrentProject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCloseAll</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleCloseAllProjects()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>deleteSelectedItems()</slot>
@@ -827,5 +859,7 @@
   <slot>projectTabCloseRequested(int)</slot>
   <slot>handleNewProject()</slot>
   <slot>projectTabSelected(int)</slot>
+  <slot>handleCloseCurrentProject()</slot>
+  <slot>handleCloseAllProjects()</slot>
  </slots>
 </ui>

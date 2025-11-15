@@ -10,6 +10,7 @@
 #include "view/MainWindow.hpp"
 
 class ProjectController;
+using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
 class MainEditorController : public QObject {
     Q_OBJECT
@@ -20,25 +21,25 @@ public:
     int start();
 
     // Methods to manage multiple projects
-    QString createProject(); // returns project ID
-    QString openProject(const QString& projectPath); // returns project ID
-    void closeProject(const QString& projectId);
-    void switchToProject(const QString& projectId);
-    QList<QString> openedProjects() const; // returns list of project IDs
+    ProjectControllerPtr createProject();
+    ProjectControllerPtr openProject(const QString& projectPath);
+    void closeProject(const ProjectControllerPtr& project);
+    void switchToProject(const ProjectControllerPtr& project);
+    void closeAllProjects();
 
-    QString getProjectIdByPath(const QString& projectPath) const;
-    QPointer<ProjectController> getProjectController(const QString& projectId) const;
+    const QList<ProjectControllerPtr>& openedProjects() const;
+
+    ProjectControllerPtr getProjectByPath(const QString& projectPath) const;
 
 signals:
-    void projectOpened(QPointer<ProjectController> project);
-    void projectSelected(QPointer<ProjectController> project);
-    void projectClosed(const QString& projectId);
+    void projectOpened(ProjectControllerPtr project);
+    void projectSelected(ProjectControllerPtr project);
+    void projectClosed(ProjectControllerPtr project);
 
 private:
     MainWindow mMainWindow;
-    // Manage multiple ProjectControllers by unique ID
-    QMap<QString, ProjectController*> mProjectControllers; // key: projectId
-    QString mCurrentProjectId;// TODO: replace with ProjectController*
+    QList<ProjectControllerPtr> mProjectControllers;
+    ProjectControllerPtr mCurrentProject;
 };
 
 #endif  // MAINEDITORCONTROLLER_HPP

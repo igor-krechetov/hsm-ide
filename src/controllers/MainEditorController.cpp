@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QString>
 #include <QUuid>
+#include <algorithm>
 
 #include "ProjectController.hpp"
 #include "view/MainWindow.hpp"
@@ -20,10 +21,9 @@ MainEditorController::MainEditorController()
 }
 
 MainEditorController::~MainEditorController() {
-    // Clean up all project controllers. Actual deletion of ProjectController instances
-    // will be handled with QObject parent-child mechanism.
-    // TODO: validate
+    // Clean up all project controllers. Memory is managed by QSharedPointer
     mProjectControllers.clear();
+    mCurrentProject.clear();
 }
 
 int MainEditorController::start() {
@@ -35,73 +35,91 @@ int MainEditorController::start() {
     return QApplication::exec();
 }
 
-QString MainEditorController::createProject() {
+ProjectControllerPtr MainEditorController::createProject() {
     qDebug() << Q_FUNC_INFO << __LINE__;
-    QString projectId = QUuid::createUuid().toString();
-    ProjectController* controller = new ProjectController(projectId, this);
+    const QString projectId = QUuid::createUuid().toString();
+    ProjectControllerPtr project = ProjectControllerPtr::create(projectId, this);
 
-    mProjectControllers.insert(projectId, controller);
-    // mMainWindow.setProjectController(controller);
-    mCurrentProjectId = projectId;
-    emit projectOpened(controller);
+    mProjectControllers.push_back(project);
+    emit projectOpened(project);
 
-    switchToProject(projectId);
+    switchToProject(project);
 
-    return projectId;
+    return project;
 }
 
-QString MainEditorController::openProject(const QString& projectPath) {
-    QString projectId = getProjectIdByPath(projectPath);
+ProjectControllerPtr MainEditorController::openProject(const QString& projectPath) {
+    ProjectControllerPtr project = getProjectByPath(projectPath);
 
-    if (projectId.isEmpty() == true) {
-        projectId = createProject();
-        auto controller = mProjectControllers.value(projectId);
+    if (project.isNull()) {
+        project = createProject();
 
-        if (controller) {
-            controller->importModel(projectPath);
+        if (project) {
+            project->importModel(projectPath);
         }
     } else {
-        switchToProject(projectId);
+        switchToProject(project);
     }
 
-    return projectId;
+    return project;
 }
 
-void MainEditorController::closeProject(const QString& projectId) {
-    if (mProjectControllers.contains(projectId)) {
-        ProjectController* project = mProjectControllers.take(projectId);
+void MainEditorController::closeProject(const ProjectControllerPtr& project) {
+    qDebug() << "MainEditorController::closeProject" << project;
+    auto it = std::find(mProjectControllers.begin(), mProjectControllers.end(), project);
 
-        if (mCurrentProjectId == projectId) {
-            mCurrentProjectId.clear();
+    if (it != mProjectControllers.end()) {
+        if (mCurrentProject == project) {
+            mCurrentProject.clear();
         }
 
-        delete project;
+        emit projectClosed(project);
+        it = mProjectControllers.erase(it);
+
+        if (it != mProjectControllers.end()) {
+            switchToProject(*it);
+        }
     }
 }
 
-void MainEditorController::switchToProject(const QString& projectId) {
-    qDebug() << Q_FUNC_INFO << __LINE__;
-    if (mProjectControllers.contains(projectId)) {
-        mCurrentProjectId = projectId;
-        emit projectSelected(mProjectControllers.value(projectId));
+void MainEditorController::switchToProject(const ProjectControllerPtr& project) {
+    auto it = std::find(mProjectControllers.begin(), mProjectControllers.end(), project);
+
+    if (it != mProjectControllers.end()) {
+        if (mCurrentProject != project) {
+            mCurrentProject = *it;
+            emit projectSelected(mCurrentProject);
+        }
     }
 }
 
-QList<QString> MainEditorController::openedProjects() const {
-    return mProjectControllers.keys();
+void MainEditorController::closeAllProjects() {
+    mCurrentProject.clear();
+
+    for (const auto& project : mProjectControllers) {
+        emit projectClosed(project);
+    }
+
+    mProjectControllers.clear();
 }
 
-QString MainEditorController::getProjectIdByPath(const QString& projectPath) const {
-    // TODO: implement
-    // for (auto it = mProjectControllers.constBegin(); it != mProjectControllers.constEnd(); ++it) {
-    //     ProjectController* controller = it.value();
-    //     if (controller && controller->projectPath() == projectPath) {
-    //         return it.key();
-    //     }
-    // }
-    return QString();
+const QList<ProjectControllerPtr>& MainEditorController::openedProjects() const {
+    return mProjectControllers;
 }
 
-QPointer<ProjectController> MainEditorController::getProjectController(const QString& projectId) const {
-    return mProjectControllers.value(projectId, nullptr);
+ProjectControllerPtr MainEditorController::getProjectByPath(const QString& projectPath) const {
+    ProjectControllerPtr project;
+
+    for (const auto& ptr : mProjectControllers) {
+        if (ptr && (ptr->modelPath() == projectPath)) {
+            project = ptr;
+            break;
+        }
+    }
+
+    return project;
 }
+
+// QPointer<ProjectController> MainEditorController::getProjectController(const QString& projectId) const {
+//     return mProjectControllers.value(projectId, nullptr);
+// }

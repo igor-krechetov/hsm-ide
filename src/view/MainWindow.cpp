@@ -64,7 +64,7 @@ void MainWindow::handleOpen() {
     QString initialDir = mCurrentFilePath.isEmpty() ? QString("~") : QFileInfo(mCurrentFilePath).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open SCXML File"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
 
-    if (!fileName.isEmpty() && mActiveProject) {
+    if (!fileName.isEmpty()) {
         mController->openProject(fileName);
     }
 }
@@ -93,18 +93,38 @@ void MainWindow::handleSaveAs() {
     }
 }
 
+void MainWindow::handleCloseCurrentProject() {
+    if (mActiveProject) {
+        mController->closeProject(mActiveProject);
+    }
+}
+
+void MainWindow::handleCloseAllProjects() {
+    // block signals from projectTabs to avoid processing tab selection events
+    QSignalBlocker block(ui->projectTabs);
+
+    mActiveProject.clear();
+    mController->closeAllProjects();
+}
+
 void MainWindow::projectTabSelected(int index) {
     if (nullptr != mController) {
         QPointer<HsmGraphicsView> view = currentView();
 
         if (nullptr != view) {
-            mController->switchToProject(view->projectController()->id());
+            mController->switchToProject(view->projectController());
         }
     }
 }
 
 void MainWindow::projectTabCloseRequested(int index) {
-    // TODO
+    if (nullptr != mController) {
+        QPointer<HsmGraphicsView> view = currentView();
+
+        if (nullptr != view) {
+            mController->closeProject(view->projectController());
+        }
+    }
 }
 
 void MainWindow::deleteSelectedItems() {
@@ -127,56 +147,46 @@ void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const Q
 }
 
 // =================================================================================================================
-void MainWindow::projectOpened(QPointer<ProjectController> project) {
+void MainWindow::projectOpened(ProjectControllerPtr project) {
     qDebug() << Q_FUNC_INFO;
-    // create a new tab in the projectTabs QTabWidget with vertical layout and HsmGraphicsView inside
     HsmGraphicsView* newView = new HsmGraphicsView();
     QGraphicsScene* scene = new QGraphicsScene();
 
-    // Connect selection change in graphics view
     connect(scene, &QGraphicsScene::selectionChanged, this, &MainWindow::onGraphicsViewSelectionChanged);
-    // Connect selection change in model tree (after model is set)
-    // (see setModel)
 
     newView->setScene(scene);
     newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
     project->registerView(newView);
-
     ui->projectTabs->addTab(newView, project->name());
 
-    connect(project, &ProjectController::projectModelChanged, this, [this](QPointer<ProjectController> project) {
-        if (nullptr != project) {
-            const int projectIndex = ui->projectTabs->indexOf(project->view());
-
+    connect(project.data(), &ProjectController::projectModelChanged, this, [this](QPointer<ProjectController> projectRaw) {
+        if (projectRaw) {
+            const int projectIndex = ui->projectTabs->indexOf(projectRaw->view());
             if (projectIndex != -1) {
-                ui->projectTabs->setTabText(projectIndex, (project->isModified() ? "*" + project->name() : project->name()));
+                ui->projectTabs->setTabText(projectIndex, (projectRaw->isModified() ? "*" + projectRaw->name() : projectRaw->name()));
             } else {
                 qCritical() << "MainWindow::projectOpened: project view not found in tabs";
             }
         }
     });
+
+    qDebug() << "MainWindow::projectOpened" << __LINE__;
 }
 
-void MainWindow::projectSelected(QPointer<ProjectController> project) {
-    qDebug() << Q_FUNC_INFO << __LINE__;
+void MainWindow::projectSelected(ProjectControllerPtr project) {
+    qDebug() << Q_FUNC_INFO << __LINE__ << project;
     mActiveProject = project;
 
-    if (nullptr != mActiveProject) {
+    if (!mActiveProject.isNull()) {
         const int projectIndex = ui->projectTabs->indexOf(mActiveProject->view());
 
         if (projectIndex != -1) {
             ui->projectTabs->setCurrentIndex(projectIndex);
-
-            // Connect StateMachineTreeModel to modelTree
             ui->modelTree->setModel(mActiveProject->hsmStructureModel());
-
-            // Connect StateMachineTreeModel to entityProperties
             ui->entityProperties->setModel(mActiveProject->hsmEntityViewModel());
             ui->entityProperties->setColumnWidth(0, 140);
-
-            // Connect selection change in modelTree
             connect(ui->modelTree->selectionModel(),
                     &QItemSelectionModel::currentChanged,
                     this,
@@ -189,8 +199,22 @@ void MainWindow::projectSelected(QPointer<ProjectController> project) {
     }
 }
 
-void MainWindow::projectClosed(const QString& projectId) {
-    // TODO
+void MainWindow::projectClosed(ProjectControllerPtr project) {
+    qDebug() << Q_FUNC_INFO;
+    if (project) {
+        const int projectIndex = ui->projectTabs->indexOf(project->view());
+
+        if (projectIndex != -1) {
+            ui->projectTabs->removeTab(projectIndex);
+            project->view()->deleteLater();
+        }
+
+        if (project == mActiveProject) {
+            ui->modelTree->setModel(nullptr);
+            ui->entityProperties->setModel(nullptr);
+            mActiveProject.clear();
+        }
+    }
 }
 
 // =================================================================================================================

@@ -19,11 +19,11 @@ class StateMachineTreeModel;
 class StateMachineEntityViewModel;
 };
 
-class ProjectController : public QObject {
+class ProjectController : public QObject, public QEnableSharedFromThis<ProjectController> {
     Q_OBJECT
 public:
     explicit ProjectController(const QString& id, QObject* parent = nullptr);
-    virtual ~ProjectController() override = default;
+    virtual ~ProjectController() override;
 
     void registerView(QPointer<HsmGraphicsView> view);
     inline QPointer<HsmGraphicsView> view() const;
@@ -32,6 +32,7 @@ public:
 
     inline QString id() const;
     inline QString name() const;
+    inline QString modelPath() const;
     inline bool isModified() const;
 
     bool importModel(const QString& path);
@@ -66,6 +67,8 @@ private:
 
 private:
     QString mId;
+    // path to a file from which the model was loaded or empty
+    QString mModelPath;
     QPointer<HsmGraphicsView> mView;
     QSharedPointer<model::StateMachineModel> mModel;
 
@@ -113,6 +116,10 @@ inline QString ProjectController::id() const {
 
 inline QString ProjectController::name() const {
     return (mModel != nullptr ? mModel->name() : "Untitled");
+}
+
+inline QString ProjectController::modelPath() const {
+    return mModelPath;
 }
 
 inline bool ProjectController::isModified() const {

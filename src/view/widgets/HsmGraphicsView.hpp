@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include <QPointer>
 #include <QSize>
+#include <QWeakPointer>
 
 #include "model/ModelTypes.hpp"
 
@@ -35,10 +36,10 @@ public:
 
 public:
     HsmGraphicsView(QWidget* parent = nullptr);
-    virtual ~HsmGraphicsView() = default;
+    virtual ~HsmGraphicsView();
 
-    QPointer<ProjectController> projectController() const;
-    void setProjectController(QPointer<ProjectController> controller);
+    QWeakPointer<ProjectController> projectController() const;
+    void setProjectController(const QWeakPointer<ProjectController>& controller);
 
     view::HsmElement* createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                        const QString& elementTypeId,
@@ -105,7 +106,7 @@ private:
 private:
     // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
     QMap<model::EntityID_t, QPointer<view::HsmElement>> mElements;
-    QPointer<ProjectController> mProjectController;
+    QWeakPointer<ProjectController> mProjectController;
     QPoint mLastPanPoint;
     bool mPanning = false;
     KeyboardModifier mKeyboardModifiers = KeyboardModifier::NoModifier;
