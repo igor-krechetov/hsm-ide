@@ -8,7 +8,7 @@ namespace view {
 
 class HsmStateTextItem : public QGraphicsTextItem {
     Q_OBJECT
-    
+
 public:
     HsmStateTextItem(QGraphicsItem* parent = nullptr);
 
@@ -28,6 +28,6 @@ private:
     QString mOriginalText;
 };
 
-} // namespace view
+}  // namespace view
 
-#endif // HSMSTATETEXTITEM_HPP
+#endif  // HSMSTATETEXTITEM_HPP

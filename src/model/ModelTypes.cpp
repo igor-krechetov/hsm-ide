@@ -3,7 +3,7 @@
 namespace model {
 
 QString transitionTypeToString(const TransitionType type) {
-    switch(type) {
+    switch (type) {
         case TransitionType::EXTERNAL:
             return "External";
         case TransitionType::INTERNAL:
@@ -31,7 +31,7 @@ TransitionType transitionTypeFromInt(const int value) {
 }
 
 QString historyTypeToString(const HistoryType type) {
-    switch(type) {
+    switch (type) {
         case HistoryType::SHALLOW:
             return "Shallow";
         case HistoryType::DEEP:

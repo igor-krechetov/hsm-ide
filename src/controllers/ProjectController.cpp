@@ -17,9 +17,9 @@
 #include "model/Transition.hpp"
 #include "view/elements/HsmTransition.hpp"
 #include "view/elements/private/HsmElement.hpp"  // TODO: move out from private
-#include "view/widgets/HsmGraphicsView.hpp"
-#include "view/models/StateMachineTreeModel.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
+#include "view/models/StateMachineTreeModel.hpp"
+#include "view/widgets/HsmGraphicsView.hpp"
 
 Q_DECLARE_LOGGING_CATEGORY(ProjectController)
 
@@ -65,7 +65,7 @@ bool ProjectController::importModel(const QString& path) {
     {
         // block signals so we dont send unnecessary projectModelChanged updates
         QSignalBlocker blocker(this);
-        
+
         serializer.deserializeFromScxml(scxmlContent, mModel);
         mModelPath = path;
         mModified = false;
@@ -136,7 +136,7 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
 void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                                QSharedPointer<model::StateMachineEntity> entity) {
     qDebug() << "handleModelEntityAdded"
-             << "parent=" << parent->id() << " child=" << entity->id();
+             << "parent=" << parent->id() << " child=" << entity->id() << "childType=" << (int)entity->type();
 
     if (entity->type() == model::StateMachineEntity::Type::State) {
         static std::map<model::StateType, QString> sElementTypes = {{model::StateType::INITIAL, "initial"},
@@ -144,7 +144,8 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
                                                                     {model::StateType::REGULAR, "state"},
                                                                     {model::StateType::ENTRYPOINT, "entrypoint"},
                                                                     {model::StateType::EXITPOINT, "exitpoint"},
-                                                                    {model::StateType::HISTORY, "history"}};
+                                                                    {model::StateType::HISTORY, "history"},
+                                                                    {model::StateType::INCLUDE, "include"}};
 
         auto ptrState = entity.dynamicCast<model::State>();
         auto itType = sElementTypes.find(ptrState->stateType());
@@ -157,18 +158,27 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
                              "elementConnected(model::EntityID_t,model::EntityID_t)",
                              this,
                              "connectElements(model::EntityID_t,model::EntityID_t)");
+        } else {
+            qFatal("ProjectController::handleModelEntityAdded: unexpected element type: %d",
+                   static_cast<int>(ptrState->stateType()));
         }
     } else if (entity->type() == model::StateMachineEntity::Type::Transition) {
         auto ptrTransition = entity.dynamicCast<model::Transition>();
 
-        if (ptrTransition->source() && ptrTransition->target()) {
-            view::HsmTransition* newViewTransition =
-                mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
+        if (ptrTransition) {
+            qDebug() << ptrTransition->source() << ptrTransition->target();
 
-            tryConnectSignal(newViewTransition,
-                             "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                             this,
-                             "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+            if (ptrTransition->source() && ptrTransition->target()) {
+                view::HsmTransition* newViewTransition =
+                    mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
+
+                tryConnectSignal(newViewTransition,
+                                 "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                                 this,
+                                 "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+            }
+        } else {
+            qCritical() << "expected Transition entity, but couldnt cast to model::Transition";
         }
     }
 
@@ -234,9 +244,8 @@ void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity>
         // if transition has both source and destination and it doesnt exist yet - create it
         if (ptrTransition->source() && ptrTransition->target()) {
             if (mView->findHsmTransition(ptrTransition->id()).isNull() == true) {
-                view::HsmTransition* newViewTransition = mView->createHsmTransition(ptrTransition,
-                                                                                                  ptrTransition->sourceId(),
-                                                                                                  ptrTransition->targetId());
+                view::HsmTransition* newViewTransition =
+                    mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
 
                 tryConnectSignal(newViewTransition,
                                  "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
@@ -262,7 +271,8 @@ void ProjectController::createElement(const QString& elementTypeId,
                                                                 {"state", model::StateType::REGULAR},
                                                                 {"entrypoint", model::StateType::ENTRYPOINT},
                                                                 {"exitpoint", model::StateType::EXITPOINT},
-                                                                {"history", model::StateType::HISTORY}};
+                                                                {"history", model::StateType::HISTORY},
+                                                                {"include", model::StateType::INCLUDE}};
 
     auto it = sElementTypes.find(elementTypeId);
 

@@ -1,9 +1,9 @@
 #ifndef HSMRESIZABLEELEMENT_HPP
 #define HSMRESIZABLEELEMENT_HPP
 
+#include <QMap>
 #include <QObject>
 #include <QPen>
-#include <QMap>
 
 #include "ElementBoundaryGripItem.hpp"
 #include "HsmConnectableElement.hpp"

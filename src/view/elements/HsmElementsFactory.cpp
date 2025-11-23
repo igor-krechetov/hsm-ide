@@ -10,32 +10,46 @@
 #include "HsmExitPointElement.hpp"
 #include "HsmFinalElement.hpp"
 #include "HsmHistoryElement.hpp"
+#include "HsmIncludeElement.hpp"
 #include "HsmInitialElement.hpp"
 #include "HsmStateElement.hpp"
 #include "private/HsmElement.hpp"
 
 namespace view {
 
-std::map<
-    QString,
-    std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&, const QSizeF&)>>>
+QMap<QString,
+     std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&, const QSizeF&)>>>
     HsmElementsFactory::mItemsCatalog = {
-        {"initial", {"initial", ":/icons/element_start.png", &HsmElementsFactory::createElementStart}},
-        {"final", {"Final", ":/icons/element_final.png", &HsmElementsFactory::createElementFinal}},
-        {"state", {"State", ":/icons/element_state.png", &HsmElementsFactory::createElementState}},
-        {"entrypoint", {"Entry Point", ":/icons/element_entrypoint.png", &HsmElementsFactory::createElementEntryPoint}},
-        {"exitpoint", {"Exit Point", ":/icons/element_exitpoint.png", &HsmElementsFactory::createElementExitPoint}},
-        {"history", {"History", ":/icons/element_history.png", &HsmElementsFactory::createElementHistory}}};
+        {"initial", {"initial", ":/icons/elements/initial.png", &HsmElementsFactory::createElementStart}},
+        {"final", {"Final", ":/icons/elements/final.png", &HsmElementsFactory::createElementFinal}},
+        {"state", {"State", ":/icons/elements/state.png", &HsmElementsFactory::createElementState}},
+        {"entrypoint", {"Entry Point", ":/icons/elements/entrypoint.png", &HsmElementsFactory::createElementEntryPoint}},
+        {"exitpoint", {"Exit Point", ":/icons/elements/exitpoint.png", &HsmElementsFactory::createElementExitPoint}},
+        {"history", {"History", ":/icons/elements/history.png", &HsmElementsFactory::createElementHistory}},
+        {"include", {"Include", ":/icons/elements/include.png", &HsmElementsFactory::createElementInclude}}};
 
 std::list<QListWidgetItem*> HsmElementsFactory::createElementsList() {
+    const QList<QString> itemsOrder = {"initial", "final", "state", "include", "entrypoint", "exitpoint", "history"};
     std::list<QListWidgetItem*> elements;
-    for (const auto& itemInfo : mItemsCatalog) {
-        QIcon icon(std::get<1>(itemInfo.second));
-        QString itemName = std::get<0>(itemInfo.second);
-        QListWidgetItem* newItem = new QListWidgetItem(icon, itemName);
 
-        newItem->setData(Qt::UserRole, itemInfo.first);
-        elements.push_back(newItem);
+    Q_ASSERT(itemsOrder.size() == mItemsCatalog.size());
+
+    for (const QString& itemId : itemsOrder) {
+        // for (const auto& itemInfo : mItemsCatalog) {
+        auto it = mItemsCatalog.find(itemId);
+
+        if (mItemsCatalog.end() != it) {
+            QIcon icon(std::get<1>(it.value()));
+            QString itemName = std::get<0>(it.value());
+            QListWidgetItem* newItem = new QListWidgetItem(icon, itemName);
+
+            newItem->setData(Qt::UserRole, it.key());
+            elements.push_back(newItem);
+        } else {
+            qFatal("Item %s not registered in HsmElementsFactory", itemId.toUtf8().constData());
+        }
+
+        qDebug() << "--- " << it.key();
     }
 
     return elements;
@@ -46,7 +60,9 @@ QString HsmElementsFactory::getElementIcon(const QString& typeId) {
     auto itItem = mItemsCatalog.find(typeId);
 
     if (mItemsCatalog.end() != itItem) {
-        iconPath = std::get<1>(itItem->second);
+        iconPath = std::get<1>(itItem.value());
+    } else {
+        qFatal("Item %s not registered in HsmElementsFactory", typeId.toUtf8().constData());
     }
 
     return iconPath;
@@ -74,6 +90,9 @@ QString HsmElementsFactory::getStateIcon(const model::StateType type) {
         case model::StateType::HISTORY:
             iconPath = getElementIcon("history");
             break;
+        case model::StateType::INCLUDE:
+            iconPath = getElementIcon("include");
+            break;
         default:
             break;
     }
@@ -93,9 +112,11 @@ HsmElement* HsmElementsFactory::createElement(const QString& typeId,
     auto itItem = mItemsCatalog.find(typeId);
 
     if (mItemsCatalog.end() != itItem) {
-        const auto& callback = std::get<2>(itItem->second);
+        const auto& callback = std::get<2>(itItem.value());
 
         element = callback(modelElement, size);
+    } else {
+        qFatal("Item %s not registered in HsmElementsFactory", typeId.toUtf8().constData());
     }
 
     return element;
@@ -151,6 +172,14 @@ HsmElement* HsmElementsFactory::createElementExitPoint(const QSharedPointer<mode
 HsmElement* HsmElementsFactory::createElementHistory(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                                      const QSizeF& size) {
     HsmElement* elem = new HsmHistoryElement();
+
+    elem->init(modelElement);
+    return elem;
+}
+
+HsmElement* HsmElementsFactory::createElementInclude(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                                     const QSizeF& size) {
+    HsmElement* elem = new HsmIncludeElement();
 
     elem->init(modelElement);
     return elem;

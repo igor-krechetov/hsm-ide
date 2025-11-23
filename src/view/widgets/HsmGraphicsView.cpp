@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QDrag>
+#include <QGraphicsRectItem>
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMimeData>
@@ -39,6 +40,21 @@ QWeakPointer<ProjectController> HsmGraphicsView::projectController() const {
 void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>& controller) {
     mProjectController = controller;
 
+    // qDebug() << "--- INIT";
+    // view::HsmElement* newElement = new view::HsmStateElement();
+    // qDebug() << "--- CREATE" << newElement;
+    // // QGraphicsRectItem* child = new QGraphicsRectItem(QRect(10, 10, 40, 40));
+    // view::HsmElement* child = new view::HsmStateElement();
+    // qDebug() << "--- CREATE" << child;
+
+    // newElement->init(nullptr);
+
+    // scene()->addItem(newElement);
+    // qDebug() << "add to parent";
+    // // child->setParentItem(newElement);
+    // newElement->addChildItem(child);
+    // qDebug() << "DONE";
+
 #ifdef DEBUG_RENDERING
     // and two crossed lines at the 0,0 point using graphics items
     QGraphicsLineItem* hLine = new QGraphicsLineItem(-1000, 0, 1000, 0);
@@ -49,7 +65,7 @@ void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>
     vLine->setPen(pen);
     scene()->addItem(hLine);
     scene()->addItem(vLine);
-#endif // DEBUG_RENDERING
+#endif  // DEBUG_RENDERING
 }
 
 view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
@@ -60,7 +76,8 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::
     view::HsmElement* newElement = view::HsmElementsFactory::createElement(elementTypeId, modelElement, size);
     view::HsmElement* parentElement = findHsmElement(parentElementId);
 
-    qDebug() << "HsmGraphicsView::createHsmElement" << "ID=" << newElement->modelId() << ", pos=" << pos << "size" << size;
+    qDebug() << "HsmGraphicsView::createHsmElement"
+             << "ID=" << newElement->modelId() << ", pos=" << pos << "size" << size;
     qDebug() << "HsmGraphicsView::createHsmElement" << newElement;
     newElement->setPos(pos);
 
@@ -341,7 +358,9 @@ void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
 }
 
 void HsmGraphicsView::dropEvent(QDropEvent* event) {
-    qDebug() << "HsmGraphicsView::dropEvent" << "mDragTargetElement=" << mDragTargetElement << "pos" << event->position() << "scenePos" << mapToScene(event->position().toPoint());
+    qDebug() << "HsmGraphicsView::dropEvent"
+             << "mDragTargetElement=" << mDragTargetElement << "pos" << event->position() << "scenePos"
+             << mapToScene(event->position().toPoint());
     // event contains position of the drop in the local coordinate system of the receiving widget
     const QPointF scenePos = mapToScene(event->position().toPoint());
 

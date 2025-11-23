@@ -12,12 +12,12 @@ class HsmGraphicsView;
 namespace model {
 class State;
 class StateMachineEntity;
-};
+};  // namespace model
 namespace view {
 class HsmElement;
 class StateMachineTreeModel;
 class StateMachineEntityViewModel;
-};
+};  // namespace view
 
 class ProjectController : public QObject, public QEnableSharedFromThis<ProjectController> {
     Q_OBJECT
@@ -55,7 +55,8 @@ private slots:
     void modelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
 
 private:
-    void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> entity);
+    void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
+                                QSharedPointer<model::StateMachineEntity> entity);
 
     // posParent - position in parent coordinate system
     void createElement(const QString& elementTypeId,

@@ -75,7 +75,10 @@ QSharedPointer<StateMachineEntity> EntryPoint::findChild(const EntityID_t id, co
     return res;
 }
 
-bool EntryPoint::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback, const int depth, const bool postOrderTraversal) {
+bool EntryPoint::forEachChildElement(
+    std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+    const int depth,
+    const bool postOrderTraversal) {
     Q_UNUSED(depth);
     bool processedAllChildren = true;
 

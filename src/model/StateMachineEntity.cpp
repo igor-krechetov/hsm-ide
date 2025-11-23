@@ -54,7 +54,6 @@ QSizeF StateMachineEntity::getSize() const {
     return QSizeF(width, height);
 }
 
-
 bool StateMachineEntity::addChild(const QSharedPointer<StateMachineEntity>& child) {
     // do nothing
     return false;
@@ -107,9 +106,10 @@ void StateMachineEntity::unregisterChild(const QSharedPointer<StateMachineEntity
     emit childRemoved(sharedFromThis().toWeakRef(), child.toWeakRef());
 }
 
-bool StateMachineEntity::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
-                                             const int depth,
-                                             const bool postOrderTraversal) {
+bool StateMachineEntity::forEachChildElement(
+    std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+    const int depth,
+    const bool postOrderTraversal) {
     // do nothing
     return true;
 }

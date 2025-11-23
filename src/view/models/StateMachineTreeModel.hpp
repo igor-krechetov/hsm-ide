@@ -7,12 +7,12 @@
 #include "model/StateMachineEntity.hpp"
 
 namespace model {
-    class StateMachineModel;
-    class RegularState;
-    class EntryPoint;
-    class InitialState;
-    class HistoryState;
-};
+class StateMachineModel;
+class RegularState;
+class EntryPoint;
+class InitialState;
+class HistoryState;
+};  // namespace model
 
 namespace view {
 class StateMachineTreeModel : public QAbstractItemModel {
@@ -65,7 +65,7 @@ public:
 
     QModelIndex findModelEntity(const model::EntityID_t id) const;
 
-    bool removeRows(int row, int count, const QModelIndex &parent) override;
+    bool removeRows(int row, int count, const QModelIndex& parent) override;
 
 private slots:
     void onModelChanged();
@@ -88,6 +88,6 @@ private:
     bool mUpdatingModel = false;
     // You may want to add a tree node structure here for mapping QModelIndex to model elements
 };
-} // namespace view
+}  // namespace view
 
-#endif // STATEMACHINETREEMODEL_HPP
+#endif  // STATEMACHINETREEMODEL_HPP

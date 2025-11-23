@@ -9,8 +9,9 @@ class QPainter;
 class QWidget;
 
 namespace view {
-    
+
 class HsmStateTextItem;
+class HsmStateBodySection;
 
 class HsmStateElement : public HsmRectangularElement {
     Q_OBJECT
@@ -23,6 +24,7 @@ public:
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
     bool acceptsChildren() const override;
     virtual QList<QGraphicsItem*> hsmChildItems() const;
+    bool hasSubstates() const override;
     // bool isDirectChild(HsmElement* item) const override;
     // QRectF childrenRect() const override;
     void addChildItem(HsmElement* child) override;
@@ -31,9 +33,7 @@ public:
     void resizeToFitChildItem(HsmElement* child) override;
     void normalizeElementRect() override;
 
-    QPointF mapFromSceneToBody(const QPointF &point) const override {
-        return mBodySection->mapFromScene(point);
-    }
+    QPointF mapFromSceneToBody(const QPointF& point) const override;
 
 protected:
     bool isInitialized() const;
@@ -41,7 +41,7 @@ protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
     void centerHeader();
-    void layoutSections(); // New: lays out all sections vertically
+    void layoutSections();  // New: lays out all sections vertically
 
     void layoutSelfTransitions();
 
@@ -51,6 +51,7 @@ protected slots:
     void onStateNameChanged();
     void onStateNameEditFinished();
     void onModelDataChanged() override;
+    void onSubstatesChanged(const bool substates);
 
 private:
     // Layout constants
@@ -62,7 +63,7 @@ private:
     HsmStateTextItem* mStateNameLabel = nullptr;
     QGraphicsRectItem* mSelfTransitionsSection = nullptr;
     QGraphicsTextItem* mPropertiesSection = nullptr;
-    QGraphicsRectItem* mBodySection = nullptr;
+    HsmStateBodySection* mBodySection = nullptr;
     // Separator lines
     QGraphicsLineItem* mHeaderSeparator = nullptr;
     QGraphicsLineItem* mSelfTransitionsSeparator = nullptr;

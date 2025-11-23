@@ -84,10 +84,11 @@ void RegularState::deleteChild(const EntityID_t id) {
 
 void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
-        child->forEachChildElement([this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
-            unregisterChild(element);
-            return true;
-        });
+        child->forEachChildElement(
+            [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
+                unregisterChild(element);
+                return true;
+            });
         mChildren.removeAll(child);
         unregisterChild(child);
     }
@@ -228,9 +229,10 @@ QVariant RegularState::getProperty(const QString& key) const {
     return State::getProperty(key);
 }
 
-bool RegularState::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
-                                       const int depth,
-                                       const bool postOrderTraversal) {
+bool RegularState::forEachChildElement(
+    std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+    const int depth,
+    const bool postOrderTraversal) {
     bool processedAllChildren = true;
 
     for (QSharedPointer<StateMachineEntity>& child : mChildren) {
@@ -241,7 +243,8 @@ bool RegularState::forEachChildElement(std::function<bool(QSharedPointer<StateMa
         }
 
         if (depth == DEPTH_INFINITE || depth > 1) {
-            processedAllChildren = child->forEachChildElement(callback, (depth != DEPTH_INFINITE ? depth - 1 : depth), postOrderTraversal);
+            processedAllChildren =
+                child->forEachChildElement(callback, (depth != DEPTH_INFINITE ? depth - 1 : depth), postOrderTraversal);
 
             if (false == processedAllChildren) {
                 break;

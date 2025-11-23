@@ -22,7 +22,7 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     QFont font = painter->font();
 
     if (cachedFontSize == 0) {
-        const qreal targetHeight = r * 2 * 0.7; // 70% of diameter
+        const qreal targetHeight = r * 2 * 0.7;  // 70% of diameter
         int fontSize = 1;
         QFontMetrics fm(font);
 
@@ -39,7 +39,7 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     painter->setFont(font);
 
     // Draw the history type indicator
-    const QString historyType = "H"; // Default to shallow history
+    const QString historyType = "H";  // Default to shallow history
     // If it's deep history, we would set historyType to "H*"
 
     // Draw the white filled circle

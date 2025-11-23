@@ -1,20 +1,20 @@
 #include "HsmTransition.hpp"
 
 #include <QDebug>
+#include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
-#include <QGraphicsScene>
 #include <QPointF>
 #include <QPolygonF>
 #include <QSignalBlocker>
 #include <cmath>
 
+#include "HsmStateElement.hpp"
 #include "model/Transition.hpp"
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"
 #include "view/common/ViewUtils.hpp"
-#include "HsmStateElement.hpp"
 
 /*
 TODO: sometimes self-transitions get positioned incorrectly (shifted to the left or right) when moving them around
@@ -611,7 +611,6 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
             }
 
             targetElement->hightlight(false);
-
 
             mConnecting = false;
             mLastConnectionTarget.clear();

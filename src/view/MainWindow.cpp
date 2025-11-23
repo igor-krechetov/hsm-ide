@@ -1,36 +1,19 @@
 #include "MainWindow.hpp"
 
-#include <QSignalBlocker>
 #include <QFileDialog>
+#include <QSignalBlocker>
 
 #include "./ui/ui_main.h"
-
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
-
-#include "model/StateMachineModel.hpp"
-#include "view/elements/HsmElementsFactory.hpp"
-#include "view/elements/HsmStateElement.hpp"
-#include "view/elements/private/ElementGripItem.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
-#include "widgets/HsmEntityPropertyDelegate.hpp"
-
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
-
-    ui->entityProperties->setItemDelegateForColumn(1, new view::HsmEntityPropertyDelegate(this));
-
-    // initialize list of HSM elements
-    auto items = view::HsmElementsFactory::createElementsList();
-
-    for (QListWidgetItem* newItem : items) {
-        ui->listHsmElements->addItem(newItem);
-    }
 
     // Connect sidebar actions to generic slot using toggled(bool)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
@@ -41,6 +24,7 @@ MainWindow::MainWindow(MainEditorController* parent)
     // Delete dummy tab
     ui->projectTabs->removeTab(0);
 
+    // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
 }
 
@@ -62,7 +46,8 @@ void MainWindow::handleNewProject() {
 
 void MainWindow::handleOpen() {
     QString initialDir = mCurrentFilePath.isEmpty() ? QString("~") : QFileInfo(mCurrentFilePath).absolutePath();
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open SCXML File"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
+    QString fileName =
+        QFileDialog::getOpenFileName(this, tr("Open SCXML File"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
 
     if (!fileName.isEmpty()) {
         mController->openProject(fileName);
@@ -81,7 +66,8 @@ void MainWindow::handleSave() {
 
 void MainWindow::handleSaveAs() {
     QString initialDir = mCurrentFilePath.isEmpty() ? QString("~") : QFileInfo(mCurrentFilePath).absolutePath();
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save SCXML File As"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
+    QString fileName =
+        QFileDialog::getSaveFileName(this, tr("Save SCXML File As"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
 
     if (!fileName.isEmpty() && mActiveProject) {
         if (!fileName.endsWith(".scxml", Qt::CaseInsensitive)) {
@@ -165,7 +151,8 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
         if (projectRaw) {
             const int projectIndex = ui->projectTabs->indexOf(projectRaw->view());
             if (projectIndex != -1) {
-                ui->projectTabs->setTabText(projectIndex, (projectRaw->isModified() ? "*" + projectRaw->name() : projectRaw->name()));
+                ui->projectTabs->setTabText(projectIndex,
+                                            (projectRaw->isModified() ? "*" + projectRaw->name() : projectRaw->name()));
             } else {
                 qCritical() << "MainWindow::projectOpened: project view not found in tabs";
             }
@@ -242,6 +229,7 @@ void MainWindow::selectModelEntityById(model::EntityID_t id) {
     }
 }
 
+// TODO: would be good to move to custom widget
 void MainWindow::onSidebarActionTriggered(bool checked) {
     QAction* senderAction = qobject_cast<QAction*>(sender());
 
@@ -258,16 +246,49 @@ void MainWindow::onSidebarActionTriggered(bool checked) {
         } else {
             // Otherwise, show dockSidebarTabs, set the correct page and uncheck other actions
             for (QAction* action : sidebarActions) {
+                // block signals so that we don't tigger onSidebarActionTriggered
+                QSignalBlocker block(action);
+
                 action->setChecked(action == senderAction);
             }
             ui->dockSidebarTabs->show();
 
+            // to store previous size set by user for each page
+            static QMap<int, int> sLastPageSize;
+            QWidget* selectedPage = nullptr;
+
             if (senderAction == ui->actionShowTabHsmElements) {
-                ui->stackedWidget->setCurrentWidget(ui->pageElements);
+                selectedPage = ui->pageElements;
             } else if (senderAction == ui->actionShowTabWorkspace) {
-                ui->stackedWidget->setCurrentWidget(ui->pageWorkspace);
+                selectedPage = ui->pageWorkspace;
             } else if (senderAction == ui->actionShowTabDebug) {
-                ui->stackedWidget->setCurrentWidget(ui->pageDebug);
+                selectedPage = ui->pageDebug;
+            }
+
+            if (nullptr != selectedPage) {
+                // store size of previous page
+                sLastPageSize.insert(ui->stackedWidget->currentIndex(), ui->dockSidebarTabs->width());
+
+                // change page
+                ui->stackedWidget->setCurrentWidget(selectedPage);
+
+                if (senderAction == ui->actionShowTabHsmElements) {
+                    // Elements page should have a fixed, non-resizable size
+                    ui->dockSidebarTabs->setMaximumWidth(ui->pageElements->minimumWidth());
+                } else {
+                    // restore size for the new page
+                    const int lastSize = sLastPageSize.value(ui->stackedWidget->currentIndex(), 0);
+
+                    ui->dockSidebarTabs->setMinimumWidth(0);
+                    ui->dockSidebarTabs->setMaximumWidth(1024);
+
+                    if (lastSize > 0) {
+                        QList<QDockWidget*> docks = {ui->dockSidebarTabs};
+                        QList<int> sizes = {lastSize};
+
+                        resizeDocks(docks, sizes, Qt::Horizontal);
+                    }
+                }
             }
         }
     }

@@ -290,7 +290,6 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
         (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
          childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
          childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left())) {
-
         if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
             // Prevent resizing below min size
             if (newOuterRect.width() < mMinWidth || newOuterRect.height() < mMinHeight) {
@@ -445,8 +444,8 @@ void HsmResizableElement::setMinHeight(qreal minHeight) {
         mMinHeight = minHeight;
 
         if (mOuterRect.height() < mMinHeight) {
-        newRect.setHeight(mMinHeight);
-    }
+            newRect.setHeight(mMinHeight);
+        }
 
         if (newRect != mOuterRect) {
             resizeElement(newRect);

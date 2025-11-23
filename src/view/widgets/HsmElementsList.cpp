@@ -5,8 +5,31 @@
 #include <QDrag>
 #include <QMouseEvent>
 
+#include "private/HsmElementsListDelegate.hpp"
+#include "view/elements/HsmElementsFactory.hpp"
+
 HsmElementsList::HsmElementsList(QWidget* parent)
-    : QListWidget(parent) {}
+    : QListWidget(parent) {
+    setItemDelegate(new HsmElementsListDelegate(this));
+
+    setViewMode(QListView::IconMode);
+    setUniformItemSizes(true);  // to keep items the same size regardless of icon or text
+    setWordWrap(true);
+    setWrapping(false);  // to keep items in a single column
+    setTextElideMode(Qt::ElideNone);
+    setResizeMode(QListView::Adjust);
+    setMouseTracking(true);
+
+    setMinimumWidth(112);
+    setMaximumWidth(112);
+
+    // initialize list of HSM elements
+    auto items = view::HsmElementsFactory::createElementsList();
+
+    for (QListWidgetItem* newItem : items) {
+        addItem(newItem);
+    }
+}
 
 QStringList HsmElementsList::mimeTypes() const {
     // types = ["hsm/element", "hsm/multiple"]

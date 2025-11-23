@@ -2,12 +2,12 @@
 #ifndef STATEMACHINESERIALIZER_HPP
 #define STATEMACHINESERIALIZER_HPP
 
+#include <QMap>
 #include <QSharedPointer>
 #include <QString>
-#include <QMap>
 
-#include "private/IModelVisitor.hpp"
 #include "ModelTypes.hpp"
+#include "private/IModelVisitor.hpp"
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
@@ -59,6 +59,7 @@ protected:
     void visitFinalState(const FinalState* finalState) override;
     void visitHistoryState(const HistoryState* historyState) override;
     void visitInitialState(const InitialState* initialState) override;
+    void visitIncludeEntity(const IncludeEntity* include) override;
     void visitTransition(const Transition* transition) override;
 
 protected:
@@ -81,6 +82,7 @@ private:
     QSharedPointer<FinalState> parseFinalState();
     QSharedPointer<HistoryState> parseHistoryState();
     QSharedPointer<InitialState> parseInitialState();
+    QSharedPointer<IncludeEntity> parseIncludeEntity();
     QSharedPointer<Transition> parseTransition();
 
     QString parseOnEntry();

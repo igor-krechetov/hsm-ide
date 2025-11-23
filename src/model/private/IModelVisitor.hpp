@@ -9,6 +9,7 @@ class ExitPoint;
 class FinalState;
 class HistoryState;
 class InitialState;
+class IncludeEntity;
 class Transition;
 
 class IModelVisitor {
@@ -21,6 +22,7 @@ public:
     virtual void visitFinalState(const FinalState* finalState) = 0;
     virtual void visitHistoryState(const HistoryState* historyState) = 0;
     virtual void visitInitialState(const InitialState* historyState) = 0;
+    virtual void visitIncludeEntity(const IncludeEntity* include) = 0;
     virtual void visitTransition(const Transition* transition) = 0;
 };
 

@@ -14,6 +14,7 @@ set(MODEL_SOURCES
     model/ExitPoint.cpp
     model/FinalState.cpp
     model/HistoryState.cpp
+    model/IncludeEntity.cpp
     model/InitialState.cpp
     model/ModelRootState.cpp
     model/RegularState.cpp
@@ -40,15 +41,18 @@ set(PROJECT_SOURCES
         view/widgets/HsmElementsList.cpp
         view/widgets/HsmGraphicsView.cpp
         view/widgets/HsmTreeView.cpp
+        view/widgets/HsmPropertiesTableView.cpp
         view/widgets/QClickableSlider.cpp
         view/widgets/QImageViewArea.cpp
-        view/widgets/HsmEntityPropertyDelegate.cpp
+        view/widgets/private/HsmEntityPropertyDelegate.cpp
+        view/widgets/private/HsmElementsListDelegate.cpp
 
         view/elements/HsmElementsFactory.cpp
         view/elements/HsmEntryPointElement.cpp
         view/elements/HsmExitPointElement.cpp
         view/elements/HsmFinalElement.cpp
         view/elements/HsmHistoryElement.cpp
+        view/elements/HsmIncludeElement.cpp
         view/elements/HsmInitialElement.cpp
         view/elements/HsmStateElement.cpp
         view/elements/HsmTransition.cpp
@@ -60,6 +64,7 @@ set(PROJECT_SOURCES
         view/elements/private/HsmElement.cpp
         view/elements/private/HsmResizableElement.cpp
         view/elements/private/HsmStateTextItem.cpp
+        view/elements/private/HsmStateBodySection.cpp
 
         view/elements/private/styles/HsmRectangularElement.cpp
         view/elements/private/styles/HsmRoundElement.cpp

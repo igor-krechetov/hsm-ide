@@ -44,11 +44,12 @@ public:
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
 
-    bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
-                             const int depth = DEPTH_INFINITE,
-                             const bool postOrderTraversal = true) override;
+    bool forEachChildElement(
+        std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+        const int depth = DEPTH_INFINITE,
+        const bool postOrderTraversal = true) override;
 
-private:
+protected:
     QString mOnStateChangedCallback;
     QString mOnEnteringCallback;
     QString mOnExitingCallback;

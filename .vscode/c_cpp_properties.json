@@ -7,7 +7,8 @@
                 "~/Qt/6.3.0/gcc_64/include",
                 "~/Qt/6.3.0/gcc_64/include/QtCore",
                 "~/Qt/6.3.0/gcc_64/include/QtWidgets",
-                "~/Qt/6.3.0/gcc_64/include/QtGui"
+                "~/Qt/6.3.0/gcc_64/include/QtGui",
+                "${workspaceFolder}/include"
             ],
             "defines": [
                 "QT_CORE_LIB",

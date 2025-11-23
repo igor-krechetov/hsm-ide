@@ -39,9 +39,10 @@ public:
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
 
 protected:
-    bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
-                             const int depth = DEPTH_INFINITE,
-                             const bool postOrderTraversal = true) override;
+    bool forEachChildElement(
+        std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+        const int depth = DEPTH_INFINITE,
+        const bool postOrderTraversal = true) override;
 
 public:
     static constexpr char cKeyHistoryType[] = "historyType";

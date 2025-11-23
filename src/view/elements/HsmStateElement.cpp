@@ -8,9 +8,10 @@
 #include <QSignalBlocker>
 #include <QTextDocument>
 
-#include "model/RegularState.hpp"
-#include "private/HsmStateTextItem.hpp"
 #include "HsmTransition.hpp"
+#include "model/RegularState.hpp"
+#include "private/HsmStateBodySection.hpp"
+#include "private/HsmStateTextItem.hpp"
 
 namespace view {
 
@@ -23,12 +24,13 @@ HsmStateElement::HsmStateElement(const QSizeF& size)
 void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
     HsmRectangularElement::init(modelEntity);
 
+    // NOTE: all objects will be deleted using parent-child mechanism, so need for explicit cleanup or smart pointers
     // Create header section
     mStateNameLabel = new HsmStateTextItem(this);  // Make editable label a direct child
     // Other sections
     mSelfTransitionsSection = new QGraphicsRectItem(this);
     mPropertiesSection = new QGraphicsTextItem("Properties", this);
-    mBodySection = new QGraphicsRectItem(this);
+    mBodySection = new HsmStateBodySection(this);
     // Separator lines
     mHeaderSeparator = new QGraphicsLineItem(this);
     mSelfTransitionsSeparator = new QGraphicsLineItem(this);
@@ -36,6 +38,7 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
 
     connect(mStateNameLabel->document(), &QTextDocument::contentsChanged, this, &HsmStateElement::onStateNameChanged);
     connect(mStateNameLabel, &HsmStateTextItem::editingFinished, this, &HsmStateElement::onStateNameEditFinished);
+    connect(mBodySection, &HsmStateBodySection::substatesChanged, this, &HsmStateElement::onSubstatesChanged);
 
     mSelfTransitionsSection->setPen(Qt::NoPen);
     mBodySection->setPen(Qt::NoPen);
@@ -75,6 +78,10 @@ QList<QGraphicsItem*> HsmStateElement::hsmChildItems() const {
     return (nullptr != mBodySection ? mBodySection->childItems() : QList<QGraphicsItem*>());
 }
 
+bool HsmStateElement::hasSubstates() const {
+    return (nullptr != mBodySection ? mBodySection->hasSubstates() : false);
+}
+
 // bool HsmStateElement::isDirectChild(HsmElement* item) const {
 //     return (nullptr != mBodySection ? mBodySection->childItems().contains(item) : false)
 // }
@@ -103,9 +110,7 @@ void HsmStateElement::addChildItem(HsmElement* child) {
             if (transition) {
                 if (transition->isSelfTransition()) {
                     qDebug() << "add SELF TRANSITION";
-                    connect(child, &QObject::destroyed, this, [this, child]() {
-                        layoutSections();
-                    });
+                    connect(child, &QObject::destroyed, this, [this, child]() { layoutSections(); });
 
                     child->setParentItem(mSelfTransitionsSection);
                     layoutSections();
@@ -114,11 +119,14 @@ void HsmStateElement::addChildItem(HsmElement* child) {
                     child->setParentItem(mBodySection);
                 }
             } else {
-                qCritical() << Q_FUNC_INFO << "mismatch between HsmElement type is TRANSIOTION, but it's not an instance of HsmTransition";
+                qCritical() << Q_FUNC_INFO
+                            << "mismatch between HsmElement type is TRANSIOTION, but it's not an instance of HsmTransition";
             }
         } else {
             child->setParentItem(mBodySection);
         }
+    } else {
+        qFatal("calling addChildItem on non-initialised HsmStateElement");
     }
 }
 
@@ -173,6 +181,10 @@ void HsmStateElement::normalizeElementRect() {
     layoutSections();
 }
 
+QPointF HsmStateElement::mapFromSceneToBody(const QPointF& point) const {
+    return mBodySection->mapFromScene(point);
+}
+
 void HsmStateElement::onModelDataChanged() {
     qDebug() << "---- HsmStateElement::onModelDataChanged";
     if (isInitialized()) {
@@ -203,6 +215,15 @@ void HsmStateElement::onModelDataChanged() {
     }
 }
 
+void HsmStateElement::onSubstatesChanged(const bool substates) {
+    // TODO: move colors to a new style object
+    if (substates == false) {
+        mBackgroundBrush.setColor(QColor("#E8F1FA"));
+    } else {
+        mBackgroundBrush.setColor(QColor("#DFF4E5"));
+    }
+}
+
 void HsmStateElement::layoutSections() {
     if (isInitialized()) {
         const QRectF rect = mOuterRect;
@@ -222,7 +243,6 @@ void HsmStateElement::layoutSections() {
         const int transitionsCount = getSelfTransitionsCount();
         qreal selfTransHeight = (transitionsCount > 0 ? (transitionsCount + 1) * HsmTransition::SELFTRANSITION_Y_OFFSET : 0.0);
 
-        qDebug() << "------------- mSelfTransitionsSection->setRect";
         mSelfTransitionsSection->setRect(rect.left(), y, w, selfTransHeight);
         y += selfTransHeight;
 
@@ -246,7 +266,6 @@ void HsmStateElement::layoutSections() {
         y += SECTION_SPACING;
 
         // Body section
-        qDebug() << "------------- mBodySection->setRect";
         mBodySection->setRect(rect.left(), y, w, rect.bottom() - y);
 
         // Calculate minimum height based on content
@@ -259,7 +278,7 @@ void HsmStateElement::layoutSections() {
 
 void HsmStateElement::layoutSelfTransitions() {
     if (mSelfTransitionsSection) {
-        for (auto child: mSelfTransitionsSection->childItems()) {
+        for (auto child : mSelfTransitionsSection->childItems()) {
             HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
 
             if (transition) {

@@ -1,14 +1,14 @@
 #ifndef STATEMACHINEENTITY_HPP
 #define STATEMACHINEENTITY_HPP
 
+#include <QMap>
 #include <QObject>
+#include <QPointF>
 #include <QSharedPointer>
+#include <QSizeF>
+#include <QString>
 #include <QStringList>
 #include <QVariant>
-#include <QMap>
-#include <QString>
-#include <QPointF>
-#include <QSizeF>
 
 #include "model/ModelTypes.hpp"
 
@@ -25,13 +25,7 @@ public:
     constexpr static int DEPTH_INFINITE = -1;
 
 public:
-    enum class MetadataKey {
-        POSITION_X,
-        POSITION_Y,
-        WIDTH,
-        HEIGHT,
-        GEOMETRY
-    };
+    enum class MetadataKey { POSITION_X, POSITION_Y, WIDTH, HEIGHT, GEOMETRY };
 
 public:
     enum class Type { Invalid, State, Transition };  // namespace model
@@ -69,9 +63,10 @@ public:
 
     // postOrderTraversal - if true, traverse children before calling the callback on the parent
     //                      if false, call the callback on the parent before traversing children
-    virtual bool forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback,
-                                     const int depth = DEPTH_INFINITE,
-                                     const bool postOrderTraversal = true);
+    virtual bool forEachChildElement(
+        std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+        const int depth = DEPTH_INFINITE,
+        const bool postOrderTraversal = true);
 
 protected:
     void registerNewChild(const QSharedPointer<StateMachineEntity>& child);

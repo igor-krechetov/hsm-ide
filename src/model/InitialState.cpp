@@ -66,7 +66,10 @@ QSharedPointer<StateMachineEntity> InitialState::findChild(const EntityID_t id, 
                 : nullptr);
 }
 
-bool InitialState::forEachChildElement(std::function<bool(QSharedPointer<StateMachineEntity>,QSharedPointer<StateMachineEntity>)> callback, const int depth, const bool postOrderTraversal) {
+bool InitialState::forEachChildElement(
+    std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
+    const int depth,
+    const bool postOrderTraversal) {
     Q_UNUSED(depth);
     bool processedAllChildren = true;
 

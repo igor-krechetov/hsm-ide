@@ -69,11 +69,17 @@ bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t
                 (mModelRoot->id() == newParentId ? mModelRoot : mModelRoot->findRegularState(newParentId));
 
             if (element && newParent) {
-                newParent->addChild(element);
+                // block model and parent from sending childAdded signals
+                QSignalBlocker blockModel(this);
+                QSignalBlocker blockParent(currentParent.get());
 
-                QSignalBlocker block(currentParent.get());
+                newParent->addChild(element);
                 currentParent->deleteDirectChild(element);
                 moved = true;
+            }
+
+            if (true == moved) {
+                emit modelChanged();
             }
         }
     }
@@ -81,7 +87,9 @@ bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t
     return moved;
 }
 
-bool StateMachineModel::reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId) {
+bool StateMachineModel::reconnectElements(const EntityID_t transitionId,
+                                          const EntityID_t newFromElementId,
+                                          const EntityID_t newToElementId) {
     bool res = false;
 
     if (mModelRoot) {
@@ -122,56 +130,58 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId, const E
 void StateMachineModel::dump() {
     int indent = 0;
 
-    mModelRoot->forEachChildElement([&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
-        if (entity->type() == StateMachineEntity::Type::State) {
-            QString stateType;
-            QSharedPointer<State> state = entity.dynamicCast<State>();
+    mModelRoot->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            if (entity->type() == StateMachineEntity::Type::State) {
+                QString stateType;
+                QSharedPointer<State> state = entity.dynamicCast<State>();
 
-            switch (state->stateType()) {
-                case StateType::INITIAL:
-                    stateType = "INITIAL";
-                    break;
-                case StateType::REGULAR:
-                    stateType = "REGULAR";
-                    break;
-                case StateType::ENTRYPOINT:
-                    stateType = "ENTRYPOINT";
-                    break;
-                case StateType::EXITPOINT:
-                    stateType = "EXITPOINT";
-                    break;
-                case StateType::FINAL:
-                    stateType = "FINAL";
-                    break;
-                case StateType::HISTORY:
-                    stateType = "HISTORY";
-                    break;
-                default:
-                    stateType = "UNKNOWN";
-                    break;
+                switch (state->stateType()) {
+                    case StateType::INITIAL:
+                        stateType = "INITIAL";
+                        break;
+                    case StateType::REGULAR:
+                        stateType = "REGULAR";
+                        break;
+                    case StateType::ENTRYPOINT:
+                        stateType = "ENTRYPOINT";
+                        break;
+                    case StateType::EXITPOINT:
+                        stateType = "EXITPOINT";
+                        break;
+                    case StateType::FINAL:
+                        stateType = "FINAL";
+                        break;
+                    case StateType::HISTORY:
+                        stateType = "HISTORY";
+                        break;
+                    default:
+                        stateType = "UNKNOWN";
+                        break;
+                }
+
+                qDebug() << "[" << stateType << "] id:" << entity->id() << "name:" << entity->getProperty("name").toString();
+            } else if (entity->type() == StateMachineEntity::Type::Transition) {
+                QSharedPointer<Transition> transition = entity.dynamicCast<Transition>();
+                auto sourceState = transition->source();
+                auto targetState = transition->target();
+                QString sourceName = "<null>";
+                QString targetName = "<null>";
+
+                if (sourceState) {
+                    sourceName = sourceState->name();
+                }
+                if (targetState) {
+                    targetName = targetState->name();
+                }
+
+                qDebug() << "[TRANSITION] id:" << entity->id() << "src:" << sourceName << " target:" << targetName
+                         << "event:" << transition->event();
             }
-
-
-            qDebug() << "[" << stateType << "] id:" << entity->id() << "name:" << entity->getProperty("name").toString();
-        } else if (entity->type() == StateMachineEntity::Type::Transition) {
-            QSharedPointer<Transition> transition = entity.dynamicCast<Transition>();
-            auto sourceState = transition->source();
-            auto targetState = transition->target();
-            QString sourceName = "<null>";
-            QString targetName = "<null>";
-
-            if (sourceState) {
-                sourceName = sourceState->name();
-            }
-            if (targetState) {
-                targetName = targetState->name();
-            }
-
-            qDebug() << "[TRANSITION] id:" << entity->id() << "src:" << sourceName << " target:" << targetName
-                     << "event:" << transition->event();
-        }
-        return true;
-    }, StateMachineEntity::DEPTH_INFINITE, false);
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
 }
 
 };  // namespace model

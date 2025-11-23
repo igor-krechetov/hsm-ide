@@ -1,13 +1,13 @@
 #ifndef HSMELEMENT_HPP
 #define HSMELEMENT_HPP
 
+#include <QGraphicsObject>
 #include <QPen>
 #include <QPoint>
 #include <QPointer>
-#include <QString>
 #include <QSharedPointer>
+#include <QString>
 #include <QWeakPointer>
-#include <QGraphicsObject>
 #include <functional>
 
 #include "model/ModelTypes.hpp"
@@ -31,7 +31,8 @@ enum class HsmElementType {
     EXIT_POINT,
     STATE,
     TRANSITION,
-    HISTORY
+    HISTORY,
+    INCLUDE
 };
 
 constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
@@ -48,7 +49,9 @@ public:
 
 public:
     explicit HsmElement(const HsmElementType elementType, const QSizeF& size);
-    explicit HsmElement(const HsmElementType elementType, const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
+    explicit HsmElement(const HsmElementType elementType,
+                        const QSharedPointer<model::StateMachineEntity>& modelElement,
+                        const QSizeF& size);
     virtual ~HsmElement();
 
     virtual void init(const QSharedPointer<model::StateMachineEntity>& modelEntity);
@@ -66,7 +69,7 @@ public:
     HsmElementType elementType() const;
     QRectF elementRect() const;
 
-    virtual QPointF mapFromSceneToBody(const QPointF &point) const;
+    virtual QPointF mapFromSceneToBody(const QPointF& point) const;
 
     template <typename T>
     QSharedPointer<T> modelElement();
@@ -80,6 +83,7 @@ public:
     virtual QList<QGraphicsItem*> hsmChildItems() const;
     bool isDirectChild(HsmElement* item) const;
     QRectF childrenRect() const;
+    virtual bool hasSubstates() const;
 
     // By default just calls setParentItem for the child, but can be overriden for custom logic
     // Only use setParentItem(nullptr) to disconnect child elements
@@ -94,7 +98,7 @@ public:
     // TODO: move to an interface
     virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
 
-// Slot for model data changes
+    // Slot for model data changes
 public slots:
     virtual void onModelDataChanged();
 
@@ -106,6 +110,7 @@ signals:
     void geometryChanged(HsmElement* element);
 
 protected:
+    void setElementType(const HsmElementType newType);
     HsmGraphicsView* hsmView() const;
     void forEachHsmChildElement(std::function<void(HsmElement*)> callback, const int depth = DEPTH_INFINITE);
 

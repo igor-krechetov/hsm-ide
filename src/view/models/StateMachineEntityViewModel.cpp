@@ -1,11 +1,12 @@
 #include "StateMachineEntityViewModel.hpp"
-#include "model/ModelRootState.hpp"
-#include "model/Transition.hpp"
-#include "model/HistoryState.hpp"
 
+#include <QDebug>
 #include <QStringList>
 #include <QVariant>
-#include <QDebug>
+
+#include "model/HistoryState.hpp"
+#include "model/ModelRootState.hpp"
+#include "model/Transition.hpp"
 
 namespace view {
 
@@ -100,11 +101,12 @@ void StateMachineEntityViewModel::selectEntity(const QSharedPointer<model::State
 
     if (mSelectedEntity) {
         // Connect to entity changes
-        mEntitySignalConnection = QObject::connect(mSelectedEntity.get(), &model::StateMachineEntity::modelDataChanged, this,
-            [this](QWeakPointer<model::StateMachineEntity> changedEntity) {
-                emit dataChanged(index(0,0), index(rowCount()-1, columnCount()-1));
-            }
-        );
+        mEntitySignalConnection = QObject::connect(mSelectedEntity.get(),
+                                                   &model::StateMachineEntity::modelDataChanged,
+                                                   this,
+                                                   [this](QWeakPointer<model::StateMachineEntity> changedEntity) {
+                                                       emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+                                                   });
     }
 
     endResetModel();
@@ -119,6 +121,7 @@ Qt::ItemFlags StateMachineEntityViewModel::flags(const QModelIndex& index) const
         return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
     }
 
+    // column 0
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 

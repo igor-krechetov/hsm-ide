@@ -31,6 +31,7 @@
 **** REQ-101g: Final states <<done>>
 **** REQ-101h: Initial states <<done>>
 **** REQ-101i: model infrastructure <<done>>
+**** REQ-101l: include nodes <<done>>
 *** REQ-102: Transition management
 **** REQ-102a: Visual transition creation <<done>>
 ***** REQ-102a1: Arrows for connectable elements <<done>>
@@ -75,7 +76,7 @@
 **** REQ-105b: Timeout transitions
 *** REQ-106: Modular Design
 **** REQ-106a: Dependency Visualization
-***** REQ-106a1: Display included files in current state machine
+***** REQ-106a1: Display included files in current state machine <<done>>
 ***** REQ-106a2: Visualize external state references
 ***** REQ-106a3: Render dependency graphs for interconnected files
 **** REQ-106b: Change Management
@@ -83,7 +84,7 @@
 ***** REQ-106b2: Notify when referenced content changes
 ***** REQ-106b3: Provide update/refresh mechanisms
 **** REQ-106c: Navigation
-***** REQ-106c1: Click-to-open for included files
+***** REQ-106c1: Click-to-open for included files <<todo>>
 ***** REQ-106c2: Breadcrumb trails showing inclusion hierarchy
 ***** REQ-106c3: Cross-file reference finder
 **** REQ-106d: Validation  <<prio_low>>
@@ -101,9 +102,10 @@
 **** REQ-107g: Final states <<done>>
 **** REQ-107h: Initial states <<done>>
 **** REQ-107i: model view widget <<done>>
-**** REQ-107i: generic element <<done>>
-***** REQ-107i1: common element functionality <<done>>
-***** REQ-107i2: redraw on model data change <<done>>
+**** REQ-107l: generic element <<done>>
+***** REQ-107l1: common element functionality <<done>>
+***** REQ-107l2: redraw on model data change <<done>>
+**** REQ-107m: include nodes <<done>>
 
 *** REQ-108: Callbacks management
 **** REQ-108a: Callbacks auto-suggestion
@@ -161,12 +163,12 @@
 **** REQ-301a: Import SCXML 1.0 files
 ***** REQ-301a1: Model structure import
 ****** REQ-301a1.1: Basic structure import <<done>>
-****** REQ-301a1.2: Support for parsing import element
+****** REQ-301a1.2: Support for parsing import element <<done>>
 ***** REQ-301a2: Model layout import <<done>>
 **** REQ-301b: Export SCXML 1.0 files
 ***** REQ-301b1: Model structure export <<done>>
 ****** REQ-301b1.1: Basic structure import <<done>>
-****** REQ-301b1.2: Support for exporting import element
+****** REQ-301b1.2: Support for exporting import element <<done>>
 ***** REQ-301b2: Model layout export <<done>>
 *** REQ-302: Image export
 **** REQ-302a: PNG export

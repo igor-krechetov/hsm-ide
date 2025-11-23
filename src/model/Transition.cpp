@@ -116,7 +116,7 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
     } else {
         handled = StateMachineEntity::setProperty(key, value);
     }
-    
+
     return handled;
 }
 

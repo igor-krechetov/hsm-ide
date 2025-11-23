@@ -22,11 +22,11 @@ HsmElement::HsmElement(const HsmElementType elementType,
     : QGraphicsObject()
     , mType(elementType)
     , mModelElement(modelElement.toWeakRef())
-    , mPenNormalMode(Qt::black, 2.0, Qt::SolidLine)
-    , mPenHighlightMode(QColor("#7AE7C7"), 3.0, Qt::DotLine)
-    , mPenSelectedBorder(QColor("lightblue"), 3.0, Qt::DotLine)
-    , mBackgroundBrush(Qt::white)
-    , mMainBrush(Qt::darkGray) {
+    , mPenNormalMode(QColor("#5A80A8"), 2.0, Qt::SolidLine)
+    , mPenHighlightMode(QColor("#2E75C8"), 3.0, Qt::DotLine)
+    , mPenSelectedBorder(QColor("#1E62D0"), 3.0, Qt::DotLine)
+    , mBackgroundBrush(QColor("#E8F1FA"))
+    , mMainBrush(QColor("#1A1A1A")) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
@@ -180,6 +180,11 @@ QRectF HsmElement::childrenRect() const {
     return rect;
 }
 
+bool HsmElement::hasSubstates() const {
+    // so far only HsmStateElement can have substates
+    return false;
+}
+
 void HsmElement::addChildItem(HsmElement* child) {
     if (nullptr != child) {
         child->setParentItem(this);
@@ -234,6 +239,10 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
     }
 }
 
+void HsmElement::setElementType(const HsmElementType newType) {
+    mType = newType;
+}
+
 HsmGraphicsView* HsmElement::hsmView() const {
     HsmGraphicsView* view = nullptr;
 
@@ -251,7 +260,7 @@ void HsmElement::forEachHsmChildElement(std::function<void(HsmElement*)> callbac
         if (userType.isValid()) {
             if (depth == DEPTH_INFINITE || depth > 1) {
                 qgraphicsitem_cast<HsmElement*>(child)->forEachHsmChildElement(callback,
-                                                                            (depth != DEPTH_INFINITE ? depth - 1 : depth));
+                                                                               (depth != DEPTH_INFINITE ? depth - 1 : depth));
             }
             callback(qgraphicsitem_cast<HsmElement*>(child));
         }
@@ -309,7 +318,7 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
         notifyGeometryChanged();
 
         forEachHsmChildElement([&](HsmElement* child) {
-            if (child) {
+            if (nullptr != child) {
                 child->notifyGeometryChanged();
             }
         });

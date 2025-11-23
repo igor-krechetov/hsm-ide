@@ -4,8 +4,8 @@
 #include <QSize>
 #include <QString>
 // TODO: use Qt types
+#include <QMap>
 #include <list>
-#include <map>
 #include <tuple>
 
 #include "model/ModelTypes.hpp"
@@ -33,13 +33,18 @@ private:
     static HsmElement* createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
     static HsmElement* createElementStart(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
     static HsmElement* createElementFinal(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
-    static HsmElement* createElementEntryPoint(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
-    static HsmElement* createElementExitPoint(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
+    static HsmElement* createElementEntryPoint(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                               const QSizeF& size);
+    static HsmElement* createElementExitPoint(const QSharedPointer<model::StateMachineEntity>& modelElement,
+                                              const QSizeF& size);
     static HsmElement* createElementHistory(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
+    static HsmElement* createElementInclude(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
 
 private:
-    static std::map<QString,
-                    std::tuple<QString, QString, std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&, const QSizeF&)>>>
+    static QMap<QString,
+                std::tuple<QString,
+                           QString,
+                           std::function<HsmElement*(const QSharedPointer<model::StateMachineEntity>&, const QSizeF&)>>>
         mItemsCatalog;
 };
 

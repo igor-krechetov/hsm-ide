@@ -1,0 +1,42 @@
+#include "HsmStateBodySection.hpp"
+
+#include "HsmElement.hpp"
+
+namespace view {
+
+HsmStateBodySection::HsmStateBodySection(QGraphicsItem* parent)
+    : QObject()
+    , QGraphicsRectItem(parent) {}
+
+bool HsmStateBodySection::hasSubstates() const {
+    return mHasSubstates;
+}
+
+QVariant HsmStateBodySection::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (QGraphicsItem::ItemChildAddedChange == change || QGraphicsItem::ItemChildRemovedChange == change) {
+        const bool oldState = mHasSubstates;
+
+        mHasSubstates = false;
+
+        for (QGraphicsItem* child : childItems()) {
+            QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
+
+            if (userType.isValid()) {
+                HsmElement* element = qgraphicsitem_cast<HsmElement*>(child);
+
+                if ((nullptr != element) && (element->elementType() != HsmElementType::TRANSITION)) {
+                    mHasSubstates = true;
+                    break;
+                }
+            }
+        }
+
+        if (oldState != mHasSubstates) {
+            emit substatesChanged(mHasSubstates);
+        }
+    }
+
+    return QGraphicsRectItem::itemChange(change, value);
+}
+
+}  // namespace view

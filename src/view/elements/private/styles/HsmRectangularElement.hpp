@@ -1,8 +1,8 @@
 #ifndef HSMRECTANGULARELEMENT_HPP
 #define HSMRECTANGULARELEMENT_HPP
 
-#include <QPen>
 #include <QBrush>
+#include <QPen>
 
 #include "view/elements/private/HsmResizableElement.hpp"
 

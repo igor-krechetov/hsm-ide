@@ -1,11 +1,11 @@
 #ifndef MAINEDITORCONTROLLER_HPP
 #define MAINEDITORCONTROLLER_HPP
 
+#include <QMap>
 #include <QObject>
 #include <QSharedPointer>
-#include <QVector>
-#include <QMap>
 #include <QUuid>
+#include <QVector>
 
 #include "view/MainWindow.hpp"
 

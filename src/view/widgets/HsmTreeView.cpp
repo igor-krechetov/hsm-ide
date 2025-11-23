@@ -1,10 +1,10 @@
 #include "HsmTreeView.hpp"
 
 #include <QAbstractItemModel>
+#include <QContextMenuEvent>
 #include <QDebug>
 #include <QKeyEvent>
 #include <QMenu>
-#include <QContextMenuEvent>
 
 HsmTreeView::HsmTreeView(QWidget* parent)
     : QTreeView(parent) {}

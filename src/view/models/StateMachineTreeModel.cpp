@@ -1,11 +1,11 @@
 #include "StateMachineTreeModel.hpp"
 
-#include <QVariant>
 #include <QIcon>
+#include <QVariant>
 
 #include "model/EntryPoint.hpp"
-#include "model/InitialState.hpp"
 #include "model/HistoryState.hpp"
+#include "model/InitialState.hpp"
 #include "model/ModelRootState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/Transition.hpp"
@@ -107,7 +107,7 @@ QModelIndex StateMachineTreeModel::parent(const QModelIndex& index) const {
 int StateMachineTreeModel::rowCount(const QModelIndex& parent) const {
     TreeNode* node = nodeFromIndex(parent);
 
-    return (node ? node->children.size() : 1);// 1 for root element
+    return (node ? node->children.size() : 1);  // 1 for root element
 }
 
 int StateMachineTreeModel::columnCount(const QModelIndex& /*parent*/) const {

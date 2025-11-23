@@ -17,7 +17,7 @@ class ProjectController;
 using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
 namespace model {
-    class StateMachineModel;
+class StateMachineModel;
 }
 
 class MainWindow : public QMainWindow {
@@ -29,7 +29,7 @@ public:
 
     QPointer<HsmGraphicsView> currentView();
 
-// UI actions and events
+    // UI actions and events
 public slots:
     void handleNewProject();
     void handleOpen();
@@ -43,9 +43,9 @@ public slots:
 
     void deleteSelectedItems();
     void onGraphicsViewSelectionChanged();
-    void onModelTreeSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+    void onModelTreeSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 
-// MainController
+    // MainController
 public slots:
     void projectOpened(ProjectControllerPtr project);
     void projectSelected(ProjectControllerPtr project);
@@ -61,7 +61,7 @@ private:
     QString mLastDirectory;
     QString mAppTitle;
     QString mConfigPath;
-    QString mCurrentFilePath; // Tracks the current file path for Save/SaveAs
+    QString mCurrentFilePath;  // Tracks the current file path for Save/SaveAs
 
 private slots:
     void onSidebarActionTriggered(bool checked);

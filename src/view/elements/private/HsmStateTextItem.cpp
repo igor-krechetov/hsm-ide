@@ -13,7 +13,7 @@ HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent)
 
     setFont(font);
 
-    setDefaultTextColor(Qt::darkBlue);
+    setDefaultTextColor(QColor("#1A1A1A"));
     // setZValue(10);
     setTextInteractionFlags(Qt::TextEditorInteraction);
 

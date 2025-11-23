@@ -1,14 +1,15 @@
 #include "ModelElementsFactory.hpp"
 
-#include <QString>
 #include <QDebug>
+#include <QString>
 
-#include "ModelRootState.hpp"
-#include "InitialState.hpp"
 #include "EntryPoint.hpp"
 #include "ExitPoint.hpp"
 #include "FinalState.hpp"
 #include "HistoryState.hpp"
+#include "IncludeEntity.hpp"
+#include "InitialState.hpp"
+#include "ModelRootState.hpp"
 #include "RegularState.hpp"
 #include "Transition.hpp"
 
@@ -46,8 +47,11 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
         case StateType::HISTORY:
             res = QSharedPointer<State>(new HistoryState(uniqueName, HistoryType::SHALLOW));
             break;
+        case StateType::INCLUDE:
+            res = QSharedPointer<State>(new IncludeEntity(uniqueName));
+            break;
         default:
-            qCritical() << "Unexpected element type:" << static_cast<int>(type);
+            qFatal("ModelElementsFactory::createUniqueState: Unexpected element type: %d", static_cast<int>(type));
             break;
     }
 
@@ -56,7 +60,7 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
 
 QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QSharedPointer<State>& source,
                                                                         const QSharedPointer<State>& target) {
-    QSharedPointer<Transition> newTransition(new Transition(source, target, "new_event"));
+    QSharedPointer<Transition> newTransition(new Transition(source, target, "NEW_EVENT"));
 
     if (false == source->addChild(newTransition)) {
         qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());
