@@ -219,6 +219,17 @@ QModelIndex StateMachineTreeModel::findModelEntity(const model::EntityID_t id) c
     return res;
 }
 
+QSharedPointer<model::StateMachineEntity> StateMachineTreeModel::entiryFromIndex(const QModelIndex& index) const {
+    QSharedPointer<model::StateMachineEntity> res;
+    StateMachineTreeModel::TreeNode* node = nodeFromIndex(index);
+
+    if (nullptr != node) {
+        res = node->entity;
+    }
+
+    return res;
+}
+
 bool StateMachineTreeModel::removeRows(int row, int count, const QModelIndex& parent) {
     qDebug() << "StateMachineTreeModel::removeRows" << row << count;
     bool res = false;

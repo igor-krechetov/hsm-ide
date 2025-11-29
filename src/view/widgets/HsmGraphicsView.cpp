@@ -99,6 +99,7 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::
     connect(newElement, &view::HsmElement::dragElementBegin, this, &HsmGraphicsView::dragElementBegin);
     connect(newElement, &view::HsmElement::dragElementEvent, this, &HsmGraphicsView::dragElementEvent);
     connect(newElement, &view::HsmElement::dropElementEvent, this, &HsmGraphicsView::dropElementEvent);
+    connect(newElement, &view::HsmElement::elementDoubleClickEvent, this, &HsmGraphicsView::hsmElementDoubleClickEvent);
 
     mElements[modelElement->id()] = QPointer(newElement);
 

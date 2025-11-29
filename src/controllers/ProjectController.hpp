@@ -36,6 +36,7 @@ public:
     inline bool isModified() const;
 
     bool importModel(const QString& path);
+    bool exportModel();
     bool exportModel(const QString& path);
 
     void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);

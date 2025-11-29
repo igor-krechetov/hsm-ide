@@ -71,6 +71,7 @@ set(PROJECT_SOURCES
 
         view/models/StateMachineTreeModel.cpp
         view/models/StateMachineEntityViewModel.cpp
+        view/models/NonEmptyDirFileSystemProxyModel.cpp
 
         view/ui/main.ui
         view/ui/settings.ui

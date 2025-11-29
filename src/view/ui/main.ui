@@ -113,14 +113,24 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <widget class="QMenu" name="menuFileRecentHSM">
+    <widget class="QMenu" name="menuRecentFiles">
      <property name="title">
       <string>Recent HSM</string>
      </property>
     </widget>
+    <widget class="QMenu" name="menuRecentWorkspaces">
+     <property name="title">
+      <string>Recent Workspaces</string>
+     </property>
+     <addaction name="actiontest"/>
+    </widget>
+    <addaction name="actionOpenWorkspace"/>
+    <addaction name="actionCloseWorkspace"/>
+    <addaction name="menuRecentWorkspaces"/>
+    <addaction name="separator"/>
     <addaction name="actionNew"/>
     <addaction name="actionOpenHsm"/>
-    <addaction name="menuFileRecentHSM"/>
+    <addaction name="menuRecentFiles"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
@@ -193,7 +203,7 @@
   </widget>
   <widget class="QDockWidget" name="dockHsmStructure">
    <property name="styleSheet">
-    <string notr="true">background-color: rgb(252, 175, 62);</string>
+    <string notr="true"/>
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
@@ -203,8 +213,14 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QVBoxLayout" name="verticalLayout_4">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
      <property name="topMargin">
       <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
      </property>
      <property name="bottomMargin">
       <number>0</number>
@@ -388,7 +404,11 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QTreeView" name="workspaceTree"/>
+          <widget class="QTreeView" name="workspaceTree">
+           <property name="headerHidden">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -630,7 +650,10 @@
     <string>EDIT</string>
    </property>
    <property name="toolTip">
-    <string>Edit</string>
+    <string>Switch to Design (Ctrl+Shift+E)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
    </property>
   </action>
   <action name="actionShowTabWorkspace">
@@ -643,6 +666,9 @@
    </property>
    <property name="text">
     <string>DIR</string>
+   </property>
+   <property name="toolTip">
+    <string>Switch to Workspace (Ctrl+Shift+B)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+B</string>
@@ -660,7 +686,10 @@
     <string>DEBUG</string>
    </property>
    <property name="toolTip">
-    <string>Debug</string>
+    <string>Switch to Debug (Ctrl+Shift+D)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+D</string>
    </property>
   </action>
   <action name="actionCloseCurrent">
@@ -674,6 +703,21 @@
   <action name="actionCloseAll">
    <property name="text">
     <string>Close All</string>
+   </property>
+  </action>
+  <action name="actionOpenWorkspace">
+   <property name="text">
+    <string>Open Workspace</string>
+   </property>
+  </action>
+  <action name="actionCloseWorkspace">
+   <property name="text">
+    <string>Close Workspace</string>
+   </property>
+  </action>
+  <action name="actiontest">
+   <property name="text">
+    <string>test</string>
    </property>
   </action>
  </widget>
@@ -739,7 +783,7 @@
    <sender>actionOpenHsm</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
-   <slot>handleOpen()</slot>
+   <slot>handleOpenFile()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -803,7 +847,7 @@
    <sender>actionNew</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
-   <slot>handleNewProject()</slot>
+   <slot>handleNewFile()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -863,17 +907,68 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCloseWorkspace</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleCloseWorkspace()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpenWorkspace</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleOpenWorkspace()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>workspaceTree</sender>
+   <signal>doubleClicked(QModelIndex)</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>onOpenWorkspaceFile(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>170</x>
+     <y>368</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>deleteSelectedItems()</slot>
-  <slot>handleOpen()</slot>
+  <slot>handleOpenFile()</slot>
   <slot>handleSave()</slot>
   <slot>handleSaveAs()</slot>
   <slot>onSidebarActionTriggered(bool)</slot>
   <slot>projectTabCloseRequested(int)</slot>
-  <slot>handleNewProject()</slot>
+  <slot>handleNewFile()</slot>
   <slot>projectTabSelected(int)</slot>
   <slot>handleCloseCurrentProject()</slot>
   <slot>handleCloseAllProjects()</slot>
+  <slot>handleOpenWorkspace()</slot>
+  <slot>handleCloseWorkspace()</slot>
+  <slot>onOpenWorkspaceFile(QModelIndex)</slot>
  </slots>
 </ui>

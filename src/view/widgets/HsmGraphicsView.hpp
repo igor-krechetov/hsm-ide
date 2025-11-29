@@ -15,6 +15,7 @@ class ProjectController;
 
 namespace model {
 class StateMachineEntity;
+class IncludeEntity;
 }
 
 namespace view {
@@ -67,6 +68,9 @@ public:
 
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
+
+signals:
+    void hsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);
 
 protected:
     void focusOutEvent(QFocusEvent* event) override;

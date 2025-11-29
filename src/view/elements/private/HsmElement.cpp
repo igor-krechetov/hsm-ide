@@ -95,6 +95,10 @@ QPointF HsmElement::mapFromSceneToBody(const QPointF& point) const {
     return mapFromScene(point);
 }
 
+QWeakPointer<model::StateMachineEntity> HsmElement::modelElementPtr() const {
+    return mModelElement;
+}
+
 void HsmElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
     mModelElement = modelEntity.toWeakRef();
     updateBoundingRect();
@@ -271,15 +275,18 @@ QRectF HsmElement::boundingRect() const {
     return mOuterRect;
 }
 
+void HsmElement::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    emit elementDoubleClickEvent(mModelElement);
+    event->accept();
+}
+
 void HsmElement::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    qDebug() << Q_FUNC_INFO << this;
     QGraphicsItem::mousePressEvent(event);
 
     mDragState = DragState::PREPARE;
 }
 
 void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    qDebug() << Q_FUNC_INFO;
     QGraphicsItem::mouseReleaseEvent(event);
 
     if (DragState::DRAGGING == mDragState) {

@@ -3,6 +3,11 @@
 
 #include <QSet>
 #include <QTreeView>
+#include <QWeakPointer>
+
+namespace model {
+    class StateMachineEntity;
+};
 
 class HsmTreeView : public QTreeView {
     Q_OBJECT
@@ -14,10 +19,11 @@ public:
     void setModel(QAbstractItemModel* model) override;
 
 signals:
-    void deleteRequested(const QModelIndex& index);
+    void elementDoubleClickEvent(const QWeakPointer<model::StateMachineEntity> element);
 
 protected:
     void contextMenuEvent(QContextMenuEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 protected slots:
     void onModelReset();

@@ -5,6 +5,10 @@
 #include <QDebug>
 #include <QKeyEvent>
 #include <QMenu>
+#include <QSharedPointer>
+
+#include "view/models/StateMachineTreeModel.hpp"
+#include "model/StateMachineEntity.hpp"
 
 HsmTreeView::HsmTreeView(QWidget* parent)
     : QTreeView(parent) {}
@@ -26,6 +30,8 @@ void HsmTreeView::setModel(QAbstractItemModel* model) {
         connect(model, &QAbstractItemModel::rowsInserted, this, &HsmTreeView::onModelRowsInserted);
         connect(model, &QAbstractItemModel::modelAboutToBeReset, this, &HsmTreeView::onModelAboutToBeReset);
     }
+
+    expandAll();
 }
 
 void HsmTreeView::onModelReset() {
@@ -78,35 +84,32 @@ void HsmTreeView::saveExpandedState() {
 }
 
 void HsmTreeView::restoreExpandedState() {
-    qDebug() << Q_FUNC_INFO;
-    if (!model() || mExpandedPaths.isEmpty() || mRestoringState) {
-        return;
-    }
+    if (model() && (mExpandedPaths.isEmpty() == false) && (false == mRestoringState)) {
+        mRestoringState = true;
 
-    mRestoringState = true;
-
-    // Recursively restore expanded state
-    std::function<void(const QModelIndex&)> restoreExpanded;
-    restoreExpanded = [&](const QModelIndex& index) {
-        QString path = getIndexPath(index);
-        if (mExpandedPaths.contains(path)) {
-            expand(index);
-        }
-
-        // Recursively process children
-        int rowCount = model()->rowCount(index);
-        for (int row = 0; row < rowCount; ++row) {
-            QModelIndex childIndex = model()->index(row, 0, index);
-            if (childIndex.isValid()) {
-                restoreExpanded(childIndex);
+        // Recursively restore expanded state
+        std::function<void(const QModelIndex&)> restoreExpanded;
+        restoreExpanded = [&](const QModelIndex& index) {
+            QString path = getIndexPath(index);
+            if (mExpandedPaths.contains(path)) {
+                expand(index);
             }
-        }
-    };
 
-    // Start from root
-    restoreExpanded(QModelIndex());
+            // Recursively process children
+            int rowCount = model()->rowCount(index);
+            for (int row = 0; row < rowCount; ++row) {
+                QModelIndex childIndex = model()->index(row, 0, index);
+                if (childIndex.isValid()) {
+                    restoreExpanded(childIndex);
+                }
+            }
+        };
 
-    mRestoringState = false;
+        // Start from root
+        restoreExpanded(QModelIndex());
+
+        mRestoringState = false;
+    }
 }
 
 QString HsmTreeView::getIndexPath(const QModelIndex& index) const {
@@ -169,5 +172,22 @@ void HsmTreeView::contextMenuEvent(QContextMenuEvent* event) {
         if (idx.isValid() && model()) {
             model()->removeRow(idx.row(), idx.parent());
         }
+    }
+}
+
+void HsmTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
+    QModelIndex idx = indexAt(event->pos());
+
+    if (idx.isValid()) {
+        // Try to cast the model to your custom model
+        auto* treeModel = qobject_cast<view::StateMachineTreeModel*>(model());
+
+        if (nullptr != treeModel) {
+            QSharedPointer<model::StateMachineEntity> element;
+
+            element = treeModel->entiryFromIndex(idx);
+            emit elementDoubleClickEvent(element);
+        }
+
     }
 }

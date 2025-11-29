@@ -49,31 +49,37 @@ void ProjectController::registerView(QPointer<HsmGraphicsView> view) {
 }
 
 bool ProjectController::importModel(const QString& path) {
-    model::StateMachineSerializer serializer;
-    QString scxmlContent;
+    bool res = false;
     QFile file(path);
 
     if (file.open(QIODevice::ReadOnly)) {
         QTextStream in(&file);
-        scxmlContent = in.readAll();
+        QString scxmlContent = in.readAll();
+
         file.close();
+
+        {
+            // block signals so we dont send unnecessary projectModelChanged updates
+            QSignalBlocker blocker(this);
+            model::StateMachineSerializer serializer;
+
+            if (true == serializer.deserializeFromScxml(scxmlContent, mModel)) {
+                mModelPath = path;
+                mModified = false;
+                res = true;
+            }
+        }
+
+        emit projectModelChanged(this);
     } else {
         qCritical() << "Failed to open file for reading: " << path;
-        return false;
     }
 
-    {
-        // block signals so we dont send unnecessary projectModelChanged updates
-        QSignalBlocker blocker(this);
+    return res;
+}
 
-        serializer.deserializeFromScxml(scxmlContent, mModel);
-        mModelPath = path;
-        mModified = false;
-    }
-
-    emit projectModelChanged(this);
-
-    return true;
+bool ProjectController::exportModel() {
+    return exportModel(modelPath());
 }
 
 bool ProjectController::exportModel(const QString& path) {
@@ -89,7 +95,12 @@ bool ProjectController::exportModel(const QString& path) {
 
             out << scxmlContent;
             file.close();
+
+            mModified = false;
+            mModelPath = path;
             res = true;
+
+            emit projectModelChanged(this);
         }
     }
 

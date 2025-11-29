@@ -12,6 +12,10 @@
 class ProjectController;
 using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
+namespace model {
+    class StateMachineEntity;
+};
+
 class MainEditorController : public QObject {
     Q_OBJECT
 public:
@@ -30,6 +34,8 @@ public:
     const QList<ProjectControllerPtr>& openedProjects() const;
 
     ProjectControllerPtr getProjectByPath(const QString& projectPath) const;
+
+    void handleHsmElementDoubleClick(QWeakPointer<model::StateMachineEntity> entity);
 
 signals:
     void projectOpened(ProjectControllerPtr project);

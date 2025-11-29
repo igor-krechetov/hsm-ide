@@ -71,6 +71,8 @@ public:
 
     virtual QPointF mapFromSceneToBody(const QPointF& point) const;
 
+    QWeakPointer<model::StateMachineEntity> modelElementPtr() const;
+
     template <typename T>
     QSharedPointer<T> modelElement();
 
@@ -109,6 +111,8 @@ signals:
     // sent when element's size of position is changed
     void geometryChanged(HsmElement* element);
 
+    void elementDoubleClickEvent(const QWeakPointer<model::StateMachineEntity> element);
+
 protected:
     void setElementType(const HsmElementType newType);
     HsmGraphicsView* hsmView() const;
@@ -122,6 +126,7 @@ protected:
     // QGraphicsItem interface
 protected:
     QRectF boundingRect() const override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;

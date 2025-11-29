@@ -9,6 +9,8 @@
 #include "ProjectController.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
+#include "model/ModelUtils.hpp"
+#include "model/IncludeEntity.hpp"
 
 MainEditorController::MainEditorController()
     : QObject(nullptr)
@@ -52,10 +54,15 @@ ProjectControllerPtr MainEditorController::openProject(const QString& projectPat
     ProjectControllerPtr project = getProjectByPath(projectPath);
 
     if (project.isNull()) {
-        project = createProject();
+        if (projectPath.isEmpty() == false) {
+            project = createProject();
 
-        if (project) {
-            project->importModel(projectPath);
+            if (project) {
+                if (false == project->importModel(projectPath)) {
+                    // do not open project if we failed to load the model
+                    project.reset();
+                }
+            }
         }
     } else {
         switchToProject(project);
@@ -65,7 +72,7 @@ ProjectControllerPtr MainEditorController::openProject(const QString& projectPat
 }
 
 void MainEditorController::closeProject(const ProjectControllerPtr& project) {
-    qDebug() << "MainEditorController::closeProject" << project;
+    qDebug() << "MainEditorController::closeProject" << project->name();
     auto it = std::find(mProjectControllers.begin(), mProjectControllers.end(), project);
 
     if (it != mProjectControllers.end()) {
@@ -118,6 +125,14 @@ ProjectControllerPtr MainEditorController::getProjectByPath(const QString& proje
     }
 
     return project;
+}
+
+void MainEditorController::handleHsmElementDoubleClick(QWeakPointer<model::StateMachineEntity> entity) {
+    auto ptrInclude = model::hsmDynamicCast<model::IncludeEntity>(entity.toStrongRef(), model::StateType::INCLUDE);
+
+    if (ptrInclude) {
+        openProject(ptrInclude->path());
+    }
 }
 
 // QPointer<ProjectController> MainEditorController::getProjectController(const QString& projectId) const {

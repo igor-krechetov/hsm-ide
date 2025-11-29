@@ -84,7 +84,7 @@
 ***** REQ-106b2: Notify when referenced content changes
 ***** REQ-106b3: Provide update/refresh mechanisms
 **** REQ-106c: Navigation
-***** REQ-106c1: Click-to-open for included files <<todo>>
+***** REQ-106c1: Click-to-open for included files <<done>>
 ***** REQ-106c2: Breadcrumb trails showing inclusion hierarchy
 ***** REQ-106c3: Cross-file reference finder
 **** REQ-106d: Validation  <<prio_low>>
@@ -113,19 +113,23 @@
 **** REQ-108c: Callbacks name validation
 
 ** REQ-200: UI/UX Requirements
-*** REQ-201: Workspace layout
+*** REQ-201: Main Layout <<done>>
 **** REQ-201a: Element palette (toolbox) <<done>>
 **** REQ-201b: Properties editor panel <<done>>
-**** REQ-201c: Canvas workspace <<in_progress>>
+**** REQ-201c: Primary Side Bar management <<done>>
+**** REQ-201c1: Show/Hide primary side bar <<done>>
+**** REQ-201c2: Switch primary side bar panels <<done>>
+**** REQ-201c3: Retain custom panel sizes in primary side bar <<done>>
 *** REQ-202: Visualization features
 **** REQ-202a: Zoom/pan controls <<in_progress>>
 ***** REQ-202a1: Custom cursor when zooming <<prio_low>>
 **** REQ-202b: Grid snapping
 **** REQ-202c: Element theming <<prio_low>>
-*** REQ-203: Project structure overview  <<prio_low>>
-**** REQ-203a: Dependency graph visualization  <<prio_low>>
-**** REQ-203b: File inclusion hierarchy  <<prio_low>>
-**** REQ-203c: Cross-file reference highlighting  <<prio_low>>
+*** REQ-203: Workspace management
+**** REQ-203a: Open/Close Workspace directory <<done>>
+**** REQ-203b: Dependency graph visualization  <<prio_low>>
+**** REQ-203c: File inclusion hierarchy  <<prio_low>>
+**** REQ-203d: Cross-file reference highlighting  <<prio_low>>
 *** REQ-204: Menu Features
 **** REQ-204a: Copy/Paste/Cut
 **** REQ-204b: Delete
@@ -157,15 +161,19 @@
 ***** REQ-205d2: switching between open projects <<done>>
 ***** REQ-205d3: closing individual open project <<done>>
 ***** REQ-205d4: closing all open projects <<done>>
+**** REQ-206: Primary Side Bar
+***** REQ-206a: Workspace view <<done>>
+***** REQ-206b: Editor elements list <<done>>
+***** REQ-206c: Debugging toolbar
 
 ** REQ-300: Import/Export
-*** REQ-301: SCXML file handling
-**** REQ-301a: Import SCXML 1.0 files
-***** REQ-301a1: Model structure import
+*** REQ-301: SCXML file handling <<done>>
+**** REQ-301a: Import SCXML 1.0 files <<done>>
+***** REQ-301a1: Model structure import <<done>>
 ****** REQ-301a1.1: Basic structure import <<done>>
 ****** REQ-301a1.2: Support for parsing import element <<done>>
 ***** REQ-301a2: Model layout import <<done>>
-**** REQ-301b: Export SCXML 1.0 files
+**** REQ-301b: Export SCXML 1.0 files <<done>>
 ***** REQ-301b1: Model structure export <<done>>
 ****** REQ-301b1.1: Basic structure import <<done>>
 ****** REQ-301b1.2: Support for exporting import element <<done>>

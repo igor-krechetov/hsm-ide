@@ -139,7 +139,18 @@ bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVaria
     }
 
     QString propName = props.at(index.row());
-    bool res = mSelectedEntity->setProperty(propName, value);
+    QVariant newValue = value;
+
+    // // Convert absolute path to relative if property is "path"
+    // if (propName == "path" && mModel && !value.toString().isEmpty()) {
+    //     QString absPath = value.toString();
+    //     QString rootFile = mModel->filePath(); // You may need to add this getter if not present
+    //     QFileInfo rootInfo(rootFile);
+    //     QDir rootDir = rootInfo.absoluteDir();
+    //     newValue = rootDir.relativeFilePath(absPath);
+    // }
+
+    bool res = mSelectedEntity->setProperty(propName, newValue);
 
     qDebug() << "setProperty -> " << res;
 
