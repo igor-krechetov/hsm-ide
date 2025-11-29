@@ -5,6 +5,7 @@
 #include <QSignalBlocker>
 
 #include "./ui/ui_main.h"
+#include "AboutDialog.hpp"
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
@@ -140,6 +141,12 @@ void MainWindow::handleCloseAllProjects() {
 
     mActiveProject.clear();
     mController->closeAllProjects();
+}
+
+void MainWindow::handleAbout() {
+    AboutDialog aboutDlg(this);
+
+    aboutDlg.exec();
 }
 
 void MainWindow::projectTabSelected(int index) {

@@ -165,6 +165,7 @@
 ***** REQ-206a: Workspace view <<done>>
 ***** REQ-206b: Editor elements list <<done>>
 ***** REQ-206c: Debugging toolbar
+**** REQ-207: About Dialog <<done>>
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling <<done>>

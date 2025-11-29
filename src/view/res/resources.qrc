@@ -7,6 +7,7 @@
         <file>elements/state.png</file>
         <file>elements/include.png</file>
         <file>elements/initial.png</file>
+        <file>hsm_ide.ico</file>
     </qresource>
     <qresource prefix="/icons/side-bar">
         <file>side-bar/debug.png</file>

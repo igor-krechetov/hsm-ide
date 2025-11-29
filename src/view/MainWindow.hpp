@@ -43,6 +43,8 @@ public slots:
     void handleCloseCurrentProject();
     void handleCloseAllProjects();
 
+    void handleAbout();
+
     void projectTabSelected(int index);
     void projectTabCloseRequested(int index);
 

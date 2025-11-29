@@ -1,0 +1,64 @@
+@startuml
+start
+
+if (Is main, dev branch or PR?) then (yes)
+    :Verify;
+else (no)
+    ' skip
+endif
+
+:Build;
+note right
+    Ubuntu, Windows
+end note
+
+:Test;
+
+if (dev branch?) then (yes)
+    if (Is release commit?) then (yes)
+        :Create Tags;
+    else (no)
+        ' skip
+    endif
+else (no)
+    ' skip
+endif
+
+if (Is main branch?) then (yes)
+    if (Is new version?) then (yes)
+        :Update Documentation;
+        :Create Release;
+    else (no)
+        ' skip
+    endif
+else (no)
+    ' skip
+endif
+
+
+'     fork again
+'         if (Is main branch?) then (yes)
+'             if (New version or Started manually?) then (yes)
+'                 fork
+'                     :Unit Tests;
+'                     note right: Ubuntu
+'                 fork again
+'                     :SCA: Coverity;
+'                 end fork
+'             else (no)
+'                 ' skip
+'             endif
+'         else (no)
+'             ' skip
+'         endif
+'     fork again
+'         :SCA: CodeQL;
+'     fork again
+'         :SCA: MISRA-C-2012;
+'     end fork
+' else (no)
+'     stop
+' endif
+
+stop
+@enduml

@@ -27,55 +27,57 @@ set(MODEL_SOURCES
 )
 
 set(PROJECT_SOURCES
-        main.cpp
-        common/ObjectUtils.cpp
+    main.cpp
+    common/ObjectUtils.cpp
 
-        controllers/MainEditorController.cpp
-        controllers/ProjectController.cpp
-        # controllers/RecentFilesManager.cpp
+    controllers/MainEditorController.cpp
+    controllers/ProjectController.cpp
+    # controllers/RecentFilesManager.cpp
 
-        view/MainWindow.cpp
+    view/MainWindow.cpp
+    view/AboutDialog.cpp
 
-        view/common/ViewUtils.cpp
+    view/common/ViewUtils.cpp
 
-        view/widgets/HsmElementsList.cpp
-        view/widgets/HsmGraphicsView.cpp
-        view/widgets/HsmTreeView.cpp
-        view/widgets/HsmPropertiesTableView.cpp
-        view/widgets/QClickableSlider.cpp
-        view/widgets/QImageViewArea.cpp
-        view/widgets/private/HsmEntityPropertyDelegate.cpp
-        view/widgets/private/HsmElementsListDelegate.cpp
+    view/widgets/HsmElementsList.cpp
+    view/widgets/HsmGraphicsView.cpp
+    view/widgets/HsmTreeView.cpp
+    view/widgets/HsmPropertiesTableView.cpp
+    view/widgets/QClickableSlider.cpp
+    view/widgets/QImageViewArea.cpp
+    view/widgets/private/HsmEntityPropertyDelegate.cpp
+    view/widgets/private/HsmElementsListDelegate.cpp
 
-        view/elements/HsmElementsFactory.cpp
-        view/elements/HsmEntryPointElement.cpp
-        view/elements/HsmExitPointElement.cpp
-        view/elements/HsmFinalElement.cpp
-        view/elements/HsmHistoryElement.cpp
-        view/elements/HsmIncludeElement.cpp
-        view/elements/HsmInitialElement.cpp
-        view/elements/HsmStateElement.cpp
-        view/elements/HsmTransition.cpp
+    view/elements/HsmElementsFactory.cpp
+    view/elements/HsmEntryPointElement.cpp
+    view/elements/HsmExitPointElement.cpp
+    view/elements/HsmFinalElement.cpp
+    view/elements/HsmHistoryElement.cpp
+    view/elements/HsmIncludeElement.cpp
+    view/elements/HsmInitialElement.cpp
+    view/elements/HsmStateElement.cpp
+    view/elements/HsmTransition.cpp
 
-        view/elements/private/ElementBoundaryGripItem.cpp
-        view/elements/private/ElementConnectionArrow.cpp
-        view/elements/private/ElementGripItem.cpp
-        view/elements/private/HsmConnectableElement.cpp
-        view/elements/private/HsmElement.cpp
-        view/elements/private/HsmResizableElement.cpp
-        view/elements/private/HsmStateTextItem.cpp
-        view/elements/private/HsmStateBodySection.cpp
+    view/elements/private/ElementBoundaryGripItem.cpp
+    view/elements/private/ElementConnectionArrow.cpp
+    view/elements/private/ElementGripItem.cpp
+    view/elements/private/HsmConnectableElement.cpp
+    view/elements/private/HsmElement.cpp
+    view/elements/private/HsmResizableElement.cpp
+    view/elements/private/HsmStateTextItem.cpp
+    view/elements/private/HsmStateBodySection.cpp
 
-        view/elements/private/styles/HsmRectangularElement.cpp
-        view/elements/private/styles/HsmRoundElement.cpp
+    view/elements/private/styles/HsmRectangularElement.cpp
+    view/elements/private/styles/HsmRoundElement.cpp
 
-        view/models/StateMachineTreeModel.cpp
-        view/models/StateMachineEntityViewModel.cpp
-        view/models/NonEmptyDirFileSystemProxyModel.cpp
+    view/models/StateMachineTreeModel.cpp
+    view/models/StateMachineEntityViewModel.cpp
+    view/models/NonEmptyDirFileSystemProxyModel.cpp
 
-        view/ui/main.ui
-        view/ui/settings.ui
-        ${TS_FILES}
+    view/ui/main.ui
+    view/ui/settings.ui
+    view/ui/about.ui
+    ${TS_FILES}
 )
 
 qt_add_library(model STATIC ${MODEL_SOURCES})
@@ -119,7 +121,8 @@ target_include_directories(model PRIVATE
 target_link_libraries(model PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                           ${CMAKE_SOURCE_DIR}/include)
+                                           ${CMAKE_SOURCE_DIR}/include
+                                           $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>)
 target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets model)
 
 set_target_properties(hsm_ide PROPERTIES
