@@ -28,6 +28,9 @@ jobs:
   build:
     needs: verify
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@main
+    if: >
+        always() &&
+        (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     with:
       build_type: Release
       platforms: "posix,windows"
