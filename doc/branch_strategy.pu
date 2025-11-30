@@ -1,0 +1,43 @@
+@startuml
+title Git Branching Strategy
+
+skinparam branch {
+    FontSize 12
+}
+
+' Main branches
+rectangle "main" as MAIN
+rectangle "dev" as DEV
+
+' Example feature branches
+rectangle "feature/xyz" as F1
+rectangle "feature/abc" as F2
+
+' Development happens on feature branches
+F1 --> DEV : MR → squash + FF merge\n(after sanity checks)
+F2 --> DEV : MR → squash + FF merge\n(after sanity checks)
+
+' Flow to main
+DEV --> MAIN : Manual merge\n(no auto-trigger)
+DEV --> MAIN : Auto merge when commit\ncontains [r] in title
+
+' Notes
+note right of DEV
+  Development branch.
+  Must contain only commits that passed sanity checks.
+  All merges are squash + fast-forward.
+end note
+
+note right of MAIN
+  Official mainline.
+  Receives releases.
+  Only gets changes from dev.
+end note
+
+note left of F1
+  Developers branch from dev.
+  Work in multiple commits.
+  Submit MR when ready.
+end note
+
+@enduml
