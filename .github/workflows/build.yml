@@ -17,8 +17,8 @@ jobs:
   # --------------------------------------------------------
   verify:
     if: >
-      github.ref == 'refs/heads/main' ||
-      github.ref == 'refs/heads/dev' ||
+      github.ref_name == 'main' ||
+      github.ref_name == 'dev' ||
       github.event_name == 'pull_request'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@main
 
@@ -48,7 +48,7 @@ jobs:
   # --------------------------------------------------------
   autotag:
     needs: [test, verify]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: github.event_name == 'push' && github.ref_name == 'dev'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
     with:
       commit_version: ${{ needs.verify.outputs.commit_version }}
@@ -60,15 +60,18 @@ jobs:
   # --------------------------------------------------------
   update_documentation:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref_name == 'main'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@main
 
   # --------------------------------------------------------
   # RELEASE — only on push to main (after docs)
   # --------------------------------------------------------
   release:
-    needs: update_documentation
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [verify, update_documentation]
+    if: >
+      github.event_name == 'push' &&
+      github.ref_name == 'main' &&
+      needs.verify.outputs.commit_action == 'r'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@main
     with:
       commit_sha: ${{ github.sha }}
