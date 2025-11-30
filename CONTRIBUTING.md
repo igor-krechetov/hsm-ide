@@ -41,7 +41,7 @@ This document describes the workflow used in the repository, including branching
 
 | Event / Branch       | verify | build | test | autotag | docs | release    |
 | -------------------- | ------ | ----- | ---- | ------- | ---- | ---------- |
-| **push → main**      | ✅      | ✅     | ✅    | ❌       | ✅    | ❌/optional |
+| **push → main**      | ✅      | ✅     | ✅    | ❌       | ✅    | ❌/✅ optional |
 | **PR → main**        | ✅      | ✅     | ✅    | ❌       | ❌    | ❌          |
 | **push → dev**       | ✅      | ✅     | ✅    | ✅       | ❌    | ❌          |
 | **PR → dev**         | ✅      | ✅     | ✅    | ❌       | ❌    | ❌          |
