@@ -3,11 +3,14 @@
 #include <QFocusEvent>
 #include <QGraphicsScene>
 #include <QKeyEvent>
+#include <QPainter>
+#include <QTextDocument>
 
 namespace view {
 
-HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent)
-    : QGraphicsTextItem(parent) {
+HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent, QGraphicsItem* logicalParent)
+    : QGraphicsTextItem(parent)
+    , mLogicalParent(logicalParent) {
     QFont font;
     font.setBold(true);
 
@@ -18,6 +21,7 @@ HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent)
     setTextInteractionFlags(Qt::TextEditorInteraction);
 
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    document()->setDocumentMargin(0);
 }
 
 void HsmStateTextItem::makeMovable(const bool enable) {
@@ -32,8 +36,9 @@ void HsmStateTextItem::focusInEvent(QFocusEvent* event) {
         scene()->clearSelection();
     }
 
-    if (parentItem()) {
-        parentItem()->setSelected(true);
+    if (nullptr != mLogicalParent) {
+        // NOTE: in case of transitions, this selects the AutoGroupItem
+        mLogicalParent->setSelected(true);
     }
 
     mOriginalText = toPlainText();
@@ -67,6 +72,25 @@ QVariant HsmStateTextItem::itemChange(GraphicsItemChange change, const QVariant&
     }
 
     return QGraphicsTextItem::itemChange(change, value);
+}
+
+void HsmStateTextItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    bool editing = hasFocus() && (textInteractionFlags() & Qt::TextEditorInteraction);
+
+    if (editing) {
+        // --- EDITING MODE RENDERING ---
+        // TODO: fix color. use colors from theme
+        painter->setBrush(QColor(255, 255, 200));  // soft yellow background
+        // painter->setPen(Qt::NoPen);
+        painter->drawRect(boundingRect());
+    } else {
+        // --- NORMAL MODE RENDERING ---
+        // painter->setPen(QPen(Qt::darkGray, 1));
+        // painter->drawRect(boundingRect());
+    }
+
+    // Draw actual text normally
+    QGraphicsTextItem::paint(painter, option, widget);
 }
 
 }  // namespace view

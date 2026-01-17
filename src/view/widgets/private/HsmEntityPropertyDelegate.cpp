@@ -31,6 +31,13 @@ QWidget* HsmEntityPropertyDelegate::createEditor(QWidget* parent,
                        static_cast<int>(model::TransitionType::INTERNAL));
 
         return combo;
+    } else if (index.data(Qt::UserRole).toString() == model::Transition::cKeyExpectedConditionValue) {
+        QComboBox* combo = new QComboBox(parent);
+
+        combo->addItem("true", true);
+        combo->addItem("false", false);
+
+        return combo;
     } else if (index.data(Qt::UserRole).toString() == model::HistoryState::cKeyHistoryType) {
         QComboBox* combo = new QComboBox(parent);
 
@@ -110,9 +117,7 @@ void HsmEntityPropertyDelegate::setModelData(QWidget* editor, QAbstractItemModel
         } else {
             qFatal("HsmEntityPropertyDelegate: unexpected editor widget");
         }
-    } else
-
-        if (QComboBox* combo = qobject_cast<QComboBox*>(editor)) {
+    } else if (QComboBox* combo = qobject_cast<QComboBox*>(editor)) {
         model->setData(index, combo->currentData(Qt::UserRole), Qt::EditRole);
     } else {
         QStyledItemDelegate::setModelData(editor, model, index);

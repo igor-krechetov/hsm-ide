@@ -1,6 +1,7 @@
 #include "Transition.hpp"
 
 #include "State.hpp"
+#include "ModelUtils.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
@@ -18,7 +19,7 @@ void Transition::accept(class IModelVisitor* visitor) {
 }
 
 const QString& Transition::event() const {
-    return mEvent;
+    return mEvent.get();
 }
 
 QSharedPointer<State> Transition::source() const {
@@ -59,11 +60,11 @@ TransitionType Transition::transitionType() const {
 }
 
 const QString& Transition::transitionCallback() const {
-    return mTransitionCallback;
+    return mTransitionCallback.get();
 }
 
 const QString& Transition::conditionCallback() const {
-    return mConditionCallback;
+    return mConditionCallback.get();
 }
 
 bool Transition::expectedConditionValue() const {
@@ -97,7 +98,7 @@ void Transition::setExpectedConditionValue(bool value) {
 }
 
 QStringList Transition::properties() const {
-    return {"event", "transitionCallback", "conditionCallback", "expectedConditionValue", cKeyTransitionType};
+    return {"event", "transitionCallback", "conditionCallback", cKeyExpectedConditionValue, cKeyTransitionType};
 }
 
 bool Transition::setProperty(const QString& key, const QVariant& value) {
@@ -109,9 +110,9 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
         setTransitionCallback(value.toString());
     } else if (key == "conditionCallback") {
         setConditionCallback(value.toString());
-    } else if (key == "expectedConditionValue") {
+    } else if (key == cKeyExpectedConditionValue) {
         setExpectedConditionValue(value.toBool());
-    } else if (key == "transitionType") {
+    } else if (key == cKeyTransitionType) {
         setTransitionType(transitionTypeFromInt(value.toInt()));
     } else {
         handled = StateMachineEntity::setProperty(key, value);
@@ -122,14 +123,14 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
 
 QVariant Transition::getProperty(const QString& key) const {
     if (key == "event") {
-        return mEvent;
+        return mEvent.get();
     } else if (key == "transitionCallback") {
-        return mTransitionCallback;
+        return mTransitionCallback.get();
     } else if (key == "conditionCallback") {
-        return mConditionCallback;
-    } else if (key == "expectedConditionValue") {
+        return mConditionCallback.get() ;
+    } else if (key == cKeyExpectedConditionValue) {
         return mExpectedConditionValue;
-    } else if (key == "transitionType") {
+    } else if (key == cKeyTransitionType) {
         return static_cast<int>(mTransitionType);
     }
     return StateMachineEntity::getProperty(key);

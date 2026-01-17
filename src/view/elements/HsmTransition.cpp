@@ -7,11 +7,14 @@
 #include <QPainterPath>
 #include <QPointF>
 #include <QPolygonF>
+#include <QRegularExpression>
 #include <QSignalBlocker>
+#include <QTimer>
 #include <cmath>
 
 #include "HsmStateElement.hpp"
 #include "model/Transition.hpp"
+#include "private/AutoGroupItem.hpp"
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"
 #include "view/common/ViewUtils.hpp"
@@ -25,8 +28,7 @@ namespace view {
 HsmTransition::HsmTransition()
     : HsmElement(HsmElementType::TRANSITION, QSizeF(1, 1))
     , mFromElement(nullptr)
-    , mToElement(nullptr)
-    , mDebugShowSelectionPolygon(false) {
+    , mToElement(nullptr) {
     qDebug() << "CREATE: HsmTransition: " << this;
     // NOTE: there are no grips at the beginning and end of the poly-line
     // TODO: fix me
@@ -54,10 +56,17 @@ void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelE
     HsmElement::init(modelEntity);
 
     // Create label
-    mLabel = new HsmStateTextItem(this);
+    mLabel = new AutoGroupItem(this);
 
-    connect(mLabel, &HsmStateTextItem::editingFinished, this, &HsmTransition::onEventEditFinished);
-    connect(mLabel, &HsmStateTextItem::positionChanged, this, &HsmTransition::onEventLabelPositionChanged);
+    mLabelEvent = new HsmStateTextItem(mLabel, this);
+    mLabelCondition = new HsmStateTextItem(mLabel, this);
+
+    mLabelCondition->setPos(0, 0);
+    mLabelEvent->setPos(0, mLabelCondition->boundingRect().height());
+
+    connect(mLabel, &AutoGroupItem::geometryChanged, this, &HsmTransition::recalculateLabelPosition);
+    connect(mLabelEvent, &HsmStateTextItem::editingFinished, this, &HsmTransition::onEventEditFinished);
+    connect(mLabelCondition, &HsmStateTextItem::editingFinished, this, &HsmTransition::onConditionEditFinished);
 
     // Pull latest data from the model
     onModelDataChanged();
@@ -116,6 +125,12 @@ QPainterPath HsmTransition::shape() const {
 }
 
 void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+#ifdef DEBUG_RENDERING
+    painter->setPen(QPen("red"));
+    painter->setBrush(Qt::NoBrush);
+    painter->drawPath(mSelectionPath);
+#endif
+
     if (false == isSelected()) {
         painter->setPen(Qt::SolidLine);
     } else {
@@ -151,12 +166,6 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
         // Set brush to same color as pen to fill the triangle
         painter->setBrush(painter->pen().color());
         painter->drawPolygon(arrowHead);
-    }
-
-    // TODO: Debug code. Remove later
-    if (true == mDebugShowSelectionPolygon) {
-        painter->setPen(QPen("red"));
-        painter->drawPath(mSelectionPath);
     }
 }
 
@@ -358,8 +367,40 @@ QPointF HsmTransition::findStartingPointFromRect(const QRectF& rectFrom, const Q
 void HsmTransition::onEventEditFinished() {
     auto entityPtr = modelElement<model::Transition>();
 
-    if (mLabel && entityPtr) {
-        entityPtr->setEvent(mLabel->toPlainText());
+    if (mLabelEvent && entityPtr) {
+        QStringList transitionConfigParts = mLabelEvent->toPlainText().split('/');
+
+        if (transitionConfigParts.size() == 2) {
+            entityPtr->setEvent(transitionConfigParts[0]);
+            entityPtr->setTransitionCallback(transitionConfigParts[1]);
+        } else {
+            entityPtr->setEvent(transitionConfigParts[0]);
+        }
+    }
+}
+
+void HsmTransition::onConditionEditFinished() {
+    auto entityPtr = modelElement<model::Transition>();
+
+    if (mLabelCondition && entityPtr) {
+        QString conditionText = mLabelCondition->toPlainText().trimmed();
+
+        conditionText.remove("<").remove(">");
+
+        // split by =, ==, is using regex
+        QRegularExpression re("(==|=|is)");
+        QStringList conditionParts = conditionText.split(re);
+
+        if (conditionParts.size() == 2) {
+            QString expectedValueStr = conditionParts[1].toLower().trimmed();
+
+            entityPtr->setConditionCallback(conditionParts[0]);
+            // NOTE: reset to TRUE by default
+            entityPtr->setExpectedConditionValue(expectedValueStr != "false");
+        } else {
+            entityPtr->setConditionCallback(conditionText);
+            entityPtr->setExpectedConditionValue(true);
+        }
     }
 }
 
@@ -381,9 +422,24 @@ void HsmTransition::onEventLabelPositionChanged() {
 void HsmTransition::onModelDataChanged() {
     auto entityPtr = modelElement<model::Transition>();
 
-    if (mLabel && entityPtr) {
-        QSignalBlocker block(mLabel);
-        mLabel->setPlainText(entityPtr->event());
+    if (mLabelEvent && mLabelCondition && entityPtr) {
+        QSignalBlocker block(mLabelEvent);
+        QSignalBlocker block2(mLabelCondition);
+
+        if (entityPtr->transitionCallback().isEmpty() == false) {
+            mLabelEvent->setPlainText(entityPtr->event() + " / " + entityPtr->transitionCallback());
+        } else {
+            mLabelEvent->setPlainText(entityPtr->event());
+        }
+
+        if (entityPtr->conditionCallback().isEmpty() == false) {
+            const QString condValue = (entityPtr->expectedConditionValue() == true ? "true" : "false");
+            mLabelCondition->setPlainText("<<" + entityPtr->conditionCallback() + " == " + condValue + ">>");
+        } else {
+            mLabelCondition->setPlainText("");
+        }
+
+        QTimer::singleShot(0, this, SLOT(recalculateLabelPosition()));
     }
 
     update();  // trigger repaint
@@ -432,7 +488,6 @@ void HsmTransition::recalculateLine() {
 
             mLinePath.prepend(pointFrom);
             mLinePath.append(pointTo);
-            // qDebug() << "mLinePath: " << mLinePath.size() << ": " << mLinePath;
         } else if (parentItem() != nullptr) {
             // self transitions
             const QRectF rectParent = parentItem()->boundingRect();
@@ -444,9 +499,6 @@ void HsmTransition::recalculateLine() {
             pointFrom.setY(pointFrom.y() + SELFTRANSITION_Y_OFFSET * (selfTransitionsIndex + 1));
             pointTo.setX(pointFrom.x() + SELFTRANSITION_LENGTH);
             pointTo.setY(pointFrom.y());
-
-            // qDebug() << "parentItem()->boundingRect()" << rectParent;
-            // qDebug() << pointFrom << pointTo;
 
             mLinePath.prepend(pointFrom);
             mLinePath.append(pointTo);
@@ -473,7 +525,6 @@ void HsmTransition::recalculateLine() {
         mLinePath.prepend(pointFrom);
         mLinePath.append(currentMovePos);
         mSrcGrip->setPos(pointFrom);
-        // qDebug() << "DEST changed: " << mLinePath;
     } else if (nullptr != mToElement) {
         currentMovePos = mSrcGrip->pos();
 
@@ -489,7 +540,6 @@ void HsmTransition::recalculateLine() {
         mLinePath.prepend(currentMovePos);
         mLinePath.append(pointTo);
         mDestGrip->setPos(pointTo);
-        // qDebug() << "SRC changed: " << mLinePath;
     } else {
         mLinePath.clear();
     }
@@ -502,7 +552,10 @@ void HsmTransition::recalculateLine() {
     }
 
     updateBoundingRect();
+    recalculateLabelPosition();
+}
 
+void HsmTransition::recalculateLabelPosition() {
     // Don't position label for self-transitions
     if (isSelfTransition() == false && mLabel && mLinePath.size() >= 2) {
         // Always position label as central point plus offset
@@ -517,8 +570,7 @@ void HsmTransition::recalculateLine() {
             mid = mLinePath[n / 2];
         }
 
-        QSignalBlocker block(mLabel);
-        mLabel->setPos(mid + mLabelOffset);
+        mLabel->setPos(mid + mLabelOffset - mLabel->boundingRect().center());
     }
 }
 
@@ -532,7 +584,6 @@ void HsmTransition::setConnectionGripsVisibility(const bool visible) {
 bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
     if (mLinePath.isEmpty() == false) {
         const int gripIndex = findGripIndex(grip);
-        // qDebug() << "HsmTransition::onGripMoved: index=" << gripIndex << ", pos=" << pos;
 
         if (gripIndex >= 0) {
             // Inner grips changed
@@ -583,12 +634,10 @@ void HsmTransition::onGripDoubleClick(ElementGripItem* grip) {
 void HsmTransition::onGripMoveEnterEvent(ElementGripItem* gripItem) {
     // NOTE: old element stays connected, but it's impossible for user to resize it
     if (gripItem == mSrcGrip) {
-        qDebug() << "SRC grip moved";
         mPrevConnectedElement = mFromElement;
         mFromElement = nullptr;
         mConnecting = true;
     } else if (gripItem == mDestGrip) {
-        qDebug() << "DEST grip moved";
         mPrevConnectedElement = mToElement;
         mToElement = nullptr;
         mConnecting = true;
@@ -598,7 +647,6 @@ void HsmTransition::onGripMoveEnterEvent(ElementGripItem* gripItem) {
 }
 
 void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
-    qDebug() << Q_FUNC_INFO;
     // TODO: implement
     if (isConnecting() == true) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {

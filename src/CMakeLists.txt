@@ -10,6 +10,7 @@ set(RESOURCE_FILES view/res/resources.qrc)
 # Create a model library target
 set(MODEL_SOURCES
     model/ModelTypes.cpp
+    model/ModelUtils.cpp
     model/EntryPoint.cpp
     model/ExitPoint.cpp
     model/FinalState.cpp
@@ -66,6 +67,7 @@ set(PROJECT_SOURCES
     view/elements/private/HsmResizableElement.cpp
     view/elements/private/HsmStateTextItem.cpp
     view/elements/private/HsmStateBodySection.cpp
+    view/elements/private/AutoGroupItem.cpp
 
     view/elements/private/styles/HsmRectangularElement.cpp
     view/elements/private/styles/HsmRoundElement.cpp

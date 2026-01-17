@@ -6,6 +6,7 @@
 #include <QWeakPointer>
 
 #include "StateMachineEntity.hpp"
+#include "private/IdentifierString.hpp"
 
 namespace model {
 class State;
@@ -46,14 +47,15 @@ public:
 
 public:
     static constexpr char cKeyTransitionType[] = "transitionType";
+    static constexpr char cKeyExpectedConditionValue[] = "expectedConditionValue";
 
 private:
     TransitionType mTransitionType = TransitionType::EXTERNAL;
     QWeakPointer<State> mSource;
     QWeakPointer<State> mTarget;
-    QString mEvent;
-    QString mTransitionCallback;
-    QString mConditionCallback;
+    priv::IdentifierString mEvent;
+    priv::IdentifierString mTransitionCallback;
+    priv::IdentifierString mConditionCallback;
     bool mExpectedConditionValue = false;
 };
 

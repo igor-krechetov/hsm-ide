@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="transitions">
+    <state id="State_2">
+        <qt:editorinfo geometry="-179.00;-70.00;0;0;246.00;146.00"/>
+        <transition event="NEW_EVENT" type="external" target="State_3" cond="cond is true">
+            <script>transitionCB</script>
+        </transition>
+    </state>
+    <state id="State_3">
+        <qt:editorinfo geometry="301.00;-72.00;0;0;246.00;146.00"/>
+        <transition event="NEW_EVENT" type="external" target="State_4" cond="myCondition is false">
+            <qt:editorinfo localGeometry="443.72;278.98"/>
+        </transition>
+    </state>
+    <state id="State_4">
+        <qt:editorinfo geometry="56.00;275.00;0;0;246.00;146.00"/>
+    </state>
+</scxml>

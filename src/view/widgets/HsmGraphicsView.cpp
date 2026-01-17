@@ -396,34 +396,30 @@ void HsmGraphicsView::wheelEvent(QWheelEvent* event) {
 }
 
 void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
-    if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
-        qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
-        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
-        viewport()->setCursor(Qt::OpenHandCursor);
-        event->accept();
-        // if (!event->isAutoRepeat() && event->key() == Qt::Key_Delete) {
-        //     // Emit signal to request deletion
-        //     emit deleteItemsRequested();
-        //     event->accept();
-        //     return;
-        // }
-    } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
-        qDebug() << "PRESS: CTRL";
-        if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
-            qDebug() << "---- QGuiApplication::setOverrideCursor(Qt::DragMoveCursor)";
-            QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
-            forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
+    QGraphicsView::keyPressEvent(event);
 
-            if (mDragTargetElement) {
-                mDragTargetElement->hightlight(true);
+    // If the scene didn't accept it, we can handle it here if needed
+    if (!event->isAccepted()) {
+        if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
+            qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
+            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
+            viewport()->setCursor(Qt::OpenHandCursor);
+            event->accept();
+        } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
+            qDebug() << "PRESS: CTRL";
+            if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
+                qDebug() << "---- QGuiApplication::setOverrideCursor(Qt::DragMoveCursor)";
+                QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
+                forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
+
+                if (mDragTargetElement) {
+                    mDragTargetElement->hightlight(true);
+                }
             }
-        }
 
-        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
-        qDebug() << mKeyboardModifiers;
-        QGraphicsView::keyPressEvent(event);
-    } else {
-        QGraphicsView::keyPressEvent(event);
+            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
+            qDebug() << mKeyboardModifiers;
+        }
     }
 }
 

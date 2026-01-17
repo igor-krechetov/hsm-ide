@@ -126,8 +126,6 @@ Qt::ItemFlags StateMachineEntityViewModel::flags(const QModelIndex& index) const
 }
 
 bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    qDebug() << "------ StateMachineEntityViewModel::setData";
-
     if (!mSelectedEntity || !index.isValid() || index.column() != 1 || role != Qt::EditRole) {
         return false;
     }

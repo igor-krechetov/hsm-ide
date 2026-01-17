@@ -4,6 +4,7 @@ namespace model {
 
 StateMachineEntity::StateMachineEntity(Type type)
     : mElementType(type) {
+    // TODO: reset state index per model
     static EntityID_t sNextId = 1;
     mId = sNextId;
     ++sNextId;

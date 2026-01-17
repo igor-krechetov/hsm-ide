@@ -5,6 +5,7 @@
 
 #include "ModelTypes.hpp"
 #include "StateMachineEntity.hpp"
+#include "State.hpp"
 
 namespace model {
 
@@ -33,6 +34,9 @@ QSharedPointer<T> hsmDynamicCast(QSharedPointer<StateMachineEntity> entity) {
 
     return ptr;
 }
+
+// Normalize literal for usage in code generation
+QString sanitiseIdentifier(const QString& input);
 
 };  // namespace model
 

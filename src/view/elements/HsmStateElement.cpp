@@ -26,7 +26,7 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
 
     // NOTE: all objects will be deleted using parent-child mechanism, so need for explicit cleanup or smart pointers
     // Create header section
-    mStateNameLabel = new HsmStateTextItem(this);  // Make editable label a direct child
+    mStateNameLabel = new HsmStateTextItem(this, this);  // Make editable label a direct child
     // Other sections
     mSelfTransitionsSection = new QGraphicsRectItem(this);
     mPropertiesSection = new QGraphicsTextItem("Properties", this);

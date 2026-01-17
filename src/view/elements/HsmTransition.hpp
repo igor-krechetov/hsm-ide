@@ -11,6 +11,7 @@
 class QPainter;
 class QWidget;
 class QGraphicsSceneMouseEvent;
+class AutoGroupItem;
 
 namespace view {
 
@@ -77,8 +78,11 @@ protected slots:
     void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
     void onEventEditFinished();
+    void onConditionEditFinished();
     void onEventLabelPositionChanged();
     void onModelDataChanged() override;
+
+    void recalculateLabelPosition();
 
 public slots:
     void recalculateLine();
@@ -87,8 +91,6 @@ private:
     void setConnectionGripsVisibility(const bool visible);
 
 private:
-    bool mDebugShowSelectionPolygon = false;
-
     QPointer<HsmElement> mFromElement;
     QPointer<HsmElement> mToElement;
     QPainterPath mSelectionPath;
@@ -101,7 +103,9 @@ private:
     QPointer<ElementGripItem> mSrcGrip;
     QPointer<ElementGripItem> mDestGrip;
     QPointer<HsmElement> mLastConnectionTarget;
-    QPointer<HsmStateTextItem> mLabel;
+    QPointer<HsmStateTextItem> mLabelEvent;
+    QPointer<HsmStateTextItem> mLabelCondition;
+    AutoGroupItem* mLabel = nullptr;
     QPointF mLabelOffset = QPointF(0, 0);
 };
 
