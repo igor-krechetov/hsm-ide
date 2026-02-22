@@ -66,12 +66,12 @@
 ****** REQ-103e3b: Move substate to top level (hold Ctrl) <<done>>
 ****** REQ-103e3c: Move substate to another parent (hold Ctrl) <<done>>
 ****** REQ-103e3b: Move multiple elements <<done>>
-**** REQ-103f: Restrictions
-***** REQ-103f1: History state must have a parent state <<todo>>
-***** REQ-103f2: Entry point must have a parent state <<todo>>
-***** REQ-103f3: Exit point must have a parent state <<todo>>
-***** REQ-103f4: Initial and final states shall be top level only <<todo>>
-***** REQ-103f5: Visual indication of restricted action <<todo>>
+**** REQ-103f: Hierarchy Restrictions <<done>>
+***** REQ-103f1: History state must have a parent state <<done>>
+***** REQ-103f2: Entry point must have a parent state <<done>>
+***** REQ-103f3: Exit point must have a parent state <<done>>
+***** REQ-103f4: Initial and final states shall be top level only <<done>>
+***** REQ-103f5: Visual indication of restricted action <<done>>
 
 *** REQ-104: State Behavior Configuration <<done>>
 **** REQ-104a: Entry actions (onentry) <<done>>

@@ -3,8 +3,6 @@
 #include <QGraphicsScene>
 #include <QPointF>
 
-#include "view/elements/private/HsmElement.hpp"
-
 namespace view {
 
 HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
@@ -12,7 +10,9 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                                        const bool onlyConnectable,
                                        const bool onlyAcceptsConnections,
                                        const bool onlyAcceptsChildren,
-                                       const HsmElement* ignoreElement) {
+                                       const bool ignoreSelected,
+                                       const HsmElement* ignoreElement,
+                                       const HsmElementType childType) {
     HsmElement* element = nullptr;
 
     if (scene != nullptr) {
@@ -39,8 +39,12 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                             qDebug() << "Target does not accept connections: " << element->modelId()
                                      << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
-                        } else if (onlyAcceptsChildren && element->acceptsChildren() == false) {
+                        } else if (onlyAcceptsChildren && element->acceptsChildElement(childType) == false) {
                             qDebug() << "Target doesn't accept children: " << element->modelId()
+                                     << " | viewElementType=" << elementType << " | " << element;
+                            element = nullptr;
+                        } else if ((true == ignoreSelected) && (element->isSelected() == true)) {
+                            qDebug() << "Targer is selected. Ignoring: modelId=" << element->modelId()
                                      << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
                         }

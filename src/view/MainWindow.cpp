@@ -181,9 +181,10 @@ void MainWindow::onGraphicsViewSelectionChanged() {
     // Get selected elements from graphics view
     auto selectedIds = currentView()->getSelectedElements();
 
-    if (!selectedIds.isEmpty()) {
+    if (selectedIds.size() == 1) {
         selectModelEntityById(selectedIds.first());
     }
+    // TODO: decide what to do with multi selection
 }
 
 void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const QModelIndex& /*previous*/) {
@@ -234,6 +235,9 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
             }
         }
     });
+
+    // TODO: for DEBUG
+    project->importModel("/home/ikrechetov/projects/hsm-ide/tests/models/dragging.scxml");
 }
 
 void MainWindow::projectSelected(ProjectControllerPtr project) {

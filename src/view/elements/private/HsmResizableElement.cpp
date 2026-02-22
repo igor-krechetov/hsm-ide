@@ -64,13 +64,8 @@ void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
         // Get parent's current rectangle
         QRectF parentRect = elementRect();
 
-        // qDebug() << Q_FUNC_INFO << newElement->boundingRect() << " --> ELEM: " << newElement->childrenBoundingRect();
-        // qDebug() << Q_FUNC_INFO << parentRect << resizableParent->childrenBoundingRect();
-
         // Calculate required size to fit child
         QRectF parentNewRect = parentRect.united(childRect);
-
-        // parentRect = resizableParent->childrenBoundingRect();
 
         if (parentRect != parentNewRect) {
             if (parentRect.left() != parentNewRect.left()) {

@@ -17,8 +17,12 @@ void HsmIncludeElement::init(const QSharedPointer<model::StateMachineEntity>& mo
     HsmStateElement::init(modelEntity);
 }
 
-bool HsmIncludeElement::acceptsChildren() const {
+bool HsmIncludeElement::acceptsChildElement(const HsmElementType type) const {
     return false;
+}
+
+bool HsmIncludeElement::canBeTopLevel() const {
+    return true;
 }
 
 void HsmIncludeElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {

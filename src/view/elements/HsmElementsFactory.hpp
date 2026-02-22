@@ -29,6 +29,8 @@ public:
                                      const QSharedPointer<model::StateMachineEntity>& modelElement,
                                      const QSizeF& size);
 
+    static HsmElementType elementTypeFromTypeId(const QString& typeId);
+
 private:
     static HsmElement* createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
     static HsmElement* createElementStart(const QSharedPointer<model::StateMachineEntity>& modelElement, const QSizeF& size);
