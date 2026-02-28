@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "../QtTestCompat.hpp"
 
 #include "model/ModelElementsFactory.hpp"
 #include "model/StateMachineModel.hpp"

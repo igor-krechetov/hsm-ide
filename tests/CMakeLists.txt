@@ -1,6 +1,5 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
-find_package(GTest REQUIRED)
 
 enable_testing()
 
@@ -32,7 +31,6 @@ target_include_directories(ModelTests PRIVATE
 )
 
 target_link_libraries(ModelTests PRIVATE
-    GTest::gtest
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
     model

@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "../../QtTestCompat.hpp"
 
 #include "model/EntryPoint.hpp"
 #include "model/ExitPoint.hpp"

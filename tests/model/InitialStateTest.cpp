@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "../QtTestCompat.hpp"
 
 #include "model/InitialState.hpp"
 #include "model/RegularState.hpp"
