@@ -22,7 +22,6 @@ set(MODEL_SOURCES
     model/State.cpp
     model/StateMachineModel.cpp
     model/Transition.cpp
-    model/SelfTransition.cpp
     model/ModelElementsFactory.cpp
     model/StateMachineEntity.cpp
     model/StateMachineSerializer.cpp

@@ -14,7 +14,6 @@ set(TEST_SOURCES
     model/EntryPointTest.cpp
     model/ExitPointTest.cpp
     model/TransitionTest.cpp
-    model/SelfTransitionTest.cpp
     model/IncludeEntityTest.cpp
     model/ModelRootStateTest.cpp
     model/ModelElementsFactoryTest.cpp
