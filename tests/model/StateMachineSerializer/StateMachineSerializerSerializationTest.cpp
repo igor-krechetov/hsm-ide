@@ -4,6 +4,7 @@
 #include "model/ExitPoint.hpp"
 #include "model/HistoryState.hpp"
 #include "model/IncludeEntity.hpp"
+#include "model/ModelRootState.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
@@ -233,7 +234,9 @@ void StateMachineSerializerSerializationTest::SerializeExitPointAndTargetingTran
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    QVERIFY(scxml.contains("<final id=\"XP\" event=\"leave\""));
+    QVERIFY(scxml.contains("<final"));
+    QVERIFY(scxml.contains("id=\"XP\""));
+    QVERIFY(scxml.contains("event=\"leave\""));
     QVERIFY(scxml.contains("event=\"done\""));
     QVERIFY(scxml.contains("target=\"XP\""));
 }

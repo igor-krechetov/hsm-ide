@@ -20,7 +20,11 @@ int runStateMachineSerializerDeserializationTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
     if (qEnvironmentVariableIsEmpty("HSM_IDE_TEST_SCXML_ROOT")) {
+#ifdef HSM_IDE_TEST_SCXML_ROOT_DEFAULT
+        qputenv("HSM_IDE_TEST_SCXML_ROOT", QByteArray(HSM_IDE_TEST_SCXML_ROOT_DEFAULT));
+#else
         qputenv("HSM_IDE_TEST_SCXML_ROOT", QByteArray("tests/data/scxml"));
+#endif
     }
 
     int result = 0;

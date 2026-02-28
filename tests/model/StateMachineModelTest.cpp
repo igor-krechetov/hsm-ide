@@ -1,6 +1,8 @@
 #include <QtTest>
 
 #include "model/ModelElementsFactory.hpp"
+#include "model/ModelRootState.hpp"
+#include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 
 class StateMachineModelTest : public QObject {

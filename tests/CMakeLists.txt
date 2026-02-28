@@ -36,4 +36,8 @@ target_link_libraries(ModelTests PRIVATE
     model
 )
 
+target_compile_definitions(ModelTests PRIVATE
+    HSM_IDE_TEST_SCXML_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/tests/data/scxml"
+)
+
 add_test(NAME ModelTests COMMAND ModelTests)
