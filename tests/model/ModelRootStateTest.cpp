@@ -1,23 +1,32 @@
-#include "../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/ModelRootState.hpp"
 
-namespace {
+class ModelRootStateTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void NameOnlyProperties();
+};
 
 /**
  * @brief Verify model root exposes only the name property.
  *
  * Use-case: Root metadata editor allows renaming state machine only.
- *
  */
-TEST(ModelRootStateTest, NameOnlyProperties) {
+void ModelRootStateTest::NameOnlyProperties() {
     auto root = QSharedPointer<model::ModelRootState>::create("Root");
 
-    EXPECT_EQ(model::StateType::MODEL_ROOT, root->stateType());
-    EXPECT_EQ(QStringList({"name"}), root->properties());
+    QCOMPARE(model::StateType::MODEL_ROOT, root->stateType());
+    QCOMPARE(QStringList({"name"}), root->properties());
 
-    EXPECT_TRUE(root->setProperty("name", "Renamed"));
-    EXPECT_EQ(QString("Renamed"), root->getProperty("name").toString());
+    QVERIFY(root->setProperty("name", "Renamed"));
+    QCOMPARE(QString("Renamed"), root->getProperty("name").toString());
 }
 
-}  // namespace
+int runModelRootStateTest(int argc, char** argv) {
+    ModelRootStateTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "ModelRootStateTest.moc"

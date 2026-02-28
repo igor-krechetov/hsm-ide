@@ -1,39 +1,48 @@
-#include "../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/ModelTypes.hpp"
 
-namespace {
+class ModelTypesTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void TransitionTypeConversions();
+    void HistoryTypeConversions();
+};
 
 /**
  * @brief Verify transition type conversion helpers round-trip supported values.
  *
  * Use-case: Persist transition type in model properties and restore from integer values.
- *
  */
-TEST(ModelTypesTest, TransitionTypeConversions) {
-    EXPECT_EQ(model::TransitionType::EXTERNAL, model::transitionTypeFromInt(static_cast<int>(model::TransitionType::EXTERNAL)));
-    EXPECT_EQ(model::TransitionType::INTERNAL, model::transitionTypeFromInt(static_cast<int>(model::TransitionType::INTERNAL)));
-    EXPECT_EQ(model::TransitionType::INVALID, model::transitionTypeFromInt(777));
+void ModelTypesTest::TransitionTypeConversions() {
+    QCOMPARE(model::TransitionType::EXTERNAL, model::transitionTypeFromInt(static_cast<int>(model::TransitionType::EXTERNAL)));
+    QCOMPARE(model::TransitionType::INTERNAL, model::transitionTypeFromInt(static_cast<int>(model::TransitionType::INTERNAL)));
+    QCOMPARE(model::TransitionType::INVALID, model::transitionTypeFromInt(777));
 
-    EXPECT_EQ(QString("External"), model::transitionTypeToString(model::TransitionType::EXTERNAL));
-    EXPECT_EQ(QString("Internal"), model::transitionTypeToString(model::TransitionType::INTERNAL));
-    EXPECT_EQ(QString(""), model::transitionTypeToString(model::TransitionType::INVALID));
+    QCOMPARE(QString("External"), model::transitionTypeToString(model::TransitionType::EXTERNAL));
+    QCOMPARE(QString("Internal"), model::transitionTypeToString(model::TransitionType::INTERNAL));
+    QCOMPARE(QString(""), model::transitionTypeToString(model::TransitionType::INVALID));
 }
 
 /**
  * @brief Verify history type conversion helpers round-trip supported values.
  *
  * Use-case: Persist history type in model properties and restore from integer values.
- *
  */
-TEST(ModelTypesTest, HistoryTypeConversions) {
-    EXPECT_EQ(model::HistoryType::SHALLOW, model::historyTypeFromInt(static_cast<int>(model::HistoryType::SHALLOW)));
-    EXPECT_EQ(model::HistoryType::DEEP, model::historyTypeFromInt(static_cast<int>(model::HistoryType::DEEP)));
-    EXPECT_EQ(model::HistoryType::INVALID, model::historyTypeFromInt(-8));
+void ModelTypesTest::HistoryTypeConversions() {
+    QCOMPARE(model::HistoryType::SHALLOW, model::historyTypeFromInt(static_cast<int>(model::HistoryType::SHALLOW)));
+    QCOMPARE(model::HistoryType::DEEP, model::historyTypeFromInt(static_cast<int>(model::HistoryType::DEEP)));
+    QCOMPARE(model::HistoryType::INVALID, model::historyTypeFromInt(-8));
 
-    EXPECT_EQ(QString("Shallow"), model::historyTypeToString(model::HistoryType::SHALLOW));
-    EXPECT_EQ(QString("Deep"), model::historyTypeToString(model::HistoryType::DEEP));
-    EXPECT_EQ(QString(""), model::historyTypeToString(model::HistoryType::INVALID));
+    QCOMPARE(QString("Shallow"), model::historyTypeToString(model::HistoryType::SHALLOW));
+    QCOMPARE(QString("Deep"), model::historyTypeToString(model::HistoryType::DEEP));
+    QCOMPARE(QString(""), model::historyTypeToString(model::HistoryType::INVALID));
 }
 
-}  // namespace
+int runModelTypesTest(int argc, char** argv) {
+    ModelTypesTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "ModelTypesTest.moc"

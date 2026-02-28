@@ -1,4 +1,4 @@
-#include "../../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/ExitPoint.hpp"
 #include "model/FinalState.hpp"
@@ -11,9 +11,24 @@
 #include "model/Transition.hpp"
 #include "../TestPaths.hpp"
 
-namespace {
+class StateMachineSerializerDeserializationTest : public QObject {
+    Q_OBJECT
 
-int countDirectTransitions(const QSharedPointer<model::RegularState>& state) {
+private slots:
+    void DeserializeDeepHistory();
+    void DeserializeShallowHistory();
+    void DeserializeSubstatesHierarchy();
+    void DeserializeMultipleTransitionsForSingleState();
+    void DeserializeExternalAndInternalTransitions();
+    void DeserializeEntryPointTransitions();
+    void DeserializeExitPointAndTargetingTransition();
+    void DeserializeIncludeEntity();
+    void DeserializeMalformedXml();
+    void DeserializeStateWithoutId();
+    void ValidateStructure();
+};
+
+static int countDirectTransitions(const QSharedPointer<model::RegularState>& state) {
     int count = 0;
 
     for (const auto& child : state->childrenEntities()) {
@@ -36,19 +51,19 @@ int countDirectTransitions(const QSharedPointer<model::RegularState>& state) {
  * H --> S1 : resume
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeDeepHistory) {
+void StateMachineSerializerDeserializationTest::DeserializeDeepHistory() {
     const QString scxml = test::loadScxmlFixture("history_deep.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto history = model->root()->findChildStateByName("H").dynamicCast<model::HistoryState>();
-    ASSERT_TRUE(history);
-    EXPECT_EQ(model::HistoryType::DEEP, history->historyType());
-    ASSERT_TRUE(history->defaultTransition());
-    EXPECT_EQ(QString("resume"), history->defaultTransition()->event());
+    QVERIFY(history);
+    QCOMPARE(model::HistoryType::DEEP, history->historyType());
+    QVERIFY(history->defaultTransition());
+    QCOMPARE(QString("resume"), history->defaultTransition()->event());
 }
 
 /**
@@ -62,19 +77,19 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeDeepHistory) {
  * H --> S2 : resume
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeShallowHistory) {
+void StateMachineSerializerDeserializationTest::DeserializeShallowHistory() {
     const QString scxml = test::loadScxmlFixture("history_shallow.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto history = model->root()->findChildStateByName("H").dynamicCast<model::HistoryState>();
-    ASSERT_TRUE(history);
-    EXPECT_EQ(model::HistoryType::SHALLOW, history->historyType());
-    ASSERT_TRUE(history->defaultTransition());
-    EXPECT_EQ(QString("S2"), history->defaultTransition()->target()->name());
+    QVERIFY(history);
+    QCOMPARE(model::HistoryType::SHALLOW, history->historyType());
+    QVERIFY(history->defaultTransition());
+    QCOMPARE(QString("S2"), history->defaultTransition()->target()->name());
 }
 
 /**
@@ -91,25 +106,25 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeShallowHistory) {
  * }
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeSubstatesHierarchy) {
+void StateMachineSerializerDeserializationTest::DeserializeSubstatesHierarchy() {
     const QString scxml = test::loadScxmlFixture("substates.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto parent = model->root()->findChildStateByName("Parent").dynamicCast<model::RegularState>();
-    ASSERT_TRUE(parent);
+    QVERIFY(parent);
     auto childA = model->root()->findChildStateByName("ChildA").dynamicCast<model::RegularState>();
     auto childB = model->root()->findChildStateByName("ChildB").dynamicCast<model::RegularState>();
     auto grandChild = model->root()->findChildStateByName("GrandChild").dynamicCast<model::RegularState>();
 
-    ASSERT_TRUE(childA);
-    ASSERT_TRUE(childB);
-    ASSERT_TRUE(grandChild);
-    EXPECT_EQ(parent, model->root()->findParentState(childA->id()).dynamicCast<model::RegularState>());
-    EXPECT_EQ(childB, model->root()->findParentState(grandChild->id()).dynamicCast<model::RegularState>());
+    QVERIFY(childA);
+    QVERIFY(childB);
+    QVERIFY(grandChild);
+    QCOMPARE(parent, model->root()->findParentState(childA->id()).dynamicCast<model::RegularState>());
+    QCOMPARE(childB, model->root()->findParentState(grandChild->id()).dynamicCast<model::RegularState>());
 }
 
 /**
@@ -122,17 +137,17 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeSubstatesHierarchy) {
  * S1 --> S3 : e2
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeMultipleTransitionsForSingleState) {
+void StateMachineSerializerDeserializationTest::DeserializeMultipleTransitionsForSingleState() {
     const QString scxml = test::loadScxmlFixture("multiple_transitions.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto s1 = model->root()->findChildStateByName("S1").dynamicCast<model::RegularState>();
-    ASSERT_TRUE(s1);
-    EXPECT_EQ(2, countDirectTransitions(s1));
+    QVERIFY(s1);
+    QCOMPARE(2, countDirectTransitions(s1));
 }
 
 /**
@@ -145,16 +160,16 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeMultipleTransitionsFo
  * S1 --> S3 : e2 / internal
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeExternalAndInternalTransitions) {
+void StateMachineSerializerDeserializationTest::DeserializeExternalAndInternalTransitions() {
     const QString scxml = test::loadScxmlFixture("multiple_transitions.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto s1 = model->root()->findChildStateByName("S1").dynamicCast<model::RegularState>();
-    ASSERT_TRUE(s1);
+    QVERIFY(s1);
 
     bool seenExternal = false;
     bool seenInternal = false;
@@ -175,8 +190,8 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeExternalAndInternalTr
         return keepWalking;
     });
 
-    EXPECT_TRUE(seenExternal);
-    EXPECT_TRUE(seenInternal);
+    QVERIFY(seenExternal);
+    QVERIFY(seenInternal);
 }
 
 /**
@@ -191,14 +206,14 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeExternalAndInternalTr
  * }
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeEntryPointTransitions) {
+void StateMachineSerializerDeserializationTest::DeserializeEntryPointTransitions() {
     const QString scxml = test::loadScxmlFixture("entrypoint_multiple.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     bool hasInitialState = false;
     bool hasTransitionToAorB = false;
 
@@ -223,8 +238,8 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeEntryPointTransitions
             return keepWalking;
         });
 
-    EXPECT_TRUE(hasInitialState);
-    EXPECT_TRUE(hasTransitionToAorB);
+    QVERIFY(hasInitialState);
+    QVERIFY(hasTransitionToAorB);
 }
 
 /**
@@ -240,20 +255,20 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeEntryPointTransitions
  * }
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeExitPointAndTargetingTransition) {
+void StateMachineSerializerDeserializationTest::DeserializeExitPointAndTargetingTransition() {
     const QString scxml = test::loadScxmlFixture("exitpoint.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto xp = model->root()->findChildStateByName("XP").dynamicCast<model::ExitPoint>();
-    ASSERT_TRUE(xp);
-    EXPECT_EQ(QString("leave"), xp->event());
+    QVERIFY(xp);
+    QCOMPARE(QString("leave"), xp->event());
 
     auto worker = model->root()->findChildStateByName("Worker").dynamicCast<model::RegularState>();
-    ASSERT_TRUE(worker);
+    QVERIFY(worker);
 
     bool hasTargetingTransition = false;
     worker->forEachChildElement([&hasTargetingTransition](QSharedPointer<model::StateMachineEntity> parent,
@@ -271,7 +286,7 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeExitPointAndTargeting
         return keepWalking;
     });
 
-    EXPECT_TRUE(hasTargetingTransition);
+    QVERIFY(hasTargetingTransition);
 }
 
 /**
@@ -284,17 +299,17 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeExitPointAndTargeting
  * IncludeNode : xi:include href=subchart.scxml
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeIncludeEntity) {
+void StateMachineSerializerDeserializationTest::DeserializeIncludeEntity() {
     const QString scxml = test::loadScxmlFixture("include_entity.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
+    QVERIFY(model);
     auto include = model->root()->findChildStateByName("IncludeNode").dynamicCast<model::IncludeEntity>();
-    ASSERT_TRUE(include);
-    EXPECT_EQ(QString("subchart.scxml"), include->path());
+    QVERIFY(include);
+    QCOMPARE(QString("subchart.scxml"), include->path());
 }
 
 /**
@@ -306,14 +321,14 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeIncludeEntity) {
  * [*] --> ParseError
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeMalformedXml) {
+void StateMachineSerializerDeserializationTest::DeserializeMalformedXml() {
     const QString scxml = test::loadScxmlFixture("malformed_not_xml.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    EXPECT_TRUE(model == nullptr || model->root()->childrenEntities().isEmpty());
+    QVERIFY(model == nullptr || model->root()->childrenEntities().isEmpty());
 }
 
 /**
@@ -325,16 +340,16 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeMalformedXml) {
  * state (missing id)
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, DeserializeStateWithoutId) {
+void StateMachineSerializerDeserializationTest::DeserializeStateWithoutId() {
     const QString scxml = test::loadScxmlFixture("malformed_missing_state_id.scxml");
-    ASSERT_FALSE(scxml.isEmpty());
+    QVERIFY(!scxml.isEmpty());
 
     model::StateMachineSerializer serializer;
     auto model = serializer.deserializeFromScxml(scxml);
 
-    ASSERT_TRUE(model);
-    EXPECT_EQ(nullptr, model->root()->findChildStateByName(""));
-    EXPECT_TRUE(model->root()->findChildStateByName("S2") != nullptr);
+    QVERIFY(model);
+    QCOMPARE(QSharedPointer<model::State>(), model->root()->findChildStateByName(""));
+    QVERIFY(model->root()->findChildStateByName("S2") != nullptr);
 }
 
 /**
@@ -346,13 +361,18 @@ TEST(StateMachineSerializerDeserializationTest, DeserializeStateWithoutId) {
  * [*] --> ValidOrInvalid
  * @enduml
  */
-TEST(StateMachineSerializerDeserializationTest, ValidateStructure) {
+void StateMachineSerializerDeserializationTest::ValidateStructure() {
     model::StateMachineSerializer serializer;
     const QString valid = "<scxml xmlns=\"http://www.w3.org/2005/07/scxml\" version=\"1.0\"></scxml>";
     const QString invalid = "<scxml version=\"1.0\"></scxml>";
 
-    EXPECT_TRUE(serializer.validateScxmlStructure(valid));
-    EXPECT_FALSE(serializer.validateScxmlStructure(invalid));
+    QVERIFY(serializer.validateScxmlStructure(valid));
+    QVERIFY(!serializer.validateScxmlStructure(invalid));
 }
 
-}  // namespace
+int runStateMachineSerializerDeserializationTest(int argc, char** argv) {
+    StateMachineSerializerDeserializationTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "StateMachineSerializerDeserializationTest.moc"

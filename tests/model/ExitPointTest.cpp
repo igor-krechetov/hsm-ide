@@ -1,25 +1,34 @@
-#include "../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/ExitPoint.hpp"
 
-namespace {
+class ExitPointTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void EventAndCallbackProperties();
+};
 
 /**
  * @brief Verify exit point event/callback properties.
  *
  * Use-case: Exit point emits auto event and lifecycle callbacks.
- *
  */
-TEST(ExitPointTest, EventAndCallbackProperties) {
+void ExitPointTest::EventAndCallbackProperties() {
     auto exit = QSharedPointer<model::ExitPoint>::create("XP");
 
-    EXPECT_TRUE(exit->setProperty("event", "done"));
-    EXPECT_TRUE(exit->setProperty("onEnteringCallback", "inCb"));
-    EXPECT_TRUE(exit->setProperty("onExitingCallback", "outCb"));
+    QVERIFY(exit->setProperty("event", "done"));
+    QVERIFY(exit->setProperty("onEnteringCallback", "inCb"));
+    QVERIFY(exit->setProperty("onExitingCallback", "outCb"));
 
-    EXPECT_EQ(QString("done"), exit->event());
-    EXPECT_EQ(QString("inCb"), exit->onEnteringCallback());
-    EXPECT_EQ(QString("outCb"), exit->onExitingCallback());
+    QCOMPARE(QString("done"), exit->event());
+    QCOMPARE(QString("inCb"), exit->onEnteringCallback());
+    QCOMPARE(QString("outCb"), exit->onExitingCallback());
 }
 
-}  // namespace
+int runExitPointTest(int argc, char** argv) {
+    ExitPointTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "ExitPointTest.moc"

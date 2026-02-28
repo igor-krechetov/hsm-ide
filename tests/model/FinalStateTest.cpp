@@ -1,21 +1,30 @@
-#include "../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/FinalState.hpp"
 
-namespace {
+class FinalStateTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void CallbackPropertyRoundTrip();
+};
 
 /**
  * @brief Verify final state callback property behavior.
  *
  * Use-case: Configure completion callback for final state entry.
- *
  */
-TEST(FinalStateTest, CallbackPropertyRoundTrip) {
+void FinalStateTest::CallbackPropertyRoundTrip() {
     auto state = QSharedPointer<model::FinalState>::create("Done");
 
-    EXPECT_TRUE(state->setProperty("onStateChangedCallback", "completeCb"));
-    EXPECT_EQ(QString("completeCb"), state->onStateChangedCallback());
-    EXPECT_EQ(QString("completeCb"), state->getProperty("onStateChangedCallback").toString());
+    QVERIFY(state->setProperty("onStateChangedCallback", "completeCb"));
+    QCOMPARE(QString("completeCb"), state->onStateChangedCallback());
+    QCOMPARE(QString("completeCb"), state->getProperty("onStateChangedCallback").toString());
 }
 
-}  // namespace
+int runFinalStateTest(int argc, char** argv) {
+    FinalStateTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "FinalStateTest.moc"

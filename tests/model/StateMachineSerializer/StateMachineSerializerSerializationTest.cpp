@@ -1,17 +1,27 @@
-#include "../../QtTestCompat.hpp"
+#include <QtTest>
 
 #include "model/EntryPoint.hpp"
 #include "model/ExitPoint.hpp"
-#include "model/FinalState.hpp"
 #include "model/HistoryState.hpp"
 #include "model/IncludeEntity.hpp"
-#include "model/InitialState.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
 #include "model/Transition.hpp"
 
-namespace {
+class StateMachineSerializerSerializationTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void SerializeDeepHistory();
+    void SerializeShallowHistory();
+    void SerializeSubstatesHierarchy();
+    void SerializeMultipleTransitionsForSingleState();
+    void SerializeExternalAndInternalTransitions();
+    void SerializeEntryPointTransitions();
+    void SerializeExitPointAndTargetingTransition();
+    void SerializeIncludeEntity();
+};
 
 /**
  * @brief Validate serialization of deep history with default transition.
@@ -24,7 +34,7 @@ namespace {
  * H --> S1 : resume
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeDeepHistory) {
+void StateMachineSerializerSerializationTest::SerializeDeepHistory() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto s1 = QSharedPointer<model::RegularState>::create("S1");
@@ -37,8 +47,8 @@ TEST(StateMachineSerializerSerializationTest, SerializeDeepHistory) {
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<history id=\"H\" type=\"deep\""));
-    EXPECT_TRUE(scxml.contains("event=\"resume\""));
+    QVERIFY(scxml.contains("<history id=\"H\" type=\"deep\""));
+    QVERIFY(scxml.contains("event=\"resume\""));
 }
 
 /**
@@ -51,7 +61,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeDeepHistory) {
  * state H <<history:shallow>>
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeShallowHistory) {
+void StateMachineSerializerSerializationTest::SerializeShallowHistory() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto s1 = QSharedPointer<model::RegularState>::create("S1");
@@ -63,7 +73,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeShallowHistory) {
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<history id=\"H\" type=\"shallow\""));
+    QVERIFY(scxml.contains("<history id=\"H\" type=\"shallow\""));
 }
 
 /**
@@ -77,7 +87,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeShallowHistory) {
  * }
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeSubstatesHierarchy) {
+void StateMachineSerializerSerializationTest::SerializeSubstatesHierarchy() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto parent = QSharedPointer<model::RegularState>::create("Parent");
@@ -89,8 +99,8 @@ TEST(StateMachineSerializerSerializationTest, SerializeSubstatesHierarchy) {
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<state id=\"Parent\""));
-    EXPECT_TRUE(scxml.contains("<state id=\"Child\""));
+    QVERIFY(scxml.contains("<state id=\"Parent\""));
+    QVERIFY(scxml.contains("<state id=\"Child\""));
 }
 
 /**
@@ -103,7 +113,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeSubstatesHierarchy) {
  * S1 --> S3 : e2
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeMultipleTransitionsForSingleState) {
+void StateMachineSerializerSerializationTest::SerializeMultipleTransitionsForSingleState() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto s1 = QSharedPointer<model::RegularState>::create("S1");
@@ -119,8 +129,8 @@ TEST(StateMachineSerializerSerializationTest, SerializeMultipleTransitionsForSin
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_NE(scxml.indexOf("event=\"e1\""), -1);
-    EXPECT_NE(scxml.indexOf("event=\"e2\""), -1);
+    QVERIFY(scxml.contains("event=\"e1\""));
+    QVERIFY(scxml.contains("event=\"e2\""));
 }
 
 /**
@@ -133,7 +143,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeMultipleTransitionsForSin
  * S1 --> S3 : in / internal
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeExternalAndInternalTransitions) {
+void StateMachineSerializerSerializationTest::SerializeExternalAndInternalTransitions() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto s1 = QSharedPointer<model::RegularState>::create("S1");
@@ -153,8 +163,8 @@ TEST(StateMachineSerializerSerializationTest, SerializeExternalAndInternalTransi
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("event=\"ext\" type=\"external\""));
-    EXPECT_TRUE(scxml.contains("event=\"in\" type=\"internal\""));
+    QVERIFY(scxml.contains("event=\"ext\" type=\"external\""));
+    QVERIFY(scxml.contains("event=\"in\" type=\"internal\""));
 }
 
 /**
@@ -169,7 +179,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeExternalAndInternalTransi
  * }
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeEntryPointTransitions) {
+void StateMachineSerializerSerializationTest::SerializeEntryPointTransitions() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto region = QSharedPointer<model::RegularState>::create("Region");
@@ -188,9 +198,9 @@ TEST(StateMachineSerializerSerializationTest, SerializeEntryPointTransitions) {
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<initial>"));
-    EXPECT_TRUE(scxml.contains("event=\"toA\""));
-    EXPECT_TRUE(scxml.contains("event=\"toB\""));
+    QVERIFY(scxml.contains("<initial>"));
+    QVERIFY(scxml.contains("event=\"toA\""));
+    QVERIFY(scxml.contains("event=\"toB\""));
 }
 
 /**
@@ -206,7 +216,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeEntryPointTransitions) {
  * }
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeExitPointAndTargetingTransition) {
+void StateMachineSerializerSerializationTest::SerializeExitPointAndTargetingTransition() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto parent = QSharedPointer<model::RegularState>::create("Parent");
@@ -223,9 +233,9 @@ TEST(StateMachineSerializerSerializationTest, SerializeExitPointAndTargetingTran
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<final id=\"XP\" event=\"leave\""));
-    EXPECT_TRUE(scxml.contains("event=\"done\""));
-    EXPECT_TRUE(scxml.contains("target=\"XP\""));
+    QVERIFY(scxml.contains("<final id=\"XP\" event=\"leave\""));
+    QVERIFY(scxml.contains("event=\"done\""));
+    QVERIFY(scxml.contains("target=\"XP\""));
 }
 
 /**
@@ -238,7 +248,7 @@ TEST(StateMachineSerializerSerializationTest, SerializeExitPointAndTargetingTran
  * IncludeNode : xi:include href=subchart.scxml
  * @enduml
  */
-TEST(StateMachineSerializerSerializationTest, SerializeIncludeEntity) {
+void StateMachineSerializerSerializationTest::SerializeIncludeEntity() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
     auto include = QSharedPointer<model::IncludeEntity>::create("IncludeNode");
@@ -249,7 +259,12 @@ TEST(StateMachineSerializerSerializationTest, SerializeIncludeEntity) {
     model::StateMachineSerializer serializer;
     const QString scxml = serializer.serializeToScxml(model);
 
-    EXPECT_TRUE(scxml.contains("<xi:include href=\"subchart.scxml\" parse=\"xml\""));
+    QVERIFY(scxml.contains("<xi:include href=\"subchart.scxml\" parse=\"xml\""));
 }
 
-}  // namespace
+int runStateMachineSerializerSerializationTest(int argc, char** argv) {
+    StateMachineSerializerSerializationTest tc;
+    return QTest::qExec(&tc, argc, argv);
+}
+
+#include "StateMachineSerializerSerializationTest.moc"
