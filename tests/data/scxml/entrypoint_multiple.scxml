@@ -1,0 +1,10 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="EntryMachine">
+    <state id="Region">
+        <initial>
+            <transition event="toA" type="external" target="A"/>
+            <transition event="toB" type="external" target="B"/>
+        </initial>
+        <state id="A"/>
+        <state id="B"/>
+    </state>
+</scxml>

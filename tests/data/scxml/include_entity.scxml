@@ -1,0 +1,5 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" version="1.0" name="IncludeMachine">
+    <state id="IncludeNode">
+        <xi:include href="subchart.scxml" parse="xml"/>
+    </state>
+</scxml>

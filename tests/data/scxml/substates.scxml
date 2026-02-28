@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="SubstateMachine">
+    <state id="Parent">
+        <state id="ChildA"/>
+        <state id="ChildB">
+            <state id="GrandChild"/>
+        </state>
+    </state>
+</scxml>

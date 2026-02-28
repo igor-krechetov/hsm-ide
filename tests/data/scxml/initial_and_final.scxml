@@ -1,0 +1,7 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="InitialFinalMachine">
+    <initial>
+        <transition type="external" target="S1"/>
+    </initial>
+    <state id="S1"/>
+    <final id="Done"/>
+</scxml>

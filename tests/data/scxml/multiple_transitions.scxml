@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="MultiTransitionMachine">
+    <state id="S1">
+        <transition event="e1" type="external" target="S2"/>
+        <transition event="e2" type="internal" target="S3"/>
+    </state>
+    <state id="S2"/>
+    <state id="S3"/>
+</scxml>

@@ -1,29 +1,41 @@
-
-
-
-# Find Qt components
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Test)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Test)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
+find_package(GTest REQUIRED)
 
 enable_testing()
 
 set(TEST_SOURCES
-    StateMachineSerializerTest.cpp
+    TestMain.cpp
+    model/ModelTypesTest.cpp
+    model/StateMachineEntityTest.cpp
+    model/RegularStateTest.cpp
+    model/HistoryStateTest.cpp
+    model/InitialStateTest.cpp
+    model/FinalStateTest.cpp
+    model/EntryPointTest.cpp
+    model/ExitPointTest.cpp
+    model/TransitionTest.cpp
+    model/SelfTransitionTest.cpp
+    model/IncludeEntityTest.cpp
+    model/ModelRootStateTest.cpp
+    model/ModelElementsFactoryTest.cpp
+    model/StateMachineModelTest.cpp
+    model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
+    model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
 )
 
-add_executable(StateMachineSerializerTests ${TEST_SOURCES})
+add_executable(ModelTests ${TEST_SOURCES})
 
-target_include_directories(StateMachineSerializerTests PRIVATE
+target_include_directories(ModelTests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/model
 )
 
-target_link_libraries(StateMachineSerializerTests PRIVATE
+target_link_libraries(ModelTests PRIVATE
+    GTest::gtest
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
     model
 )
 
-add_test(NAME StateMachineSerializerTests COMMAND StateMachineSerializerTests)
-
-
+add_test(NAME ModelTests COMMAND ModelTests)
