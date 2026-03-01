@@ -42,6 +42,10 @@ bool HsmConnectableElement::acceptsConnections() const {
     return true;
 }
 
+const QRectF& HsmConnectableElement::hoverRect() const {
+    return mHoverRect;
+}
+
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
     qreal arrowOffset = 0.0;
@@ -105,12 +109,34 @@ void HsmConnectableElement::createConnectionArrows() {
 }
 
 void HsmConnectableElement::removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos) {
-    for (QGraphicsItem* item : scene()->items()) {
-        auto* connectable = dynamic_cast<HsmConnectableElement*>(item);
-        if (connectable && connectable != this) {
-            const QRectF sceneRect = mapRectToScene(connectable->elementRect());
+    const QRectF elementSceneRect = mapRectToScene(elementRect());
+    QList<QPointer<HsmConnectableElement>> relatedItems;
+    HsmConnectableElement* ptrElement = this;
 
-            if (sceneRect.contains(sceneMousePos)) {
+    // Collect list of parent items
+    while (nullptr != ptrElement) {
+        ptrElement = dynamic_cast<HsmConnectableElement*>(ptrElement->hsmParentItem().get());
+
+        if (ptrElement && ptrElement != this) {
+            relatedItems.append(ptrElement);
+        }
+    }
+
+    // Collect connectable child items
+    forEachHsmChildElement([&relatedItems](HsmElement* child) {
+        auto* connectableChild = dynamic_cast<HsmConnectableElement*>(child);
+        if (connectableChild) {
+            relatedItems.append(connectableChild);
+        }
+    });
+
+    for (HsmConnectableElement* connectable : relatedItems) {
+        const QRectF elementHoverRect = connectable->mapRectToScene(connectable->hoverRect());
+
+        if (elementHoverRect.contains(elementSceneRect)) {
+            connectable->removeConnectionArrows();
+        } else {
+            if (false == elementHoverRect.contains(sceneMousePos)) {
                 connectable->removeConnectionArrows();
             }
         }
@@ -190,7 +216,7 @@ QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arr
 
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     if (isConnectable() == true && hasVisibleArrows() == false) {
-        const QRectF sceneRect = mapRectToScene(mOuterRect);
+        const QRectF sceneRect = mapRectToScene(hoverRect());
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {

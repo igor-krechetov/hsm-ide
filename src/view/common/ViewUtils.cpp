@@ -44,7 +44,7 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                                      << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
                         } else if ((true == ignoreSelected) && (element->isSelected() == true)) {
-                            qDebug() << "Targer is selected. Ignoring: modelId=" << element->modelId()
+                            qDebug() << "Target is selected. Ignoring: modelId=" << element->modelId()
                                      << " | viewElementType=" << elementType << " | " << element;
                             element = nullptr;
                         }

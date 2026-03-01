@@ -31,6 +31,7 @@ public:
 
     bool isConnectable() const override;
     bool acceptsConnections() const override;
+    const QRectF& hoverRect() const;
 
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
