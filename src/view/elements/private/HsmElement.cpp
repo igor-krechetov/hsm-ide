@@ -158,16 +158,42 @@ bool HsmElement::isResizable() const {
 //     return element;
 // }
 
-bool HsmElement::acceptsChildren() const {
+bool HsmElement::canBeTopLevel() const {
     return false;
+}
+
+bool HsmElement::acceptsChildElement(const HsmElementType type) const {
+    return false;
+}
+
+bool HsmElement::acceptsChildElement(HsmElement* element) const {
+    return (nullptr != element ? element->acceptsChildElement(element->elementType()) : false);
 }
 
 QList<QGraphicsItem*> HsmElement::hsmChildItems() const {
     return childItems();
 }
 
-bool HsmElement::isDirectChild(HsmElement* item) const {
-    return hsmChildItems().contains(item);
+bool HsmElement::isDirectChild(HsmElement* child) const {
+    return hsmChildItems().contains(child);
+}
+
+bool HsmElement::containsChild(HsmElement* child) const {
+    bool res = false;
+
+    // qDebug() << "======= CHILDREN COUNT" << hsmChildItems().size();
+
+    for (QGraphicsItem* item : hsmChildItems()) {
+        if (auto element = qgraphicsitem_cast<HsmElement*>(item)) {
+            // qDebug() << "====== parent" << this << "child X" << element;
+            if ((child == element) || (element->containsChild(child) == true)) {
+                res = true;
+                break;
+            }
+        }
+    }
+
+    return res;
 }
 
 QRectF HsmElement::childrenRect() const {

@@ -21,7 +21,9 @@ public:
     virtual ~HsmIncludeElement() = default;
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
-    bool acceptsChildren() const override;
+    bool acceptsChildElement(const HsmElementType type) const override;
+
+    bool canBeTopLevel() const override;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;

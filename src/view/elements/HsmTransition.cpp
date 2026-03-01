@@ -598,7 +598,7 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
             // Check if there is an element under cursor and highlight it
-            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, nullptr);
+            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
 
             if (mLastConnectionTarget != element) {
                 if (mLastConnectionTarget) {
@@ -652,7 +652,7 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
             QPointF pos = gripItem->pos();
             // check if there is an element which accepts connections
-            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, nullptr);
+            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;

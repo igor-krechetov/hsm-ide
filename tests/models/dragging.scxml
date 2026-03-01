@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Dragging Test">
+    <state id="State_2">
+        <qt:editorinfo geometry="49.32;-222.81;0;0;202.00;102.00"/>
+    </state>
+    <state id="State_3">
+        <qt:editorinfo geometry="-249.45;-316.70;0;0;281.00;210.00"/>
+        <history id="State_4" type="shallow">
+            <qt:editorinfo geometry="117.00;109.90;0;0;42.00;42.00"/>
+        </history>
+    </state>
+    <state id="State_5">
+        <qt:editorinfo geometry="-249.09;-66.10;0;0;298.00;222.00"/>
+        <state id="State_6">
+            <qt:editorinfo geometry="48.00;67.00;0;0;202.00;123.00"/>
+        </state>
+    </state>
+    <state id="State_7">
+        <qt:editorinfo geometry="318.73;-239.94;0;0;202.00;120.00"/>
+    </state>
+    <state id="State_8">
+        <qt:editorinfo geometry="-241.29;212.20;0;0;296.00;301.00"/>
+        <state id="State_9">
+            <qt:editorinfo geometry="52.40;67.64;0;0;202.00;102.00"/>
+        </state>
+        <state id="State_10">
+            <qt:editorinfo geometry="50.65;179.58;0;0;202.00;102.00"/>
+        </state>
+    </state>
+    <state id="State_11">
+        <qt:editorinfo geometry="-612.15;-321.82;0;0;244.00;216.00"/>
+        <history id="State_21" type="shallow">
+            <qt:editorinfo geometry="99.69;108.44;0;0;42.00;42.00"/>
+        </history>
+    </state>
+    <state id="State_13">
+        <qt:editorinfo geometry="-613.90;-75.21;0;0;244.00;223.00"/>
+        <history id="State_22" type="shallow">
+            <qt:editorinfo geometry="97.94;115.43;0;0;42.00;42.00"/>
+        </history>
+    </state>
+    <state id="State_15">
+        <qt:editorinfo geometry="190.64;218.63;0;0;398.00;242.00"/>
+        <state id="State_16">
+            <qt:editorinfo geometry="78.71;69.96;0;0;244.00;144.00"/>
+            <history id="State_23" type="shallow">
+                <qt:editorinfo geometry="111.94;71.71;0;0;42.00;42.00"/>
+            </history>
+        </state>
+    </state>
+    <state id="State_15">
+        <qt:editorinfo geometry="-615.27;-602.45;0;0;372.00;224.00"/>
+        <history id="State_16" type="shallow">
+            <qt:editorinfo geometry="57.83;84.32;0;0;42.00;42.00"/>
+        </history>
+        <state id="State_17">
+            <qt:editorinfo geometry="136.47;72.76;0;0;200.00;117.00"/>
+        </state>
+    </state>
+</scxml>

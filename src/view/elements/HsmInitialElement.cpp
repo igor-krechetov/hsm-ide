@@ -6,10 +6,14 @@
 namespace view {
 
 HsmInitialElement::HsmInitialElement()
-    : HsmRoundElement(HsmElementType::START) {}
+    : HsmRoundElement(HsmElementType::INITIAL) {}
 
 bool HsmInitialElement::acceptsConnections() const {
     return false;
+}
+
+bool HsmInitialElement::canBeTopLevel() const {
+    return true;
 }
 
 void HsmInitialElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {

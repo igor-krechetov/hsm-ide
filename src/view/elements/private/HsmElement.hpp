@@ -25,7 +25,7 @@ class ElementGripItem;
 enum class HsmElementType {
     UNKNOWN,
 
-    START,
+    INITIAL,
     FINAL,
     ENTRY_POINT,
     EXIT_POINT,
@@ -81,9 +81,17 @@ public:
     virtual bool isResizable() const;
     // HsmElement* connectableElementAt(const QPointF& pos) const;
 
-    virtual bool acceptsChildren() const;
+    // true if element is allowed to be a top level element in the scene
+    virtual bool canBeTopLevel() const;
+    // todo: merge with acceptsElement
+    virtual bool acceptsChildElement(const HsmElementType type) const;
+    bool acceptsChildElement(HsmElement* element) const;
+
     virtual QList<QGraphicsItem*> hsmChildItems() const;
-    bool isDirectChild(HsmElement* item) const;
+    // Return true if element is direct child
+    bool isDirectChild(HsmElement* child) const;
+    // Return true if element is direct or indirect child
+    bool containsChild(HsmElement* child) const;
     QRectF childrenRect() const;
     virtual bool hasSubstates() const;
 

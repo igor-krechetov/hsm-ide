@@ -122,6 +122,28 @@ HsmElement* HsmElementsFactory::createElement(const QString& typeId,
     return element;
 }
 
+HsmElementType HsmElementsFactory::elementTypeFromTypeId(const QString& typeId) {
+    HsmElementType elementType = HsmElementType::UNKNOWN;
+
+    if (typeId == "initial") {
+        elementType = HsmElementType::INITIAL;
+    } else if (typeId == "final") {
+        elementType = HsmElementType::FINAL;
+    } else if (typeId == "state") {
+        elementType = HsmElementType::STATE;
+    } else if (typeId == "entrypoint") {
+        elementType = HsmElementType::ENTRY_POINT;
+    } else if (typeId == "exitpoint") {
+        elementType = HsmElementType::EXIT_POINT;
+    } else if (typeId == "history") {
+        elementType = HsmElementType::HISTORY;
+    } else if (typeId == "include") {
+        elementType = HsmElementType::INCLUDE;
+    }
+
+    return elementType;
+}
+
 HsmElement* HsmElementsFactory::createElementState(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                                    const QSizeF& size) {
     HsmElement* elem = nullptr;

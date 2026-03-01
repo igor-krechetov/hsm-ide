@@ -95,10 +95,10 @@ public slots:
     void dropElementEvent(view::HsmElement* element, const QPointF& scenePos);
 
 private:
-    void handleElementDragEvent(view::HsmElement* element, const QPointF& scenePos);
-    void handleElementDropEvent(view::HsmElement* element, const QPointF& scenePos);
+    // only element or mimetype is expected to be provided
+    bool handleElementDragEvent(const QPointF& scenePos, view::HsmElement* element, const QString& mimetype = "");
+    bool handleElementDropEvent(view::HsmElement* element, const QPointF& scenePos);
 
-    // view::HsmElement* acceptsChildrenElementAt(const QPointF& pos) const;
     void setPanningMode(const bool enable);
 
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
@@ -117,6 +117,10 @@ private:
 
     QPointer<view::HsmElement> mDraggedElement;
     QPointer<view::HsmElement> mDragTargetElement;
+    // list of elements that are deselected during dragging because their parent is already selected
+    QList<view::HsmElement*> mDraggedChildElements;
+
+    QMap<view::HsmElement*, QPointF> mDragRevertPositions;
 };
 
 #endif  // HSMGRAPHICSVIEW_HPP
