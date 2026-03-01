@@ -20,6 +20,8 @@ void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     if (isHighligted() == true) {
         painter->setPen(mPenHighlightMode);
+    } else if (isSelected() == true) {
+        painter->setPen(mPenSelectedBorder);
     } else {
         painter->setPen(mPenNormalMode);
     }

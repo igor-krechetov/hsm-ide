@@ -25,7 +25,7 @@ void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsI
     // Draw the rounded rectangle with fully rounded corners
     if (isHighligted() == true) {
         painter->setPen(mPenHighlightMode);
-    } else if (isResizing() == true) {
+    } else if (isSelected() == true) {
         painter->setPen(mPenSelectedBorder);
     } else {
         painter->setPen(mPenNormalMode);

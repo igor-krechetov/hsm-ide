@@ -57,7 +57,8 @@ private slots:
 
 private:
     void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
-                                QSharedPointer<model::StateMachineEntity> entity);
+                                QSharedPointer<model::StateMachineEntity> entity,
+                                const bool addChildren);
 
     // posParent - position in parent coordinate system
     void createElement(const QString& elementTypeId,

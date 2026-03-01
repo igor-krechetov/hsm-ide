@@ -31,6 +31,7 @@ public:
 
     bool isConnectable() const override;
     bool acceptsConnections() const override;
+    const QRectF& hoverRect() const;
 
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
@@ -58,6 +59,7 @@ protected:
 private:
     void createConnectionArrows();
     void removeConnectionArrows();
+    void removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos);
     bool hasVisibleArrows() const;
     QPointF getArrowPos(ElementConnectionArrow::Direction arrowDirection) const;
     QSizeF getArrowSize(ElementConnectionArrow::Direction arrowDirection) const;

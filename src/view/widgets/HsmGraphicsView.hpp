@@ -33,6 +33,7 @@ public:
         ControlModifier = 0x04000000,
         AltModifier = 0x08000000,
         SpaceModifier = 0x10000000,
+        R_Modifier = 0x20000000,
     };
 
 public:
@@ -65,6 +66,8 @@ public:
     bool keyboardSpacePressed() const;
     bool keyboardCtrlPressed() const;
     bool keyboardAltPressed() const;
+    bool keyboardModifierPressed(const KeyboardModifier modifier) const;
+    bool keyboardReparentModifierPressed() const;
 
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;

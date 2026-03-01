@@ -7,28 +7,20 @@
 
 namespace view {
 
-ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection direction)
-    : ElementGripItem(annotationElement)
-    , mGripDirection(direction) {
-    // qDebug() << "CREATE: ElementBoundaryGripItem: " << this << "parent: " << annotationElement->modelId() << " | "
-    //          << annotationElement;
-
-    if ((GripDirection::North == mGripDirection) || (GripDirection::South == mGripDirection)) {
+ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection type)
+    : ElementGripItem(annotationElement, type) {
+    if ((GripDirection::North == direction()) || (GripDirection::South == direction())) {
         mGripDirectionType = GripDirectionType::Vertical;
-    } else if ((GripDirection::West == mGripDirection) || (GripDirection::East == mGripDirection)) {
+    } else if ((GripDirection::West == direction()) || (GripDirection::East == direction())) {
         mGripDirectionType = GripDirectionType::Horizontal;
-    } else if ((GripDirection::NorthEast == mGripDirection) || (GripDirection::NorthWest == mGripDirection) ||
-               (GripDirection::SouthWest == mGripDirection) || (GripDirection::SouthEast == mGripDirection)) {
+    } else if ((GripDirection::NorthEast == direction()) || (GripDirection::NorthWest == direction()) ||
+               (GripDirection::SouthWest == direction()) || (GripDirection::SouthEast == direction())) {
         mGripDirectionType = GripDirectionType::Diagonal;
     }
 }
 
 HsmResizableElement* ElementBoundaryGripItem::annotationElement() const {
     return reinterpret_cast<HsmResizableElement*>(ElementGripItem::annotationElement());
-}
-
-GripDirection ElementBoundaryGripItem::direction() const {
-    return mGripDirection;
 }
 
 GripDirectionType ElementBoundaryGripItem::directionType() const {

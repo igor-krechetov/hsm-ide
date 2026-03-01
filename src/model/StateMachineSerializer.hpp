@@ -75,7 +75,7 @@ private:
 
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
 
-    QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent);
+    QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent, QSharedPointer<StateMachineEntity>* outNewParent = nullptr);
     QSharedPointer<RegularState> parseRegularState();
     QSharedPointer<EntryPoint> parseEntryPoint();
     QSharedPointer<ExitPoint> parseExitPoint();

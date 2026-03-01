@@ -42,6 +42,10 @@ bool HsmConnectableElement::acceptsConnections() const {
     return true;
 }
 
+const QRectF& HsmConnectableElement::hoverRect() const {
+    return mHoverRect;
+}
+
 // TODO: try to implement same logic using qgraphicsitemgroup
 void HsmConnectableElement::updateHoverRect() {
     qreal arrowOffset = 0.0;
@@ -62,7 +66,6 @@ void HsmConnectableElement::updateHoverRect() {
 // TODO: delete every time or change visibility?
 void HsmConnectableElement::createConnectionArrows() {
     if (true == mArrows.isEmpty()) {
-        qDebug() << Q_FUNC_INFO << "CREATE";
         updateHoverRect();
 
         for (const auto direction : {ElementConnectionArrow::Direction::North,
@@ -104,6 +107,42 @@ void HsmConnectableElement::createConnectionArrows() {
         scene()->installEventFilter(this);
     }
 }
+
+void HsmConnectableElement::removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos) {
+    const QRectF elementSceneRect = mapRectToScene(elementRect());
+    QList<QPointer<HsmConnectableElement>> relatedItems;
+    HsmConnectableElement* ptrElement = this;
+
+    // Collect list of parent items
+    while (nullptr != ptrElement) {
+        ptrElement = dynamic_cast<HsmConnectableElement*>(ptrElement->hsmParentItem().get());
+
+        if (ptrElement && ptrElement != this) {
+            relatedItems.append(ptrElement);
+        }
+    }
+
+    // Collect connectable child items
+    forEachHsmChildElement([&relatedItems](HsmElement* child) {
+        auto* connectableChild = dynamic_cast<HsmConnectableElement*>(child);
+        if (connectableChild) {
+            relatedItems.append(connectableChild);
+        }
+    });
+
+    for (HsmConnectableElement* connectable : relatedItems) {
+        const QRectF elementHoverRect = connectable->mapRectToScene(connectable->hoverRect());
+
+        if (elementHoverRect.contains(elementSceneRect)) {
+            connectable->removeConnectionArrows();
+        } else {
+            if (false == elementHoverRect.contains(sceneMousePos)) {
+                connectable->removeConnectionArrows();
+            }
+        }
+    }
+}
+
 
 void HsmConnectableElement::removeConnectionArrows() {
     if (hasVisibleArrows() == true) {
@@ -177,10 +216,14 @@ QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arr
 
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     if (isConnectable() == true && hasVisibleArrows() == false) {
-        const QRectF sceneRect = mapRectToScene(mOuterRect);
+        const QRectF sceneRect = mapRectToScene(hoverRect());
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {
+            // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast enough.
+            //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore (but need to account
+            //       for the arrow size)
+            removeConnectionArrowsForOtherElements(sceneMousePos);
             createConnectionArrows();
         }
 
@@ -195,11 +238,9 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
 
 void HsmConnectableElement::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     HsmElement::hoverLeaveEvent(event);
-    // removeConnectionArrows();
 }
 
 // TODO: redraw transitions to subitems
-
 QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemPositionHasChanged == change) {
         removeConnectionArrows();

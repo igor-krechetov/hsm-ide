@@ -113,6 +113,13 @@
 ***** REQ-107l1: common element functionality <<done>>
 ***** REQ-107l2: redraw on model data change <<done>>
 **** REQ-107m: include nodes <<done>>
+**** REQ-107n: Elements Selection <<done>>
+***** REQ-107n1: State <<done>>
+***** REQ-107n2: History states <<done>>
+***** REQ-107n3: Entry points <<done>>
+***** REQ-107n4: Exit points <<done>>
+***** REQ-107n5: Final states <<done>>
+***** REQ-107n6: Initial states <<done>>
 
 *** REQ-108: Callbacks management
 **** REQ-108a: Callbacks auto-suggestion

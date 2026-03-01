@@ -335,14 +335,16 @@ QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
     const QPointF elementCenter = mOuterRect.center();
     qreal xCenter = elementCenter.x();
     qreal yCenter = elementCenter.y();
-    QMap<GripDirection, QPointF> positions = {{GripDirection::North, QPointF(xCenter, mOuterRect.top())},
-                                              {GripDirection::NorthEast, mOuterRect.topRight()},
-                                              {GripDirection::East, QPointF(mOuterRect.right(), yCenter)},
-                                              {GripDirection::SouthEast, mOuterRect.bottomRight()},
-                                              {GripDirection::South, QPointF(xCenter, mOuterRect.bottom())},
-                                              {GripDirection::SouthWest, mOuterRect.bottomLeft()},
-                                              {GripDirection::West, QPointF(mOuterRect.left(), yCenter)},
-                                              {GripDirection::NorthWest, mOuterRect.topLeft()}};
+    // TODO: replace hardcoded 2 with values from style class (when implemented)
+    // TODO: account for round edge riadus (also based on style)
+    QMap<GripDirection, QPointF> positions = {{GripDirection::North, QPointF(xCenter, mOuterRect.top() + 2)},
+                                              {GripDirection::NorthEast, QPointF(mOuterRect.topRight().x() - 3, mOuterRect.topRight().y() + 3)},
+                                              {GripDirection::East, QPointF(mOuterRect.right() - 2, yCenter)},
+                                              {GripDirection::SouthEast, QPointF(mOuterRect.bottomRight().x() - 3, mOuterRect.bottomRight().y() - 3)},
+                                              {GripDirection::South, QPointF(xCenter, mOuterRect.bottom() - 2)},
+                                              {GripDirection::SouthWest, QPointF(mOuterRect.bottomLeft().x() + 3, mOuterRect.bottomLeft().y() - 3)},
+                                              {GripDirection::West, QPointF(mOuterRect.left() + 2, yCenter)},
+                                              {GripDirection::NorthWest, QPointF(mOuterRect.topLeft().x() + 3, mOuterRect.topLeft().y() + 3)}};
     return positions[gripDirection];
 }
 

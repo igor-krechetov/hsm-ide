@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.2.1] - 2026-02-22
+### New
+- [REQ-103b] Selection rendering for HSM elements
+
+### Fixed
+- Loading of nested elements from SCXML resulted in visual duplicates
+- [REQ-103b] Incorrect cursor shapes when dragging/reparenting HSM elements
+- [REQ-103b] Improved showing/hiding connection arrows for HSM elements
+- [REQ-103b] Rendering and scaling of grip items
+
 ## [0.2.0] - 2026-02-22
 ### New
 - [REQ-103f1] History state must have a parent state
