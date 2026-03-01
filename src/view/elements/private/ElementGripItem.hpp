@@ -7,14 +7,26 @@ namespace view {
 
 class HsmElement;
 
+enum class GripDirection {
+    North = 1,
+    NorthEast = 2,
+    East = 3,
+    SouthEast = 4,
+    South = 5,
+    SouthWest = 6,
+    West = 7,
+    NorthWest = 8,
+    FreeMove = 9
+};
+
 class ElementGripItem : public QGraphicsObject {
     Q_OBJECT
 
 public:
-    constexpr static int cGripSize = 8;
+    constexpr static int cGripSize = 16;
 
 public:
-    explicit ElementGripItem(HsmElement* annotationElement);
+    explicit ElementGripItem(HsmElement* annotationElement, const GripDirection type = GripDirection::FreeMove);
     // virtual ~ElementGripItem() = default;
     virtual ~ElementGripItem();
 
@@ -22,6 +34,8 @@ public:
 
     HsmElement* annotationElement() const;
     QRectF boundingRect() const override;
+
+    GripDirection direction() const;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
@@ -44,6 +58,7 @@ signals:
 
 private:
     HsmElement* mAnnotationElement = nullptr;
+    GripDirection mGripDirection = GripDirection::FreeMove;
     QRectF mGripRect;
     QColor mGripColor;
     QPointF mLastPos;

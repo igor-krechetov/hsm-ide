@@ -145,7 +145,8 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
 }
 
 void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
-                                               QSharedPointer<model::StateMachineEntity> entity) {
+                                               QSharedPointer<model::StateMachineEntity> entity,
+                                               const bool addChildren) {
     qDebug() << "handleModelEntityAdded"
              << "parent=" << parent->id() << " child=" << entity->id() << "childType=" << (int)entity->type();
 
@@ -193,11 +194,13 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
         }
     }
 
-    entity->forEachChildElement(
-        [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
-            handleModelEntityAdded(parent, element);
-            return true;
-        });
+    if (true == addChildren) {
+        entity->forEachChildElement(
+            [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
+                handleModelEntityAdded(parent, element, false);
+                return true;
+            }, -1, false);
+    }
 }
 
 void ProjectController::connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
@@ -226,7 +229,7 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
     auto ptrParent = parent.lock();
 
     if (ptrChild && ptrParent) {
-        handleModelEntityAdded(ptrParent, ptrChild);
+        handleModelEntityAdded(ptrParent, ptrChild, true);
         projectModified();
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";

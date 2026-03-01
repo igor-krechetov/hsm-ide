@@ -227,12 +227,19 @@ bool HsmGraphicsView::keyboardSpacePressed() const {
 }
 
 bool HsmGraphicsView::keyboardCtrlPressed() const {
-    qDebug() << "keyboardCtrlPressed: " << (bool)(mKeyboardModifiers & ControlModifier);
     return mKeyboardModifiers & ControlModifier;
 }
 
 bool HsmGraphicsView::keyboardAltPressed() const {
     return mKeyboardModifiers & AltModifier;
+}
+
+bool HsmGraphicsView::keyboardModifierPressed(const KeyboardModifier modifier) const {
+    return mKeyboardModifiers & modifier;
+}
+
+bool HsmGraphicsView::keyboardReparentModifierPressed() const {
+    return keyboardModifierPressed(KeyboardModifier::R_Modifier);
 }
 
 void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
@@ -313,6 +320,8 @@ bool HsmGraphicsView::handleElementDropEvent(view::HsmElement* element, const QP
     mDraggedElement = nullptr;
     mDragRevertPositions.clear();
     mDraggedChildElements.clear();
+
+    QGuiApplication::restoreOverrideCursor();
 
     // TODO: implement
     return true;
@@ -411,7 +420,7 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
     mDraggedElement = element;
 
     qDebug() << "mDraggedElement->parentItem" << mDraggedElement->hsmParentItem();
-    qDebug() << "keyboardCtrlPressed" << keyboardCtrlPressed();
+    qDebug() << "keyboardReparentModifierPressed" << keyboardReparentModifierPressed();
 
     // TODO:
     /*
@@ -421,11 +430,13 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
 
         When selecting both B and C it should not be possible to move them outside of A
     */
-    if ((mDraggedElement->hsmParentItem() == nullptr) || keyboardCtrlPressed()) {
-        qDebug() << "dragElementBegin: DRAG";
+    qDebug() << "dragElementBegin: DRAG";
+
+    if ((mDraggedElement->hsmParentItem() == nullptr) || keyboardReparentModifierPressed()) {
         QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
         mDraggedElement->setDragMode(true);
     } else {
+        QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
         forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
     }
 }
@@ -456,7 +467,7 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
 
                 selectedElement->setGroupDragMode(false);
 
-                if ((nullptr != selectedElement) && (selectedElement->hsmParentItem() == nullptr) || keyboardCtrlPressed()) {
+                if ((nullptr != selectedElement) && (selectedElement->hsmParentItem() == nullptr) || keyboardReparentModifierPressed()) {
                     qDebug() << "------ dropElementEvent:ALLOWED: NEW PARENT or TOP";
                     // If we are dragging element into a new parent or to a top level
                     // const auto targetElementId = (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId());
@@ -565,13 +576,17 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
         if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
             qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
             mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
-            viewport()->setCursor(Qt::OpenHandCursor);
+            QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
             event->accept();
         } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
             qDebug() << "PRESS: CTRL";
+
+            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
+            qDebug() << mKeyboardModifiers;
+        } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_R) {
+            qDebug() << "PRESS: R";
             if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
-                qDebug() << "---- QGuiApplication::setOverrideCursor(Qt::DragMoveCursor)";
-                QGuiApplication::setOverrideCursor(Qt::DragMoveCursor);
+                QGuiApplication::changeOverrideCursor(Qt::DragMoveCursor);
                 forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
 
                 if (mDragTargetElement) {
@@ -579,7 +594,7 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
                 }
             }
 
-            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
+            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::R_Modifier);
             qDebug() << mKeyboardModifiers;
         }
     }
@@ -590,9 +605,14 @@ void HsmGraphicsView::keyReleaseEvent(QKeyEvent* event) {
         qDebug() << "RELEASE: " << event->key() << " " << event->isAutoRepeat();
         mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::SpaceModifier);
         setPanningMode(false);
+        QGuiApplication::restoreOverrideCursor();
         event->accept();
     } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
         qDebug() << "RELEASE: CTRL";
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::ControlModifier);
+        QGraphicsView::keyReleaseEvent(event);
+    } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_R) {
+        qDebug() << "RELEASE: R";
         if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
             qDebug() << "---- QGuiApplication::restoreOverrideCursor()";
             QGuiApplication::restoreOverrideCursor();
@@ -602,7 +622,7 @@ void HsmGraphicsView::keyReleaseEvent(QKeyEvent* event) {
                 mDragTargetElement->hightlight(false);
             }
         }
-        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::ControlModifier);
+        mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers & ~HsmGraphicsView::R_Modifier);
         QGraphicsView::keyReleaseEvent(event);
     } else {
         QGraphicsView::keyReleaseEvent(event);
@@ -612,6 +632,7 @@ void HsmGraphicsView::keyReleaseEvent(QKeyEvent* event) {
 void HsmGraphicsView::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::MiddleButton) {
         setPanningMode(true);
+        mLastPanPoint = event->pos();
         event->accept();
     } else if (event->button() == Qt::LeftButton && keyboardSpacePressed()) {
         setPanningMode(true);
@@ -626,7 +647,6 @@ void HsmGraphicsView::mouseMoveEvent(QMouseEvent* event) {
     if (mPanning) {
         QPointF delta = mLastPanPoint - event->pos();
 
-        // viewport()->setCursor(Qt::ClosedHandCursor);
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() + delta.x());
         verticalScrollBar()->setValue(verticalScrollBar()->value() + delta.y());
         mLastPanPoint = event->pos();
@@ -642,17 +662,30 @@ void HsmGraphicsView::mouseReleaseEvent(QMouseEvent* event) {
         event->accept();
     } else if (mPanning && event->button() == Qt::LeftButton && keyboardSpacePressed()) {
         setPanningMode(false);
-        viewport()->setCursor(Qt::OpenHandCursor);
         event->accept();
     } else {
         QGraphicsView::mouseReleaseEvent(event);
     }
 }
 
+/*
+    Hold Space              : open hand         (push x1)
+    Hold Space -> Hold LMB  : closed hand       (push x2)
+    Release Space           : normal            (pop x2)
+    Release LMB             : open hand         (pop x1)
+
+    Hold MMB                : closed hand       (push x1)
+    Release MMB             : normal            (pop x1)
+*/
 void HsmGraphicsView::setPanningMode(const bool enable) {
     qDebug() << "setPanningMode: " << enable;
     mPanning = enable;
-    viewport()->setCursor(true == mPanning ? Qt::ClosedHandCursor : Qt::ArrowCursor);
+
+    if (true == mPanning) {
+        QGuiApplication::setOverrideCursor(Qt::ClosedHandCursor);
+    } else {
+        QGuiApplication::restoreOverrideCursor();
+    }
 }
 
 QPointer<view::HsmElement> HsmGraphicsView::findHsmElement(const model::EntityID_t id) const {
@@ -686,17 +719,6 @@ view::HsmElement* HsmGraphicsView::itemToHsmElement(QGraphicsItem* item) const {
 
     return element;
 }
-
-// view::HsmResizableElement* HsmGraphicsView::itemToHsmResizableElement(QGraphicsItem* item) const {
-//     view::HsmResizableElement* resizableElement = nullptr;
-//     view::HsmElement* element = itemToHsmElement(item);
-
-//     if (nullptr != element && element->isResizable()) {
-//         resizableElement = dynamic_cast<view::HsmResizableElement*>(element);
-//     }
-
-//     return resizableElement;
-// }
 
 view::HsmResizableElement* HsmGraphicsView::elementToHsmResizableElement(view::HsmElement* element) const {
     view::HsmResizableElement* resizableElement = nullptr;

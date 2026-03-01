@@ -58,6 +58,7 @@ protected:
 private:
     void createConnectionArrows();
     void removeConnectionArrows();
+    void removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos);
     bool hasVisibleArrows() const;
     QPointF getArrowPos(ElementConnectionArrow::Direction arrowDirection) const;
     QSizeF getArrowSize(ElementConnectionArrow::Direction arrowDirection) const;

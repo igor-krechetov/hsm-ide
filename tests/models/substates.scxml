@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Substates Test">
+    <state id="State_1">
+        <qt:editorinfo geometry="255.00;-206.00;0;0;631.00;474.00"/>
+        <state id="State_2">
+            <qt:editorinfo geometry="92.71;289.96;0;0;355.00;159.00"/>
+            <history id="State_3" type="shallow">
+                <qt:editorinfo geometry="31.94;59.71;0;0;42.00;42.00"/>
+            </history>
+            <initial>
+                <qt:editorinfo geometry="151.65;56.41;0;0;42.00;42.00"/>
+            </initial>
+            <final id="State_4">
+                <qt:editorinfo geometry="265.65;63.41;0;0;42.00;42.00"/>
+            </final>
+        </state>
+        <state id="State_5">
+            <qt:editorinfo geometry="43.36;87.37;0;0;250.00;150.00"/>
+        </state>
+        <state id="State_6">
+            <xi:include href="" parse="xml">
+                <qt:editorinfo geometry="342.00;90.00;0;0;242.00;142.00"/>
+            </xi:include>
+        </state>
+        <initial>
+            <qt:editorinfo geometry="502.00;291.00;0;0;42.00;42.00"/>
+        </initial>
+        <final id="State_8">
+            <qt:editorinfo geometry="503.00;367.00;0;0;42.00;42.00"/>
+        </final>
+        <history id="State_9" type="shallow">
+            <qt:editorinfo geometry="559.00;328.00;0;0;42.00;42.00"/>
+        </history>
+    </state>
+    <state id="L_1">
+        <qt:editorinfo geometry="-363.00;-259.00;0;0;567.00;1032.00"/>
+        <state id="L_2">
+            <qt:editorinfo geometry="16.00;52.00;0;0;546.00;975.00"/>
+            <state id="L_3">
+                <qt:editorinfo geometry="22.00;54.00;0;0;519.00;929.00"/>
+                <state id="L_4">
+                    <qt:editorinfo geometry="21.00;52.00;0;0;493.00;879.00"/>
+                    <state id="L_5">
+                        <qt:editorinfo geometry="23.00;53.00;0;0;465.00;829.00"/>
+                        <state id="L_6">
+                            <qt:editorinfo geometry="22.00;53.00;0;0;438.00;779.00"/>
+                            <state id="L_7">
+                                <qt:editorinfo geometry="19.00;9.00;0;0;414.00;656.00"/>
+                                <state id="L_8">
+                                    <qt:editorinfo geometry="13.00;56.00;0;0;396.00;595.00"/>
+                                    <state id="L_9">
+                                        <qt:editorinfo geometry="20.00;54.00;0;0;371.00;536.00"/>
+                                        <state id="L_10">
+                                            <qt:editorinfo geometry="16.00;54.00;0;0;350.00;477.00"/>
+                                            <state id="L_11">
+                                                <qt:editorinfo geometry="14.00;51.00;0;0;331.00;421.00"/>
+                                                <state id="L_12">
+                                                    <qt:editorinfo geometry="14.00;52.00;0;0;312.00;364.00"/>
+                                                    <state id="L_13">
+                                                        <qt:editorinfo geometry="10.00;48.00;0;0;297.00;314.00"/>
+                                                        <state id="L_14">
+                                                            <qt:editorinfo geometry="8.00;40.00;0;0;284.00;258.00"/>
+                                                            <state id="L_15">
+                                                                <qt:editorinfo geometry="8.00;51.00;0;0;271.00;202.00"/>
+                                                                <state id="L_16">
+                                                                    <qt:editorinfo geometry="13.00;52.00;0;0;244.00;144.00"/>
+                                                                </state>
+                                                            </state>
+                                                        </state>
+                                                    </state>
+                                                </state>
+                                            </state>
+                                        </state>
+                                    </state>
+                                </state>
+                            </state>
+                        </state>
+                    </state>
+                </state>
+            </state>
+        </state>
+    </state>
+</scxml>

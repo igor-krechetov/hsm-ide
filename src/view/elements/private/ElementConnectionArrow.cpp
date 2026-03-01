@@ -11,11 +11,14 @@ ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElemen
     , mDirection(direction)
     , mOuterRect(-mW / 2, -mW / 2, mW, mW)
     , mShapeArrow(initShape(direction))
+    // TODO: take color from style object
     , mArrowColor("green") {
     // qDebug() << "CREATE: ElementConnectionArrow: " << this;
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
+    // TODO: arrows should not scale with the sceene, but need to adjust bounding rect of the elements
+    // setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
 }
 
 void ElementConnectionArrow::setPos(const QPointF& pos) {

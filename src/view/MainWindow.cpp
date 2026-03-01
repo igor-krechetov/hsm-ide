@@ -235,9 +235,6 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
             }
         }
     });
-
-    // TODO: for DEBUG
-    project->importModel("/home/ikrechetov/projects/hsm-ide/tests/models/dragging.scxml");
 }
 
 void MainWindow::projectSelected(ProjectControllerPtr project) {

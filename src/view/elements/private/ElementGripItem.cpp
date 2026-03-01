@@ -11,10 +11,11 @@
 
 namespace view {
 
-ElementGripItem::ElementGripItem(HsmElement* annotationElement)
+ElementGripItem::ElementGripItem(HsmElement* annotationElement, const GripDirection type)
     : QGraphicsObject(annotationElement)
-    , mGripRect(-4, -4, cGripSize, cGripSize)
-    , mGripColor("green")
+    , mGripDirection(type)
+    , mGripRect(-(cGripSize/2), -(cGripSize/2), cGripSize, cGripSize)
+    , mGripColor("red") // TODO: move to style object
     , mAnnotationElement(annotationElement) {
     // qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
     // qDebug() << "QObject parent:" << parentObject();
@@ -35,10 +36,40 @@ void ElementGripItem::init() {
     tryConnectSignal(this, "onGripMoveEnterEvent(ElementGripItem*)", parentObject(), "onGripMoveEnterEvent(ElementGripItem*)");
     tryConnectSignal(this, "onGripMoveLeaveEvent(ElementGripItem*)", parentObject(), "onGripMoveLeaveEvent(ElementGripItem*)");
 
-    // setFlag(ItemIgnoresTransformations, true);
     setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemSendsGeometryChanges);
+    setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     setAcceptHoverEvents(true);
     setZValue(11);
+
+    switch(mGripDirection) {
+        case GripDirection::North:
+        case GripDirection::South:
+            setCursor(QCursor(Qt::SizeVerCursor));
+            break;
+
+        case GripDirection::NorthEast:
+        case GripDirection::SouthWest:
+            setCursor(QCursor(Qt::SizeBDiagCursor));
+            break;
+
+        case GripDirection::East:
+        case GripDirection::West:
+            setCursor(QCursor(Qt::SizeHorCursor));
+            break;
+        case GripDirection::SouthEast:
+        case GripDirection::NorthWest:
+            setCursor(QCursor(Qt::SizeFDiagCursor));
+            break;
+
+        case GripDirection::FreeMove:
+        default:
+            setCursor(QCursor(Qt::PointingHandCursor));
+            break;
+    }
+}
+
+GripDirection ElementGripItem::direction() const {
+    return mGripDirection;
 }
 
 HsmElement* ElementGripItem::annotationElement() const {
@@ -57,17 +88,24 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     painter->setBrush(mGripColor);
     painter->setPen(Qt::NoPen);
-    painter->drawRect(mGripRect);
+    painter->drawEllipse(mGripRect);
+
+#ifdef DEBUG_RENDERING
+    // draw small X at the center of the grip
+    painter->setPen(QPen(Qt::black, 1));
+    painter->drawLine(QPointF(-cGripSize/4, -cGripSize/4), QPointF(cGripSize/4, cGripSize/4));
+    painter->drawLine(QPointF(-cGripSize/4, cGripSize/4), QPointF(cGripSize/4, -cGripSize/4));
+#endif // DEBUG_RENDERING
 }
 
 void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
-    mGripColor = QColor("red");
+    mGripColor = QColor("green");
     QGraphicsObject::hoverEnterEvent(event);
-    setCursor(QCursor(Qt::PointingHandCursor));
+    // setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    mGripColor = QColor("green");
+    mGripColor = QColor("red");
     QGraphicsObject::hoverLeaveEvent(event);
 }
 

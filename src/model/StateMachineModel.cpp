@@ -137,6 +137,9 @@ void StateMachineModel::dump() {
                 QSharedPointer<State> state = entity.dynamicCast<State>();
 
                 switch (state->stateType()) {
+                    case StateType::MODEL_ROOT:
+                        stateType = "MODEL_ROOT";
+                        break;
                     case StateType::INITIAL:
                         stateType = "INITIAL";
                         break;
@@ -154,6 +157,9 @@ void StateMachineModel::dump() {
                         break;
                     case StateType::HISTORY:
                         stateType = "HISTORY";
+                        break;
+                    case StateType::INCLUDE:
+                        stateType = "INCLUDE";
                         break;
                     default:
                         stateType = "UNKNOWN";

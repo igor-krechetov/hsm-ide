@@ -62,7 +62,6 @@ void HsmConnectableElement::updateHoverRect() {
 // TODO: delete every time or change visibility?
 void HsmConnectableElement::createConnectionArrows() {
     if (true == mArrows.isEmpty()) {
-        qDebug() << Q_FUNC_INFO << "CREATE";
         updateHoverRect();
 
         for (const auto direction : {ElementConnectionArrow::Direction::North,
@@ -104,6 +103,20 @@ void HsmConnectableElement::createConnectionArrows() {
         scene()->installEventFilter(this);
     }
 }
+
+void HsmConnectableElement::removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos) {
+    for (QGraphicsItem* item : scene()->items()) {
+        auto* connectable = dynamic_cast<HsmConnectableElement*>(item);
+        if (connectable && connectable != this) {
+            const QRectF sceneRect = mapRectToScene(connectable->elementRect());
+
+            if (sceneRect.contains(sceneMousePos)) {
+                connectable->removeConnectionArrows();
+            }
+        }
+    }
+}
+
 
 void HsmConnectableElement::removeConnectionArrows() {
     if (hasVisibleArrows() == true) {
@@ -181,6 +194,10 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {
+            // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast enough.
+            //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore (but need to account
+            //       for the arrow size)
+            removeConnectionArrowsForOtherElements(sceneMousePos);
             createConnectionArrows();
         }
 
@@ -195,11 +212,9 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
 
 void HsmConnectableElement::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     HsmElement::hoverLeaveEvent(event);
-    // removeConnectionArrows();
 }
 
 // TODO: redraw transitions to subitems
-
 QVariant HsmConnectableElement::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemPositionHasChanged == change) {
         removeConnectionArrows();

@@ -508,12 +508,15 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
     return res;
 }
 
-QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(const QSharedPointer<StateMachineEntity>& parent) {
+QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(const QSharedPointer<StateMachineEntity>& parent,
+                                                                            QSharedPointer<StateMachineEntity>* outNewParent) {
     qDebug() << "parseChildEntity:" << mXmlReader->name();
     QSharedPointer<StateMachineEntity> entity;
 
     if (mXmlReader->name() == QStringView(u"state")) {
         entity = parseRegularState();
+
+        QSharedPointer<State> state = entity.dynamicCast<State>();
     } else if (mXmlReader->name() == QStringView(u"initial")) {
         entity = parseInitialState();
     } else if (mXmlReader->name() == QStringView(u"history")) {
@@ -529,6 +532,18 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
         }
     } else if (mXmlReader->name() == QStringView(u"include")) {
         entity = parseIncludeEntity();
+
+        QSharedPointer<RegularState> ptrParentState = hsmDynamicCast<RegularState>(parent, StateType::REGULAR);
+        QSharedPointer<IncludeEntity> ptrInclude = hsmDynamicCast<IncludeEntity>(entity, StateType::INCLUDE);
+
+        // since Include elements are defined as children of a State, we need to merge them
+        if (ptrInclude && ptrParentState) {
+            // promote existing RegularState element to IncludeEntity
+            ptrInclude->promoteFrom(ptrParentState);
+
+            // release RegularState instance and replace pointer with IncludeEntity
+            *outNewParent = ptrInclude;
+        }
     } else if (mXmlReader->name() == QStringView(u"script")) {
         if (parent->type() == StateMachineEntity::Type::Transition) {
             QSharedPointer<Transition> ptrParent = parent.dynamicCast<Transition>();
@@ -544,7 +559,7 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
     }
     // TODO: parallel
 
-    if (entity) {
+    if (entity && ((nullptr == outNewParent) || outNewParent->isNull())) {
         QSharedPointer<Transition> transition = hsmDynamicCast<Transition>(entity);
 
         if (transition) {
@@ -584,17 +599,12 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
                     entity->setOnEnteringCallback(parseInvoke());
                 } else {
                     // TODO: handle errors if can't parse child entities
-                    QSharedPointer<StateMachineEntity> childEntity = parseChildEntity(entity);
-                    QSharedPointer<IncludeEntity> ptrInclude = hsmDynamicCast<IncludeEntity>(childEntity, StateType::INCLUDE);
+                    QSharedPointer<StateMachineEntity> newParent;
+                    QSharedPointer<StateMachineEntity> childEntity = parseChildEntity(entity, &newParent);
 
-                    if (ptrInclude) {
-                        // parseChildEntity() adds new element as a child of the entity. Need to unlink it first
-                        entity->deleteDirectChild(ptrInclude);
-                        // promote existing RegularState element to IncludeEntity
-                        ptrInclude->promoteFrom(entity);
-
-                        // release RegularState instance and replace pointer with IncludeEntity
-                        entity = ptrInclude;
+                    if (newParent) {
+                        // TODO: better casting
+                        entity = newParent.dynamicCast<model::RegularState>();
                     }
                 }
             }
