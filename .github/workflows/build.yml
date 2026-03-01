@@ -35,6 +35,7 @@ jobs:
       build_type: Release
       platforms: "posix,windows"
       build_qt: 'ON'
+      build_tests: 'ON'
 
   # --------------------------------------------------------
   # TEST — always runs after build
@@ -42,6 +43,10 @@ jobs:
   test:
     needs: build
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@main
+    if: >
+        always() && (needs.build.result == 'success')
+    with:
+      test_script: "validate.sh"
 
   # --------------------------------------------------------
   # AUTOTAG — only on push to *dev*
