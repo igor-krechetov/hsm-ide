@@ -121,73 +121,77 @@ QVariant StateMachineTreeModel::data(const QModelIndex& index, int role) const {
         TreeNode* node = nodeFromIndex(index);
 
         if (nullptr != node) {
-            if (Qt::DisplayRole == role) {
-                // Handle root node specially
-                if (node->isRoot()) {
-                    if (node->entity) {
-                        auto state = node->entity.dynamicCast<model::State>();
+            auto ptrEntity = node->getEntity();
+
+            if (ptrEntity) {
+                if (Qt::DisplayRole == role) {
+                    // Handle root node specially
+                    if (node->isRoot()) {
+                        auto state = ptrEntity.dynamicCast<model::State>();
 
                         if (state) {
                             res = QString("[Model] %1").arg(state->name());
                         } else {
                             qCritical() << "StateMachineTreeModel::data: Root entity is not a State!";
                         }
-                    }
-                } else if (model::StateMachineEntity::Type::State == node->type() && node->entity) {
-                    auto state = node->entity.dynamicCast<model::State>();
+                    } else if (model::StateMachineEntity::Type::State == node->type()) {
+                        auto state = ptrEntity.dynamicCast<model::State>();
 
-                    if (state) {
-                        res = state->name();
-                    }
-                } else if (model::StateMachineEntity::Type::Transition == node->type() && node->entity) {
-                    auto transition = node->entity.dynamicCast<model::Transition>();
-                    QString sourceName;
-                    QString targetName;
-
-                    if (transition) {
-                        if (transition->source()) {
-                            sourceName = transition->source()->name();
+                        if (state) {
+                            res = state->name();
                         }
-                        if (transition->target()) {
-                            targetName = transition->target()->name();
-                        }
+                    } else if (model::StateMachineEntity::Type::Transition == node->type()) {
+                        auto transition = ptrEntity.dynamicCast<model::Transition>();
+                        QString sourceName;
+                        QString targetName;
 
-                        res = QString("Transition %1 -> %2").arg(sourceName, targetName);
-                    }
-                }
-            } else if (Qt::UserRole == role) {
-                if (node->entity) {
-                    res = node->entity->id();
-                } else {
-                    // TODO: error
-                }
-            } else if (Qt::DecorationRole == role) {
-                // Icon logic based on type
-                if (node->isRoot()) {
-                    // Root node gets a special icon
-                    // res = QIcon(":/icons/model.png");
-                    // TODO: add icon for root node
-                } else if (node->entity) {
-                    switch (node->entity->type()) {
-                        case model::StateMachineEntity::Type::State: {
-                            auto state = node->entity.dynamicCast<model::State>();
-                            if (state) {
-                                QString iconPath = HsmElementsFactory::getStateIcon(state->stateType());
-
-                                if (iconPath.isEmpty() == false) {
-                                    res = QIcon(iconPath);
-                                }
+                        if (transition) {
+                            if (transition->source()) {
+                                sourceName = transition->source()->name();
                             }
-                            break;
+                            if (transition->target()) {
+                                targetName = transition->target()->name();
+                            }
+
+                            res = QString("Transition %1 -> %2").arg(sourceName, targetName);
                         }
-                        case model::StateMachineEntity::Type::Transition:
-                            // res = QIcon(":/icons/transition.png");
-                            break;
-                        default:
-                            // res = QIcon(":/icons/default.png");
-                            break;
+                    }
+                } else if (Qt::UserRole == role) {
+                    if (node->entity) {
+                        res = ptrEntity->id();
+                    } else {
+                        // TODO: error
+                    }
+                } else if (Qt::DecorationRole == role) {
+                    // Icon logic based on type
+                    if (node->isRoot()) {
+                        // Root node gets a special icon
+                        // res = QIcon(":/icons/model.png");
+                        // TODO: add icon for root node
+                    } else {
+                        switch (ptrEntity->type()) {
+                            case model::StateMachineEntity::Type::State: {
+                                auto state = ptrEntity.dynamicCast<model::State>();
+                                if (state) {
+                                    QString iconPath = HsmElementsFactory::getStateIcon(state->stateType());
+
+                                    if (iconPath.isEmpty() == false) {
+                                        res = QIcon(iconPath);
+                                    }
+                                }
+                                break;
+                            }
+                            case model::StateMachineEntity::Type::Transition:
+                                // res = QIcon(":/icons/transition.png");
+                                break;
+                            default:
+                                // res = QIcon(":/icons/default.png");
+                                break;
+                        }
                     }
                 }
+            } else {
+                // TODO: error
             }
         }
     }
@@ -242,10 +246,14 @@ bool StateMachineTreeModel::removeRows(int row, int count, const QModelIndex& pa
             mUpdatingModel = true;
             beginRemoveRows(parent, row, row);
 
-            mModel->root()->deleteChild(node->entity->id());
+            auto ptrEntity = node->getEntity();
 
-            if (node->parent) {
-                node->parent->children.removeAt(row);
+            if (ptrEntity) {
+                mModel->root()->deleteChild(ptrEntity->id());
+
+                if (node->parent) {
+                    node->parent->children.removeAt(row);
+                }
             }
 
             delete node;

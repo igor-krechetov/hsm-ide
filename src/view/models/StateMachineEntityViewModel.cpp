@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QStringList>
 #include <QVariant>
+#include <utility>
 
 #include "model/HistoryState.hpp"
 #include "model/ModelRootState.hpp"
@@ -148,7 +149,15 @@ bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVaria
     //     newValue = rootDir.relativeFilePath(absPath);
     // }
 
+    if (mBeginHistoryTransaction) {
+        mBeginHistoryTransaction(QString("Edit property: %1").arg(propName));
+    }
+
     bool res = mSelectedEntity->setProperty(propName, newValue);
+
+    if (mCommitHistoryTransaction) {
+        mCommitHistoryTransaction();
+    }
 
     qDebug() << "setProperty -> " << res;
 
@@ -174,6 +183,12 @@ QStringList StateMachineEntityViewModel::valueOptions(int row) const {
     //     }
     // }
     return {};
+}
+
+void StateMachineEntityViewModel::setHistoryTransactionCallbacks(std::function<void(const QString&)> beginCallback,
+                                                                 std::function<void()> commitCallback) {
+    mBeginHistoryTransaction = std::move(beginCallback);
+    mCommitHistoryTransaction = std::move(commitCallback);
 }
 
 }  // namespace view

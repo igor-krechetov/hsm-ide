@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.3.0] - 2026-03-14
+### New
+- [REQ-204c] Undo/Redo support
+
 ## [0.2.1] - 2026-02-22
 ### New
 - [REQ-103b] Selection rendering for HSM elements

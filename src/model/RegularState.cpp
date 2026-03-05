@@ -9,6 +9,22 @@ namespace model {
 RegularState::RegularState(const QString& name)
     : State(name, StateType::REGULAR) {}
 
+RegularState::~RegularState() {
+    qDebug() << "DELETE RegularState:" << this;
+    deleteAllChildren();
+}
+
+RegularState& RegularState::operator=(const RegularState& other) {
+    if (this != &other) {
+        State::operator=(other);
+        mOnStateChangedCallback = other.mOnStateChangedCallback;
+        mOnEnteringCallback = other.mOnEnteringCallback;
+        mOnExitingCallback = other.mOnExitingCallback;
+    }
+
+    return *this;
+}
+
 void RegularState::accept(class IModelVisitor* visitor) {
     if (visitor) {
         visitor->visitRegularState(this);
@@ -84,14 +100,27 @@ void RegularState::deleteChild(const EntityID_t id) {
 
 void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
     if (child) {
-        child->forEachChildElement(
-            [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
-                unregisterChild(element);
-                return true;
-            });
+        // child->forEachChildElement(
+        //     [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
+        //         unregisterChild(element);
+        //         return true;
+        //     });
         mChildren.removeAll(child);
         unregisterChild(child);
     }
+}
+
+void RegularState::deleteAllChildren() {
+    for (const auto& child : mChildren) {
+        // child->forEachChildElement(
+        //     [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
+        //         unregisterChild(element);
+        //         return true;
+        //     });
+        unregisterChild(child);
+    }
+
+    mChildren.clear();
 }
 
 QSharedPointer<StateMachineEntity> RegularState::findParentState(const EntityID_t childId) {

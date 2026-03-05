@@ -28,15 +28,20 @@ private:
 
         TreeNode* parent = nullptr;
         QList<TreeNode*> children;
-        QSharedPointer<model::StateMachineEntity> entity;
+        QWeakPointer<model::StateMachineEntity> entity;
         NodeType nodeType = NodeType::Entity;
 
         ~TreeNode() {
             qDeleteAll(children);
         }
 
+        QSharedPointer<model::StateMachineEntity> getEntity() {
+            return entity.lock();
+        }
+
         model::StateMachineEntity::Type type() const {
-            return (nullptr != entity ? entity->type() : model::StateMachineEntity::Type::Invalid);
+            auto ptrEntity = entity.lock();
+            return (nullptr != ptrEntity ? ptrEntity->type() : model::StateMachineEntity::Type::Invalid);
         }
 
         bool isRoot() const {

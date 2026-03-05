@@ -10,8 +10,30 @@ StateMachineEntity::StateMachineEntity(Type type)
     ++sNextId;
 }
 
+StateMachineEntity::~StateMachineEntity() {
+    qDebug() << "StateMachineEntity::DELETE id:" << mId << " type:" << (int)mElementType;
+}
+
 StateMachineEntity::Type StateMachineEntity::type() const {
     return mElementType;
+}
+
+StateMachineEntity& StateMachineEntity::operator=(const StateMachineEntity& other) {
+    if (this != &other) {
+        copyEntityData(other);
+    }
+
+    return *this;
+}
+
+void StateMachineEntity::copyEntityData(const StateMachineEntity& other) {
+    mMetadata = other.mMetadata;
+
+    const QStringList props = other.properties();
+
+    for (const QString& key : props) {
+        setProperty(key, other.getProperty(key));
+    }
 }
 
 EntityID_t StateMachineEntity::id() const {
@@ -65,6 +87,10 @@ void StateMachineEntity::deleteChild(const EntityID_t id) {
 }
 
 void StateMachineEntity::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
+    // do nothing
+}
+
+void StateMachineEntity::deleteAllChildren() {
     // do nothing
 }
 

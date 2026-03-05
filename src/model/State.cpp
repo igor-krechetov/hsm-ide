@@ -20,6 +20,16 @@ StateType State::stateType() const {
     return mStateType;
 }
 
+State& State::operator=(const State& other) {
+    if (this != &other) {
+        StateMachineEntity::operator=(other);
+        mStateType = other.mStateType;
+        mName = other.mName;
+    }
+
+    return *this;
+}
+
 void State::setStateType(const StateType newType) {
     mStateType = newType;
 }

@@ -12,10 +12,29 @@ Transition::Transition(QSharedPointer<State> source, QSharedPointer<State> targe
     , mTarget(target)
     , mEvent(event) {}
 
+Transition::~Transition() {
+     qDebug() << "Transition::DELETE id:" << id() << " event:" << mEvent.get();
+}
+
 void Transition::accept(class IModelVisitor* visitor) {
     if (visitor) {
         visitor->visitTransition(this);
     }
+}
+
+Transition& Transition::operator=(const Transition& other) {
+    if (this != &other) {
+        StateMachineEntity::operator=(other);
+        mTransitionType = other.mTransitionType;
+        mSource = other.mSource;
+        mTarget = other.mTarget;
+        mEvent = other.mEvent;
+        mTransitionCallback = other.mTransitionCallback;
+        mConditionCallback = other.mConditionCallback;
+        mExpectedConditionValue = other.mExpectedConditionValue;
+    }
+
+    return *this;
 }
 
 const QString& Transition::event() const {

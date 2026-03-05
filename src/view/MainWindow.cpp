@@ -20,6 +20,8 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
+    connect(ui->actionUndo, &QAction::triggered, this, &MainWindow::handleUndo);
+    connect(ui->actionRedo, &QAction::triggered, this, &MainWindow::handleRedo);
 
     // Connect sidebar actions to generic slot using toggled(bool)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
@@ -32,6 +34,8 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
+    ui->actionUndo->setEnabled(false);
+    ui->actionRedo->setEnabled(false);
 }
 
 MainWindow::~MainWindow() {
@@ -126,6 +130,22 @@ void MainWindow::handleSaveAs() {
         }
 
         mActiveProject->exportModel(fileName);
+    }
+}
+
+void MainWindow::handleUndo() {
+    if (mActiveProject) {
+        mActiveProject->undo();
+        ui->actionUndo->setEnabled(mActiveProject->canUndo());
+        ui->actionRedo->setEnabled(mActiveProject->canRedo());
+    }
+}
+
+void MainWindow::handleRedo() {
+    if (mActiveProject) {
+        mActiveProject->redo();
+        ui->actionUndo->setEnabled(mActiveProject->canUndo());
+        ui->actionRedo->setEnabled(mActiveProject->canRedo());
     }
 }
 
@@ -230,6 +250,10 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
             if (projectIndex != -1) {
                 ui->projectTabs->setTabText(projectIndex,
                                             (projectRaw->isModified() ? "*" + projectRaw->name() : projectRaw->name()));
+                if (mActiveProject && mActiveProject.data() == projectRaw.data()) {
+                    ui->actionUndo->setEnabled(projectRaw->canUndo());
+                    ui->actionRedo->setEnabled(projectRaw->canRedo());
+                }
             } else {
                 qCritical() << "MainWindow::projectOpened: project view not found in tabs";
             }
@@ -249,6 +273,8 @@ void MainWindow::projectSelected(ProjectControllerPtr project) {
             ui->modelTree->setModel(mActiveProject->hsmStructureModel());
             ui->entityProperties->setModel(mActiveProject->hsmEntityViewModel());
             ui->entityProperties->setColumnWidth(0, 140);
+            ui->actionUndo->setEnabled(mActiveProject->canUndo());
+            ui->actionRedo->setEnabled(mActiveProject->canRedo());
             connect(ui->modelTree->selectionModel(),
                     &QItemSelectionModel::currentChanged,
                     this,
@@ -258,6 +284,8 @@ void MainWindow::projectSelected(ProjectControllerPtr project) {
         }
     } else {
         qCritical() << "MainWindow::projectSelected: project is nullptr";
+        ui->actionUndo->setEnabled(false);
+        ui->actionRedo->setEnabled(false);
     }
 }
 
@@ -274,6 +302,8 @@ void MainWindow::projectClosed(ProjectControllerPtr project) {
             ui->modelTree->setModel(nullptr);
             ui->entityProperties->setModel(nullptr);
             mActiveProject.clear();
+            ui->actionUndo->setEnabled(false);
+            ui->actionRedo->setEnabled(false);
         }
     }
 }

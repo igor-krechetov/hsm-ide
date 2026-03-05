@@ -91,6 +91,9 @@ QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFrom
 }
 
 bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel) {
+    // NOTE: block all signals because it's a full rebuild of the model
+    QSignalBlocker bloker(outModel.get());
+
     mModel = outModel;
     mModel->clearModel();
     mXmlReader = QSharedPointer<QXmlStreamReader>::create(scxml);

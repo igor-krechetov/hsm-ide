@@ -9,7 +9,8 @@ namespace model {
 class RegularState : public State {
 public:
     explicit RegularState(const QString& name);
-    virtual ~RegularState() = default;
+    virtual ~RegularState();
+    RegularState& operator=(const RegularState& other);
 
     void accept(class IModelVisitor* visitor) override;
 
@@ -30,6 +31,7 @@ public:
 
     void deleteChild(const EntityID_t id) override;
     void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) override;
+    void deleteAllChildren() override;
 
     QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId) override;
     QSharedPointer<StateMachineEntity> findChild(

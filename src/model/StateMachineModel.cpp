@@ -1,24 +1,137 @@
 #include "StateMachineModel.hpp"
 
 #include <QDebug>
+#include <QHash>
 #include <QSignalBlocker>
 
 #include "ModelElementsFactory.hpp"
 #include "ModelRootState.hpp"
+#include "RegularState.hpp"
 #include "State.hpp"
 #include "StateMachineEntity.hpp"
 #include "Transition.hpp"
 
 namespace model {
 
+namespace {}
+
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent) {
-    clearModel();
+
+    mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT).dynamicCast<ModelRootState>();
+
+    // Subscribe to modelEntityAdded for mModelRoot
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelChanged);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelEntityAdded);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelEntityDeleted);
+    QObject::connect(mModelRoot.data(), &StateMachineEntity::modelDataChanged, this, &StateMachineModel::modelDataChanged);
+
     setName(name);
 }
 
 StateMachineModel::~StateMachineModel() {
     qDebug() << "DELETE: " << this;
+}
+
+StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) {
+    // NOTE: since we are going to make a big update - do not emit small notifications. Clients 
+    //       are responsible to handle any data changes
+    QSignalBlocker blocker(this);
+
+    if (this == &other) {
+        return *this;
+    }
+
+    clearModel();
+
+    if (!other.root() || !mModelRoot) {
+        return *this;
+    }
+
+    setName(other.name());
+    mModelRoot->copyEntityData(*other.root());
+
+    QHash<const State*, QSharedPointer<State>> copiedStates;
+
+    copiedStates.insert(other.root().data(), mModelRoot);
+
+    // qDebug() << "pass 1: clone state entities (without parent links)";
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            Q_UNUSED(parent);
+
+            if (entity->type() == StateMachineEntity::Type::State) {
+                auto sourceState = entity.dynamicCast<State>();
+                auto newState = ModelElementsFactory::cloneStateEntity(sourceState);
+
+                if (!newState) {
+                    return false;
+                }
+
+                newState->copyEntityData(*sourceState);
+                copiedStates.insert(sourceState.data(), newState);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    // qDebug() << "pass 2: attach states to copied parents";
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            if (entity->type() == StateMachineEntity::Type::State) {
+                auto sourceParentState = parent.dynamicCast<State>();
+                auto sourceChildState = entity.dynamicCast<State>();
+
+                auto newParent = copiedStates.value(sourceParentState.data()).dynamicCast<RegularState>();
+                auto newChild = copiedStates.value(sourceChildState.data());
+
+                if (!newParent || !newChild) {
+                    return false;
+                }
+
+                newParent->addChildState(newChild);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    // qDebug() << "pass 3: clone transitions with remapped src/dst";
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            Q_UNUSED(parent);
+
+            if (entity->type() == StateMachineEntity::Type::Transition) {
+                auto sourceTransition = entity.dynamicCast<Transition>();
+                auto sourceSrc = sourceTransition->source();
+                auto sourceDst = sourceTransition->target();
+
+                auto newSrc = copiedStates.value(sourceSrc.data());
+                auto newDst = copiedStates.value(sourceDst.data());
+                auto newSrcRegular = newSrc.dynamicCast<RegularState>();
+
+                if (!newSrcRegular) {
+                    return false;
+                }
+
+                auto newTransition = QSharedPointer<Transition>::create(newSrc, newDst, sourceTransition->event());
+                newTransition->copyEntityData(*sourceTransition);
+                newSrcRegular->addTransition(newTransition);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    blocker.unblock();
+    emit modelChanged();
+
+    return *this;
 }
 
 QString StateMachineModel::name() const {
@@ -35,18 +148,16 @@ QSharedPointer<ModelRootState>& StateMachineModel::root() {
     return mModelRoot;
 }
 
+const QSharedPointer<ModelRootState>& StateMachineModel::root() const {
+    return mModelRoot;
+}
+
 void StateMachineModel::clearModel() {
-    QString oldName = name();
+    qDebug() << "StateMachineModel::clearModel" << this;
 
-    mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT).dynamicCast<ModelRootState>();
-    mModelRoot->setName(oldName);
-
-    // Subscribe to modelEntityAdded for mModelRoot
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelChanged);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelEntityAdded);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::childRemoved, this, &StateMachineModel::modelEntityDeleted);
-    QObject::connect(mModelRoot.data(), &StateMachineEntity::modelDataChanged, this, &StateMachineModel::modelDataChanged);
+    if (mModelRoot) {
+        mModelRoot->deleteAllChildren();
+    }
 }
 
 QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const EntityID_t source, const EntityID_t target) {
@@ -127,7 +238,7 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId,
     return res;
 }
 
-void StateMachineModel::dump() {
+void StateMachineModel::dump() const {
     int indent = 0;
 
     mModelRoot->forEachChildElement(

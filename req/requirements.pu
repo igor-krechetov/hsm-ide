@@ -147,7 +147,7 @@
 *** REQ-204: Menu Features
 **** REQ-204a: Copy/Paste/Cut
 **** REQ-204b: Delete
-**** REQ-204c: Undo/Redo
+**** REQ-204c: Undo/Redo <<done>>
 **** REQ-204d: File menu
 ***** REQ-204d1: Open <<done>>
 ***** REQ-204d2: Save <<done>>

@@ -32,7 +32,9 @@ public:
 
 public:
     explicit StateMachineEntity(const Type type);
-    virtual ~StateMachineEntity() = default;
+    virtual ~StateMachineEntity();
+    StateMachineEntity& operator=(const StateMachineEntity& other);
+    void copyEntityData(const StateMachineEntity& other);
 
     EntityID_t id() const;
     Type type() const;
@@ -51,6 +53,7 @@ public:
     virtual bool addChild(const QSharedPointer<StateMachineEntity>& child);
     virtual void deleteChild(const EntityID_t id);
     virtual void deleteDirectChild(const QSharedPointer<StateMachineEntity>& child);
+    virtual void deleteAllChildren();
 
     virtual QSharedPointer<StateMachineEntity> findParentState(const EntityID_t childId);
     virtual QSharedPointer<StateMachineEntity> findChild(

@@ -17,11 +17,13 @@ class StateMachineModel : public QObject {
 public:
     explicit StateMachineModel(const QString& name, QObject* parent = nullptr);
     virtual ~StateMachineModel();
+    StateMachineModel& operator=(const StateMachineModel& other);
 
     QString name() const;
     void setName(const QString& name);
 
     QSharedPointer<ModelRootState>& root();
+    const QSharedPointer<ModelRootState>& root() const;
 
     void clearModel();
 
@@ -31,7 +33,7 @@ public:
 
     bool reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId);
 
-    void dump();
+    void dump() const;
 
 signals:
     void modelChanged();
