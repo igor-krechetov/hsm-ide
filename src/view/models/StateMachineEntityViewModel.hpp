@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QSharedPointer>
+#include <functional>
 
 #include "model/StateMachineEntity.hpp"
 #include "model/StateMachineModel.hpp"
@@ -28,11 +29,14 @@ public:
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     // For drop-down support
     QStringList valueOptions(int row) const;
+    void setHistoryTransactionCallbacks(std::function<void(const QString&)> beginCallback, std::function<void()> commitCallback);
 
 private:
     QSharedPointer<model::StateMachineModel> mModel;
     QSharedPointer<model::StateMachineEntity> mSelectedEntity;
     QMetaObject::Connection mEntitySignalConnection;
+    std::function<void(const QString&)> mBeginHistoryTransaction;
+    std::function<void()> mCommitHistoryTransaction;
 };
 
 }  // namespace view

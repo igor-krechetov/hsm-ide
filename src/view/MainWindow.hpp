@@ -40,6 +40,8 @@ public slots:
     void handleOpenFile();
     void handleSave();
     void handleSaveAs();
+    void handleUndo();
+    void handleRedo();
     void handleCloseCurrentProject();
     void handleCloseAllProjects();
 

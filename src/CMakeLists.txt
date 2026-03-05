@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
     common/ObjectUtils.cpp
 
     controllers/MainEditorController.cpp
+    controllers/ModificationHistoryController.cpp
     controllers/ProjectController.cpp
     # controllers/RecentFilesManager.cpp
 

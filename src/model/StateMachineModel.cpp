@@ -1,15 +1,19 @@
 #include "StateMachineModel.hpp"
 
 #include <QDebug>
+#include <QHash>
 #include <QSignalBlocker>
 
 #include "ModelElementsFactory.hpp"
 #include "ModelRootState.hpp"
+#include "RegularState.hpp"
 #include "State.hpp"
 #include "StateMachineEntity.hpp"
 #include "Transition.hpp"
 
 namespace model {
+
+namespace {}
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent) {
@@ -19,6 +23,98 @@ StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
 
 StateMachineModel::~StateMachineModel() {
     qDebug() << "DELETE: " << this;
+}
+
+StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    clearModel();
+
+    if (!other.root() || !mModelRoot) {
+        return *this;
+    }
+
+    setName(other.name());
+    mModelRoot->copyEntityData(*other.root());
+
+    QHash<const State*, QSharedPointer<State>> copiedStates;
+    copiedStates.insert(other.root().data(), mModelRoot);
+
+    // pass 1: clone state entities (without parent links)
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            Q_UNUSED(parent);
+
+            if (entity->type() == StateMachineEntity::Type::State) {
+                auto sourceState = entity.dynamicCast<State>();
+                auto newState = ModelElementsFactory::cloneStateEntity(sourceState);
+
+                if (!newState) {
+                    return false;
+                }
+
+                newState->copyEntityData(*sourceState);
+                copiedStates.insert(sourceState.data(), newState);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    // pass 2: attach states to copied parents
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            if (entity->type() == StateMachineEntity::Type::State) {
+                auto sourceParentState = parent.dynamicCast<State>();
+                auto sourceChildState = entity.dynamicCast<State>();
+
+                auto newParent = copiedStates.value(sourceParentState.data()).dynamicCast<RegularState>();
+                auto newChild = copiedStates.value(sourceChildState.data());
+
+                if (!newParent || !newChild) {
+                    return false;
+                }
+
+                newParent->addChildState(newChild);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    // pass 3: clone transitions with remapped src/dst
+    other.root()->forEachChildElement(
+        [&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+            Q_UNUSED(parent);
+
+            if (entity->type() == StateMachineEntity::Type::Transition) {
+                auto sourceTransition = entity.dynamicCast<Transition>();
+                auto sourceSrc = sourceTransition->source();
+                auto sourceDst = sourceTransition->target();
+
+                auto newSrc = copiedStates.value(sourceSrc.data());
+                auto newDst = copiedStates.value(sourceDst.data());
+                auto newSrcRegular = newSrc.dynamicCast<RegularState>();
+
+                if (!newSrcRegular) {
+                    return false;
+                }
+
+                auto newTransition = QSharedPointer<Transition>::create(newSrc, newDst, sourceTransition->event());
+                newTransition->copyEntityData(*sourceTransition);
+                newSrcRegular->addTransition(newTransition);
+            }
+
+            return true;
+        },
+        StateMachineEntity::DEPTH_INFINITE,
+        false);
+
+    return *this;
 }
 
 QString StateMachineModel::name() const {
@@ -32,6 +128,10 @@ void StateMachineModel::setName(const QString& name) {
 }
 
 QSharedPointer<ModelRootState>& StateMachineModel::root() {
+    return mModelRoot;
+}
+
+const QSharedPointer<ModelRootState>& StateMachineModel::root() const {
     return mModelRoot;
 }
 
