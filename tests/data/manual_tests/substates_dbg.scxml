@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Substates Test">
+    <state id="State_1">
+        <qt:editorinfo geometry="40.00;-240.00;0;0;629.00;472.00"/>
+        <state id="State_2">
+            <qt:editorinfo geometry="92.71;289.96;0;0;353.00;157.00"/>
+            <history id="State_3" type="shallow">
+                <qt:editorinfo geometry="31.94;59.71;0;0;42.00;42.00"/>
+            </history>
+            <initial>
+                <qt:editorinfo geometry="151.65;56.41;0;0;42.00;42.00"/>
+            </initial>
+            <final id="State_4">
+                <qt:editorinfo geometry="265.65;63.41;0;0;42.00;42.00"/>
+            </final>
+        </state>
+        <state id="State_5">
+            <qt:editorinfo geometry="43.36;87.37;0;0;248.00;148.00"/>
+        </state>
+        <state id="State_6">
+            <xi:include href="" parse="xml">
+                <qt:editorinfo geometry="342.00;90.00;0;0;242.00;142.00"/>
+            </xi:include>
+        </state>
+        <initial>
+            <qt:editorinfo geometry="502.00;291.00;0;0;42.00;42.00"/>
+        </initial>
+        <final id="State_8">
+            <qt:editorinfo geometry="503.00;367.00;0;0;42.00;42.00"/>
+        </final>
+        <history id="State_9" type="shallow">
+            <qt:editorinfo geometry="559.00;328.00;0;0;42.00;42.00"/>
+        </history>
+    </state>
+</scxml>

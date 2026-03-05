@@ -73,9 +73,10 @@ void StateMachineSerializerDeserializationTest::DeserializeDeepHistory() {
  * Use-case: Ensure `history` with `type="shallow"` is parsed as shallow history.
  *
  * @startuml
- * state S1
+ * state S1 {
  * state H <<history:shallow>>
  * H --> S2 : resume
+ * }
  * @enduml
  */
 void StateMachineSerializerDeserializationTest::DeserializeShallowHistory() {
@@ -134,6 +135,8 @@ void StateMachineSerializerDeserializationTest::DeserializeSubstatesHierarchy() 
  * Use-case: Ensure a single state can hold multiple outgoing transitions.
  *
  * @startuml
+ * state S1
+ * state S2
  * S1 --> S2 : e1
  * S1 --> S3 : e2
  * @enduml
@@ -157,6 +160,8 @@ void StateMachineSerializerDeserializationTest::DeserializeMultipleTransitionsFo
  * Use-case: Ensure SCXML `type` attribute maps to model transition type enum.
  *
  * @startuml
+ * state S1
+ * state S2
  * S1 --> S2 : e1 / external
  * S1 --> S3 : e2 / internal
  * @enduml
@@ -351,7 +356,7 @@ void StateMachineSerializerDeserializationTest::DeserializeStateWithoutId() {
     auto model = serializer.deserializeFromScxml(scxml);
 
     QVERIFY(model);
-    QCOMPARE(QSharedPointer<model::State>(), model->root()->findChildStateByName(""));
+    QCOMPARE(nullptr, model->root()->findChildStateByName(""));
     QVERIFY(model->root()->findChildStateByName("S2") != nullptr);
 }
 
