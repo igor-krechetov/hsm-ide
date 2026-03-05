@@ -9,6 +9,17 @@ namespace model {
 RegularState::RegularState(const QString& name)
     : State(name, StateType::REGULAR) {}
 
+RegularState& RegularState::operator=(const RegularState& other) {
+    if (this != &other) {
+        State::operator=(other);
+        mOnStateChangedCallback = other.mOnStateChangedCallback;
+        mOnEnteringCallback = other.mOnEnteringCallback;
+        mOnExitingCallback = other.mOnExitingCallback;
+    }
+
+    return *this;
+}
+
 void RegularState::accept(class IModelVisitor* visitor) {
     if (visitor) {
         visitor->visitRegularState(this);

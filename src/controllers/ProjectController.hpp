@@ -19,6 +19,8 @@ class StateMachineTreeModel;
 class StateMachineEntityViewModel;
 };  // namespace view
 
+class ModificationHistoryController;
+
 class ProjectController : public QObject, public QEnableSharedFromThis<ProjectController> {
     Q_OBJECT
 public:
@@ -42,6 +44,12 @@ public:
     void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
+    void beginHistoryTransaction(const QString& label);
+    void commitHistoryTransaction();
+    bool undo();
+    bool redo();
+    bool canUndo() const;
+    bool canRedo() const;
 
 signals:
     void projectModelChanged(QPointer<ProjectController> project);
@@ -74,6 +82,7 @@ private:
     QString mModelPath;
     QPointer<HsmGraphicsView> mView;
     QSharedPointer<model::StateMachineModel> mModel;
+    QSharedPointer<ModificationHistoryController> mHistoryController;
 
     view::StateMachineTreeModel* mHsmStrctureViewModel = nullptr;
     view::StateMachineEntityViewModel* mHsmEntityViewModel = nullptr;

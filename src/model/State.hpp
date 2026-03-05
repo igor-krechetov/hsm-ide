@@ -27,6 +27,7 @@ public:
 
     explicit State(const QString& name, const StateType type = StateType::REGULAR);
     virtual ~State() = default;
+    State& operator=(const State& other);
 
     StateType stateType() const;
 

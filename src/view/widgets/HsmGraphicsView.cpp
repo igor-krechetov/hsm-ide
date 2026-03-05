@@ -439,6 +439,10 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
         QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
         forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
     }
+
+    if (auto controller = mProjectController.toStrongRef()) {
+        controller->beginHistoryTransaction("Drag elements");
+    }
 }
 
 void HsmGraphicsView::dragElementEvent(view::HsmElement* element, const QPointF& scenePos) {
@@ -504,6 +508,8 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
                 }
             }
         });
+
+        controller->commitHistoryTransaction();
     }
 
     handleElementDropEvent(nullptr, scenePos);

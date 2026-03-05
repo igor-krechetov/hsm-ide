@@ -11,6 +11,7 @@ namespace model {
 class ModelElementsFactory {
 public:
     static QSharedPointer<State> createUniqueState(const StateType type);
+    static QSharedPointer<State> cloneStateEntity(const QSharedPointer<State>& source);
     static QSharedPointer<Transition> createUniqueTransition(const QSharedPointer<State>& source,
                                                              const QSharedPointer<State>& target);
 

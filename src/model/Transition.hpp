@@ -15,6 +15,7 @@ class Transition : public StateMachineEntity {
 public:
     Transition(QSharedPointer<State> source, QSharedPointer<State> target, const QString& event);
     virtual ~Transition() = default;
+    Transition& operator=(const Transition& other);
 
     void accept(class IModelVisitor* visitor) override;
 

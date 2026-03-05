@@ -18,6 +18,21 @@ void Transition::accept(class IModelVisitor* visitor) {
     }
 }
 
+Transition& Transition::operator=(const Transition& other) {
+    if (this != &other) {
+        StateMachineEntity::operator=(other);
+        mTransitionType = other.mTransitionType;
+        mSource = other.mSource;
+        mTarget = other.mTarget;
+        mEvent = other.mEvent;
+        mTransitionCallback = other.mTransitionCallback;
+        mConditionCallback = other.mConditionCallback;
+        mExpectedConditionValue = other.mExpectedConditionValue;
+    }
+
+    return *this;
+}
+
 const QString& Transition::event() const {
     return mEvent.get();
 }

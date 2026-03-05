@@ -10,6 +10,7 @@ class RegularState : public State {
 public:
     explicit RegularState(const QString& name);
     virtual ~RegularState() = default;
+    RegularState& operator=(const RegularState& other);
 
     void accept(class IModelVisitor* visitor) override;
 
