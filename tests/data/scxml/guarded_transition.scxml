@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="GuardMachine">
+    <state id="S1">
+        <transition event="go" type="internal" target="S2" cond="guardCb is false">
+            <script>goCb</script>
+        </transition>
+    </state>
+    <state id="S2"/>
+</scxml>

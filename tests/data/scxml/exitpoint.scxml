@@ -1,0 +1,12 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="ExitPointMachine">
+    <state id="Parent">
+        <state id="Worker">
+            <transition event="done" type="external" target="XP"/>
+        </state>
+        <final id="XP" event="leave">
+            <onentry>
+                <script>xpEnter</script>
+            </onentry>
+        </final>
+    </state>
+</scxml>

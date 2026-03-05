@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="HistoryShallowMachine">
+    <state id="S1">
+        <history id="H" type="shallow">
+            <transition event="resume" type="external" target="S2"/>
+        </history>
+        <state id="S2"/>
+    </state>
+</scxml>

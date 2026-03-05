@@ -1,0 +1,11 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="CallbacksMachine">
+    <state id="S1">
+        <onentry>
+            <script>enterCb</script>
+        </onentry>
+        <onexit>
+            <script>exitCb</script>
+        </onexit>
+        <invoke srcexpr="stateCb"/>
+    </state>
+</scxml>

@@ -1,0 +1,7 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="HistoryMachine">
+    <state id="S1">
+        <history id="H" type="deep">
+            <transition event="resume" type="external" target="S1"/>
+        </history>
+    </state>
+</scxml>

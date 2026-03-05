@@ -1,0 +1,6 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="Broken2">
+    <state>
+        <transition event="e1" type="external" target="S2"/>
+    </state>
+    <state id="S2"/>
+</scxml>
