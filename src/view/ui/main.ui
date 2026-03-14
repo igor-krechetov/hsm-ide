@@ -122,7 +122,6 @@
      <property name="title">
       <string>Recent Workspaces</string>
      </property>
-     <addaction name="actiontest"/>
     </widget>
     <addaction name="actionOpenWorkspace"/>
     <addaction name="actionCloseWorkspace"/>
@@ -713,11 +712,6 @@
   <action name="actionCloseWorkspace">
    <property name="text">
     <string>Close Workspace</string>
-   </property>
-  </action>
-  <action name="actiontest">
-   <property name="text">
-    <string>test</string>
    </property>
   </action>
  </widget>

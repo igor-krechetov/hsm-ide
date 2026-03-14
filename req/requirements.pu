@@ -145,14 +145,16 @@
 **** REQ-203c: File inclusion hierarchy  <<prio_low>>
 **** REQ-203d: Cross-file reference highlighting  <<prio_low>>
 *** REQ-204: Menu Features
-**** REQ-204a: Copy/Paste/Cut
-**** REQ-204b: Delete
-**** REQ-204c: Undo/Redo <<done>>
-**** REQ-204d: File menu
+**** REQ-204a: Edit menu
+***** REQ-204a1: Copy/Paste/Cut <<todo>>
+***** REQ-204a2: Delete <<partial>>
+***** REQ-204a3: Undo/Redo <<done>>
+**** REQ-204d: File menu <<done>>
 ***** REQ-204d1: Open <<done>>
 ***** REQ-204d2: Save <<done>>
 ***** REQ-204d3: Save As <<done>>
-***** REQ-204d4: List of recent files <<prio_low>>
+***** REQ-204d4: List of recent files <<done>>
+***** REQ-204d5: List of recent workspaces <<done>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
@@ -175,11 +177,14 @@
 ***** REQ-205d2: switching between open projects <<done>>
 ***** REQ-205d3: closing individual open project <<done>>
 ***** REQ-205d4: closing all open projects <<done>>
-**** REQ-206: Primary Side Bar
-***** REQ-206a: Workspace view <<done>>
-***** REQ-206b: Editor elements list <<done>>
-***** REQ-206c: Debugging toolbar <<prio_low>>
-**** REQ-207: About Dialog <<done>>
+*** REQ-206: Primary Side Bar
+**** REQ-206a: Workspace view <<done>>
+**** REQ-206b: Editor elements list <<done>>
+**** REQ-206c: Debugging toolbar <<prio_low>>
+*** REQ-207: About Dialog <<done>>
+*** REQ-208: Themes
+**** REQ-208a: Themes management <<todo>>
+**** REQ-208b: Default theme <<todo>>
 
 ** REQ-300: Import/Export
 *** REQ-301: SCXML file handling <<done>>

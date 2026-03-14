@@ -1,13 +1,16 @@
 #include "MainWindow.hpp"
 
+#include <QAction>
 #include <QFileDialog>
 #include <QFileSystemModel>
+#include <QFileInfo>
 #include <QSignalBlocker>
 
 #include "./ui/ui_main.h"
 #include "AboutDialog.hpp"
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
+#include "controllers/SettingsController.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
 #include "view/models/NonEmptyDirFileSystemProxyModel.hpp"
@@ -31,6 +34,17 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Delete dummy tab
     ui->projectTabs->removeTab(0);
+
+    mSettingsController = std::make_unique<SettingsController>();
+    updateRecentHsmMenu();
+    updateRecentWorkspacesMenu();
+
+    connect(mController, &MainEditorController::hsmProjectOpened, this, [this](const QString& path) {
+        if (mSettingsController) {
+            mSettingsController->addRecentHsm(path);
+            updateRecentHsmMenu();
+        }
+    });
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
@@ -61,27 +75,15 @@ QPointer<HsmGraphicsView> MainWindow::getViewByIndex(const int index) {
 }
 
 void MainWindow::handleOpenWorkspace() {
-    Q_ASSERT(ui->workspaceTree != nullptr);
-
     QString rootDir = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
 
     if (rootDir.isEmpty() == false) {
-        // Use QFileSystemModel as source, NonEmptyDirFileSystemProxyModel as proxy
-        QFileSystemModel* fsModel = new QFileSystemModel(this);
-        fsModel->setRootPath(rootDir);
-        fsModel->setNameFilters({"*.scxml"});
-        fsModel->setNameFilterDisables(false);   // Hide all files that don't match
+        openWorkspace(rootDir);
 
-        view::NonEmptyDirFileSystemProxyModel* proxyModel = new view::NonEmptyDirFileSystemProxyModel(this);
-        proxyModel->setSourceModel(fsModel);
-
-        ui->workspaceTree->setModel(proxyModel);
-        ui->workspaceTree->setRootIndex(proxyModel->mapFromSource(fsModel->index(rootDir)));
-
-        ui->workspaceTree->setColumnHidden(1, true); // Size
-        ui->workspaceTree->setColumnHidden(2, true); // Type
-        ui->workspaceTree->setColumnHidden(3, true); // Date Modified
-        ui->workspaceTree->setHeaderHidden(true);
+        if (mSettingsController) {
+            mSettingsController->addRecentWorkspace(rootDir);
+            updateRecentWorkspacesMenu();
+        }
     }
 }
 
@@ -221,6 +223,80 @@ void MainWindow::onOpenWorkspaceFile(const QModelIndex& index) {
     if (path.isEmpty() == false) {
         mController->openProject(path);
     }
+}
+
+void MainWindow::openWorkspace(const QString& rootDir) {
+    Q_ASSERT(ui->workspaceTree != nullptr);
+
+    // Use QFileSystemModel as source, NonEmptyDirFileSystemProxyModel as proxy
+    QFileSystemModel* fsModel = new QFileSystemModel(this);
+    fsModel->setRootPath(rootDir);
+    fsModel->setNameFilters({"*.scxml"});
+    fsModel->setNameFilterDisables(false);   // Hide all files that don't match
+
+    view::NonEmptyDirFileSystemProxyModel* proxyModel = new view::NonEmptyDirFileSystemProxyModel(this);
+    proxyModel->setSourceModel(fsModel);
+
+    ui->workspaceTree->setModel(proxyModel);
+    ui->workspaceTree->setRootIndex(proxyModel->mapFromSource(fsModel->index(rootDir)));
+
+    ui->workspaceTree->setColumnHidden(1, true); // Size
+    ui->workspaceTree->setColumnHidden(2, true); // Type
+    ui->workspaceTree->setColumnHidden(3, true); // Date Modified
+    ui->workspaceTree->setHeaderHidden(true);
+}
+
+void MainWindow::updateMenuItemsRecent(QMenu* menu,
+                                 const QStringList& items,
+                                 const std::function<void(const QString&)>& callbackOpen,
+                                 const std::function<void()>& callbackClear) {
+    Q_ASSERT(menu != nullptr);
+
+    menu->clear();
+
+    if (items.isEmpty()) {
+        menu->setEnabled(false);
+        return;
+    }
+
+    menu->setEnabled(true);
+
+    for (const QString& curPath : items) {
+        QAction* entryAction = menu->addAction(curPath);
+        connect(entryAction, &QAction::triggered, this, [callbackOpen, curPath]() { callbackOpen(curPath); });
+    }
+
+    menu->addSeparator();
+    QAction* clearAction = menu->addAction(tr("Clear Menu"));
+    connect(clearAction, &QAction::triggered, this, callbackClear);
+}
+
+void MainWindow::updateRecentHsmMenu() {
+    Q_ASSERT(mSettingsController != nullptr);
+
+    updateMenuItemsRecent(ui->menuRecentFiles,
+                    mSettingsController->recentHsm(),
+                    [this](const QString& path) { mController->openProject(path); },
+                    [this]() {
+                        mSettingsController->clearRecentHsm();
+                        updateRecentHsmMenu();
+                    });
+}
+
+void MainWindow::updateRecentWorkspacesMenu() {
+    Q_ASSERT(mSettingsController != nullptr);
+
+    updateMenuItemsRecent(ui->menuRecentWorkspaces,
+                    mSettingsController->recentWorkspaces(),
+                    [this](const QString& path) {
+                        openWorkspace(path);
+                        mSettingsController->addRecentWorkspace(path);
+                        updateRecentWorkspacesMenu();
+                    },
+                    [this]() {
+                        mSettingsController->clearRecentWorkspaces();
+                        updateRecentWorkspacesMenu();
+                    });
 }
 
 void MainWindow::onHsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity) {
