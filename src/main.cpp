@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QCoreApplication>
 #include <QLocale>
 #include <QTranslator>
 
@@ -7,6 +8,8 @@
 
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
+    QCoreApplication::setOrganizationName("hsmcpp");
+    QCoreApplication::setApplicationName("hsm-ide");
 
     qRegisterMetaType<model::EntityID_t>("model::EntityID_t");
 

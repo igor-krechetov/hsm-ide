@@ -1,4 +1,5 @@
 temp
+.vscode/settings.json
 
 # Qt
 build-*

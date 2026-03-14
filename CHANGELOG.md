@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.4.0] - 2026-03-14
+### New
+- [REQ-204d4] List of recent files
+- [REQ-204d5] List of recent workspaces
+
 ## [0.3.0] - 2026-03-14
 ### New
 - [REQ-204c] Undo/Redo support

@@ -1,0 +1,2 @@
+- Add localisation support
+- Add indication of the currently opened workspace
