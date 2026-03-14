@@ -2,8 +2,8 @@
 
 #include <QAction>
 #include <QFileDialog>
-#include <QFileSystemModel>
 #include <QFileInfo>
+#include <QFileSystemModel>
 #include <QMessageBox>
 #include <QSignalBlocker>
 
@@ -12,9 +12,9 @@
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
+#include "view/models/NonEmptyDirFileSystemProxyModel.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
-#include "view/models/NonEmptyDirFileSystemProxyModel.hpp"
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
@@ -216,7 +216,8 @@ void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const Q
 
 void MainWindow::onOpenWorkspaceFile(const QModelIndex& index) {
     qDebug() << "onOpenWorkspaceFile" << index;
-    view::NonEmptyDirFileSystemProxyModel *model = qobject_cast<view::NonEmptyDirFileSystemProxyModel*>(ui->workspaceTree->model());
+    view::NonEmptyDirFileSystemProxyModel* model =
+        qobject_cast<view::NonEmptyDirFileSystemProxyModel*>(ui->workspaceTree->model());
 
     Q_ASSERT(nullptr != model);
     const QString path = model->getFilePath(index);
@@ -233,7 +234,7 @@ void MainWindow::openWorkspace(const QString& rootDir) {
     QFileSystemModel* fsModel = new QFileSystemModel(this);
     fsModel->setRootPath(rootDir);
     fsModel->setNameFilters({"*.scxml"});
-    fsModel->setNameFilterDisables(false);   // Hide all files that don't match
+    fsModel->setNameFilterDisables(false);  // Hide all files that don't match
 
     view::NonEmptyDirFileSystemProxyModel* proxyModel = new view::NonEmptyDirFileSystemProxyModel(this);
     proxyModel->setSourceModel(fsModel);
@@ -241,16 +242,16 @@ void MainWindow::openWorkspace(const QString& rootDir) {
     ui->workspaceTree->setModel(proxyModel);
     ui->workspaceTree->setRootIndex(proxyModel->mapFromSource(fsModel->index(rootDir)));
 
-    ui->workspaceTree->setColumnHidden(1, true); // Size
-    ui->workspaceTree->setColumnHidden(2, true); // Type
-    ui->workspaceTree->setColumnHidden(3, true); // Date Modified
+    ui->workspaceTree->setColumnHidden(1, true);  // Size
+    ui->workspaceTree->setColumnHidden(2, true);  // Type
+    ui->workspaceTree->setColumnHidden(3, true);  // Date Modified
     ui->workspaceTree->setHeaderHidden(true);
 }
 
 void MainWindow::updateMenuItemsRecent(QMenu* menu,
-                                 const QStringList& items,
-                                 const std::function<void(const QString&)>& callbackOpen,
-                                 const std::function<void()>& callbackClear) {
+                                       const QStringList& items,
+                                       const std::function<void(const QString&)>& callbackOpen,
+                                       const std::function<void()>& callbackClear) {
     Q_ASSERT(menu != nullptr);
 
     menu->clear();
@@ -275,29 +276,55 @@ void MainWindow::updateMenuItemsRecent(QMenu* menu,
 void MainWindow::updateRecentHsmMenu() {
     Q_ASSERT(mSettingsController != nullptr);
 
-    updateMenuItemsRecent(ui->menuRecentFiles,
-                    mSettingsController->recentHsm(),
-                    [this](const QString& path) { mController->openProject(path); },
-                    [this]() {
-                        mSettingsController->clearRecentHsm();
-                        updateRecentHsmMenu();
-                    });
+    updateMenuItemsRecent(
+        ui->menuRecentFiles,
+        mSettingsController->recentHsm(),
+        [this](const QString& path) {
+            const QFileInfo hsmInfo(path);
+
+            if (!hsmInfo.exists() || !hsmInfo.isFile()) {
+                mSettingsController->removeRecentHsm(path);
+                updateRecentHsmMenu();
+                QMessageBox::warning(this,
+                                     tr("Recent File Not Found"),
+                                     tr("Cannot open recent HSM because the file no longer exists:\n%1").arg(path));
+                return;
+            }
+
+            mController->openProject(path);
+        },
+        [this]() {
+            mSettingsController->clearRecentHsm();
+            updateRecentHsmMenu();
+        });
 }
 
 void MainWindow::updateRecentWorkspacesMenu() {
     Q_ASSERT(mSettingsController != nullptr);
 
-    updateMenuItemsRecent(ui->menuRecentWorkspaces,
-                    mSettingsController->recentWorkspaces(),
-                    [this](const QString& path) {
-                        openWorkspace(path);
-                        mSettingsController->addRecentWorkspace(path);
-                        updateRecentWorkspacesMenu();
-                    },
-                    [this]() {
-                        mSettingsController->clearRecentWorkspaces();
-                        updateRecentWorkspacesMenu();
-                    });
+    updateMenuItemsRecent(
+        ui->menuRecentWorkspaces,
+        mSettingsController->recentWorkspaces(),
+        [this](const QString& path) {
+            const QFileInfo workspaceInfo(path);
+
+            if (!workspaceInfo.exists() || !workspaceInfo.isDir()) {
+                mSettingsController->removeRecentWorkspace(path);
+                updateRecentWorkspacesMenu();
+                QMessageBox::warning(this,
+                                     tr("Recent Workspace Not Found"),
+                                     tr("Cannot open recent workspace because the directory no longer exists:\n%1").arg(path));
+                return;
+            }
+
+            openWorkspace(path);
+            mSettingsController->addRecentWorkspace(path);
+            updateRecentWorkspacesMenu();
+        },
+        [this]() {
+            mSettingsController->clearRecentWorkspaces();
+            updateRecentWorkspacesMenu();
+        });
 }
 
 void MainWindow::onHsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity) {
