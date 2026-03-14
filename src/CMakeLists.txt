@@ -33,6 +33,7 @@ set(PROJECT_SOURCES
 
     controllers/MainEditorController.cpp
     controllers/ProjectController.cpp
+    controllers/SettingsController.cpp
     # controllers/RecentFilesManager.cpp
 
     view/MainWindow.cpp

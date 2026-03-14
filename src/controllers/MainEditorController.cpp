@@ -61,11 +61,14 @@ ProjectControllerPtr MainEditorController::openProject(const QString& projectPat
                 if (false == project->importModel(projectPath)) {
                     // do not open project if we failed to load the model
                     project.reset();
+                } else {
+                    emit hsmProjectOpened(projectPath);
                 }
             }
         }
     } else {
         switchToProject(project);
+        emit hsmProjectOpened(projectPath);
     }
 
     return project;

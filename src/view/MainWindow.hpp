@@ -2,8 +2,12 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <QMenu>
 #include <QPointer>
 #include <QSharedPointer>
+#include <QStringList>
+#include <functional>
+#include <memory>
 
 #include "model/ModelTypes.hpp"
 
@@ -14,6 +18,7 @@ QT_END_NAMESPACE
 class HsmGraphicsView;
 class MainEditorController;
 class ProjectController;
+class SettingsController;
 using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
 namespace model {
@@ -65,11 +70,17 @@ public slots:
     void projectClosed(ProjectControllerPtr project);
 
 private:
+    void openWorkspace(const QString& rootDir);
+    void updateMenuItems(QMenu* menu, const QStringList& items, const std::function<void(const QString&)>& callbackOpen,
+                         const std::function<void()>& callbackClear);
+    void updateRecentHsmMenu();
+    void updateRecentWorkspacesMenu();
     void selectModelEntityById(const model::EntityID_t id);
 
 private:
     Ui_hsm_ide* ui = nullptr;
     MainEditorController* mController = nullptr;
+    std::unique_ptr<SettingsController> mSettingsController;
     ProjectControllerPtr mActiveProject;
     QString mLastDirectory;
     QString mAppTitle;

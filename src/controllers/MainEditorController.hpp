@@ -41,6 +41,7 @@ signals:
     void projectOpened(ProjectControllerPtr project);
     void projectSelected(ProjectControllerPtr project);
     void projectClosed(ProjectControllerPtr project);
+    void hsmProjectOpened(const QString& path);
 
 private:
     MainWindow mMainWindow;
