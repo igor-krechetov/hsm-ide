@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QFileSystemModel>
 #include <QFileInfo>
+#include <QMessageBox>
 #include <QSignalBlocker>
 
 #include "./ui/ui_main.h"

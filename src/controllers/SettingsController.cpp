@@ -34,6 +34,14 @@ void SettingsController::clearRecentWorkspaces() {
     mSettings.sync();
 }
 
+void SettingsController::removeRecentHsm(const QString& path) {
+    removePathFromRecentList(path, mRecentHsmFiles, KEY_RECENT_HSM);
+}
+
+void SettingsController::removeRecentWorkspace(const QString& path) {
+    removePathFromRecentList(path, mRecentWorkspaces, KEY_RECENT_WORKSPACES);
+}
+
 const QStringList& SettingsController::recentHsm() const {
     return mRecentHsmFiles;
 }
@@ -53,5 +61,15 @@ void SettingsController::addPathToRecentList(const QString& path, QStringList& i
 
         mSettings.setValue(settingsKey, items);
         mSettings.sync();
+    }
+}
+
+
+void SettingsController::removePathFromRecentList(const QString& path, QStringList& items, const QString& settingsKey) {
+    if (path.isEmpty() == false) {
+        if (items.removeAll(path) > 0) {
+            mSettings.setValue(settingsKey, items);
+            mSettings.sync();
+        }
     }
 }
