@@ -156,6 +156,15 @@ void HsmGraphicsView::deleteHsmElement(const model::EntityID_t modelElementId) {
     }
 }
 
+void HsmGraphicsView::clearAllHsmElements() {
+    qDebug() << Q_FUNC_INFO;
+    for (auto it = mElements.begin(); it != mElements.end(); ++it) {
+        delete *it;
+    }
+
+    mElements.clear();
+}
+
 void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId) {
     // qDebug() << "--- HsmGraphicsView::moveHsmElement: elementId" << elementId << " -> " << newParentId;
 
@@ -439,6 +448,10 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
         QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
         forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
     }
+
+    if (auto controller = mProjectController.toStrongRef()) {
+        controller->beginHistoryTransaction("Drag elements");
+    }
 }
 
 void HsmGraphicsView::dragElementEvent(view::HsmElement* element, const QPointF& scenePos) {
@@ -462,6 +475,10 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
             const bool elementDraggingAllowed = handleElementDragEvent(scenePos, selectedElement);
 
             if (true == elementDraggingAllowed) {
+                // element's position is updated every time move event is triggered. since we only care about 
+                // the final position we mark it manually instead of triggering model change notifications
+                controller->markHistoryElement(selectedElement->modelId());
+
                 // qDebug() << "------ dropElementEvent:ALLOWED";
                 view::HsmResizableElement* currentParent = elementToHsmResizableElement(selectedElement->hsmParentItem());
 
@@ -502,8 +519,13 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
                         itPos.key()->setPos(itPos.value());
                     }
                 }
+
+                // since we reset the element, unmark it so it doesnt affect history
+                controller->unmarkHistoryElement(selectedElement->modelId());
             }
         });
+
+        controller->commitHistoryTransaction();
     }
 
     handleElementDropEvent(nullptr, scenePos);

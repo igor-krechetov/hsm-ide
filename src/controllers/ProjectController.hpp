@@ -19,6 +19,8 @@ class StateMachineTreeModel;
 class StateMachineEntityViewModel;
 };  // namespace view
 
+class ModificationHistoryController;
+
 class ProjectController : public QObject, public QEnableSharedFromThis<ProjectController> {
     Q_OBJECT
 public:
@@ -42,6 +44,15 @@ public:
     void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
+    void beginHistoryTransaction(const QString& label);
+    void commitHistoryTransaction();
+    void cancelHistoryTransaction();
+    void markHistoryElement(const model::EntityID_t elementId);
+    void unmarkHistoryElement(const model::EntityID_t elementId);
+    bool undo();
+    bool redo();
+    bool canUndo() const;
+    bool canRedo() const;
 
 signals:
     void projectModelChanged(QPointer<ProjectController> project);
@@ -56,6 +67,7 @@ private slots:
     void modelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
 
 private:
+    void refreshViewFromModel();
     void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                 QSharedPointer<model::StateMachineEntity> entity,
                                 const bool addChildren);
@@ -74,31 +86,13 @@ private:
     QString mModelPath;
     QPointer<HsmGraphicsView> mView;
     QSharedPointer<model::StateMachineModel> mModel;
+    QSharedPointer<ModificationHistoryController> mHistoryController;
 
-    view::StateMachineTreeModel* mHsmStrctureViewModel = nullptr;
+    view::StateMachineTreeModel* mHsmStructureViewModel = nullptr;
     view::StateMachineEntityViewModel* mHsmEntityViewModel = nullptr;
 
     // true if the model was modified since last save/loading
     bool mModified = false;
-
-    // TODO
-    //     2. Create a scene per project
-    // Each project gets its own QGraphicsScene (which encapsulates your state machine graph, connections, etc.).
-    // auto* scene = new QGraphicsScene(this);
-    // scene->addItem(...); // populate
-    // m_openProjects.insert(projectName, scene);
-    //     3. On project switch
-
-    // Just swap the scene pointer:
-
-    // void EditorWindow::switchToProject(const QString& name)
-    // {
-    //     if (!m_openProjects.contains(name))
-    //         return;
-
-    //     m_view->setScene(m_openProjects[name]);
-    //     m_currentProject = name;
-    // }
 };
 
 inline QPointer<HsmGraphicsView> ProjectController::view() const {
@@ -106,7 +100,7 @@ inline QPointer<HsmGraphicsView> ProjectController::view() const {
 }
 
 inline view::StateMachineTreeModel* ProjectController::hsmStructureModel() {
-    return mHsmStrctureViewModel;
+    return mHsmStructureViewModel;
 }
 
 inline view::StateMachineEntityViewModel* ProjectController::hsmEntityViewModel() {

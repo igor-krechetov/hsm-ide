@@ -52,6 +52,7 @@ public:
                                              const model::EntityID_t fromElementId,
                                              const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
+    void clearAllHsmElements();
     void moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId);
 
     void reconnectHsmTransition(const model::EntityID_t transitionId,

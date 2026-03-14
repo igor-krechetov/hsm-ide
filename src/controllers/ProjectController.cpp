@@ -7,6 +7,7 @@
 #include <QTextStream>
 
 #include "ObjectUtils.hpp"
+#include "controllers/ModificationHistoryController.hpp"
 #include "model/EntryPoint.hpp"
 #include "model/InitialState.hpp"
 #include "model/ModelElementsFactory.hpp"
@@ -26,13 +27,17 @@ Q_DECLARE_LOGGING_CATEGORY(ProjectController)
 ProjectController::ProjectController(const QString& id, QObject* parent)
     : QObject(parent)
     , mId(id)
-    , mModel(new model::StateMachineModel("Untitled")) {
+    , mModel(new model::StateMachineModel("Untitled"))
+    , mHistoryController(new ModificationHistoryController(mModel)) {
     QObject::connect(mModel.get(), &model::StateMachineModel::modelEntityAdded, this, &ProjectController::modelEntityAdded);
     QObject::connect(mModel.get(), &model::StateMachineModel::modelEntityDeleted, this, &ProjectController::modelEntityDeleted);
     QObject::connect(mModel.get(), &model::StateMachineModel::modelDataChanged, this, &ProjectController::modelDataChanged);
 
-    mHsmStrctureViewModel = new view::StateMachineTreeModel(mModel, this);
+    mHsmStructureViewModel = new view::StateMachineTreeModel(mModel, this);
     mHsmEntityViewModel = new view::StateMachineEntityViewModel(mModel, this);
+    mHsmEntityViewModel->setHistoryTransactionCallbacks(
+        [this](const QString& label) { beginHistoryTransaction(label); },
+        [this]() { commitHistoryTransaction(); });
 }
 
 ProjectController::~ProjectController() {
@@ -70,6 +75,7 @@ bool ProjectController::importModel(const QString& path) {
             }
         }
 
+        refreshViewFromModel();
         emit projectModelChanged(this);
     } else {
         qCritical() << "Failed to open file for reading: " << path;
@@ -112,7 +118,9 @@ void ProjectController::handleViewDropEvent(const QString& elementTypeId,
                                             const model::EntityID_t targetElementId) {
     qDebug() << Q_FUNC_INFO << elementTypeId << targetElementId << parentPos;
 
+    beginHistoryTransaction("Create element");
     createElement(elementTypeId, parentPos, targetElementId);
+    commitHistoryTransaction();
 }
 
 void ProjectController::handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId) {
@@ -138,10 +146,14 @@ void ProjectController::handleViewMoveEvent(const model::EntityID_t draggedEleme
 void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& elementIDs) {
     qDebug() << Q_FUNC_INFO << elementIDs;
 
+    beginHistoryTransaction("Delete elements");
+
     for (model::EntityID_t id : elementIDs) {
         mModel->root()->deleteChild(id);
         // NOTE: model will send signal which will trigger view update
     }
+
+    commitHistoryTransaction();
 }
 
 void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
@@ -205,9 +217,12 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
 
 void ProjectController::connectElements(const model::EntityID_t fromElementId, const model::EntityID_t toElementId) {
     qDebug() << Q_FUNC_INFO << fromElementId << " -> " << toElementId;
+
+    beginHistoryTransaction("Create transition");
     auto source = mModel->root()->findState(fromElementId);
     auto target = mModel->root()->findState(toElementId);
     auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
+    commitHistoryTransaction();
 }
 
 void ProjectController::reconnectElements(const model::EntityID_t transitionId,
@@ -215,11 +230,16 @@ void ProjectController::reconnectElements(const model::EntityID_t transitionId,
                                           const model::EntityID_t newToElementId) {
     qDebug() << Q_FUNC_INFO << transitionId << ": " << newFromElementId << " -> " << newToElementId;
 
+    beginHistoryTransaction("Reconnect transition");
+
     if (mModel->reconnectElements(transitionId, newFromElementId, newToElementId) == true) {
         mView->reconnectHsmTransition(transitionId, newFromElementId, newToElementId);
+        commitHistoryTransaction();
     } else {
         qCritical() << "Failed to reconnect transition with id " << transitionId << newFromElementId << newToElementId;
     }
+
+    cancelHistoryTransaction();
 }
 
 void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity> parent,
@@ -229,6 +249,9 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
     auto ptrParent = parent.lock();
 
     if (ptrChild && ptrParent) {
+        if (mHistoryController) {
+            mHistoryController->onModelEntityAdded(ptrParent->id(), ptrChild->id());
+        }
         handleModelEntityAdded(ptrParent, ptrChild, true);
         projectModified();
     } else {
@@ -238,10 +261,12 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
 
 void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntity> parent,
                                            QWeakPointer<model::StateMachineEntity> entity) {
-    qDebug() << Q_FUNC_INFO;
     auto ptrEntity = entity.lock();
 
     if (ptrEntity) {
+        if (mHistoryController) {
+            mHistoryController->onModelEntityDeleted(model::INVALID_MODEL_ID, ptrEntity->id());
+        }
         mView->deleteHsmElement(ptrEntity->id());
         projectModified();
     } else {
@@ -251,6 +276,10 @@ void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntit
 
 void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity> entity) {
     auto ptrEntity = entity.lock();
+
+    if (ptrEntity && mHistoryController) {
+        mHistoryController->onModelDataChanged(ptrEntity->id());
+    }
 
     if (ptrEntity && ptrEntity->type() == model::StateMachineEntity::Type::Transition) {
         auto ptrTransition = ptrEntity.dynamicCast<model::Transition>();
@@ -315,4 +344,92 @@ void ProjectController::createTransition(const QSharedPointer<model::State>& fro
 void ProjectController::projectModified() {
     mModified = true;
     emit projectModelChanged(this);
+}
+
+void ProjectController::beginHistoryTransaction(const QString& label) {
+    if (mHistoryController) {
+        mHistoryController->beginTransaction(label);
+    }
+}
+
+void ProjectController::commitHistoryTransaction() {
+    if (mHistoryController) {
+        mHistoryController->commitTransaction();
+        emit projectModelChanged(this);
+    }
+}
+
+void ProjectController::cancelHistoryTransaction() {
+    if (mHistoryController) {
+        mHistoryController->cancelTransaction();
+    }
+}
+
+void ProjectController::markHistoryElement(const model::EntityID_t elementId) {
+    if (mHistoryController) {
+        mHistoryController->markChanged(elementId);
+    }
+}
+
+void ProjectController::unmarkHistoryElement(const model::EntityID_t elementId) {
+    if (mHistoryController) {
+        mHistoryController->unmarkChanged(elementId);
+    }
+}
+
+bool ProjectController::undo() {
+    if (mHistoryController && mHistoryController->undo()) {
+        refreshViewFromModel();
+        emit projectModelChanged(this);
+        return true;
+    }
+
+    return false;
+}
+
+bool ProjectController::redo() {
+    if (mHistoryController && mHistoryController->redo()) {
+        refreshViewFromModel();
+        emit projectModelChanged(this);
+        return true;
+    }
+
+    return false;
+}
+
+bool ProjectController::canUndo() const {
+    return (mHistoryController ? mHistoryController->canUndo() : false);
+}
+
+bool ProjectController::canRedo() const {
+    return (mHistoryController ? mHistoryController->canRedo() : false);
+}
+
+void ProjectController::refreshViewFromModel() {
+    qDebug() << Q_FUNC_INFO;
+    if (mView && mModel) {
+        auto root = mModel->root();
+
+        // Clear all elements from the view
+        mView->clearAllHsmElements();
+
+        if (root) {
+            // Recursively add states only
+            root->forEachChildElement([&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
+                if (child && child->type() == model::StateMachineEntity::Type::State) {
+                    handleModelEntityAdded(parent, child, false);
+                }
+                return true;
+            }, -1, false);
+
+            // Recursively add transitions. If we try doing it together with states,
+            // we might end up not having a source/target when creatng transition (because we can't control states order in the model)
+            root->forEachChildElement([&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
+                if (child && child->type() == model::StateMachineEntity::Type::Transition) {
+                    handleModelEntityAdded(parent, child, false);
+                }
+                return true;
+            }, -1, false);
+        }
+    }
 }

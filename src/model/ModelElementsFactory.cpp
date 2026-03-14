@@ -58,6 +58,46 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
     return res;
 }
 
+QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointer<State>& source) {
+    if (!source) {
+        return nullptr;
+    }
+
+    QSharedPointer<State> res;
+
+    switch (source->stateType()) {
+        case StateType::MODEL_ROOT:
+            res = QSharedPointer<State>(new ModelRootState(source->name()));
+            break;
+        case StateType::INITIAL:
+            res = QSharedPointer<State>(new InitialState());
+            break;
+        case StateType::REGULAR:
+            res = QSharedPointer<State>(new RegularState(source->name()));
+            break;
+        case StateType::ENTRYPOINT:
+            res = QSharedPointer<State>(new EntryPoint(source->name()));
+            break;
+        case StateType::EXITPOINT:
+            res = QSharedPointer<State>(new ExitPoint(source->name()));
+            break;
+        case StateType::FINAL:
+            res = QSharedPointer<State>(new FinalState(source->name()));
+            break;
+        case StateType::HISTORY:
+            res = QSharedPointer<State>(new HistoryState(source->name(), HistoryType::SHALLOW));
+            break;
+        case StateType::INCLUDE:
+            res = QSharedPointer<State>(new IncludeEntity(source->name()));
+            break;
+        default:
+            qFatal("ModelElementsFactory::cloneStateEntity: Unexpected element type: %d", static_cast<int>(source->stateType()));
+            break;
+    }
+
+    return res;
+}
+
 QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QSharedPointer<State>& source,
                                                                         const QSharedPointer<State>& target) {
     QSharedPointer<Transition> newTransition(new Transition(source, target, "NEW_EVENT"));
