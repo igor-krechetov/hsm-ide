@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "ui/theme/ThemeManager.hpp"
+
 namespace view {
 
 HsmHistoryElement::HsmHistoryElement()
@@ -26,7 +28,7 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     QFont font = painter->font();
 
     if (cachedFontSize == 0) {
-        const qreal targetHeight = r * 2 * 0.7;  // 70% of diameter
+        const qreal targetHeight = r * 2 * ThemeManager::instance().theme().node.historyFontHeightFactor;
         int fontSize = 1;
         QFontMetrics fm(font);
 
@@ -47,7 +49,7 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     // If it's deep history, we would set historyType to "H*"
 
     // Draw the white filled circle
-    painter->setBrush(mBackgroundBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.backgroundBrush);
     painter->drawEllipse(c, r, r);
 
     // Draw text centered in the ellipse

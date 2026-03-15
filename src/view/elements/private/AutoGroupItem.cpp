@@ -5,6 +5,8 @@
 #include <QPainter>
 #include <QTimer>
 
+#include "ui/theme/ThemeManager.hpp"
+
 AutoGroupItem::AutoGroupItem(QGraphicsItem* parent)
     : QGraphicsObject(parent) {
     setFlags(ItemIsMovable | ItemSendsGeometryChanges);
@@ -30,7 +32,8 @@ QRectF AutoGroupItem::boundingRect() const {
 void AutoGroupItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) {
     // Optional: draw bounding box (debug)
 #ifdef DEBUG_RENDERING
-    p->setPen(Qt::DashLine);
+    const auto& theme = ThemeManager::instance().theme();
+    p->setPen(theme.grid.majorLinePen);
     p->drawRect(childrenBoundingRect());
 #endif
 }

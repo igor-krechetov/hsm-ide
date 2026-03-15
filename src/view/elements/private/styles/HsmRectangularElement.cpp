@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "ui/theme/ThemeManager.hpp"
+
 namespace view {
 
 HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType)
@@ -14,27 +16,27 @@ HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType, c
 }
 
 void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    constexpr qreal cEdgeRadius = 5.0;
-
     // Configure painter
     painter->setRenderHint(QPainter::Antialiasing, true);
 
+    const auto& theme = ThemeManager::instance().theme();
+
     // Set the brush color
-    painter->setBrush(mBackgroundBrush);
+    painter->setBrush(theme.node.backgroundBrush);
 
     // Draw the rounded rectangle with fully rounded corners
     if (isHighligted() == true) {
-        painter->setPen(mPenHighlightMode);
+        painter->setPen(theme.node.highlightBorderPen);
     } else if (isSelected() == true) {
-        painter->setPen(mPenSelectedBorder);
+        painter->setPen(theme.node.selectedBorderPen);
     } else {
-        painter->setPen(mPenNormalMode);
+        painter->setPen(theme.node.borderPen);
     }
 
     painter->drawRoundedRect(
         mOuterRect.adjusted(cOuterBorderAdjustment, cOuterBorderAdjustment, -cOuterBorderAdjustment, -cOuterBorderAdjustment),
-        cEdgeRadius,
-        cEdgeRadius);
+        theme.node.cornerRadius,
+        theme.node.cornerRadius);
 
 #ifdef DEBUG_RENDERING
     painter->drawEllipse(QPointF(0, 0), 5, 5);

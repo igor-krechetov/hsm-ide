@@ -17,6 +17,7 @@
 #include "view/elements/HsmTransition.hpp"
 #include "view/elements/private/HsmElement.hpp"
 #include "view/elements/private/HsmResizableElement.hpp"
+#include "ui/theme/ThemeManager.hpp"
 
 HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     : QGraphicsView(parent) {
@@ -27,6 +28,14 @@ HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     // setSceneRect(-500, -500, 1000, 1000);
     // scale(0.3, 0.3);
     // translate(100, 0);
+
+    QObject::connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this]() {
+        if (scene() != nullptr) {
+            scene()->update();
+        }
+
+        viewport()->update();
+    });
 }
 
 HsmGraphicsView::~HsmGraphicsView() {
@@ -59,8 +68,8 @@ void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>
     // and two crossed lines at the 0,0 point using graphics items
     QGraphicsLineItem* hLine = new QGraphicsLineItem(-1000, 0, 1000, 0);
     QGraphicsLineItem* vLine = new QGraphicsLineItem(0, -1000, 0, 1000);
-    QPen pen(Qt::lightGray);
-    pen.setStyle(Qt::DashLine);
+    const auto& theme = ThemeManager::instance().theme();
+    QPen pen(theme.grid.majorLinePen);
     hLine->setPen(pen);
     vLine->setPen(pen);
     scene()->addItem(hLine);

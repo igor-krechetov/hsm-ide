@@ -60,7 +60,7 @@ private:
     HsmElement* mAnnotationElement = nullptr;
     GripDirection mGripDirection = GripDirection::FreeMove;
     QRectF mGripRect;
-    QColor mGripColor;
+    bool mHovered = false;
     QPointF mLastPos;
     bool mDragging = false;
 };
