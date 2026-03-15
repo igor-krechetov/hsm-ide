@@ -8,6 +8,7 @@
 
 #include "HsmElement.hpp"
 #include "ObjectUtils.hpp"
+#include "ui/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -15,7 +16,6 @@ ElementGripItem::ElementGripItem(HsmElement* annotationElement, const GripDirect
     : QGraphicsObject(annotationElement)
     , mGripDirection(type)
     , mGripRect(-(cGripSize/2), -(cGripSize/2), cGripSize, cGripSize)
-    , mGripColor("red") // TODO: move to style object
     , mAnnotationElement(annotationElement) {
     // qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
     // qDebug() << "QObject parent:" << parentObject();
@@ -66,6 +66,7 @@ void ElementGripItem::init() {
             setCursor(QCursor(Qt::PointingHandCursor));
             break;
     }
+
 }
 
 GripDirection ElementGripItem::direction() const {
@@ -86,26 +87,29 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    painter->setBrush(mGripColor);
+    const auto& theme = ThemeManager::instance().theme();
+    painter->setBrush(mHovered ? theme.grip.hoverColor : theme.grip.color);
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(mGripRect);
 
 #ifdef DEBUG_RENDERING
     // draw small X at the center of the grip
-    painter->setPen(QPen(Qt::black, 1));
+    painter->setPen(ThemeManager::instance().theme().grip.debugPen);
     painter->drawLine(QPointF(-cGripSize/4, -cGripSize/4), QPointF(cGripSize/4, cGripSize/4));
     painter->drawLine(QPointF(-cGripSize/4, cGripSize/4), QPointF(cGripSize/4, -cGripSize/4));
 #endif // DEBUG_RENDERING
 }
 
 void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
-    mGripColor = QColor("green");
+    mHovered = true;
+    update();
     QGraphicsObject::hoverEnterEvent(event);
     // setCursor(QCursor(Qt::PointingHandCursor));
 }
 
 void ElementGripItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    mGripColor = QColor("red");
+    mHovered = false;
+    update();
     QGraphicsObject::hoverLeaveEvent(event);
 }
 

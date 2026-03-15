@@ -1,7 +1,6 @@
 #ifndef ELEMENTCONNECTIONARROW_HPP
 #define ELEMENTCONNECTIONARROW_HPP
 
-#include <QColor>
 #include <QGraphicsObject>
 #include <QPainter>
 #include <QPointF>
@@ -55,7 +54,7 @@ private:
     QRectF mOuterRect;
     Direction mDirection;
     QPainterPath mShapeArrow;
-    QColor mArrowColor;
+    bool mHovered = false;
 };
 
 inline ElementConnectionArrow::Direction ElementConnectionArrow::direction() const {

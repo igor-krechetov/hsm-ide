@@ -2,7 +2,6 @@
 #define HSMELEMENT_HPP
 
 #include <QGraphicsObject>
-#include <QPen>
 #include <QPoint>
 #include <QPointer>
 #include <QSharedPointer>
@@ -11,7 +10,6 @@
 #include <functional>
 
 #include "model/ModelTypes.hpp"
-
 namespace model {
 class StateMachineEntity;
 }
@@ -134,7 +132,7 @@ protected:
     // QGraphicsItem interface
 protected:
     QRectF boundingRect() const override;
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
@@ -146,12 +144,6 @@ protected:
     // dragging - element is being moved around the view and can be assigned to a new parent
     QSizeF mSize;
     QRectF mOuterRect;
-
-    QPen mPenNormalMode;
-    QPen mPenHighlightMode;
-    QPen mPenSelectedBorder;
-    QBrush mBackgroundBrush;
-    QBrush mMainBrush;
 
 private:
     QPointer<HsmElement> mHsmParent;

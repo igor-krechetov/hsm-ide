@@ -20,7 +20,6 @@ public:
     explicit HsmIncludeElement(const QSizeF& size);
     virtual ~HsmIncludeElement() = default;
 
-    void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
     bool acceptsChildElement(const HsmElementType type) const override;
 
     bool canBeTopLevel() const override;

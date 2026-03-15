@@ -1,8 +1,6 @@
 #ifndef HSMROUNDELEMENT_HPP
 #define HSMROUNDELEMENT_HPP
 
-#include <QBrush>
-
 #include "view/elements/private/HsmConnectableElement.hpp"
 
 class QPainter;
@@ -22,9 +20,6 @@ protected:
     qreal radius() const;
     QPointF center() const;
 
-protected:
-    QBrush mBackgroundBrush;
-    QBrush mMainBrush;
 };
 
 };  // namespace view

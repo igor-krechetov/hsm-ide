@@ -1,29 +1,25 @@
 #include "HsmRoundElement.hpp"
 
-#include <QColor>
 #include <QPainter>
+
+#include "ui/theme/ThemeManager.hpp"
 
 namespace view {
 
 HsmRoundElement::HsmRoundElement(const HsmElementType elementType)
-    : HsmConnectableElement(elementType, QSizeF(40, 40))
-    , mBackgroundBrush(Qt::white)
-    , mMainBrush(Qt::darkGray) {}
+    : HsmConnectableElement(elementType, QSizeF(40, 40)) {}
 
 void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    // Configure painter
-    QPen pen = QPen(Qt::SolidLine);
+    const auto& theme = ThemeManager::instance().theme();
 
-    pen.setWidth(2);
-    painter->setPen(pen);
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     if (isHighligted() == true) {
-        painter->setPen(mPenHighlightMode);
+        painter->setPen(theme.node.highlightBorderPen);
     } else if (isSelected() == true) {
-        painter->setPen(mPenSelectedBorder);
+        painter->setPen(theme.node.selectedBorderPen);
     } else {
-        painter->setPen(mPenNormalMode);
+        painter->setPen(theme.node.borderPen);
     }
 }
 

@@ -12,6 +12,7 @@
 #include "model/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
 #include "private/HsmStateTextItem.hpp"
+#include "ui/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -42,6 +43,22 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
 
     mSelfTransitionsSection->setPen(Qt::NoPen);
     mBodySection->setPen(Qt::NoPen);
+
+    const auto applyTheme = [this]() {
+        const auto& theme = ThemeManager::instance().theme();
+
+        mStateNameLabel->setDefaultTextColor(theme.node.textColor);
+        mPropertiesSection->setDefaultTextColor(theme.node.textColor);
+        mHeaderSeparator->setPen(theme.node.borderPen);
+        mSelfTransitionsSeparator->setPen(theme.node.borderPen);
+        mPropertiesSeparator->setPen(theme.node.borderPen);
+    };
+
+    applyTheme();
+    QObject::connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this, applyTheme]() {
+        applyTheme();
+        update();
+    });
 
     onModelDataChanged();
     layoutSections();
@@ -237,12 +254,8 @@ void HsmStateElement::onModelDataChanged() {
 }
 
 void HsmStateElement::onSubstatesChanged(const bool substates) {
-    // TODO: move colors to a new style object
-    if (substates == false) {
-        mBackgroundBrush.setColor(QColor("#E8F1FA"));
-    } else {
-        mBackgroundBrush.setColor(QColor("#DFF4E5"));
-    }
+    Q_UNUSED(substates);
+    update();
 }
 
 void HsmStateElement::layoutSections() {
@@ -327,7 +340,34 @@ void HsmStateElement::updateBoundingRect(const QRectF& newRect) {
 }
 
 void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    HsmRectangularElement::paint(painter, option, widget);
+    const auto& theme = ThemeManager::instance().theme();
+
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
+    if (hasSubstates() == true) {
+        painter->setBrush(theme.node.substateBackgroundBrush);
+    } else {
+        painter->setBrush(theme.node.backgroundBrush);
+    }
+
+    if (isHighligted() == true) {
+        painter->setPen(theme.node.highlightBorderPen);
+    } else if (isSelected() == true) {
+        painter->setPen(theme.node.selectedBorderPen);
+    } else {
+        painter->setPen(theme.node.borderPen);
+    }
+
+    painter->drawRoundedRect(
+        mOuterRect.adjusted(cOuterBorderAdjustment, cOuterBorderAdjustment, -cOuterBorderAdjustment, -cOuterBorderAdjustment),
+        theme.node.cornerRadius,
+        theme.node.cornerRadius);
+
+#ifdef DEBUG_RENDERING
+    painter->drawEllipse(QPointF(0, 0), 5, 5);
+    painter->drawPoint(0, 0);
+#endif  // DEBUG_RENDERING
+
     // Sections and separators are QGraphicsItems, so no extra drawing needed here
 }
 

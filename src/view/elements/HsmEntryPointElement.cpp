@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "ui/theme/ThemeManager.hpp"
+
 namespace view {
 
 HsmEntryPointElement::HsmEntryPointElement()
@@ -23,7 +25,7 @@ void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIt
     const QPointF c = center();
 
     // Draw the circle
-    painter->setBrush(mBackgroundBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.backgroundBrush);
     painter->drawEllipse(c, r, r);
 }
 

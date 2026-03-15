@@ -4,19 +4,20 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QTransform>
 
+#include "ui/theme/ThemeManager.hpp"
+
 namespace view {
 
 ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction)
     : QGraphicsObject(annotationElement)
     , mDirection(direction)
     , mOuterRect(-mW / 2, -mW / 2, mW, mW)
-    , mShapeArrow(initShape(direction))
-    // TODO: take color from style object
-    , mArrowColor("green") {
+    , mShapeArrow(initShape(direction)) {
     // qDebug() << "CREATE: ElementConnectionArrow: " << this;
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
+
     // TODO: arrows should not scale with the sceene, but need to adjust bounding rect of the elements
     // setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
 }
@@ -54,7 +55,9 @@ QRectF ElementConnectionArrow::boundingRect() const {
 }
 
 void ElementConnectionArrow::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    painter->setBrush(mArrowColor);
+    const auto& theme = ThemeManager::instance().theme();
+
+    painter->setBrush(mHovered ? theme.connectionArrow.invalidBrush : theme.connectionArrow.validBrush);
     painter->setPen(Qt::NoPen);
     painter->drawPath(mShapeArrow);
 }
@@ -96,12 +99,14 @@ QPainterPath ElementConnectionArrow::initShape(const Direction direction) const 
 }
 
 void ElementConnectionArrow::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
-    mArrowColor = QColor("red");
+    mHovered = true;
+    update();
     QGraphicsObject::hoverEnterEvent(event);
 }
 
 void ElementConnectionArrow::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    mArrowColor = QColor("green");
+    mHovered = false;
+    update();
     QGraphicsObject::hoverLeaveEvent(event);
 }
 
@@ -125,8 +130,7 @@ void ElementConnectionArrow::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 QVariant ElementConnectionArrow::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (GraphicsItemChange::ItemVisibleHasChanged == change) {
-        // TODO: make a proper reset function
-        mArrowColor = QColor("green");
+        mHovered = false;
     }
 
     return QGraphicsObject::itemChange(change, value);
