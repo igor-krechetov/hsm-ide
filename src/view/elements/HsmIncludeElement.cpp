@@ -1,6 +1,6 @@
 #include "HsmIncludeElement.hpp"
 
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -25,26 +25,7 @@ bool HsmIncludeElement::canBeTopLevel() const {
 void HsmIncludeElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     const auto& theme = ThemeManager::instance().theme();
 
-    painter->setRenderHint(QPainter::Antialiasing, true);
-    painter->setBrush(theme.node.includeBackgroundBrush);
-
-    if (isHighligted() == true) {
-        painter->setPen(theme.node.highlightBorderPen);
-    } else if (isSelected() == true) {
-        painter->setPen(theme.node.selectedBorderPen);
-    } else {
-        painter->setPen(theme.node.borderPen);
-    }
-
-    painter->drawRoundedRect(
-        mOuterRect.adjusted(cOuterBorderAdjustment, cOuterBorderAdjustment, -cOuterBorderAdjustment, -cOuterBorderAdjustment),
-        theme.node.cornerRadius,
-        theme.node.cornerRadius);
-
-#ifdef DEBUG_RENDERING
-    painter->drawEllipse(QPointF(0, 0), 5, 5);
-    painter->drawPoint(0, 0);
-#endif  // DEBUG_RENDERING
+    paintRectangularBody(painter, theme.node.includeBackgroundBrush);
 }
 
 };  // namespace view

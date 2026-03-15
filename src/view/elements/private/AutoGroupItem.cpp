@@ -5,7 +5,7 @@
 #include <QPainter>
 #include <QTimer>
 
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 AutoGroupItem::AutoGroupItem(QGraphicsItem* parent)
     : QGraphicsObject(parent) {

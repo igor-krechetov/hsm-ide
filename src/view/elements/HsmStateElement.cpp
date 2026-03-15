@@ -12,7 +12,7 @@
 #include "model/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
 #include "private/HsmStateTextItem.hpp"
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -342,31 +342,11 @@ void HsmStateElement::updateBoundingRect(const QRectF& newRect) {
 void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     const auto& theme = ThemeManager::instance().theme();
 
-    painter->setRenderHint(QPainter::Antialiasing, true);
-
     if (hasSubstates() == true) {
-        painter->setBrush(theme.node.substateBackgroundBrush);
+        paintRectangularBody(painter, theme.node.substateBackgroundBrush);
     } else {
-        painter->setBrush(theme.node.backgroundBrush);
+        paintRectangularBody(painter, theme.node.backgroundBrush);
     }
-
-    if (isHighligted() == true) {
-        painter->setPen(theme.node.highlightBorderPen);
-    } else if (isSelected() == true) {
-        painter->setPen(theme.node.selectedBorderPen);
-    } else {
-        painter->setPen(theme.node.borderPen);
-    }
-
-    painter->drawRoundedRect(
-        mOuterRect.adjusted(cOuterBorderAdjustment, cOuterBorderAdjustment, -cOuterBorderAdjustment, -cOuterBorderAdjustment),
-        theme.node.cornerRadius,
-        theme.node.cornerRadius);
-
-#ifdef DEBUG_RENDERING
-    painter->drawEllipse(QPointF(0, 0), 5, 5);
-    painter->drawPoint(0, 0);
-#endif  // DEBUG_RENDERING
 
     // Sections and separators are QGraphicsItems, so no extra drawing needed here
 }

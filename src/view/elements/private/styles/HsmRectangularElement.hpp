@@ -19,6 +19,7 @@ public:
     virtual ~HsmRectangularElement() = default;
 
 protected:
+    void paintRectangularBody(QPainter* painter, const QBrush& backgroundBrush) const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 protected:

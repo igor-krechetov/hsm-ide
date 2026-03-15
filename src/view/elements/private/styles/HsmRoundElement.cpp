@@ -2,7 +2,7 @@
 
 #include <QPainter>
 
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 

@@ -8,14 +8,14 @@
 
 #include "HsmElement.hpp"
 #include "ObjectUtils.hpp"
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 
 ElementGripItem::ElementGripItem(HsmElement* annotationElement, const GripDirection type)
     : QGraphicsObject(annotationElement)
     , mGripDirection(type)
-    , mGripRect(-(cGripSize/2), -(cGripSize/2), cGripSize, cGripSize)
+    , mGripRect(-(cGripSize / 2), -(cGripSize / 2), cGripSize, cGripSize)
     , mAnnotationElement(annotationElement) {
     // qDebug() << "CREATE: ElementGripItem: " << this << "parent: " << annotationElement;
     // qDebug() << "QObject parent:" << parentObject();
@@ -41,7 +41,7 @@ void ElementGripItem::init() {
     setAcceptHoverEvents(true);
     setZValue(11);
 
-    switch(mGripDirection) {
+    switch (mGripDirection) {
         case GripDirection::North:
         case GripDirection::South:
             setCursor(QCursor(Qt::SizeVerCursor));
@@ -66,7 +66,6 @@ void ElementGripItem::init() {
             setCursor(QCursor(Qt::PointingHandCursor));
             break;
     }
-
 }
 
 GripDirection ElementGripItem::direction() const {
@@ -95,9 +94,9 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 #ifdef DEBUG_RENDERING
     // draw small X at the center of the grip
     painter->setPen(ThemeManager::instance().theme().grip.debugPen);
-    painter->drawLine(QPointF(-cGripSize/4, -cGripSize/4), QPointF(cGripSize/4, cGripSize/4));
-    painter->drawLine(QPointF(-cGripSize/4, cGripSize/4), QPointF(cGripSize/4, -cGripSize/4));
-#endif // DEBUG_RENDERING
+    painter->drawLine(QPointF(-cGripSize / 4, -cGripSize / 4), QPointF(cGripSize / 4, cGripSize / 4));
+    painter->drawLine(QPointF(-cGripSize / 4, cGripSize / 4), QPointF(cGripSize / 4, -cGripSize / 4));
+#endif  // DEBUG_RENDERING
 }
 
 void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {

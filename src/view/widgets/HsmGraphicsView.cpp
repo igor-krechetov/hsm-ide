@@ -17,7 +17,7 @@
 #include "view/elements/HsmTransition.hpp"
 #include "view/elements/private/HsmElement.hpp"
 #include "view/elements/private/HsmResizableElement.hpp"
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     : QGraphicsView(parent) {
@@ -272,15 +272,14 @@ bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmE
 
     if (mimetype.isEmpty() == false) {
         sourceElementType = view::HsmElementsFactory::elementTypeFromTypeId(mimetype);
-    } else if(nullptr != element) {
+    } else if (nullptr != element) {
         sourceElementType = element->elementType();
     }
 
     targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, true, element, sourceElementType);
 
-    qDebug() << "--- handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : 0)
-             << "mimetype" << mimetype << (int)sourceElementType
-             << "target=" << (targetElement ? targetElement->modelId() : 0)
+    qDebug() << "--- handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : 0) << "mimetype"
+             << mimetype << (int)sourceElementType << "target=" << (targetElement ? targetElement->modelId() : 0)
              << "mDragTargetElement=" << (mDragTargetElement ? mDragTargetElement->modelId() : 0);
 
     if (targetElement != mDragTargetElement) {
@@ -300,7 +299,7 @@ bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmE
 
     if (nullptr == mDragTargetElement) {
         // if we don't have a valid target element, check if element is allowed to be on a top level
-        switch(sourceElementType) {
+        switch (sourceElementType) {
             case view::HsmElementType::INITIAL:
             case view::HsmElementType::FINAL:
             case view::HsmElementType::STATE:
@@ -389,8 +388,7 @@ OK    #e
 
 // NOTE: this is called only for the element under cursor (even if multiple elements are dragged)
 void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF& scenePos) {
-    qDebug() << Q_FUNC_INFO << "id=" << element->modelId() << "type=" << (int)element->elementType()
-             << element << scenePos;
+    qDebug() << Q_FUNC_INFO << "id=" << element->modelId() << "type=" << (int)element->elementType() << element << scenePos;
 
     mDraggedChildElements.clear();
     mDragRevertPositions.clear();
@@ -412,9 +410,8 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
             if (parentSelectedElement != childSelectedElement) {
                 if (parentSelectedElement->containsChild(childSelectedElement) == false) {
                     qDebug() << "---- BEGIN DRAGGING, id=" << childSelectedElement->modelId()
-                            << "type=" << (int)childSelectedElement->elementType()
-                             << childSelectedElement;
-                    
+                             << "type=" << (int)childSelectedElement->elementType() << childSelectedElement;
+
                     // store position for secondary dragged element
                     mDragRevertPositions.insert(childSelectedElement, childSelectedElement->pos());
 
@@ -484,7 +481,7 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
             const bool elementDraggingAllowed = handleElementDragEvent(scenePos, selectedElement);
 
             if (true == elementDraggingAllowed) {
-                // element's position is updated every time move event is triggered. since we only care about 
+                // element's position is updated every time move event is triggered. since we only care about
                 // the final position we mark it manually instead of triggering model change notifications
                 controller->markHistoryElement(selectedElement->modelId());
 
@@ -493,10 +490,12 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
 
                 selectedElement->setGroupDragMode(false);
 
-                if ((nullptr != selectedElement) && (selectedElement->hsmParentItem() == nullptr) || keyboardReparentModifierPressed()) {
+                if ((nullptr != selectedElement) && (selectedElement->hsmParentItem() == nullptr) ||
+                    keyboardReparentModifierPressed()) {
                     qDebug() << "------ dropElementEvent:ALLOWED: NEW PARENT or TOP";
                     // If we are dragging element into a new parent or to a top level
-                    // const auto targetElementId = (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId());
+                    // const auto targetElementId = (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID :
+                    // mDragTargetElement->modelId());
 
                     if ((nullptr != mDragTargetElement) && (currentParent == mDragTargetElement) &&
                         (mDragTargetElement->containsChild(selectedElement) == true)) {
@@ -505,8 +504,8 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
                     } else {
                         qDebug() << "---- MOVE TO NEW PARENT";
                         controller->handleViewMoveEvent(
-                                selectedElement->modelId(),
-                                (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
+                            selectedElement->modelId(),
+                            (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID : mDragTargetElement->modelId()));
                     }
                 } else {
                     qDebug() << "------ dropElementEvent:ALLOWED: INTERNALLY" << selectedElement->modelId();
@@ -551,7 +550,8 @@ void HsmGraphicsView::dragEnterEvent(QDragEnterEvent* event) {
 
 void HsmGraphicsView::dragMoveEvent(QDragMoveEvent* event) {
     if (event->mimeData()->hasFormat("hsm/element")) {
-        const bool elementAllowed = handleElementDragEvent(mapToScene(event->position().toPoint()), nullptr, event->mimeData()->data("hsm/element"));
+        const bool elementAllowed =
+            handleElementDragEvent(mapToScene(event->position().toPoint()), nullptr, event->mimeData()->data("hsm/element"));
 
         if (true == elementAllowed) {
             event->setDropAction(Qt::CopyAction);

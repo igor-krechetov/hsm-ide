@@ -42,7 +42,7 @@ set(PROJECT_SOURCES
 
     view/common/ViewUtils.cpp
 
-    ui/theme/ThemeManager.cpp
+    view/theme/ThemeManager.cpp
 
     view/widgets/HsmElementsList.cpp
     view/widgets/HsmGraphicsView.cpp

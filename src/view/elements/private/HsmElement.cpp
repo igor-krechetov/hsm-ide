@@ -9,7 +9,7 @@
 
 #include "HsmResizableElement.hpp"
 #include "model/StateMachineEntity.hpp"
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {

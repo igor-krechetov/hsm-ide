@@ -4,7 +4,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QTransform>
 
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 

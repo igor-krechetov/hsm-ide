@@ -3,7 +3,7 @@
 #include <QColor>
 #include <QPainter>
 
-#include "ui/theme/ThemeManager.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -16,13 +16,19 @@ HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType, c
 }
 
 void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    const auto& theme = ThemeManager::instance().theme();
+
+    paintRectangularBody(painter, theme.node.backgroundBrush);
+}
+
+void HsmRectangularElement::paintRectangularBody(QPainter* painter, const QBrush& backgroundBrush) const {
     // Configure painter
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     const auto& theme = ThemeManager::instance().theme();
 
     // Set the brush color
-    painter->setBrush(theme.node.backgroundBrush);
+    painter->setBrush(backgroundBrush);
 
     // Draw the rounded rectangle with fully rounded corners
     if (isHighligted() == true) {

@@ -17,8 +17,8 @@
 #include "private/AutoGroupItem.hpp"
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"
-#include "ui/theme/ThemeManager.hpp"
 #include "view/common/ViewUtils.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 /*
 TODO: sometimes self-transitions get positioned incorrectly (shifted to the left or right) when moving them around
