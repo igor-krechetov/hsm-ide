@@ -44,6 +44,8 @@ public:
     void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
+    QString serializeElementsToScxml(const QList<model::EntityID_t>& elementIDs) const;
+    bool pasteScxmlElements(const QString& scxmlContent, const QList<model::EntityID_t>& selectedElementIDs = {});
     void beginHistoryTransaction(const QString& label);
     void commitHistoryTransaction();
     void cancelHistoryTransaction();
@@ -68,6 +70,8 @@ private slots:
 
 private:
     void refreshViewFromModel();
+
+    QSharedPointer<model::State> resolvePasteTargetParent(const QList<model::EntityID_t>& selectedElementIDs) const;
     void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                 QSharedPointer<model::StateMachineEntity> entity,
                                 const bool addChildren);

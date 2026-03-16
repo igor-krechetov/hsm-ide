@@ -17,6 +17,7 @@
 #include "ModelRootState.hpp"
 #include "ModelUtils.hpp"
 #include "RegularState.hpp"
+#include "StateHierarchyRules.hpp"
 #include "StateMachineModel.hpp"
 #include "Transition.hpp"
 
@@ -36,23 +37,27 @@ static void serializeState(QXmlStreamWriter& mXmlWriter, const QSharedPointer<mo
  * @param model The state machine model to serialize
  * @return SCXML representation as a QString
  */
-QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr) {
+QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
+                                                 const bool addScxmlTag) {
     QString scxml;
 
     mXmlWriter = QSharedPointer<QXmlStreamWriter>::create(&scxml);
 
     mXmlWriter->setAutoFormatting(true);
     mXmlWriter->writeStartDocument();
-    // Write SCXML root element
-    mXmlWriter->writeStartElement("scxml");
-    mXmlWriter->writeAttribute("encoding", "UTF-8");
-    mXmlWriter->writeAttribute("version", "1.0");
-    mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
-    mXmlWriter->writeAttribute("xmlns:xi", "http://www.w3.org/2001/XInclude");
-    mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
 
-    if (!modelPtr->name().isEmpty()) {
-        mXmlWriter->writeAttribute("name", modelPtr->name());
+    if (addScxmlTag) {
+        // Write SCXML root element
+        mXmlWriter->writeStartElement("scxml");
+        mXmlWriter->writeAttribute("encoding", "UTF-8");
+        mXmlWriter->writeAttribute("version", "1.0");
+        mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
+        mXmlWriter->writeAttribute("xmlns:xi", "http://www.w3.org/2001/XInclude");
+        mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
+
+        if (!modelPtr->name().isEmpty()) {
+            mXmlWriter->writeAttribute("name", modelPtr->name());
+        }
     }
 
     // Get the root state
@@ -66,7 +71,10 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
         }
     }
 
-    mXmlWriter->writeEndElement();  // scxml
+    if (addScxmlTag) {
+        mXmlWriter->writeEndElement();  // scxml
+    }
+
     mXmlWriter->writeEndDocument();
 
     mXmlWriter.reset();
@@ -197,17 +205,17 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     return isValid;
 }
 
-#define SCXML_SERIALIZE_CALLBACK(_object, _cbGetter, _element, _attr) \
-  if (!(_object)->_cbGetter().isEmpty()) {                            \
-    mXmlWriter->writeStartElement(_element);                          \
-    mXmlWriter->writeTextElement((_attr), (_object)->_cbGetter());    \
-    mXmlWriter->writeEndElement();                                    \
-  }
+#define SCXML_SERIALIZE_CALLBACK(_object, _cbGetter, _element, _attr)  \
+    if (!(_object)->_cbGetter().isEmpty()) {                           \
+        mXmlWriter->writeStartElement(_element);                       \
+        mXmlWriter->writeTextElement((_attr), (_object)->_cbGetter()); \
+        mXmlWriter->writeEndElement();                                 \
+    }
 
-#define SCXML_SERIALIZE_STATE_CALLBACKS(_object)                             \
-  SCXML_SERIALIZE_CALLBACK(_object, onEnteringCallback, "onentry", "script") \
-  SCXML_SERIALIZE_CALLBACK(_object, onExitingCallback, "onexit", "script")   \
-  SCXML_SERIALIZE_CALLBACK(_object, onStateChangedCallback, "invoke", "srcexpr")
+#define SCXML_SERIALIZE_STATE_CALLBACKS(_object)                               \
+    SCXML_SERIALIZE_CALLBACK(_object, onEnteringCallback, "onentry", "script") \
+    SCXML_SERIALIZE_CALLBACK(_object, onExitingCallback, "onexit", "script")   \
+    SCXML_SERIALIZE_CALLBACK(_object, onStateChangedCallback, "invoke", "srcexpr")
 
 void StateMachineSerializer::visitRegularState(const RegularState* state) {
     qDebug() << Q_FUNC_INFO;
@@ -569,7 +577,12 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
             transition->setSource(parent.dynamicCast<State>());
         }
 
-        parent->addChild(entity);
+        if (StateHierarchyRules::canAddEntityToParent(parent, entity)) {
+            parent->addChild(entity);
+        } else {
+            qWarning() << "Ignoring invalid hierarchy. Parent type=" << static_cast<int>(parent->type())
+                       << "child type=" << static_cast<int>(entity->type());
+        }
     }
 
     return entity;

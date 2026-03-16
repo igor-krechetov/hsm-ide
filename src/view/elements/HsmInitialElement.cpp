@@ -14,10 +14,6 @@ bool HsmInitialElement::acceptsConnections() const {
     return false;
 }
 
-bool HsmInitialElement::canBeTopLevel() const {
-    return true;
-}
-
 void HsmInitialElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);
 

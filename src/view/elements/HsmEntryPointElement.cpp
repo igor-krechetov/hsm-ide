@@ -14,10 +14,6 @@ bool HsmEntryPointElement::acceptsConnections() const {
     return false;
 }
 
-bool HsmEntryPointElement::canBeTopLevel() const {
-    return false;
-}
-
 void HsmEntryPointElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);
 

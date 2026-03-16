@@ -56,6 +56,9 @@ public slots:
     void projectTabCloseRequested(int index);
 
     void deleteSelectedItems();
+    void copySelectedItems();
+    void cutSelectedItems();
+    void pasteItems();
     void onGraphicsViewSelectionChanged();
     void onModelTreeSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 

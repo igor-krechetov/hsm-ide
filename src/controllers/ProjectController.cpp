@@ -13,6 +13,7 @@
 #include "model/ModelElementsFactory.hpp"
 #include "model/ModelRootState.hpp"
 #include "model/RegularState.hpp"
+#include "model/StateHierarchyRules.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
 #include "model/Transition.hpp"
@@ -35,9 +36,8 @@ ProjectController::ProjectController(const QString& id, QObject* parent)
 
     mHsmStructureViewModel = new view::StateMachineTreeModel(mModel, this);
     mHsmEntityViewModel = new view::StateMachineEntityViewModel(mModel, this);
-    mHsmEntityViewModel->setHistoryTransactionCallbacks(
-        [this](const QString& label) { beginHistoryTransaction(label); },
-        [this]() { commitHistoryTransaction(); });
+    mHsmEntityViewModel->setHistoryTransactionCallbacks([this](const QString& label) { beginHistoryTransaction(label); },
+                                                        [this]() { commitHistoryTransaction(); });
 }
 
 ProjectController::~ProjectController() {
@@ -156,6 +156,158 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
     commitHistoryTransaction();
 }
 
+QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_t>& elementIDs) const {
+    QString serializedData;
+
+    if (mModel && mModel->root()) {
+        QSharedPointer<model::StateMachineModel> tempModel = QSharedPointer<model::StateMachineModel>::create("Clipboard");
+        QMap<model::EntityID_t, QSharedPointer<model::State>> stateCopies;
+
+        for (const model::EntityID_t elementId : elementIDs) {
+            const auto sourceEntity = mModel->root()->findChild(elementId);
+
+            if (sourceEntity && sourceEntity->type() == model::StateMachineEntity::Type::State) {
+                const auto sourceState = sourceEntity.dynamicCast<model::State>();
+                const auto stateCopy = model::ModelElementsFactory::cloneStateEntity(sourceState);
+
+                if (stateCopy) {
+                    stateCopy->copyEntityData(*sourceState);
+                    tempModel->root()->addChild(stateCopy);
+                    stateCopies.insert(elementId, stateCopy);
+                }
+            }
+        }
+
+        for (const model::EntityID_t elementId : elementIDs) {
+            const auto sourceEntity = mModel->root()->findChild(elementId);
+
+            if (sourceEntity && sourceEntity->type() == model::StateMachineEntity::Type::Transition) {
+                const auto sourceTransition = sourceEntity.dynamicCast<model::Transition>();
+                const auto sourceState = sourceTransition->source();
+                const auto targetState = sourceTransition->target();
+                const auto transitionParent =
+                    (sourceState ? stateCopies.value(sourceState->id()) : QSharedPointer<model::State>());
+
+                if (sourceState && targetState && transitionParent) {
+                    QSharedPointer<model::State> transitionTarget = stateCopies.value(targetState->id());
+
+                    if (transitionTarget.isNull()) {
+                        transitionTarget = targetState;
+                    }
+
+                    const auto transitionCopy = QSharedPointer<model::Transition>::create(transitionParent,
+                                                                                          transitionTarget,
+                                                                                          sourceTransition->event());
+
+                    transitionCopy->copyEntityData(*sourceTransition);
+                    transitionParent->addChild(transitionCopy);
+                }
+            }
+        }
+
+        model::StateMachineSerializer serializer;
+        serializedData = serializer.serializeToScxml(tempModel, false).trimmed();
+    }
+
+    return serializedData;
+}
+
+bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QList<model::EntityID_t>& selectedElementIDs) {
+    bool pasted = false;
+
+    if (mModel) {
+        QString wrappedScxml = scxmlContent.trimmed();
+
+        if (wrappedScxml.isEmpty() == false) {
+            if (wrappedScxml.contains("<scxml") == false) {
+                wrappedScxml =
+                    QString("<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\">%1</scxml>").arg(wrappedScxml);
+            }
+
+            QSharedPointer<model::StateMachineModel> importModel =
+                QSharedPointer<model::StateMachineModel>::create("ClipboardImport");
+            model::StateMachineSerializer serializer;
+
+            if (serializer.deserializeFromScxml(wrappedScxml, importModel)) {
+                const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
+
+                beginHistoryTransaction("Paste elements");
+
+                importModel->root()->forEachChildElement(
+                    [this, targetParent](QSharedPointer<model::StateMachineEntity> parent,
+                                         QSharedPointer<model::StateMachineEntity> entity) {
+                        Q_UNUSED(parent);
+
+                        if (entity && entity->type() == model::StateMachineEntity::Type::State) {
+                            const auto state = entity.dynamicCast<model::State>();
+
+                            if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
+                                targetParent->addChild(state);
+                            }
+                        }
+
+                        return true;
+                    },
+                    1,
+                    false);
+
+                commitHistoryTransaction();
+                pasted = true;
+            }
+        }
+    }
+
+    return pasted;
+}
+
+QSharedPointer<model::State> ProjectController::resolvePasteTargetParent(
+    const QList<model::EntityID_t>& selectedElementIDs) const {
+    QSharedPointer<model::State> targetParent;
+    QList<QSharedPointer<model::State>> selectedStates;
+
+    if (mModel && mModel->root()) {
+        auto isAncestor = [this](const QSharedPointer<model::State>& possibleAncestor,
+                                 const QSharedPointer<model::State>& possibleDescendant) {
+            bool ancestorFound = false;
+            QSharedPointer<model::StateMachineEntity> current = possibleDescendant;
+
+            while (current) {
+                if (current == possibleAncestor) {
+                    ancestorFound = true;
+                }
+
+                current = mModel->root()->findParentState(current->id());
+            }
+
+            return ancestorFound;
+        };
+
+        for (const model::EntityID_t elementId : selectedElementIDs) {
+            const auto entity = mModel->root()->findChild(elementId);
+
+            if (entity && entity->type() == model::StateMachineEntity::Type::State) {
+                selectedStates.push_back(entity.dynamicCast<model::State>());
+            }
+        }
+
+        if (selectedStates.isEmpty() == false) {
+            targetParent = selectedStates.first();
+
+            for (const auto& candidate : selectedStates) {
+                if (candidate && targetParent && isAncestor(candidate, targetParent) && (candidate != targetParent)) {
+                    targetParent = candidate;
+                }
+            }
+        }
+
+        if (targetParent.isNull()) {
+            targetParent = mModel->root();
+        }
+    }
+
+    return targetParent;
+}
+
 void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                                QSharedPointer<model::StateMachineEntity> entity,
                                                const bool addChildren) {
@@ -211,7 +363,9 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
             [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
                 handleModelEntityAdded(parent, element, false);
                 return true;
-            }, -1, false);
+            },
+            -1,
+            false);
     }
 }
 
@@ -415,21 +569,28 @@ void ProjectController::refreshViewFromModel() {
 
         if (root) {
             // Recursively add states only
-            root->forEachChildElement([&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
-                if (child && child->type() == model::StateMachineEntity::Type::State) {
-                    handleModelEntityAdded(parent, child, false);
-                }
-                return true;
-            }, -1, false);
+            root->forEachChildElement(
+                [&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
+                    if (child && child->type() == model::StateMachineEntity::Type::State) {
+                        handleModelEntityAdded(parent, child, false);
+                    }
+                    return true;
+                },
+                -1,
+                false);
 
             // Recursively add transitions. If we try doing it together with states,
-            // we might end up not having a source/target when creatng transition (because we can't control states order in the model)
-            root->forEachChildElement([&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
-                if (child && child->type() == model::StateMachineEntity::Type::Transition) {
-                    handleModelEntityAdded(parent, child, false);
-                }
-                return true;
-            }, -1, false);
+            // we might end up not having a source/target when creatng transition (because we can't control states order in the
+            // model)
+            root->forEachChildElement(
+                [&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> child) {
+                    if (child && child->type() == model::StateMachineEntity::Type::Transition) {
+                        handleModelEntityAdded(parent, child, false);
+                    }
+                    return true;
+                },
+                -1,
+                false);
         }
     }
 }

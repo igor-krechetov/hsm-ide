@@ -1,5 +1,6 @@
 #include <QtTest>
 
+#include "../TestPaths.hpp"
 #include "model/ExitPoint.hpp"
 #include "model/FinalState.hpp"
 #include "model/HistoryState.hpp"
@@ -10,7 +11,6 @@
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
 #include "model/Transition.hpp"
-#include "../TestPaths.hpp"
 
 class StateMachineSerializerDeserializationTest : public QObject {
     Q_OBJECT
@@ -27,6 +27,7 @@ private slots:
     void DeserializeMalformedXml();
     void DeserializeStateWithoutId();
     void ValidateStructure();
+    void DeserializeInvalidHierarchyIgnored();
 };
 
 static int countDirectTransitions(const QSharedPointer<model::RegularState>& state) {
@@ -378,6 +379,29 @@ void StateMachineSerializerDeserializationTest::ValidateStructure() {
     // With default XML namespace handling this returns false for both strings.
     QVERIFY(!serializer.validateScxmlStructure(valid));
     QVERIFY(!serializer.validateScxmlStructure(invalid));
+}
+
+/**
+ * @brief Validate invalid SCXML hierarchy nodes are ignored according to shared hierarchy rules.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeInvalidHierarchyIgnored() {
+    const QString scxml = R"(<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" name="InvalidHierarchy">
+<state id="Parent">
+  <initial>
+    <transition event="start" target="Child"/>
+  </initial>
+  <state id="Child"/>
+</state>
+<history id="Hroot" type="shallow"/>
+</scxml>)";
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    QVERIFY(model->root()->findChildStateByName("Parent") != nullptr);
+    QVERIFY(model->root()->findChildStateByName("Child") != nullptr);
+    QVERIFY(model->root()->findChildStateByName("Hroot") == nullptr);
 }
 
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) {

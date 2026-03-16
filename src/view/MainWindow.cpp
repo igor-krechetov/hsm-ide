@@ -1,9 +1,11 @@
 #include "MainWindow.hpp"
 
 #include <QAction>
+#include <QClipboard>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
+#include <QGuiApplication>
 #include <QMessageBox>
 #include <QSignalBlocker>
 
@@ -26,6 +28,9 @@ MainWindow::MainWindow(MainEditorController* parent)
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
     connect(ui->actionUndo, &QAction::triggered, this, &MainWindow::handleUndo);
     connect(ui->actionRedo, &QAction::triggered, this, &MainWindow::handleRedo);
+    connect(ui->actionCopy, &QAction::triggered, this, &MainWindow::copySelectedItems);
+    connect(ui->actionCut, &QAction::triggered, this, &MainWindow::cutSelectedItems);
+    connect(ui->actionPaste, &QAction::triggered, this, &MainWindow::pasteItems);
 
     // Connect sidebar actions to generic slot using toggled(bool)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
@@ -197,6 +202,43 @@ void MainWindow::deleteSelectedItems() {
 
     if ((nullptr != viewPtr) && (nullptr != viewPtr->scene())) {
         viewPtr->deleteSelectedItems();
+    }
+}
+
+void MainWindow::copySelectedItems() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
+        const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+        const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
+
+        if (scxmlData.isEmpty() == false) {
+            QGuiApplication::clipboard()->setText(scxmlData);
+        }
+    }
+}
+
+void MainWindow::cutSelectedItems() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
+        const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+        const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
+
+        if (scxmlData.isEmpty() == false) {
+            QGuiApplication::clipboard()->setText(scxmlData);
+            deleteSelectedItems();
+        }
+    }
+}
+
+void MainWindow::pasteItems() {
+    if (mActiveProject) {
+        const QString clipboardText = QGuiApplication::clipboard()->text();
+
+        if (clipboardText.isEmpty() == false) {
+            mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+        }
     }
 }
 

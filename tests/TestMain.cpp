@@ -14,6 +14,7 @@ int runIncludeEntityTest(int argc, char** argv);
 int runModelRootStateTest(int argc, char** argv);
 int runModelElementsFactoryTest(int argc, char** argv);
 int runStateMachineModelTest(int argc, char** argv);
+int runStateHierarchyRulesTest(int argc, char** argv);
 int runStateMachineSerializerSerializationTest(int argc, char** argv);
 int runStateMachineSerializerDeserializationTest(int argc, char** argv);
 
@@ -41,6 +42,7 @@ int main(int argc, char** argv) {
     result |= runModelRootStateTest(argc, argv);
     result |= runModelElementsFactoryTest(argc, argv);
     result |= runStateMachineModelTest(argc, argv);
+    result |= runStateHierarchyRulesTest(argc, argv);
     result |= runStateMachineSerializerSerializationTest(argc, argv);
     result |= runStateMachineSerializerDeserializationTest(argc, argv);
 

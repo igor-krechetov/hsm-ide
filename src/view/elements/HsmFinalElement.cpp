@@ -16,10 +16,6 @@ bool HsmFinalElement::isConnectable() const {
     return false;
 }
 
-bool HsmFinalElement::canBeTopLevel() const {
-    return true;
-}
-
 void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     HsmRoundElement::paint(painter, option, widget);
 
