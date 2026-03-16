@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "view/theme/ThemeManager.hpp"
+
 namespace view {
 
 // TODO: block outgoing connections
@@ -25,11 +27,11 @@ void HsmExitPointElement::paint(QPainter* painter, const QStyleOptionGraphicsIte
     const QPointF c = center();
 
     // Draw the circle
-    painter->setBrush(mBackgroundBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.backgroundBrush);
     painter->drawEllipse(c, r, r);
 
     // Draw two diameter lines perpendicular to each other, rotated by 45 degrees
-    painter->setBrush(mMainBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.mainBrush);
 
     // Calculate endpoints for the lines
     const qreal d = r * std::sqrt(2);  // diameter of the circle along 45-degree axis

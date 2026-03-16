@@ -12,6 +12,7 @@
 #include "model/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
 #include "private/HsmStateTextItem.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 namespace view {
 
@@ -38,10 +39,27 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
 
     connect(mStateNameLabel->document(), &QTextDocument::contentsChanged, this, &HsmStateElement::onStateNameChanged);
     connect(mStateNameLabel, &HsmStateTextItem::editingFinished, this, &HsmStateElement::onStateNameEditFinished);
+    connect(mStateNameLabel, &HsmStateTextItem::textGeometryChanged, this, &HsmStateElement::centerHeader);
     connect(mBodySection, &HsmStateBodySection::substatesChanged, this, &HsmStateElement::onSubstatesChanged);
 
     mSelfTransitionsSection->setPen(Qt::NoPen);
     mBodySection->setPen(Qt::NoPen);
+
+    const auto applyTheme = [this]() {
+        const auto& theme = ThemeManager::instance().theme();
+
+        mStateNameLabel->setDefaultTextColor(theme.node.textColor);
+        mPropertiesSection->setDefaultTextColor(theme.node.textColor);
+        mHeaderSeparator->setPen(theme.node.borderPen);
+        mSelfTransitionsSeparator->setPen(theme.node.borderPen);
+        mPropertiesSeparator->setPen(theme.node.borderPen);
+    };
+
+    applyTheme();
+    QObject::connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this, applyTheme]() {
+        applyTheme();
+        update();
+    });
 
     onModelDataChanged();
     layoutSections();
@@ -237,12 +255,8 @@ void HsmStateElement::onModelDataChanged() {
 }
 
 void HsmStateElement::onSubstatesChanged(const bool substates) {
-    // TODO: move colors to a new style object
-    if (substates == false) {
-        mBackgroundBrush.setColor(QColor("#E8F1FA"));
-    } else {
-        mBackgroundBrush.setColor(QColor("#DFF4E5"));
-    }
+    Q_UNUSED(substates);
+    update();
 }
 
 void HsmStateElement::layoutSections() {
@@ -327,7 +341,14 @@ void HsmStateElement::updateBoundingRect(const QRectF& newRect) {
 }
 
 void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    HsmRectangularElement::paint(painter, option, widget);
+    const auto& theme = ThemeManager::instance().theme();
+
+    if (hasSubstates() == true) {
+        paintRectangularBody(painter, theme.node.substateBackgroundBrush);
+    } else {
+        paintRectangularBody(painter, theme.node.backgroundBrush);
+    }
+
     // Sections and separators are QGraphicsItems, so no extra drawing needed here
 }
 

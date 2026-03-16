@@ -18,6 +18,7 @@
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"
 #include "view/common/ViewUtils.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 /*
 TODO: sometimes self-transitions get positioned incorrectly (shifted to the left or right) when moving them around
@@ -126,15 +127,17 @@ QPainterPath HsmTransition::shape() const {
 
 void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
 #ifdef DEBUG_RENDERING
-    painter->setPen(QPen("red"));
+    painter->setPen(ThemeManager::instance().theme().transition.debugSelectionPen);
     painter->setBrush(Qt::NoBrush);
     painter->drawPath(mSelectionPath);
 #endif
 
+    const auto& theme = ThemeManager::instance().theme();
+
     if (false == isSelected()) {
-        painter->setPen(Qt::SolidLine);
+        painter->setPen(theme.transition.pen);
     } else {
-        painter->setPen(Qt::DashLine);
+        painter->setPen(theme.transition.selectedPen);
     }
 
     // Draw the transition path
@@ -598,7 +601,8 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
             // Check if there is an element under cursor and highlight it
-            QPointer<HsmElement> element = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
+            QPointer<HsmElement> element =
+                ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
 
             if (mLastConnectionTarget != element) {
                 if (mLastConnectionTarget) {
@@ -652,7 +656,8 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
             QPointF pos = gripItem->pos();
             // check if there is an element which accepts connections
-            HsmElement* targetElement = ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
+            HsmElement* targetElement =
+                ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;

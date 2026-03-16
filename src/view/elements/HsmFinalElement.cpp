@@ -3,6 +3,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "view/theme/ThemeManager.hpp"
+
 namespace view {
 
 // TODO: block outgoing connections
@@ -23,14 +25,14 @@ void HsmFinalElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     const qreal r = radius();
     const QPointF c = center();
-    const qreal outlineRadius = r * 0.7;
+    const qreal outlineRadius = r * ThemeManager::instance().theme().node.finalInnerRadiusFactor;
 
     // Draw the filled circle
-    painter->setBrush(mBackgroundBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.backgroundBrush);
     painter->drawEllipse(c, r, r);
 
     // Draw the inner circle
-    painter->setBrush(mMainBrush);
+    painter->setBrush(ThemeManager::instance().theme().node.mainBrush);
     painter->drawEllipse(c, outlineRadius, outlineRadius);
 }
 

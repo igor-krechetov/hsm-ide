@@ -6,22 +6,32 @@
 #include <QPainter>
 #include <QTextDocument>
 
+#include "view/theme/ThemeManager.hpp"
+
 namespace view {
 
 HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent, QGraphicsItem* logicalParent)
     : QGraphicsTextItem(parent)
     , mLogicalParent(logicalParent) {
-    QFont font;
-    font.setBold(true);
+    const auto& theme = ThemeManager::instance().theme();
 
-    setFont(font);
-
-    setDefaultTextColor(QColor("#1A1A1A"));
+    setFont(theme.node.labelFont);
+    setDefaultTextColor(theme.node.textColor);
     // setZValue(10);
     setTextInteractionFlags(Qt::TextEditorInteraction);
 
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     document()->setDocumentMargin(0);
+
+    QObject::connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this]() {
+        const auto& theme = ThemeManager::instance().theme();
+
+        setFont(theme.node.labelFont);
+        setDefaultTextColor(theme.node.textColor);
+        document()->adjustSize();
+        emit textGeometryChanged();
+        update();
+    });
 }
 
 void HsmStateTextItem::makeMovable(const bool enable) {
@@ -79,8 +89,7 @@ void HsmStateTextItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     if (editing) {
         // --- EDITING MODE RENDERING ---
-        // TODO: fix color. use colors from theme
-        painter->setBrush(QColor(255, 255, 200));  // soft yellow background
+        painter->setBrush(ThemeManager::instance().theme().node.editingBackgroundBrush);
         // painter->setPen(Qt::NoPen);
         painter->drawRect(boundingRect());
     } else {

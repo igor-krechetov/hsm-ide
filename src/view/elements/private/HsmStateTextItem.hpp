@@ -20,6 +20,7 @@ public:
 signals:
     void editingFinished();
     void positionChanged();
+    void textGeometryChanged();
 
 protected:
     void focusInEvent(QFocusEvent* event) override;

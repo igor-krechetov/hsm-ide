@@ -42,6 +42,8 @@ set(PROJECT_SOURCES
 
     view/common/ViewUtils.cpp
 
+    view/theme/ThemeManager.cpp
+
     view/widgets/HsmElementsList.cpp
     view/widgets/HsmGraphicsView.cpp
     view/widgets/HsmTreeView.cpp

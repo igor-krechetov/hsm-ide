@@ -9,6 +9,7 @@
 
 #include "HsmResizableElement.hpp"
 #include "model/StateMachineEntity.hpp"
+#include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
@@ -21,12 +22,7 @@ HsmElement::HsmElement(const HsmElementType elementType,
                        const QSizeF& size)
     : QGraphicsObject()
     , mType(elementType)
-    , mModelElement(modelElement.toWeakRef())
-    , mPenNormalMode(QColor("#5A80A8"), 2.0, Qt::SolidLine)
-    , mPenHighlightMode(QColor("#2E75C8"), 3.0, Qt::DotLine)
-    , mPenSelectedBorder(QColor("#1E62D0"), 3.0, Qt::DotLine)
-    , mBackgroundBrush(QColor("#E8F1FA"))
-    , mMainBrush(QColor("#1A1A1A")) {
+    , mModelElement(modelElement.toWeakRef()) {
     qDebug() << "CREATE: HsmElement: " << (int)elementType << ": " << this;
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
@@ -249,7 +245,7 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
 
     if (newRect.isNull()) {
         qDebug() << Q_FUNC_INFO << "RECT is NULL" << this;
-        constexpr qreal penWidth = 1.0;
+        const qreal penWidth = ThemeManager::instance().theme().node.selectedBorderPen.widthF();
 
         // mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
         //                     -mSize.height() / 2 - penWidth / 2,
@@ -301,7 +297,7 @@ QRectF HsmElement::boundingRect() const {
     return mOuterRect;
 }
 
-void HsmElement::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+void HsmElement::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
     emit elementDoubleClickEvent(mModelElement);
     event->accept();
 }
