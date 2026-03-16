@@ -24,19 +24,7 @@ void HsmHistoryElement::paint(QPainter* painter, const QStyleOptionGraphicsItem*
     const auto& theme = ThemeManager::instance().theme();
     const qreal r = radius();
     const QPointF c = center();
-    QFont font = painter->font();
-    const qreal targetHeight = r * 2 * theme.node.historyFontHeightFactor;
-    int fontSize = 1;
-    QFontMetrics fm(font);
-
-    while (fm.height() < targetHeight) {
-        fontSize++;
-        font.setPointSize(fontSize);
-        fm = QFontMetrics(font);
-    }
-
-    font.setPointSize(fontSize - 1);
-    painter->setFont(font);
+    painter->setFont(theme.node.historyFont);
 
     // Draw the history type indicator
     const QString historyType = "H";  // Default to shallow history

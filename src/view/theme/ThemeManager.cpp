@@ -29,6 +29,8 @@ view::theme::Theme ThemeManager::createDefaultTheme() {
     defaultTheme.node.textColor = QColor("#1A1A1A");
     defaultTheme.node.editingBackgroundBrush = QBrush(QColor(255, 255, 200));
     defaultTheme.node.labelFont.setBold(true);
+    defaultTheme.node.historyFont.setBold(true);
+    defaultTheme.node.historyFont.setPointSize(14);
 
     defaultTheme.transition.pen = QPen(QColor("#1A1A1A"), 1.0, Qt::SolidLine);
     defaultTheme.transition.selectedPen = QPen(QColor("#1A1A1A"), 1.0, Qt::DashLine);

@@ -21,9 +21,9 @@ struct NodeStyle {
     QColor textColor;
     QBrush editingBackgroundBrush;
     QFont labelFont;
+    QFont historyFont;
     qreal cornerRadius = 5.0;
     qreal finalInnerRadiusFactor = 0.7;
-    qreal historyFontHeightFactor = 0.7;
 };
 
 struct TransitionStyle {
