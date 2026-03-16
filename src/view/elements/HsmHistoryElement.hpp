@@ -14,7 +14,6 @@ public:
     virtual ~HsmHistoryElement() = default;
 
     bool isConnectable() const override;
-    bool canBeTopLevel() const override;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };

@@ -33,7 +33,7 @@ public:
      * @param model The state machine model to serialize
      * @return SCXML representation as a QString
      */
-    QString serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr);
+    QString serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr, const bool addScxmlTag = true);
 
     /**
      * @brief Deserializes SCXML format to a state machine model
@@ -75,7 +75,8 @@ private:
 
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
 
-    QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent, QSharedPointer<StateMachineEntity>* outNewParent = nullptr);
+    QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent,
+                                                        QSharedPointer<StateMachineEntity>* outNewParent = nullptr);
     QSharedPointer<RegularState> parseRegularState();
     QSharedPointer<EntryPoint> parseEntryPoint();
     QSharedPointer<ExitPoint> parseExitPoint();

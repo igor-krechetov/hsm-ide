@@ -25,6 +25,7 @@ set(MODEL_SOURCES
     model/ModelElementsFactory.cpp
     model/StateMachineEntity.cpp
     model/StateMachineSerializer.cpp
+    model/StateHierarchyRules.cpp
 )
 
 set(PROJECT_SOURCES

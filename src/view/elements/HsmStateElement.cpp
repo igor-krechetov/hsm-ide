@@ -70,30 +70,6 @@ void HsmStateElement::centerHeader() {
     }
 }
 
-bool HsmStateElement::acceptsChildElement(const HsmElementType type) const {
-    bool accepts = false;
-
-    switch (type) {
-        case HsmElementType::STATE:
-        case HsmElementType::INCLUDE:
-        case HsmElementType::ENTRY_POINT:
-        case HsmElementType::EXIT_POINT:
-        case HsmElementType::HISTORY:
-        case HsmElementType::TRANSITION:
-            accepts = true;
-            break;
-        default:
-            accepts = false;
-            break;
-    }
-
-    return accepts;
-}
-
-bool HsmStateElement::canBeTopLevel() const {
-    return true;
-}
-
 QList<QGraphicsItem*> HsmStateElement::hsmChildItems() const {
     return (nullptr != mBodySection ? mBodySection->childItems() : QList<QGraphicsItem*>());
 }

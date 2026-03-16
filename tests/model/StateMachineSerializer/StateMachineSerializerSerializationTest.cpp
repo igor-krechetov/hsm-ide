@@ -22,6 +22,7 @@ private slots:
     void SerializeEntryPointTransitions();
     void SerializeExitPointAndTargetingTransition();
     void SerializeIncludeEntity();
+    void SerializeWithoutScxmlWrapper();
 };
 
 /**
@@ -263,6 +264,23 @@ void StateMachineSerializerSerializationTest::SerializeIncludeEntity() {
     const QString scxml = serializer.serializeToScxml(model);
 
     QVERIFY(scxml.contains("<xi:include href=\"subchart.scxml\" parse=\"xml\""));
+}
+
+/**
+ * @brief Validate serialization without wrapping root <scxml> tag.
+ */
+void StateMachineSerializerSerializationTest::SerializeWithoutScxmlWrapper() {
+    auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
+    auto root = model->root();
+    auto state = QSharedPointer<model::RegularState>::create("StateA");
+
+    root->addChildState(state);
+
+    model::StateMachineSerializer serializer;
+    const QString scxml = serializer.serializeToScxml(model, false);
+
+    QVERIFY(scxml.contains("<state id=\"StateA\""));
+    QVERIFY(scxml.contains("<scxml") == false);
 }
 
 int runStateMachineSerializerSerializationTest(int argc, char** argv) {

@@ -22,9 +22,7 @@ public:
     virtual ~HsmStateElement() = default;
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
-    bool acceptsChildElement(const HsmElementType type) const override;
-    bool canBeTopLevel() const override;
-    
+
     virtual QList<QGraphicsItem*> hsmChildItems() const;
     bool hasSubstates() const override;
     // bool isDirectChild(HsmElement* item) const override;
