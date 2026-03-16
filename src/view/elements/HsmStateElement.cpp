@@ -39,6 +39,7 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
 
     connect(mStateNameLabel->document(), &QTextDocument::contentsChanged, this, &HsmStateElement::onStateNameChanged);
     connect(mStateNameLabel, &HsmStateTextItem::editingFinished, this, &HsmStateElement::onStateNameEditFinished);
+    connect(mStateNameLabel, &HsmStateTextItem::textGeometryChanged, this, &HsmStateElement::centerHeader);
     connect(mBodySection, &HsmStateBodySection::substatesChanged, this, &HsmStateElement::onSubstatesChanged);
 
     mSelfTransitionsSection->setPen(Qt::NoPen);

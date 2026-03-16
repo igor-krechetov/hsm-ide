@@ -28,6 +28,8 @@ HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent, QGraphicsItem* logical
 
         setFont(theme.node.labelFont);
         setDefaultTextColor(theme.node.textColor);
+        document()->adjustSize();
+        emit textGeometryChanged();
         update();
     });
 }
