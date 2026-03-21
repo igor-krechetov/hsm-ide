@@ -5,8 +5,8 @@
 
 namespace model {
 
-EntryPoint::EntryPoint(const QString& name)
-    : State(name, StateType::ENTRYPOINT) {}
+EntryPoint::EntryPoint()
+    : State("", StateType::ENTRYPOINT) {}
 
 void EntryPoint::accept(class IModelVisitor* visitor) {
     if (visitor) {
