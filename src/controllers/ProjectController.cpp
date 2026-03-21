@@ -3,7 +3,9 @@
 #include <QDebug>
 #include <QFile>
 #include <QLoggingCategory>
+#include <QMap>
 #include <QMimeData>
+#include <QSet>
 #include <QTextStream>
 
 #include "ObjectUtils.hpp"
@@ -24,6 +26,62 @@
 #include "view/widgets/HsmGraphicsView.hpp"
 
 Q_DECLARE_LOGGING_CATEGORY(ProjectController)
+
+namespace {
+
+QSharedPointer<model::State> cloneStateTree(const QSharedPointer<model::State>& sourceState,
+                                            const QSharedPointer<model::State>& targetParent,
+                                            QMap<model::EntityID_t, QSharedPointer<model::State>>& clonedStates) {
+    QSharedPointer<model::State> clonedState;
+
+    if (sourceState) {
+        clonedState = model::ModelElementsFactory::cloneStateEntity(sourceState);
+
+        if (clonedState) {
+            const model::EntityID_t sourceStateId = sourceState->id();
+            clonedState->copyEntityData(*sourceState);
+            targetParent->addChild(clonedState);
+            clonedStates.insert(sourceState->id(), clonedState);
+
+            sourceState->forEachChildElement(
+                [&clonedStates, &clonedState, &sourceStateId](QSharedPointer<model::StateMachineEntity> parent,
+                                                               QSharedPointer<model::StateMachineEntity> child) {
+                    bool continueTraversal = true;
+
+                    if (parent && (parent->id() == sourceStateId) && child &&
+                        (child->type() == model::StateMachineEntity::Type::State)) {
+                        cloneStateTree(child.dynamicCast<model::State>(), clonedState, clonedStates);
+                    }
+
+                    return continueTraversal;
+                },
+                1,
+                false);
+        }
+    }
+
+    return clonedState;
+}
+
+bool hasSelectedAncestor(const QSharedPointer<model::ModelRootState>& rootState,
+                         const QSharedPointer<model::State>& state,
+                         const QSet<model::EntityID_t>& selectedStateIds) {
+    bool hasAncestor = false;
+    QSharedPointer<model::StateMachineEntity> currentParent;
+
+    if (rootState && state) {
+        currentParent = rootState->findParentState(state->id());
+
+        while (currentParent && (hasAncestor == false)) {
+            hasAncestor = selectedStateIds.contains(currentParent->id());
+            currentParent = rootState->findParentState(currentParent->id());
+        }
+    }
+
+    return hasAncestor;
+}
+
+}  // namespace
 
 ProjectController::ProjectController(const QString& id, QObject* parent)
     : QObject(parent)
@@ -162,46 +220,69 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
     if (mModel && mModel->root()) {
         QSharedPointer<model::StateMachineModel> tempModel = QSharedPointer<model::StateMachineModel>::create("Clipboard");
         QMap<model::EntityID_t, QSharedPointer<model::State>> stateCopies;
+        QList<QSharedPointer<model::State>> topLevelSelectedStates;
+        QSet<model::EntityID_t> selectedStateIds;
 
         for (const model::EntityID_t elementId : elementIDs) {
             const auto sourceEntity = mModel->root()->findChild(elementId);
 
             if (sourceEntity && sourceEntity->type() == model::StateMachineEntity::Type::State) {
                 const auto sourceState = sourceEntity.dynamicCast<model::State>();
-                const auto stateCopy = model::ModelElementsFactory::cloneStateEntity(sourceState);
 
-                if (stateCopy) {
-                    stateCopy->copyEntityData(*sourceState);
-                    tempModel->root()->addChild(stateCopy);
-                    stateCopies.insert(elementId, stateCopy);
+                if (sourceState) {
+                    selectedStateIds.insert(sourceState->id());
                 }
             }
         }
 
-        for (const model::EntityID_t elementId : elementIDs) {
-            const auto sourceEntity = mModel->root()->findChild(elementId);
+        for (const model::EntityID_t stateId : selectedStateIds) {
+            const auto stateEntity = mModel->root()->findChild(stateId);
 
-            if (sourceEntity && sourceEntity->type() == model::StateMachineEntity::Type::Transition) {
-                const auto sourceTransition = sourceEntity.dynamicCast<model::Transition>();
-                const auto sourceState = sourceTransition->source();
-                const auto targetState = sourceTransition->target();
-                const auto transitionParent =
-                    (sourceState ? stateCopies.value(sourceState->id()) : QSharedPointer<model::State>());
+            if (stateEntity) {
+                const auto state = stateEntity.dynamicCast<model::State>();
 
-                if (sourceState && targetState && transitionParent) {
-                    QSharedPointer<model::State> transitionTarget = stateCopies.value(targetState->id());
-
-                    if (transitionTarget.isNull()) {
-                        transitionTarget = targetState;
-                    }
-
-                    const auto transitionCopy = QSharedPointer<model::Transition>::create(transitionParent,
-                                                                                          transitionTarget,
-                                                                                          sourceTransition->event());
-
-                    transitionCopy->copyEntityData(*sourceTransition);
-                    transitionParent->addChild(transitionCopy);
+                if (state && (hasSelectedAncestor(mModel->root(), state, selectedStateIds) == false)) {
+                    topLevelSelectedStates.push_back(state);
                 }
+            }
+        }
+
+        for (const auto& sourceState : topLevelSelectedStates) {
+            cloneStateTree(sourceState, tempModel->root(), stateCopies);
+        }
+
+        for (auto stateIt = stateCopies.constBegin(); stateIt != stateCopies.constEnd(); ++stateIt) {
+            const model::EntityID_t sourceStateId = stateIt.key();
+            const auto sourceStateEntity = mModel->root()->findChild(sourceStateId);
+            const auto sourceState = sourceStateEntity.dynamicCast<model::State>();
+            const auto sourceStateCopy = stateIt.value();
+
+            if (sourceState && sourceStateCopy) {
+                sourceState->forEachChildElement(
+                    [&sourceStateId, &sourceStateCopy, &stateCopies](QSharedPointer<model::StateMachineEntity> parent,
+                                                                     QSharedPointer<model::StateMachineEntity> entity) {
+                        bool continueTraversal = true;
+
+                        if (parent && entity && (parent->id() == sourceStateId) &&
+                            (entity->type() == model::StateMachineEntity::Type::Transition)) {
+                            const auto sourceTransition = entity.dynamicCast<model::Transition>();
+                            const auto sourceTransitionTarget =
+                                (sourceTransition ? sourceTransition->target() : QSharedPointer<model::State>());
+                            const auto targetStateCopy = (sourceTransitionTarget ? stateCopies.value(sourceTransitionTarget->id())
+                                                                                  : QSharedPointer<model::State>());
+
+                            if (sourceTransition && targetStateCopy) {
+                                const auto transitionCopy = QSharedPointer<model::Transition>::create(
+                                    sourceStateCopy, targetStateCopy, sourceTransition->event());
+                                transitionCopy->copyEntityData(*sourceTransition);
+                                sourceStateCopy->addChild(transitionCopy);
+                            }
+                        }
+
+                        return continueTraversal;
+                    },
+                    1,
+                    false);
             }
         }
 

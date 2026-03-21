@@ -281,6 +281,7 @@ void StateMachineSerializerSerializationTest::SerializeWithoutScxmlWrapper() {
 
     QVERIFY(scxml.contains("<state id=\"StateA\""));
     QVERIFY(scxml.contains("<scxml") == false);
+    QVERIFY(scxml.startsWith("<?xml") == false);
 }
 
 int runStateMachineSerializerSerializationTest(int argc, char** argv) {
