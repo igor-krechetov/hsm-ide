@@ -44,7 +44,9 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
     mXmlWriter = QSharedPointer<QXmlStreamWriter>::create(&scxml);
 
     mXmlWriter->setAutoFormatting(true);
-    mXmlWriter->writeStartDocument();
+    if (addScxmlTag) {
+        mXmlWriter->writeStartDocument();
+    }
 
     if (addScxmlTag) {
         // Write SCXML root element
@@ -75,7 +77,9 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
         mXmlWriter->writeEndElement();  // scxml
     }
 
-    mXmlWriter->writeEndDocument();
+    if (addScxmlTag) {
+        mXmlWriter->writeEndDocument();
+    }
 
     mXmlWriter.reset();
 
@@ -205,17 +209,17 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     return isValid;
 }
 
-#define SCXML_SERIALIZE_CALLBACK(_object, _cbGetter, _element, _attr)  \
-    if (!(_object)->_cbGetter().isEmpty()) {                           \
-        mXmlWriter->writeStartElement(_element);                       \
-        mXmlWriter->writeTextElement((_attr), (_object)->_cbGetter()); \
-        mXmlWriter->writeEndElement();                                 \
-    }
+#define SCXML_SERIALIZE_CALLBACK(_object, _cbGetter, _element, _attr) \
+  if (!(_object)->_cbGetter().isEmpty()) {                            \
+    mXmlWriter->writeStartElement(_element);                          \
+    mXmlWriter->writeTextElement((_attr), (_object)->_cbGetter());    \
+    mXmlWriter->writeEndElement();                                    \
+  }
 
-#define SCXML_SERIALIZE_STATE_CALLBACKS(_object)                               \
-    SCXML_SERIALIZE_CALLBACK(_object, onEnteringCallback, "onentry", "script") \
-    SCXML_SERIALIZE_CALLBACK(_object, onExitingCallback, "onexit", "script")   \
-    SCXML_SERIALIZE_CALLBACK(_object, onStateChangedCallback, "invoke", "srcexpr")
+#define SCXML_SERIALIZE_STATE_CALLBACKS(_object)                             \
+  SCXML_SERIALIZE_CALLBACK(_object, onEnteringCallback, "onentry", "script") \
+  SCXML_SERIALIZE_CALLBACK(_object, onExitingCallback, "onexit", "script")   \
+  SCXML_SERIALIZE_CALLBACK(_object, onStateChangedCallback, "invoke", "srcexpr")
 
 void StateMachineSerializer::visitRegularState(const RegularState* state) {
     qDebug() << Q_FUNC_INFO;
