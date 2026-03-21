@@ -187,7 +187,7 @@ void StateMachineSerializerSerializationTest::SerializeEntryPointTransitions() {
     auto region = QSharedPointer<model::RegularState>::create("Region");
     auto a = QSharedPointer<model::RegularState>::create("A");
     auto b = QSharedPointer<model::RegularState>::create("B");
-    auto entry = QSharedPointer<model::EntryPoint>::create("EP");
+    auto entry = QSharedPointer<model::EntryPoint>::create();
 
     entry->addTransition(QSharedPointer<model::Transition>::create(entry, a, "toA"));
     entry->addTransition(QSharedPointer<model::Transition>::create(entry, b, "toB"));

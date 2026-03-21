@@ -9,7 +9,7 @@ class Transition;
 
 class EntryPoint : public State {
 public:
-    explicit EntryPoint(const QString& name);
+    explicit EntryPoint();
     virtual ~EntryPoint() = default;
 
     void accept(class IModelVisitor* visitor) override;

@@ -20,7 +20,7 @@ void EntryPointTest::ManagesOutgoingTransitions() {
     auto source = QSharedPointer<model::RegularState>::create("Src");
     auto targetA = QSharedPointer<model::RegularState>::create("A");
     auto targetB = QSharedPointer<model::RegularState>::create("B");
-    auto entry = QSharedPointer<model::EntryPoint>::create("EP");
+    auto entry = QSharedPointer<model::EntryPoint>::create();
 
     auto t1 = QSharedPointer<model::Transition>::create(source, targetA, "E1");
     auto t2 = QSharedPointer<model::Transition>::create(source, targetB, "E2");

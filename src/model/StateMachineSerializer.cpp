@@ -102,6 +102,20 @@ QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFrom
     return resModel;
 }
 
+bool StateMachineSerializer::deserializeFromUnwrapperScxml(const QString& unwrappedScxml, QSharedPointer<model::StateMachineModel>& outModel) {
+    QString wrappedScxml = unwrappedScxml.trimmed();
+
+    if ((wrappedScxml.isEmpty() == false) && (wrappedScxml.contains("<scxml") == false)) {
+        wrappedScxml = QString(
+                            "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:qt = \"http://www.qt.io/2015/02/scxml-ext\">"
+                            "%1"
+                            "</scxml>")
+                            .arg(wrappedScxml);
+    }
+
+    return deserializeFromScxml(wrappedScxml, outModel);
+}
+
 bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel) {
     // NOTE: block all signals because it's a full rebuild of the model
     QSignalBlocker bloker(outModel.get());
@@ -533,7 +547,12 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
 
         QSharedPointer<State> state = entity.dynamicCast<State>();
     } else if (mXmlReader->name() == QStringView(u"initial")) {
-        entity = parseInitialState();
+        if (parent == mModel->root()) {
+            // Root final state
+            entity = parseInitialState();
+        } else {
+            entity = parseEntryPoint();
+        }
     } else if (mXmlReader->name() == QStringView(u"history")) {
         entity = parseHistoryState();
     } else if (mXmlReader->name() == QStringView(u"transition")) {
@@ -641,8 +660,14 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
 QSharedPointer<EntryPoint> StateMachineSerializer::parseEntryPoint() {
     qDebug() << Q_FUNC_INFO;
     QSharedPointer<EntryPoint> entity;
-    // TODO
-    mXmlReader->skipCurrentElement();
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"initial"))) {
+        entity = QSharedPointer<EntryPoint>::create();
+
+        // TODO: handle errors
+        parseAllChildEntities(entity);
+    }
+
     return entity;
 }
 

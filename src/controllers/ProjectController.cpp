@@ -299,76 +299,40 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
 bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QList<model::EntityID_t>& selectedElementIDs) {
     bool pasted = false;
 
-    if (mModel) {
-        QString wrappedScxml = scxmlContent.trimmed();
-        bool isFragment = false;
-        const QString clipboardContainerName = "__hsm_ide_clipboard_container__";
+    if (mModel && (scxmlContent.isEmpty() == false)) {
+        QSharedPointer<model::StateMachineModel> importModel =
+            QSharedPointer<model::StateMachineModel>::create("ClipboardImport");
+        model::StateMachineSerializer serializer;
 
-        if (wrappedScxml.isEmpty() == false) {
-            if (wrappedScxml.contains("<scxml") == false) {
-                isFragment = true;
-                wrappedScxml = QString(
-                                   "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\">"
-                                   "<state id=\"%1\">%2</state>"
-                                   "</scxml>")
-                                   .arg(clipboardContainerName, wrappedScxml);
+        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, importModel)) {
+            const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
+            QList<QSharedPointer<model::State>> importedStates;
+
+            importModel->root()->forEachChildElement(
+                [&importedStates, &importModel](QSharedPointer<model::StateMachineEntity> parent,
+                                                QSharedPointer<model::StateMachineEntity> entity) {
+                    bool continueTraversal = true;
+
+                    if (parent && entity && (parent == importModel->root()) &&
+                        (entity->type() == model::StateMachineEntity::Type::State)) {
+                        importedStates.push_back(entity.dynamicCast<model::State>());
+                    }
+
+                    return continueTraversal;
+                },
+                1,
+                false);
+
+            beginHistoryTransaction("Paste elements");
+
+            for (const auto& state : importedStates) {
+                if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
+                    targetParent->addChild(state);
+                }
             }
 
-            QSharedPointer<model::StateMachineModel> importModel =
-                QSharedPointer<model::StateMachineModel>::create("ClipboardImport");
-            model::StateMachineSerializer serializer;
-
-            if (serializer.deserializeFromScxml(wrappedScxml, importModel)) {
-                const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
-                QList<QSharedPointer<model::State>> importedStates;
-
-                if (isFragment) {
-                    const auto clipboardContainer = importModel->root()->findChildStateByName(clipboardContainerName);
-
-                    if (clipboardContainer) {
-                        clipboardContainer->forEachChildElement(
-                            [&importedStates, &clipboardContainer](QSharedPointer<model::StateMachineEntity> parent,
-                                                                   QSharedPointer<model::StateMachineEntity> entity) {
-                                bool continueTraversal = true;
-
-                                if (parent && entity && (parent == clipboardContainer) &&
-                                    (entity->type() == model::StateMachineEntity::Type::State)) {
-                                    importedStates.push_back(entity.dynamicCast<model::State>());
-                                }
-
-                                return continueTraversal;
-                            },
-                            1,
-                            false);
-                    }
-                } else {
-                    importModel->root()->forEachChildElement(
-                        [&importedStates, &importModel](QSharedPointer<model::StateMachineEntity> parent,
-                                                        QSharedPointer<model::StateMachineEntity> entity) {
-                            bool continueTraversal = true;
-
-                            if (parent && entity && (parent == importModel->root()) &&
-                                (entity->type() == model::StateMachineEntity::Type::State)) {
-                                importedStates.push_back(entity.dynamicCast<model::State>());
-                            }
-
-                            return continueTraversal;
-                        },
-                        1,
-                        false);
-                }
-
-                beginHistoryTransaction("Paste elements");
-
-                for (const auto& state : importedStates) {
-                    if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
-                        targetParent->addChild(state);
-                    }
-                }
-
-                commitHistoryTransaction();
-                pasted = true;
-            }
+            commitHistoryTransaction();
+            pasted = true;
         }
     }
 
