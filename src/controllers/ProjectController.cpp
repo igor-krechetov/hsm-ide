@@ -45,7 +45,7 @@ QSharedPointer<model::State> cloneStateTree(const QSharedPointer<model::State>& 
 
             sourceState->forEachChildElement(
                 [&clonedStates, &clonedState, &sourceStateId](QSharedPointer<model::StateMachineEntity> parent,
-                                                               QSharedPointer<model::StateMachineEntity> child) {
+                                                              QSharedPointer<model::StateMachineEntity> child) {
                     bool continueTraversal = true;
 
                     if (parent && (parent->id() == sourceStateId) && child &&
@@ -268,12 +268,15 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
                             const auto sourceTransition = entity.dynamicCast<model::Transition>();
                             const auto sourceTransitionTarget =
                                 (sourceTransition ? sourceTransition->target() : QSharedPointer<model::State>());
-                            const auto targetStateCopy = (sourceTransitionTarget ? stateCopies.value(sourceTransitionTarget->id())
-                                                                                  : QSharedPointer<model::State>());
+                            const auto targetStateCopy =
+                                (sourceTransitionTarget ? stateCopies.value(sourceTransitionTarget->id())
+                                                        : QSharedPointer<model::State>());
 
                             if (sourceTransition && targetStateCopy) {
-                                const auto transitionCopy = QSharedPointer<model::Transition>::create(
-                                    sourceStateCopy, targetStateCopy, sourceTransition->event());
+                                const auto transitionCopy =
+                                    QSharedPointer<model::Transition>::create(sourceStateCopy,
+                                                                              targetStateCopy,
+                                                                              sourceTransition->event());
                                 transitionCopy->copyEntityData(*sourceTransition);
                                 sourceStateCopy->addChild(transitionCopy);
                             }
@@ -298,11 +301,17 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
 
     if (mModel) {
         QString wrappedScxml = scxmlContent.trimmed();
+        bool isFragment = false;
+        const QString clipboardContainerName = "__hsm_ide_clipboard_container__";
 
         if (wrappedScxml.isEmpty() == false) {
             if (wrappedScxml.contains("<scxml") == false) {
-                wrappedScxml =
-                    QString("<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\">%1</scxml>").arg(wrappedScxml);
+                isFragment = true;
+                wrappedScxml = QString(
+                                   "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\">"
+                                   "<state id=\"%1\">%2</state>"
+                                   "</scxml>")
+                                   .arg(clipboardContainerName, wrappedScxml);
             }
 
             QSharedPointer<model::StateMachineModel> importModel =
@@ -311,26 +320,51 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
 
             if (serializer.deserializeFromScxml(wrappedScxml, importModel)) {
                 const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
+                QList<QSharedPointer<model::State>> importedStates;
+
+                if (isFragment) {
+                    const auto clipboardContainer = importModel->root()->findChildStateByName(clipboardContainerName);
+
+                    if (clipboardContainer) {
+                        clipboardContainer->forEachChildElement(
+                            [&importedStates, &clipboardContainer](QSharedPointer<model::StateMachineEntity> parent,
+                                                                   QSharedPointer<model::StateMachineEntity> entity) {
+                                bool continueTraversal = true;
+
+                                if (parent && entity && (parent == clipboardContainer) &&
+                                    (entity->type() == model::StateMachineEntity::Type::State)) {
+                                    importedStates.push_back(entity.dynamicCast<model::State>());
+                                }
+
+                                return continueTraversal;
+                            },
+                            1,
+                            false);
+                    }
+                } else {
+                    importModel->root()->forEachChildElement(
+                        [&importedStates, &importModel](QSharedPointer<model::StateMachineEntity> parent,
+                                                        QSharedPointer<model::StateMachineEntity> entity) {
+                            bool continueTraversal = true;
+
+                            if (parent && entity && (parent == importModel->root()) &&
+                                (entity->type() == model::StateMachineEntity::Type::State)) {
+                                importedStates.push_back(entity.dynamicCast<model::State>());
+                            }
+
+                            return continueTraversal;
+                        },
+                        1,
+                        false);
+                }
 
                 beginHistoryTransaction("Paste elements");
 
-                importModel->root()->forEachChildElement(
-                    [this, targetParent](QSharedPointer<model::StateMachineEntity> parent,
-                                         QSharedPointer<model::StateMachineEntity> entity) {
-                        Q_UNUSED(parent);
-
-                        if (entity && entity->type() == model::StateMachineEntity::Type::State) {
-                            const auto state = entity.dynamicCast<model::State>();
-
-                            if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
-                                targetParent->addChild(state);
-                            }
-                        }
-
-                        return true;
-                    },
-                    1,
-                    false);
+                for (const auto& state : importedStates) {
+                    if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
+                        targetParent->addChild(state);
+                    }
+                }
 
                 commitHistoryTransaction();
                 pasted = true;
