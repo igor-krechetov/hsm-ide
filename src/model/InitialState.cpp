@@ -85,16 +85,11 @@ bool InitialState::forEachChildElement(
     return processedAllChildren;
 }
 
-void InitialState::copyEntityData(const StateMachineEntity& other) {
-    State::copyEntityData(other);
+// void InitialState::copyEntityData(const StateMachineEntity& other) {
+//     State::copyEntityData(other);
 
-    if (const InitialState* iOther = dynamic_cast<const InitialState*>(&other)) {
-        mTransition->copyEntityData(*iOther->mTransition);
-
-        if (mTransition) {
-            mTransition->setSource(sharedFromThis().dynamicCast<State>());
-        }
-    }
-}
+//     if (const InitialState* iOther = dynamic_cast<const InitialState*>(&other)) {
+//     }
+// }
 
 };  // namespace model

@@ -1,4 +1,5 @@
 #include "ElementConnectionArrow.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 
 #include <QCursor>
 #include <QGraphicsSceneMouseEvent>
@@ -134,6 +135,10 @@ QVariant ElementConnectionArrow::itemChange(GraphicsItemChange change, const QVa
     }
 
     return QGraphicsObject::itemChange(change, value);
+}
+
+int ElementConnectionArrow::type() const {
+    return view::ELEMENT_TYPE_CONNECTION_ARROW;
 }
 
 };  // namespace view

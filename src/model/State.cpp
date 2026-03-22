@@ -71,7 +71,7 @@ QSharedPointer<State> State::findChildStateByName(const QString& name) {
 
 void State::copyEntityData(const StateMachineEntity& other) {
     StateMachineEntity::copyEntityData(other);
-    
+
     if (const State* stateOther = dynamic_cast<const State*>(&other)) {
         mStateType = stateOther->mStateType;
         mName = stateOther->mName;

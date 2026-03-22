@@ -31,7 +31,8 @@ public:
         const EntityID_t id,
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
 
-    void copyEntityData(const StateMachineEntity& other) override;
+    // NOTE: implement if element specific data will be added in future
+    // void copyEntityData(const StateMachineEntity& other) override;
 
 protected:
     bool forEachChildElement(

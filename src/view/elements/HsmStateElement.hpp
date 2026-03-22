@@ -23,7 +23,7 @@ public:
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
 
-    virtual QList<QGraphicsItem*> hsmChildItems() const;
+    QList<QGraphicsItem*> hsmChildItems() const override;
     bool hasSubstates() const override;
     // bool isDirectChild(HsmElement* item) const override;
     // QRectF childrenRect() const override;

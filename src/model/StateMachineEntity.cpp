@@ -28,12 +28,6 @@ StateMachineEntity& StateMachineEntity::operator=(const StateMachineEntity& othe
 
 void StateMachineEntity::copyEntityData(const StateMachineEntity& other) {
     mMetadata = other.mMetadata;
-
-    const QStringList props = other.properties();
-
-    for (const QString& key : props) {
-        setProperty(key, other.getProperty(key));
-    }
 }
 
 EntityID_t StateMachineEntity::id() const {

@@ -89,6 +89,7 @@ QVariant ExitPoint::getProperty(const QString& key) const {
 
 void ExitPoint::copyEntityData(const StateMachineEntity& other) {
     State::copyEntityData(other);
+
     if (const ExitPoint* eOther = dynamic_cast<const ExitPoint*>(&other)) {
         mEvent = eOther->mEvent;
         mOnStateChangedCallback = eOther->mOnStateChangedCallback;

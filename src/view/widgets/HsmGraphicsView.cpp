@@ -10,6 +10,7 @@
 #include <QScrollBar>
 #include <QWheelEvent>
 
+#include "view/elements/ElementTypeIds.hpp"
 #include "controllers/ProjectController.hpp"
 #include "view/common/ViewUtils.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
@@ -410,7 +411,8 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
             if (parentSelectedElement != childSelectedElement) {
                 if (parentSelectedElement->containsChild(childSelectedElement) == false) {
                     qDebug() << "---- BEGIN DRAGGING, id=" << childSelectedElement->modelId()
-                             << "type=" << (int)childSelectedElement->elementType() << childSelectedElement;
+                            << "type=" << (int)childSelectedElement->elementType()
+                             << childSelectedElement;
 
                     // store position for secondary dragged element
                     mDragRevertPositions.insert(childSelectedElement, childSelectedElement->pos());
@@ -738,14 +740,10 @@ QPointer<view::HsmTransition> HsmGraphicsView::findHsmTransition(const model::En
 view::HsmElement* HsmGraphicsView::itemToHsmElement(QGraphicsItem* item) const {
     view::HsmElement* element = nullptr;
 
-    if (nullptr != item) {
-        QVariant elementType = item->data(view::USERDATA_HSM_ELEMENT_TYPE);
-
-        if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
-            // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
-            //       to use dynamic_cast. parentItem() != parentObject()
-            element = dynamic_cast<view::HsmElement*>(item);
-        }
+    if ((nullptr != item) && IS_HSM_ELEMENT_TYPE(item->type())) {
+        // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
+        //       to use dynamic_cast. parentItem() != parentObject()
+        element = dynamic_cast<view::HsmElement*>(item);
     }
 
     return element;

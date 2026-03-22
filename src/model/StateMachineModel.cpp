@@ -34,24 +34,23 @@ StateMachineModel::~StateMachineModel() {
 }
 
 StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) {
-    // NOTE: since we are going to make a big update - do not emit small notifications. Clients
-    //       are responsible to handle any data changes
-    QSignalBlocker blocker(this);
-
+    qDebug() << "StateMachineModel: copy" << this;
     if (this == &other) {
         return *this;
     }
-
-    clearModel();
 
     if (!other.root() || !mModelRoot) {
         return *this;
     }
 
+    // NOTE: since we are going to make a big update - do not emit small notifications. Clients
+    //       are responsible to handle any data changes
+    QSignalBlocker blocker(this);
+    QHash<const State*, QSharedPointer<State>> copiedStates;
+
+    clearModel();
     setName(other.name());
     mModelRoot->copyEntityData(*other.root());
-
-    QHash<const State*, QSharedPointer<State>> copiedStates;
 
     copiedStates.insert(other.root().data(), mModelRoot);
 
@@ -106,22 +105,12 @@ StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) 
 
             if (entity->type() == StateMachineEntity::Type::Transition) {
                 auto sourceTransition = entity.dynamicCast<Transition>();
-                auto sourceSrc = sourceTransition->source();
-                auto sourceDst = sourceTransition->target();
-
-                auto newSrc = copiedStates.value(sourceSrc.data());
-                auto newDst = copiedStates.value(sourceDst.data());
-                auto newSrcRegular = newSrc.dynamicCast<RegularState>();
-
-                if (!newSrcRegular) {
-                    return false;
-                }
-
+                auto newSrc = copiedStates.value(sourceTransition->source().data());
+                auto newDst = copiedStates.value(sourceTransition->target().data());
                 auto newTransition = QSharedPointer<Transition>::create(newSrc, newDst, sourceTransition->event());
+
                 newTransition->copyEntityData(*sourceTransition);
-                newTransition->setSource(newSrc);
-                newTransition->setTarget(newDst);
-                newSrcRegular->addTransition(newTransition);
+                newSrc->addChild(newTransition);
             }
 
             return true;
@@ -131,7 +120,11 @@ StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) 
 
     blocker.unblock();
     emit modelChanged();
-
+    qDebug() << "--- StateMachineModel: copy done" << this;
+    qDebug() << "--- source model";
+    other.dump();
+    qDebug() << "--- new model after copy";
+    dump();
     return *this;
 }
 
@@ -293,8 +286,10 @@ void StateMachineModel::dump() const {
                     targetName = targetState->name();
                 }
 
-                qDebug() << "[TRANSITION] id:" << entity->id() << "src:" << sourceName << " target:" << targetName
-                         << "event:" << transition->event();
+                qDebug() << "[TRANSITION] id:" << entity->id()
+                         << "src:" << sourceName << "[" << transition->sourceId() << "]"
+                         << " target:" << targetName << "[" << transition->targetId() << "]"
+                         << " event:" << transition->event();
             }
             return true;
         },

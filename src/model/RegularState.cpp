@@ -292,6 +292,7 @@ bool RegularState::forEachChildElement(
 
 void RegularState::copyEntityData(const StateMachineEntity& other) {
     State::copyEntityData(other);
+    
     if (const RegularState* rOther = dynamic_cast<const RegularState*>(&other)) {
         mOnStateChangedCallback = rOther->mOnStateChangedCallback;
         mOnEnteringCallback = rOther->mOnEnteringCallback;

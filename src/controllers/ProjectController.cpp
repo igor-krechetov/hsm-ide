@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QLoggingCategory>
 #include <QMap>
+#include <QMultiMap>
 #include <QMimeData>
 #include <QSet>
 #include <QTextStream>
@@ -216,6 +217,7 @@ void ProjectController::handleDeleteElements(const QList<model::EntityID_t>& ele
 }
 
 QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_t>& elementIDs) const {
+    qDebug() << "ProjectController::serializeElementsToScxml: itemsCount=" << elementIDs.size();
     QString serializedData;
 
     if (mModel && mModel->root()) {
@@ -313,6 +315,8 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
 
             const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
             QList<QSharedPointer<model::State>> importedStates;
+            // used to update references to ExitPoint/Final states
+            QMultiMap<model::EntityID_t, QSharedPointer<model::Transition>> importedTransitions;
             QSharedPointer<model::State> rootState = importModel->root()->findChildStateByName(wrapperId);
 
             if (!rootState) {
@@ -321,14 +325,29 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
 
             rootState->forEachChildElement(
                 [&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> entity) {
-                    bool continueTraversal = true;
-
                     if (parent && entity && (parent == rootState) &&
                         (entity->type() == model::StateMachineEntity::Type::State)) {
                         importedStates.push_back(entity.dynamicCast<model::State>());
+                        
+                        // collect direct transitions incase we'll need to update references
+                        entity->forEachChildElement(
+                            [&importedTransitions](QSharedPointer<model::StateMachineEntity> transitionParent,
+                                                  QSharedPointer<model::StateMachineEntity> transitionEntity) {
+                                if (transitionEntity && (transitionEntity->type() == model::StateMachineEntity::Type::Transition)) {
+                                    const auto transition = transitionEntity.dynamicCast<model::Transition>();
+
+                                    if (transition) {
+                                        importedTransitions.insert(transition->targetId(), transition);
+                                    }
+                                }
+
+                                return true;
+                            },
+                            1,
+                            false);
                     }
 
-                    return continueTraversal;
+                    return true;
                 },
                 1,
                 false);
@@ -348,7 +367,17 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
                 if (state->stateType() == model::StateType::ENTRYPOINT && targetParent == mModel->root()) {
                     newState = model::ModelElementsFactory::createInitialFrom(state.dynamicCast<model::EntryPoint>());
                 } else if (state->stateType() == model::StateType::EXITPOINT && targetParent == mModel->root()) {
+                    // TODO: how do we update references to transitions pointing to this element?
                     newState = model::ModelElementsFactory::createFinalFrom(state.dynamicCast<model::ExitPoint>());
+
+                    // iterate over importedTransitions for state-id()
+                    auto range = importedTransitions.equal_range(state->id());
+                    for (auto it = range.first; it != range.second; ++it) {
+                        const auto& transition = it.value();
+
+                        // Re-link the transition to point to new state
+                        transition->setTarget(newState);
+                    }
                 } else {
                     newState = state;
                 }
@@ -362,6 +391,10 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
 
             commitHistoryTransaction();
             mIgnoreAddedModelEntities = false;
+
+            qDebug() << "---- model after paste: " << mModel->name();
+            mModel->dump(); // TODO: debug
+
             refreshViewFromModel();
 
             pasted = true;

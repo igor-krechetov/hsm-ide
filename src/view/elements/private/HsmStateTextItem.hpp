@@ -17,6 +17,8 @@ public:
     void makeMovable(const bool enable);
     void link(const QPointer<HsmStateTextItem>& other);
 
+    int type() const override;
+
 signals:
     void editingFinished();
     void positionChanged();

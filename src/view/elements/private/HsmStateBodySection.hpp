@@ -15,6 +15,8 @@ public:
 
     bool hasSubstates() const;
 
+    int type() const override;
+
 signals:
     void substatesChanged(const bool hasSubstates);
 

@@ -93,16 +93,8 @@ bool EntryPoint::forEachChildElement(
     return processedAllChildren;
 }
 
-void EntryPoint::copyEntityData(const StateMachineEntity& other) {
-    State::copyEntityData(other);
-    if (const EntryPoint* eOther = dynamic_cast<const EntryPoint*>(&other)) {
-        mTransitions = eOther->mTransitions;
-        for (auto& transition : mTransitions) {
-            if (transition) {
-                transition->setSource(sharedFromThis().dynamicCast<State>());
-            }
-        }
-    }
-}
+// void EntryPoint::copyEntityData(const StateMachineEntity& other) {
+//     State::copyEntityData(other);
+// }
 
 };  // namespace model

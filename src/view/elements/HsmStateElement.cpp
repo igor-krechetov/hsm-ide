@@ -8,6 +8,7 @@
 #include <QSignalBlocker>
 #include <QTextDocument>
 
+#include "view/elements/ElementTypeIds.hpp"
 #include "HsmTransition.hpp"
 #include "model/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
@@ -119,22 +120,24 @@ bool HsmStateElement::hasSubstates() const {
 void HsmStateElement::addChildItem(HsmElement* child) {
     if (nullptr != child && nullptr != mBodySection) {
         if (child->elementType() == HsmElementType::TRANSITION) {
-            HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
+            if (child->type() == HSM_ELEMENT_TYPE_TRANSITION) {
+                HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
 
-            if (transition) {
-                if (transition->isSelfTransition()) {
-                    qDebug() << "add SELF TRANSITION";
-                    connect(child, &QObject::destroyed, this, [this, child]() { layoutSections(); });
+                if (transition) {
+                    if (transition->isSelfTransition()) {
+                        qDebug() << "add SELF TRANSITION";
+                        connect(child, &QObject::destroyed, this, [this, child]() { layoutSections(); });
 
-                    child->setParentItem(mSelfTransitionsSection);
-                    layoutSections();
-                } else {
-                    qDebug() << "add regular TRANSITION";
-                    child->setParentItem(mBodySection);
+                        child->setParentItem(mSelfTransitionsSection);
+                        layoutSections();
+                    } else {
+                        qDebug() << "add regular TRANSITION";
+                        child->setParentItem(mBodySection);
+                    }
                 }
             } else {
                 qCritical() << Q_FUNC_INFO
-                            << "mismatch between HsmElement type is TRANSIOTION, but it's not an instance of HsmTransition";
+                            << "mismatch between HsmElement type is TRANSITION, but it's not an instance of HsmTransition";
             }
         } else {
             child->setParentItem(mBodySection);
@@ -179,9 +182,6 @@ void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
                 parentNewRect.adjust(0, 0, 0, dh + cChildPadding);
             }
 
-            QGraphicsRectItem* body = qgraphicsitem_cast<QGraphicsRectItem*>(mBodySection);
-
-            qDebug() << Q_FUNC_INFO << __LINE__;
             resizeElement(parentNewRect);
             resizeParentToFitChildItem();
         }
@@ -290,10 +290,15 @@ void HsmStateElement::layoutSections() {
 void HsmStateElement::layoutSelfTransitions() {
     if (mSelfTransitionsSection) {
         for (auto child : mSelfTransitionsSection->childItems()) {
-            HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
+            if (child->type() == HSM_ELEMENT_TYPE_TRANSITION) {
+                HsmTransition* transition = qgraphicsitem_cast<HsmTransition*>(child);
 
-            if (transition) {
-                transition->recalculateLine();
+                if (transition) {
+                    transition->recalculateLine();
+                }
+            } else {
+                qCritical() << Q_FUNC_INFO
+                            << "unexpected child type in self-transitions section, expected TRANSITION, got" << child->type();
             }
         }
     }

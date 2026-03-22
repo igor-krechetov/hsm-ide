@@ -32,14 +32,16 @@ Transition& Transition::operator=(const Transition& other) {
 
 void Transition::copyEntityData(const StateMachineEntity& other) {
     StateMachineEntity::copyEntityData(other);
+
     if (const Transition* tOther = dynamic_cast<const Transition*>(&other)) {
         mTransitionType = tOther->mTransitionType;
-        mSource = tOther->mSource;
-        mTarget = tOther->mTarget;
         mEvent = tOther->mEvent;
         mTransitionCallback = tOther->mTransitionCallback;
         mConditionCallback = tOther->mConditionCallback;
         mExpectedConditionValue = tOther->mExpectedConditionValue;
+
+        // do not copy source and target here, because they are not properties
+        // of transition but linked
     }
 }
 
