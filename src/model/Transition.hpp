@@ -44,6 +44,8 @@ public:
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
 
+    void copyEntityData(const StateMachineEntity& other) override;
+
     QStringList properties() const override;
 
 public:

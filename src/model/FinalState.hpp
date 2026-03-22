@@ -22,6 +22,8 @@ public:
     QVariant getProperty(const QString& key) const override;
     QStringList properties() const override;
 
+    void copyEntityData(const StateMachineEntity& other) override;
+
 private:
     QString mOnStateChangedCallback;
 };

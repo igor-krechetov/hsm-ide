@@ -51,6 +51,8 @@ public:
         const int depth = DEPTH_INFINITE,
         const bool postOrderTraversal = true) override;
 
+    void copyEntityData(const StateMachineEntity& other) override;
+
 protected:
     QString mOnStateChangedCallback;
     QString mOnEnteringCallback;

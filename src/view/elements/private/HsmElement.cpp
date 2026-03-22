@@ -194,48 +194,17 @@ bool HsmElement::isResizable() const {
 // }
 
 bool HsmElement::canBeTopLevel() const {
-    bool allowed = false;
-    model::StateType parentType = model::StateType::INVALID;
-
-    const auto entityPtr = mModelElement.toStrongRef();
-    const auto state = entityPtr.dynamicCast<model::State>();
-
-    if (state) {
-        parentType = state->stateType();
-    } else {
-        parentType = elementTypeToStateType(mType);
-    }
-
-    if (parentType != model::StateType::INVALID) {
-        allowed = model::StateHierarchyRules::canBeTopLevel(parentType);
-    }
-
-    return allowed;
+    return model::StateHierarchyRules::canBeTopLevel(elementTypeToStateType(mType));
 }
 
 bool HsmElement::acceptsChildElement(const HsmElementType type) const {
     bool allowed = false;
-    model::StateType parentType = model::StateType::INVALID;
+    const model::StateType parentType = elementTypeToStateType(mType);
 
-    const auto entityPtr = mModelElement.toStrongRef();
-    const auto state = entityPtr.dynamicCast<model::State>();
-
-    if (state) {
-        parentType = state->stateType();
+    if (type == HsmElementType::TRANSITION) {
+        allowed = model::StateHierarchyRules::canTransitionBeChildOf(parentType);
     } else {
-        parentType = elementTypeToStateType(mType);
-    }
-
-    if (parentType != model::StateType::INVALID) {
-        if (type == HsmElementType::TRANSITION) {
-            allowed = model::StateHierarchyRules::canTransitionBeChildOf(parentType);
-        } else {
-            const model::StateType childType = elementTypeToStateType(type);
-
-            if (childType != model::StateType::INVALID) {
-                allowed = model::StateHierarchyRules::canStateBeChildOf(parentType, childType);
-            }
-        }
+        allowed = model::StateHierarchyRules::canStateBeChildOf(parentType, elementTypeToStateType(type));
     }
 
     return allowed;

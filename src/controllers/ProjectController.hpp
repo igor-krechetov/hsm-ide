@@ -97,6 +97,8 @@ private:
 
     // true if the model was modified since last save/loading
     bool mModified = false;
+    // flag to block new model entities from being added to the view
+    bool mIgnoreAddedModelEntities = false;
 };
 
 inline QPointer<HsmGraphicsView> ProjectController::view() const {

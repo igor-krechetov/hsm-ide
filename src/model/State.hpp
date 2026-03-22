@@ -28,6 +28,7 @@ public:
     explicit State(const QString& name, const StateType type = StateType::REGULAR);
     virtual ~State() = default;
     State& operator=(const State& other);
+    void copyEntityData(const StateMachineEntity& other) override;
 
     StateType stateType() const;
 

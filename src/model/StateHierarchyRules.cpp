@@ -2,10 +2,10 @@
 
 namespace model {
 
-bool StateHierarchyRules::canBeTopLevel(const StateType childType) {
+bool StateHierarchyRules::canBeTopLevel(const StateType elementType) {
     bool allowed = false;
 
-    switch (childType) {
+    switch (elementType) {
         case StateType::INITIAL:
         case StateType::FINAL:
         case StateType::REGULAR:
@@ -29,12 +29,13 @@ bool StateHierarchyRules::canStateBeChildOf(const StateType parentType, const St
         switch (childType) {
             case StateType::REGULAR:
             case StateType::INCLUDE:
-            case StateType::INITIAL:
             case StateType::ENTRYPOINT:
             case StateType::EXITPOINT:
             case StateType::HISTORY:
                 allowed = true;
                 break;
+            case StateType::INITIAL:
+            case StateType::FINAL:
             default:
                 allowed = false;
                 break;
@@ -51,9 +52,12 @@ bool StateHierarchyRules::canTransitionBeChildOf(const StateType parentType) {
         case StateType::REGULAR:
         case StateType::INCLUDE:
         case StateType::INITIAL:
+        case StateType::ENTRYPOINT:
         case StateType::HISTORY:
             allowed = true;
             break;
+        case StateType::EXITPOINT:
+        case StateType::FINAL:
         default:
             allowed = false;
             break;
@@ -71,6 +75,8 @@ bool StateHierarchyRules::canAddEntityToParent(const QSharedPointer<StateMachine
 
         if (child->type() == StateMachineEntity::Type::State) {
             const QSharedPointer<State> childState = child.dynamicCast<State>();
+
+            qDebug() << "---- parentType" << (int)parentState->stateType() << " - childType" << (int)childState->stateType();
 
             if (parentState && childState) {
                 allowed = canStateBeChildOf(parentState->stateType(), childState->stateType());

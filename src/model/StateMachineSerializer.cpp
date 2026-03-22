@@ -102,15 +102,15 @@ QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFrom
     return resModel;
 }
 
-bool StateMachineSerializer::deserializeFromUnwrapperScxml(const QString& unwrappedScxml, QSharedPointer<model::StateMachineModel>& outModel) {
+bool StateMachineSerializer::deserializeFromUnwrapperScxml(const QString& unwrappedScxml, const QString& stateWrapper, QSharedPointer<model::StateMachineModel>& outModel) {
     QString wrappedScxml = unwrappedScxml.trimmed();
 
     if ((wrappedScxml.isEmpty() == false) && (wrappedScxml.contains("<scxml") == false)) {
         wrappedScxml = QString(
                             "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:qt = \"http://www.qt.io/2015/02/scxml-ext\">"
-                            "%1"
+                            "<state id=\"%1\">%2</state>"
                             "</scxml>")
-                            .arg(wrappedScxml);
+                            .arg(stateWrapper).arg(wrappedScxml);
     }
 
     return deserializeFromScxml(wrappedScxml, outModel);

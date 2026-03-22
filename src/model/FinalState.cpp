@@ -48,4 +48,11 @@ QVariant FinalState::getProperty(const QString& key) const {
     return State::getProperty(key);
 }
 
+void FinalState::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+    if (const FinalState* fOther = dynamic_cast<const FinalState*>(&other)) {
+        mOnStateChangedCallback = fOther->mOnStateChangedCallback;
+    }
+}
+
 };  // namespace model

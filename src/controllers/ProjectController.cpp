@@ -11,6 +11,7 @@
 #include "ObjectUtils.hpp"
 #include "controllers/ModificationHistoryController.hpp"
 #include "model/EntryPoint.hpp"
+#include "model/ExitPoint.hpp"
 #include "model/InitialState.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/ModelRootState.hpp"
@@ -303,17 +304,25 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
         QSharedPointer<model::StateMachineModel> importModel =
             QSharedPointer<model::StateMachineModel>::create("ClipboardImport");
         model::StateMachineSerializer serializer;
+        const QString wrapperId = "__hsmide_clipboard_wrapper__";
 
-        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, importModel)) {
+        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, wrapperId, importModel)) {
+            importModel->dump();// TODO: debug
+
             const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
             QList<QSharedPointer<model::State>> importedStates;
+            QSharedPointer<model::State> rootState = importModel->root()->findChildStateByName(wrapperId);
 
-            importModel->root()->forEachChildElement(
-                [&importedStates, &importModel](QSharedPointer<model::StateMachineEntity> parent,
+            if (!rootState) {
+                rootState = importModel->root();
+            }
+
+            rootState->forEachChildElement(
+                [&](QSharedPointer<model::StateMachineEntity> parent,
                                                 QSharedPointer<model::StateMachineEntity> entity) {
                     bool continueTraversal = true;
 
-                    if (parent && entity && (parent == importModel->root()) &&
+                    if (parent && entity && (parent == rootState) &&
                         (entity->type() == model::StateMachineEntity::Type::State)) {
                         importedStates.push_back(entity.dynamicCast<model::State>());
                     }
@@ -324,14 +333,35 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
                 false);
 
             beginHistoryTransaction("Paste elements");
+            // NOTE: prevent view from being updated. Due to transitions depending on elements order, we'll just update the model
+            //       and then refresh the view.
+            mIgnoreAddedModelEntities = true;
+            qDebug() << "---- importedStates.size" << importedStates.size();
 
             for (const auto& state : importedStates) {
-                if (state && model::StateHierarchyRules::canAddEntityToParent(targetParent, state)) {
-                    targetParent->addChild(state);
+                QSharedPointer<model::State> newState;
+
+                // NOTE: because <initial> and <final> are treated differently depending if they are in top-level or
+                //       a substate, we ony know how to handle them right before adding them to the sceene
+                if (state->stateType() == model::StateType::ENTRYPOINT && targetParent == mModel->root()) {
+                    newState = model::ModelElementsFactory::createInitialFrom(state.dynamicCast<model::EntryPoint>());
+                } else if (state->stateType() == model::StateType::EXITPOINT && targetParent == mModel->root()) {
+                    newState = model::ModelElementsFactory::createFinalFrom(state.dynamicCast<model::ExitPoint>());
+                } else {
+                    newState = state;
+                }
+
+                if (newState && model::StateHierarchyRules::canAddEntityToParent(targetParent, newState)) {
+                    targetParent->addChild(newState);
+                } else {
+                    qWarning() << "Cannot paste state " << newState->id() << " to target parent " << targetParent->id();
                 }
             }
 
             commitHistoryTransaction();
+            mIgnoreAddedModelEntities = false;
+            refreshViewFromModel();
+
             pasted = true;
         }
     }
@@ -390,61 +420,63 @@ QSharedPointer<model::State> ProjectController::resolvePasteTargetParent(
 void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                                QSharedPointer<model::StateMachineEntity> entity,
                                                const bool addChildren) {
-    qDebug() << "handleModelEntityAdded"
-             << "parent=" << parent->id() << " child=" << entity->id() << "childType=" << (int)entity->type();
+    if (false == mIgnoreAddedModelEntities) {
+        qDebug() << "handleModelEntityAdded"
+                << "parent=" << parent->id() << " child=" << entity->id() << "childType=" << (int)entity->type();
 
-    if (entity->type() == model::StateMachineEntity::Type::State) {
-        static std::map<model::StateType, QString> sElementTypes = {{model::StateType::INITIAL, "initial"},
-                                                                    {model::StateType::FINAL, "final"},
-                                                                    {model::StateType::REGULAR, "state"},
-                                                                    {model::StateType::ENTRYPOINT, "entrypoint"},
-                                                                    {model::StateType::EXITPOINT, "exitpoint"},
-                                                                    {model::StateType::HISTORY, "history"},
-                                                                    {model::StateType::INCLUDE, "include"}};
+        if (entity->type() == model::StateMachineEntity::Type::State) {
+            static std::map<model::StateType, QString> sElementTypes = {{model::StateType::INITIAL, "initial"},
+                                                                        {model::StateType::FINAL, "final"},
+                                                                        {model::StateType::REGULAR, "state"},
+                                                                        {model::StateType::ENTRYPOINT, "entrypoint"},
+                                                                        {model::StateType::EXITPOINT, "exitpoint"},
+                                                                        {model::StateType::HISTORY, "history"},
+                                                                        {model::StateType::INCLUDE, "include"}};
 
-        auto ptrState = entity.dynamicCast<model::State>();
-        auto itType = sElementTypes.find(ptrState->stateType());
+            auto ptrState = entity.dynamicCast<model::State>();
+            auto itType = sElementTypes.find(ptrState->stateType());
 
-        if (itType != sElementTypes.end()) {
-            view::HsmElement* newViewElement =
-                mView->createHsmElement(entity, itType->second, entity->getPos(), entity->getSize(), parent->id());
+            if (itType != sElementTypes.end()) {
+                view::HsmElement* newViewElement =
+                    mView->createHsmElement(entity, itType->second, entity->getPos(), entity->getSize(), parent->id());
 
-            tryConnectSignal(newViewElement,
-                             "elementConnected(model::EntityID_t,model::EntityID_t)",
-                             this,
-                             "connectElements(model::EntityID_t,model::EntityID_t)");
-        } else {
-            qFatal("ProjectController::handleModelEntityAdded: unexpected element type: %d",
-                   static_cast<int>(ptrState->stateType()));
-        }
-    } else if (entity->type() == model::StateMachineEntity::Type::Transition) {
-        auto ptrTransition = entity.dynamicCast<model::Transition>();
-
-        if (ptrTransition) {
-            qDebug() << ptrTransition->source() << ptrTransition->target();
-
-            if (ptrTransition->source() && ptrTransition->target()) {
-                view::HsmTransition* newViewTransition =
-                    mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
-
-                tryConnectSignal(newViewTransition,
-                                 "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                                 this,
-                                 "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                tryConnectSignal(newViewElement,
+                                "elementConnected(model::EntityID_t,model::EntityID_t)",
+                                this,
+                                "connectElements(model::EntityID_t,model::EntityID_t)");
+            } else {
+                qFatal("ProjectController::handleModelEntityAdded: unexpected element type: %d",
+                    static_cast<int>(ptrState->stateType()));
             }
-        } else {
-            qCritical() << "expected Transition entity, but couldnt cast to model::Transition";
-        }
-    }
+        } else if (entity->type() == model::StateMachineEntity::Type::Transition) {
+            auto ptrTransition = entity.dynamicCast<model::Transition>();
 
-    if (true == addChildren) {
-        entity->forEachChildElement(
-            [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
-                handleModelEntityAdded(parent, element, false);
-                return true;
-            },
-            -1,
-            false);
+            if (ptrTransition) {
+                qDebug() << ptrTransition->source() << ptrTransition->target();
+
+                if (ptrTransition->source() && ptrTransition->target()) {
+                    view::HsmTransition* newViewTransition =
+                        mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
+
+                    tryConnectSignal(newViewTransition,
+                                    "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                                    this,
+                                    "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                }
+            } else {
+                qCritical() << "expected Transition entity, but couldnt cast to model::Transition";
+            }
+        }
+
+        if (true == addChildren) {
+            entity->forEachChildElement(
+                [this](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> element) {
+                    handleModelEntityAdded(parent, element, false);
+                    return true;
+                },
+                -1,
+                false);
+        }
     }
 }
 

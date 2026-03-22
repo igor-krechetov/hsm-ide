@@ -10,7 +10,7 @@ namespace model {
 
 class StateHierarchyRules {
 public:
-    static bool canBeTopLevel(const StateType childType);
+    static bool canBeTopLevel(const StateType elementType);
     static bool canStateBeChildOf(const StateType parentType, const StateType childType);
     static bool canTransitionBeChildOf(const StateType parentType);
     static bool canAddEntityToParent(const QSharedPointer<StateMachineEntity>& parent,

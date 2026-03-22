@@ -7,7 +7,7 @@ namespace model {
 
 // TODO: does it make sence to generate an ID here?
 InitialState::InitialState()
-    : State("", StateType::INITIAL) {}
+    : State("Initial", StateType::INITIAL) {}
 
 void InitialState::accept(class IModelVisitor* visitor) {
     if (visitor) {
@@ -19,8 +19,13 @@ void InitialState::setTransition(const QSharedPointer<Transition>& transition) {
     if (mTransition) {
         unregisterChild(mTransition);
     }
+
     mTransition = transition;
-    registerNewChild(transition);
+
+    if (mTransition) {
+        mTransition->setSource(sharedFromThis().dynamicCast<State>());
+        registerNewChild(mTransition);
+    }
 }
 
 QSharedPointer<Transition> InitialState::transition() const {
@@ -78,6 +83,18 @@ bool InitialState::forEachChildElement(
     }
 
     return processedAllChildren;
+}
+
+void InitialState::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+
+    if (const InitialState* iOther = dynamic_cast<const InitialState*>(&other)) {
+        mTransition->copyEntityData(*iOther->mTransition);
+
+        if (mTransition) {
+            mTransition->setSource(sharedFromThis().dynamicCast<State>());
+        }
+    }
 }
 
 };  // namespace model
