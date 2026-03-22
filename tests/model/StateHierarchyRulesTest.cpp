@@ -12,20 +12,31 @@ private slots:
 };
 
 void StateHierarchyRulesTest::TopLevelRules() {
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::INITIAL));
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::FINAL));
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::REGULAR));
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::INCLUDE));
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::ENTRYPOINT) == false);
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::EXITPOINT) == false);
-    QVERIFY(model::StateHierarchyRules::canBeTopLevel(model::StateType::HISTORY) == false);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::INITIAL), true);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::FINAL), true);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::REGULAR), true);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::INCLUDE), true);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::ENTRYPOINT), false);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::EXITPOINT), false);
+    QCOMPARE(model::StateHierarchyRules::canBeTopLevel(model::StateType::HISTORY), false);
 }
 
 void StateHierarchyRulesTest::ParentChildRules() {
-    QVERIFY(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::REGULAR));
-    QVERIFY(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::HISTORY) == false);
-    QVERIFY(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::HISTORY));
-    QVERIFY(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::INITIAL));
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::HISTORY), false);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::INITIAL), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::REGULAR), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::ENTRYPOINT), false);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::EXITPOINT), false);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::FINAL), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::MODEL_ROOT, model::StateType::INCLUDE), true);
+
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::HISTORY), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::INITIAL), false);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::REGULAR), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::ENTRYPOINT), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::EXITPOINT), true);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::FINAL), false);
+    QCOMPARE(model::StateHierarchyRules::canStateBeChildOf(model::StateType::REGULAR, model::StateType::INCLUDE), true);
 }
 
 void StateHierarchyRulesTest::TransitionParentRules() {
