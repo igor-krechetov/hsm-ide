@@ -33,8 +33,8 @@ public:
 public:
     explicit StateMachineEntity(const Type type);
     virtual ~StateMachineEntity();
-    StateMachineEntity& operator=(const StateMachineEntity& other);
-    void copyEntityData(const StateMachineEntity& other);
+    virtual StateMachineEntity& operator=(const StateMachineEntity& other);
+    virtual void copyEntityData(const StateMachineEntity& other);
 
     EntityID_t id() const;
     Type type() const;

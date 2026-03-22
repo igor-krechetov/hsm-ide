@@ -41,6 +41,8 @@ void ModificationHistoryController::commitTransaction() {
 
                 mFrames.push_back(snapshot);
                 mFrameIndex = mFrames.size() - 1;
+
+                snapshot->dump(); // TODO: debug
             }
         } else {
             qDebug() << "HISTORY: skip. transaction is not dirty";

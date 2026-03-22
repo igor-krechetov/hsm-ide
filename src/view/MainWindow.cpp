@@ -26,11 +26,6 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
-    connect(ui->actionUndo, &QAction::triggered, this, &MainWindow::handleUndo);
-    connect(ui->actionRedo, &QAction::triggered, this, &MainWindow::handleRedo);
-    connect(ui->actionCopy, &QAction::triggered, this, &MainWindow::copySelectedItems);
-    connect(ui->actionCut, &QAction::triggered, this, &MainWindow::cutSelectedItems);
-    connect(ui->actionPaste, &QAction::triggered, this, &MainWindow::pasteItems);
 
     // Connect sidebar actions to generic slot using toggled(bool)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
@@ -171,6 +166,30 @@ void MainWindow::handleCloseAllProjects() {
     mController->closeAllProjects();
 }
 
+// =================================================================================================================
+// Edit menu items
+
+void MainWindow::handleClipboardCopy() {
+    copySelectedItems();
+}
+
+void MainWindow::handleClipboardCut() {
+    if (copySelectedItems() == true) {
+        deleteSelectedItems();
+    }
+}
+
+void MainWindow::handleClipboardPaste() {
+    if (mActiveProject) {
+        const QString clipboardText = QGuiApplication::clipboard()->text();
+
+        if (clipboardText.isEmpty() == false) {
+            mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+        }
+    }
+}
+
+// =================================================================================================================
 void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
 
@@ -205,7 +224,8 @@ void MainWindow::deleteSelectedItems() {
     }
 }
 
-void MainWindow::copySelectedItems() {
+bool MainWindow::copySelectedItems() {
+    bool res = false;
     QPointer<HsmGraphicsView> viewPtr = currentView();
 
     if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
@@ -214,33 +234,36 @@ void MainWindow::copySelectedItems() {
 
         if (scxmlData.isEmpty() == false) {
             QGuiApplication::clipboard()->setText(scxmlData);
+            res = true;
         }
     }
+
+    return res;
 }
 
-void MainWindow::cutSelectedItems() {
-    QPointer<HsmGraphicsView> viewPtr = currentView();
+// void MainWindow::cutSelectedItems() {
+//     QPointer<HsmGraphicsView> viewPtr = currentView();
 
-    if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
-        const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
-        const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
+//     if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
+//         const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+//         const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
 
-        if (scxmlData.isEmpty() == false) {
-            QGuiApplication::clipboard()->setText(scxmlData);
-            deleteSelectedItems();
-        }
-    }
-}
+//         if (scxmlData.isEmpty() == false) {
+//             QGuiApplication::clipboard()->setText(scxmlData);
+//             deleteSelectedItems();
+//         }
+//     }
+// }
 
-void MainWindow::pasteItems() {
-    if (mActiveProject) {
-        const QString clipboardText = QGuiApplication::clipboard()->text();
+// void MainWindow::pasteClipboardItems() {
+//     if (mActiveProject) {
+//         const QString clipboardText = QGuiApplication::clipboard()->text();
 
-        if (clipboardText.isEmpty() == false) {
-            mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
-        }
-    }
-}
+//         if (clipboardText.isEmpty() == false) {
+//             mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+//         }
+//     }
+// }
 
 void MainWindow::onGraphicsViewSelectionChanged() {
     // Get selected elements from graphics view

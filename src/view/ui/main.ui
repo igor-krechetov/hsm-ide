@@ -965,6 +965,86 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCopy</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleClipboardCopy()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCut</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleClipboardCut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPaste</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleClipboardPaste()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionUndo</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleUndo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRedo</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleRedo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>deleteSelectedItems()</slot>
@@ -981,5 +1061,10 @@
   <slot>handleCloseWorkspace()</slot>
   <slot>onOpenWorkspaceFile(QModelIndex)</slot>
   <slot>handleAbout()</slot>
+  <slot>handleClipboardCopy()</slot>
+  <slot>handleClipboardCut()</slot>
+  <slot>handleClipboardPaste()</slot>
+  <slot>handleUndo()</slot>
+  <slot>handleRedo()</slot>
  </slots>
 </ui>

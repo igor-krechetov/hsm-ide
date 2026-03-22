@@ -38,6 +38,8 @@ public:
         const EntityID_t id,
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
 
+    void copyEntityData(const StateMachineEntity& other) override;
+
 protected:
     bool forEachChildElement(
         std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,

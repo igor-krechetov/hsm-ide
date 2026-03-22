@@ -5,6 +5,7 @@
 #include "model/FinalState.hpp"
 #include "model/HistoryState.hpp"
 #include "model/IncludeEntity.hpp"
+#include "model/EntryPoint.hpp"
 #include "model/InitialState.hpp"
 #include "model/ModelRootState.hpp"
 #include "model/RegularState.hpp"
@@ -232,12 +233,17 @@ void StateMachineSerializerDeserializationTest::DeserializeEntryPointTransitions
 
             if (child->type() == model::StateMachineEntity::Type::State) {
                 auto state = child.dynamicCast<model::State>();
-                if (state && state->stateType() == model::StateType::INITIAL) {
+                if (state && state->stateType() == model::StateType::ENTRYPOINT) {
                     hasInitialState = true;
-                    auto initial = state.dynamicCast<model::InitialState>();
-                    if (initial && initial->transition()) {
-                        const QString target = initial->transition()->target()->name();
-                        hasTransitionToAorB = (target == "A" || target == "B");
+                    auto entry = state.dynamicCast<model::EntryPoint>();
+
+                    if (entry) {
+                        auto& transitions = entry->transitions();
+                        if (transitions.size() > 0) {
+                            const QString target = transitions.first()->target()->name();
+
+                            hasTransitionToAorB = (target == "A" || target == "B");
+                        }
                     }
                 }
             }

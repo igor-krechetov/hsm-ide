@@ -105,4 +105,15 @@ bool HistoryState::forEachChildElement(
     return processedAllChildren;
 }
 
+void HistoryState::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+    if (const HistoryState* hOther = dynamic_cast<const HistoryState*>(&other)) {
+        mHistoryType = hOther->mHistoryType;
+        mDefaultTransition = hOther->mDefaultTransition;
+        if (mDefaultTransition) {
+            mDefaultTransition->setSource(sharedFromThis().dynamicCast<State>());
+        }
+    }
+}
+
 };  // namespace model

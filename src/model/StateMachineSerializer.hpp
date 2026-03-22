@@ -43,7 +43,7 @@ public:
     QSharedPointer<model::StateMachineModel> deserializeFromScxml(const QString& scxml);
 
     bool deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel);
-    bool deserializeFromUnwrapperScxml(const QString& unwrappedScxml, QSharedPointer<model::StateMachineModel>& outModel);
+    bool deserializeFromUnwrapperScxml(const QString& unwrappedScxml, const QString& stateWrapper, QSharedPointer<model::StateMachineModel>& outModel);
 
     /**
      * @brief Validates the structure of SCXML content

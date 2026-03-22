@@ -6,7 +6,7 @@
 namespace model {
 
 EntryPoint::EntryPoint()
-    : State("", StateType::ENTRYPOINT) {}
+    : State("EntryPoint", StateType::ENTRYPOINT) {}
 
 void EntryPoint::accept(class IModelVisitor* visitor) {
     if (visitor) {
@@ -91,6 +91,18 @@ bool EntryPoint::forEachChildElement(
     }
 
     return processedAllChildren;
+}
+
+void EntryPoint::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+    if (const EntryPoint* eOther = dynamic_cast<const EntryPoint*>(&other)) {
+        mTransitions = eOther->mTransitions;
+        for (auto& transition : mTransitions) {
+            if (transition) {
+                transition->setSource(sharedFromThis().dynamicCast<State>());
+            }
+        }
+    }
 }
 
 };  // namespace model

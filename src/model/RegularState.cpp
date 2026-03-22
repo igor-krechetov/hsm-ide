@@ -290,4 +290,14 @@ bool RegularState::forEachChildElement(
     return processedAllChildren;
 }
 
+void RegularState::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+    if (const RegularState* rOther = dynamic_cast<const RegularState*>(&other)) {
+        mOnStateChangedCallback = rOther->mOnStateChangedCallback;
+        mOnEnteringCallback = rOther->mOnEnteringCallback;
+        mOnExitingCallback = rOther->mOnExitingCallback;
+        // mChildren is not copied as it represents owned children, not shallow data
+    }
+}
+
 };  // namespace model
