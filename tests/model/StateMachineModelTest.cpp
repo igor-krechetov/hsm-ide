@@ -4,12 +4,14 @@
 #include "model/ModelRootState.hpp"
 #include "model/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
+#include "model/Transition.hpp"
 
 class StateMachineModelTest : public QObject {
     Q_OBJECT
 
 private slots:
     void MoveAndReconnectElements();
+    void CloneTransitionsUsesNewStateReferences();
 };
 
 /**
@@ -38,6 +40,56 @@ void StateMachineModelTest::MoveAndReconnectElements() {
     QVERIFY(model->reconnectElements(tr->id(), parent->id(), a->id()));
     QCOMPARE(parent->id(), tr->sourceId());
     QCOMPARE(a->id(), tr->targetId());
+}
+
+void StateMachineModelTest::CloneTransitionsUsesNewStateReferences() {
+    auto sourceModel = QSharedPointer<model::StateMachineModel>::create("Source");
+    auto sourceRoot = sourceModel->root();
+
+    auto sourceA =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto sourceB =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+
+    sourceRoot->addChildState(sourceA);
+    sourceRoot->addChildState(sourceB);
+
+    auto sourceTransition = model::ModelElementsFactory::createUniqueTransition(sourceA, sourceB);
+    QVERIFY(sourceTransition);
+
+    model::StateMachineModel destinationModel("Destination");
+    destinationModel = *sourceModel;
+
+    auto destinationA = destinationModel.root()->findChildStateByName(sourceA->name());
+    auto destinationB = destinationModel.root()->findChildStateByName(sourceB->name());
+    QSharedPointer<model::Transition> destinationTransition;
+
+    if (destinationA) {
+        destinationA->forEachChildElement(
+            [&destinationTransition, &destinationA](QSharedPointer<model::StateMachineEntity> parent,
+                                                    QSharedPointer<model::StateMachineEntity> entity) {
+                bool continueTraversal = true;
+
+                if (parent && entity && (parent == destinationA) &&
+                    (entity->type() == model::StateMachineEntity::Type::Transition)) {
+                    destinationTransition = entity.dynamicCast<model::Transition>();
+                    continueTraversal = false;
+                }
+
+                return continueTraversal;
+            },
+            1,
+            false);
+    }
+
+    QVERIFY(destinationA);
+    QVERIFY(destinationB);
+    QVERIFY(destinationTransition);
+
+    QCOMPARE(destinationTransition->source().data(), destinationA.data());
+    QCOMPARE(destinationTransition->target().data(), destinationB.data());
+    QVERIFY(destinationTransition->source().data() != sourceA.data());
+    QVERIFY(destinationTransition->target().data() != sourceB.data());
 }
 
 int runStateMachineModelTest(int argc, char** argv) {

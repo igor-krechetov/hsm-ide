@@ -17,7 +17,6 @@ namespace {}
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent) {
-
     mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT).dynamicCast<ModelRootState>();
 
     // Subscribe to modelEntityAdded for mModelRoot
@@ -35,7 +34,7 @@ StateMachineModel::~StateMachineModel() {
 }
 
 StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) {
-    // NOTE: since we are going to make a big update - do not emit small notifications. Clients 
+    // NOTE: since we are going to make a big update - do not emit small notifications. Clients
     //       are responsible to handle any data changes
     QSignalBlocker blocker(this);
 
@@ -120,6 +119,8 @@ StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) 
 
                 auto newTransition = QSharedPointer<Transition>::create(newSrc, newDst, sourceTransition->event());
                 newTransition->copyEntityData(*sourceTransition);
+                newTransition->setSource(newSrc);
+                newTransition->setTarget(newDst);
                 newSrcRegular->addTransition(newTransition);
             }
 
