@@ -3,7 +3,7 @@ All notable changes to project will be documented in this file.
 
 ## [0.5.0] - 2026-03-16
 ### New
-- [REQ-205a] Copy/cut/paste HSM elements through SCXML clipboard serialization/deserialization
+- [REQ-103c1, REQ-103c2, REQ-103c3] Copy, cut, paste HSM elements through SCXML clipboard serialization/deserialization
 
 ## [0.4.0] - 2026-03-14
 ### New
