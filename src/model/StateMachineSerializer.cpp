@@ -17,6 +17,7 @@
 #include "ModelRootState.hpp"
 #include "ModelUtils.hpp"
 #include "RegularState.hpp"
+#include "StateHierarchyRules.hpp"
 #include "StateMachineModel.hpp"
 #include "Transition.hpp"
 
@@ -36,23 +37,29 @@ static void serializeState(QXmlStreamWriter& mXmlWriter, const QSharedPointer<mo
  * @param model The state machine model to serialize
  * @return SCXML representation as a QString
  */
-QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr) {
+QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
+                                                 const bool addScxmlTag) {
     QString scxml;
 
     mXmlWriter = QSharedPointer<QXmlStreamWriter>::create(&scxml);
 
     mXmlWriter->setAutoFormatting(true);
-    mXmlWriter->writeStartDocument();
-    // Write SCXML root element
-    mXmlWriter->writeStartElement("scxml");
-    mXmlWriter->writeAttribute("encoding", "UTF-8");
-    mXmlWriter->writeAttribute("version", "1.0");
-    mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
-    mXmlWriter->writeAttribute("xmlns:xi", "http://www.w3.org/2001/XInclude");
-    mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
+    if (addScxmlTag) {
+        mXmlWriter->writeStartDocument();
+    }
 
-    if (!modelPtr->name().isEmpty()) {
-        mXmlWriter->writeAttribute("name", modelPtr->name());
+    if (addScxmlTag) {
+        // Write SCXML root element
+        mXmlWriter->writeStartElement("scxml");
+        mXmlWriter->writeAttribute("encoding", "UTF-8");
+        mXmlWriter->writeAttribute("version", "1.0");
+        mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
+        mXmlWriter->writeAttribute("xmlns:xi", "http://www.w3.org/2001/XInclude");
+        mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
+
+        if (!modelPtr->name().isEmpty()) {
+            mXmlWriter->writeAttribute("name", modelPtr->name());
+        }
     }
 
     // Get the root state
@@ -66,8 +73,13 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
         }
     }
 
-    mXmlWriter->writeEndElement();  // scxml
-    mXmlWriter->writeEndDocument();
+    if (addScxmlTag) {
+        mXmlWriter->writeEndElement();  // scxml
+    }
+
+    if (addScxmlTag) {
+        mXmlWriter->writeEndDocument();
+    }
 
     mXmlWriter.reset();
 
@@ -88,6 +100,20 @@ QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFrom
     }
 
     return resModel;
+}
+
+bool StateMachineSerializer::deserializeFromUnwrapperScxml(const QString& unwrappedScxml, const QString& stateWrapper, QSharedPointer<model::StateMachineModel>& outModel) {
+    QString wrappedScxml = unwrappedScxml.trimmed();
+
+    if ((wrappedScxml.isEmpty() == false) && (wrappedScxml.contains("<scxml") == false)) {
+        wrappedScxml = QString(
+                            "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:qt = \"http://www.qt.io/2015/02/scxml-ext\">"
+                            "<state id=\"%1\">%2</state>"
+                            "</scxml>")
+                            .arg(stateWrapper).arg(wrappedScxml);
+    }
+
+    return deserializeFromScxml(wrappedScxml, outModel);
 }
 
 bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel) {
@@ -521,7 +547,12 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
 
         QSharedPointer<State> state = entity.dynamicCast<State>();
     } else if (mXmlReader->name() == QStringView(u"initial")) {
-        entity = parseInitialState();
+        if (parent == mModel->root()) {
+            // Root final state
+            entity = parseInitialState();
+        } else {
+            entity = parseEntryPoint();
+        }
     } else if (mXmlReader->name() == QStringView(u"history")) {
         entity = parseHistoryState();
     } else if (mXmlReader->name() == QStringView(u"transition")) {
@@ -569,7 +600,12 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
             transition->setSource(parent.dynamicCast<State>());
         }
 
-        parent->addChild(entity);
+        if (StateHierarchyRules::canAddEntityToParent(parent, entity)) {
+            parent->addChild(entity);
+        } else {
+            qWarning() << "Ignoring invalid hierarchy. Parent type=" << static_cast<int>(parent->type())
+                       << "child type=" << static_cast<int>(entity->type());
+        }
     }
 
     return entity;
@@ -624,8 +660,14 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
 QSharedPointer<EntryPoint> StateMachineSerializer::parseEntryPoint() {
     qDebug() << Q_FUNC_INFO;
     QSharedPointer<EntryPoint> entity;
-    // TODO
-    mXmlReader->skipCurrentElement();
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"initial"))) {
+        entity = QSharedPointer<EntryPoint>::create();
+
+        // TODO: handle errors
+        parseAllChildEntities(entity);
+    }
+
     return entity;
 }
 

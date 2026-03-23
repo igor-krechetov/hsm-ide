@@ -50,12 +50,18 @@ public slots:
     void handleCloseCurrentProject();
     void handleCloseAllProjects();
 
+    void handleClipboardCopy();
+    void handleClipboardCut();
+    void handleClipboardPaste();
+
     void handleAbout();
 
     void projectTabSelected(int index);
     void projectTabCloseRequested(int index);
 
     void deleteSelectedItems();
+    // void cutSelectedItems();
+    // void pasteClipboardItems();
     void onGraphicsViewSelectionChanged();
     void onModelTreeSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 
@@ -80,6 +86,8 @@ private:
     void updateRecentHsmMenu();
     void updateRecentWorkspacesMenu();
     void selectModelEntityById(const model::EntityID_t id);
+
+    bool copySelectedItems();
 
 private:
     Ui_hsm_ide* ui = nullptr;

@@ -33,8 +33,9 @@ public:
 public:
     explicit StateMachineEntity(const Type type);
     virtual ~StateMachineEntity();
-    StateMachineEntity& operator=(const StateMachineEntity& other);
-    void copyEntityData(const StateMachineEntity& other);
+    virtual StateMachineEntity& operator=(const StateMachineEntity& other);
+    // Copies data of the entity (metadata and properties) but does not change the id and type or clone linked elements.
+    virtual void copyEntityData(const StateMachineEntity& other);
 
     EntityID_t id() const;
     Type type() const;

@@ -26,6 +26,7 @@ public:
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+    int type() const override;
 
 private:
     QPainterPath initShape(const Direction direction) const;

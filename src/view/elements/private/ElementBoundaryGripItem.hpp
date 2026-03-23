@@ -19,6 +19,8 @@ public:
 
     GripDirectionType directionType() const;
 
+    int type() const override;
+
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 

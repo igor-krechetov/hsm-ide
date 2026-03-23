@@ -10,7 +10,9 @@ class QChildEvent;
 class QMetaObject;
 class QPainter;
 
-class AutoGroupItem : public QGraphicsObject {
+namespace view {
+
+    class AutoGroupItem : public QGraphicsObject {
     Q_OBJECT
 public:
     AutoGroupItem(QGraphicsItem* parent = nullptr);
@@ -19,6 +21,7 @@ public:
 
     QRectF boundingRect() const override;
     void paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) override;
+    int type() const override;
 
 signals:
     void geometryChanged() const;
@@ -34,5 +37,7 @@ private:
     // needs to be mutable so we can update it in boundingRect()
     mutable QRectF mLastRect;
 };
+
+};  // namespace view
 
 #endif  // AUTOGROUPITEM_HPP

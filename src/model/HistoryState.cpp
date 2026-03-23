@@ -105,4 +105,15 @@ bool HistoryState::forEachChildElement(
     return processedAllChildren;
 }
 
+void HistoryState::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+
+    if (const HistoryState* hOther = dynamic_cast<const HistoryState*>(&other)) {
+        mHistoryType = hOther->mHistoryType;
+        // dont copy transition here, because it is not a property of history state but a
+        // linked element, and copying linked elements is handled by controllers when
+        // needed (e.g. when cloning states)
+    }
+}
+
 };  // namespace model

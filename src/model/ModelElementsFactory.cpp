@@ -21,9 +21,12 @@ quint32 ModelElementsFactory::s_stateCounter = 0;
 QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType type) {
     qDebug() << "------ createUniqueState" << (int)type;
     QSharedPointer<State> res;
+    QString uniqueName;
 
-    s_stateCounter++;
-    QString uniqueName = QString("State_%1").arg(s_stateCounter);
+    if ((StateType::INITIAL != type) && (StateType::ENTRYPOINT != type)) {
+        s_stateCounter++;
+        uniqueName = QString("State_%1").arg(s_stateCounter);
+    }
 
     switch (type) {
         case StateType::MODEL_ROOT:
@@ -36,7 +39,7 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
             res = QSharedPointer<State>(new RegularState(uniqueName));
             break;
         case StateType::ENTRYPOINT:
-            res = QSharedPointer<State>(new EntryPoint(uniqueName));
+            res = QSharedPointer<State>(new EntryPoint());
             break;
         case StateType::EXITPOINT:
             res = QSharedPointer<State>(new ExitPoint(uniqueName));
@@ -76,7 +79,7 @@ QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointe
             res = QSharedPointer<State>(new RegularState(source->name()));
             break;
         case StateType::ENTRYPOINT:
-            res = QSharedPointer<State>(new EntryPoint(source->name()));
+            res = QSharedPointer<State>(new EntryPoint());
             break;
         case StateType::EXITPOINT:
             res = QSharedPointer<State>(new ExitPoint(source->name()));
@@ -108,6 +111,37 @@ QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QS
     }
 
     return newTransition;
+}
+
+QSharedPointer<State> ModelElementsFactory::createInitialFrom(const QSharedPointer<EntryPoint>& entryPoint) {
+    QSharedPointer<InitialState> initial;
+
+    if (entryPoint) {
+        initial = QSharedPointer<InitialState>::create();
+
+        // Copy the first transition if exists
+        if (!entryPoint->transitions().isEmpty()) {
+            qDebug() << "---- createInitialFrom: entryPoint=" << entryPoint->id() << ", initial=" << initial->id();
+            qDebug() << "--------- sourceId=" << entryPoint->transitions().first()->sourceId();
+            qDebug() << "--------- targetId=" << entryPoint->transitions().first()->targetId();
+            initial->setTransition(entryPoint->transitions().first());
+            qDebug() << "--------- new sourceId=" << initial->transition()->sourceId();
+            qDebug() << "--------- new targetId=" << initial->transition()->targetId();
+        }
+    }
+
+    return initial;
+}
+
+QSharedPointer<State> ModelElementsFactory::createFinalFrom(const QSharedPointer<ExitPoint>& exitPoint) {
+    QSharedPointer<FinalState> state;
+
+    if (exitPoint) {
+        state = QSharedPointer<FinalState>::create(exitPoint->name());
+        state->setOnStateChangedCallback(exitPoint->onStateChangedCallback());
+    }
+
+    return state;
 }
 
 }  // namespace model

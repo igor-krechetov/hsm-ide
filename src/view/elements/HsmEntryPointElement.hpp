@@ -14,7 +14,6 @@ public:
     virtual ~HsmEntryPointElement() = default;
 
     bool acceptsConnections() const override;
-    bool canBeTopLevel() const override;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;

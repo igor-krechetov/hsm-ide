@@ -7,12 +7,52 @@
 #include <QGraphicsView>
 #include <QMimeData>
 
+#include "view/elements/ElementTypeIds.hpp"
 #include "HsmResizableElement.hpp"
+#include "model/State.hpp"
+#include "model/StateHierarchyRules.hpp"
 #include "model/StateMachineEntity.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
+
+namespace {
+model::StateType elementTypeToStateType(const view::HsmElementType type) {
+    model::StateType stateType = model::StateType::INVALID;
+
+    switch (type) {
+        case view::HsmElementType::INITIAL:
+            stateType = model::StateType::INITIAL;
+            break;
+        case view::HsmElementType::FINAL:
+            stateType = model::StateType::FINAL;
+            break;
+        case view::HsmElementType::ENTRY_POINT:
+            stateType = model::StateType::ENTRYPOINT;
+            break;
+        case view::HsmElementType::EXIT_POINT:
+            stateType = model::StateType::EXITPOINT;
+            break;
+        case view::HsmElementType::STATE:
+            stateType = model::StateType::REGULAR;
+            break;
+        case view::HsmElementType::HISTORY:
+            stateType = model::StateType::HISTORY;
+            break;
+        case view::HsmElementType::INCLUDE:
+            stateType = model::StateType::INCLUDE;
+            break;
+        case view::HsmElementType::TRANSITION:
+        case view::HsmElementType::UNKNOWN:
+        default:
+            stateType = model::StateType::INVALID;
+            break;
+    }
+
+    return stateType;
+}
+}  // namespace
 
 HsmElement::HsmElement(const HsmElementType elementType, const QSizeF& size)
     : HsmElement(elementType, nullptr, size) {}
@@ -27,7 +67,6 @@ HsmElement::HsmElement(const HsmElementType elementType,
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsFocusable |
              QGraphicsItem::ItemSendsGeometryChanges);
     setZValue(3);
-    setData(USERDATA_HSM_ELEMENT_TYPE, static_cast<int>(mType));
     updateBoundingRect(QRect(0, 0, size.width(), size.height()));
 }
 
@@ -155,11 +194,20 @@ bool HsmElement::isResizable() const {
 // }
 
 bool HsmElement::canBeTopLevel() const {
-    return false;
+    return model::StateHierarchyRules::canBeTopLevel(elementTypeToStateType(mType));
 }
 
 bool HsmElement::acceptsChildElement(const HsmElementType type) const {
-    return false;
+    bool allowed = false;
+    const model::StateType parentType = elementTypeToStateType(mType);
+
+    if (type == HsmElementType::TRANSITION) {
+        allowed = model::StateHierarchyRules::canTransitionBeChildOf(parentType);
+    } else {
+        allowed = model::StateHierarchyRules::canStateBeChildOf(parentType, elementTypeToStateType(type));
+    }
+
+    return allowed;
 }
 
 bool HsmElement::acceptsChildElement(HsmElement* element) const {
@@ -179,12 +227,14 @@ bool HsmElement::containsChild(HsmElement* child) const {
 
     // qDebug() << "======= CHILDREN COUNT" << hsmChildItems().size();
 
+    // Why view::AutoGroupItem got added to hsm items in the first place?
     for (QGraphicsItem* item : hsmChildItems()) {
-        if (auto element = qgraphicsitem_cast<HsmElement*>(item)) {
-            // qDebug() << "====== parent" << this << "child X" << element;
-            if ((child == element) || (element->containsChild(child) == true)) {
-                res = true;
-                break;
+        if ( IS_HSM_ELEMENT_TYPE(item->type()) ) {
+            if (auto element = qgraphicsitem_cast<HsmElement*>(item)) {
+                if ((child == element) || (element->containsChild(child) == true)) {
+                    res = true;
+                    break;
+                }
             }
         }
     }
@@ -196,9 +246,7 @@ QRectF HsmElement::childrenRect() const {
     QRectF rect;
 
     for (QGraphicsItem* child : hsmChildItems()) {
-        QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
-
-        if (userType.isValid()) {
+        if (IS_HSM_ELEMENT_TYPE(child->type())) {
             rect = rect.united(child->mapRectToParent(child->boundingRect()));
         }
     }
@@ -281,9 +329,7 @@ HsmGraphicsView* HsmElement::hsmView() const {
 
 void HsmElement::forEachHsmChildElement(std::function<void(HsmElement*)> callback, const int depth) {
     for (QGraphicsItem* child : hsmChildItems()) {
-        QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
-
-        if (userType.isValid()) {
+        if (IS_HSM_ELEMENT_TYPE(child->type())) {
             if (depth == DEPTH_INFINITE || depth > 1) {
                 qgraphicsitem_cast<HsmElement*>(child)->forEachHsmChildElement(callback,
                                                                                (depth != DEPTH_INFINITE ? depth - 1 : depth));
@@ -292,6 +338,8 @@ void HsmElement::forEachHsmChildElement(std::function<void(HsmElement*)> callbac
         }
     }
 }
+
+int HsmElement::type() const { return HSM_ELEMENT_TYPE_BASE + static_cast<int>(mType); }
 
 QRectF HsmElement::boundingRect() const {
     return mOuterRect;

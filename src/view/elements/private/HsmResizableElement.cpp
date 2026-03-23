@@ -4,8 +4,6 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
-// #include <QCursor>
-// #include <QGraphicsView>
 namespace view {
 
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType, const QSizeF& size)

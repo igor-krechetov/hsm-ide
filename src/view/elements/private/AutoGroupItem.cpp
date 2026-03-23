@@ -1,11 +1,13 @@
 #include "AutoGroupItem.hpp"
+#include "view/elements/ElementTypeIds.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 #include <QChildEvent>
 #include <QGraphicsItem>
 #include <QPainter>
 #include <QTimer>
 
-#include "view/theme/ThemeManager.hpp"
+namespace view {
 
 AutoGroupItem::AutoGroupItem(QGraphicsItem* parent)
     : QGraphicsObject(parent) {
@@ -87,3 +89,9 @@ void AutoGroupItem::relayout() {
         }
     }
 }
+
+int AutoGroupItem::type() const {
+    return view::ELEMENT_TYPE_AUTOGROUP;
+}
+
+};  // namespace view

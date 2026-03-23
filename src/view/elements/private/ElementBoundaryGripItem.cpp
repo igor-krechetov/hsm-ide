@@ -4,6 +4,7 @@
 // #include <QGraphicsSceneMouseEvent>
 // #include <QPainter>
 #include <QDebug>
+#include "view/elements/ElementTypeIds.hpp"
 
 namespace view {
 
@@ -85,6 +86,10 @@ QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QV
     }
 
     return res;
+}
+
+int ElementBoundaryGripItem::type() const {
+    return view::ELEMENT_TYPE_BOUNDARY_GRIP;
 }
 
 };  // namespace view

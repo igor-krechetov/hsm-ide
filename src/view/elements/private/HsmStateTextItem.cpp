@@ -1,4 +1,5 @@
 #include "HsmStateTextItem.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 
 #include <QFocusEvent>
 #include <QGraphicsScene>
@@ -100,6 +101,10 @@ void HsmStateTextItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     // Draw actual text normally
     QGraphicsTextItem::paint(painter, option, widget);
+}
+
+int HsmStateTextItem::type() const {
+    return view::ELEMENT_TYPE_STATE_TEXT;
 }
 
 }  // namespace view

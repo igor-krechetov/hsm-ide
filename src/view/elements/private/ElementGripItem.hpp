@@ -48,6 +48,7 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    int type() const override;
 
 signals:
     void onGripDoubleClick(ElementGripItem* gripItem);

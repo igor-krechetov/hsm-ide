@@ -14,10 +14,18 @@ int runIncludeEntityTest(int argc, char** argv);
 int runModelRootStateTest(int argc, char** argv);
 int runModelElementsFactoryTest(int argc, char** argv);
 int runStateMachineModelTest(int argc, char** argv);
+int runStateHierarchyRulesTest(int argc, char** argv);
 int runStateMachineSerializerSerializationTest(int argc, char** argv);
 int runStateMachineSerializerDeserializationTest(int argc, char** argv);
 
+// void silentMessageHandler(QtMsgType, const QMessageLogContext &, const QString &) {
+//     // Do nothing → suppress all messages
+// }
+
 int main(int argc, char** argv) {
+    // qInstallMessageHandler(silentMessageHandler);
+    qputenv("QT_LOGGING_RULES", "*.debug=false;*.warning=false;");
+
     if (qEnvironmentVariableIsEmpty("HSM_IDE_TEST_SCXML_ROOT")) {
 #ifdef HSM_IDE_TEST_SCXML_ROOT_DEFAULT
         qputenv("HSM_IDE_TEST_SCXML_ROOT", QByteArray(HSM_IDE_TEST_SCXML_ROOT_DEFAULT));
@@ -41,6 +49,7 @@ int main(int argc, char** argv) {
     result |= runModelRootStateTest(argc, argv);
     result |= runModelElementsFactoryTest(argc, argv);
     result |= runStateMachineModelTest(argc, argv);
+    result |= runStateHierarchyRulesTest(argc, argv);
     result |= runStateMachineSerializerSerializationTest(argc, argv);
     result |= runStateMachineSerializerDeserializationTest(argc, argv);
 

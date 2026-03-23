@@ -33,8 +33,6 @@ enum class HsmElementType {
     INCLUDE
 };
 
-constexpr int USERDATA_HSM_ELEMENT_TYPE = 1;
-
 // TODO: subscribe to model data chages and redraw HsmElement
 
 class HsmElement : public QGraphicsObject {
@@ -51,6 +49,8 @@ public:
                         const QSharedPointer<model::StateMachineEntity>& modelElement,
                         const QSizeF& size);
     virtual ~HsmElement();
+
+    int type() const override;
 
     virtual void init(const QSharedPointer<model::StateMachineEntity>& modelEntity);
 

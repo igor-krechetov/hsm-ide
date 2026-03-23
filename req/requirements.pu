@@ -50,9 +50,9 @@
 ***** REQ-103b2: Minimum size for resizable elements <<done>>
 ***** REQ-103b2: Moving elements <<done>>
 **** REQ-103c: Multi-select operations <<partial>>
-***** REQ-103c1: Copy <<prio_low>>
-***** REQ-103c2: Cut <<prio_low>>
-***** REQ-103c3: Paste <<prio_low>>
+***** REQ-103c1: Copy <<done>>
+***** REQ-103c2: Cut <<done>>
+***** REQ-103c3: Paste <<in_progress>>
 ***** REQ-103c4: Delete <<done>>
 **** REQ-103d: Delete selected elements <<done>>
 ***** REQ-103d1: Delete states <<done>>
@@ -186,7 +186,7 @@
 **** REQ-208a: Themes management <<todo>>
 **** REQ-208b: Default theme <<todo>>
 
-** REQ-300: Import/Export
+** REQ-300: Import/Export <<partial>>
 *** REQ-301: SCXML file handling <<done>>
 **** REQ-301a: Import SCXML 1.0 files <<done>>
 ***** REQ-301a1: Model structure import <<done>>

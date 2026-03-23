@@ -24,17 +24,25 @@ void Transition::accept(class IModelVisitor* visitor) {
 
 Transition& Transition::operator=(const Transition& other) {
     if (this != &other) {
-        StateMachineEntity::operator=(other);
-        mTransitionType = other.mTransitionType;
-        mSource = other.mSource;
-        mTarget = other.mTarget;
-        mEvent = other.mEvent;
-        mTransitionCallback = other.mTransitionCallback;
-        mConditionCallback = other.mConditionCallback;
-        mExpectedConditionValue = other.mExpectedConditionValue;
+        copyEntityData(other);
     }
 
     return *this;
+}
+
+void Transition::copyEntityData(const StateMachineEntity& other) {
+    StateMachineEntity::copyEntityData(other);
+
+    if (const Transition* tOther = dynamic_cast<const Transition*>(&other)) {
+        mTransitionType = tOther->mTransitionType;
+        mEvent = tOther->mEvent;
+        mTransitionCallback = tOther->mTransitionCallback;
+        mConditionCallback = tOther->mConditionCallback;
+        mExpectedConditionValue = tOther->mExpectedConditionValue;
+
+        // do not copy source and target here, because they are not properties
+        // of transition but linked
+    }
 }
 
 const QString& Transition::event() const {

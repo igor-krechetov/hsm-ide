@@ -1,9 +1,11 @@
 #include "MainWindow.hpp"
 
 #include <QAction>
+#include <QClipboard>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
+#include <QGuiApplication>
 #include <QMessageBox>
 #include <QSignalBlocker>
 
@@ -24,8 +26,6 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
-    connect(ui->actionUndo, &QAction::triggered, this, &MainWindow::handleUndo);
-    connect(ui->actionRedo, &QAction::triggered, this, &MainWindow::handleRedo);
 
     // Connect sidebar actions to generic slot using toggled(bool)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
@@ -166,6 +166,30 @@ void MainWindow::handleCloseAllProjects() {
     mController->closeAllProjects();
 }
 
+// =================================================================================================================
+// Edit menu items
+
+void MainWindow::handleClipboardCopy() {
+    copySelectedItems();
+}
+
+void MainWindow::handleClipboardCut() {
+    if (copySelectedItems() == true) {
+        deleteSelectedItems();
+    }
+}
+
+void MainWindow::handleClipboardPaste() {
+    if (mActiveProject) {
+        const QString clipboardText = QGuiApplication::clipboard()->text();
+
+        if (clipboardText.isEmpty() == false) {
+            mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+        }
+    }
+}
+
+// =================================================================================================================
 void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
 
@@ -199,6 +223,47 @@ void MainWindow::deleteSelectedItems() {
         viewPtr->deleteSelectedItems();
     }
 }
+
+bool MainWindow::copySelectedItems() {
+    bool res = false;
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
+        const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+        const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
+
+        if (scxmlData.isEmpty() == false) {
+            QGuiApplication::clipboard()->setText(scxmlData);
+            res = true;
+        }
+    }
+
+    return res;
+}
+
+// void MainWindow::cutSelectedItems() {
+//     QPointer<HsmGraphicsView> viewPtr = currentView();
+
+//     if ((nullptr != viewPtr) && (nullptr != viewPtr->scene()) && mActiveProject) {
+//         const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+//         const QString scxmlData = mActiveProject->serializeElementsToScxml(selectedIds);
+
+//         if (scxmlData.isEmpty() == false) {
+//             QGuiApplication::clipboard()->setText(scxmlData);
+//             deleteSelectedItems();
+//         }
+//     }
+// }
+
+// void MainWindow::pasteClipboardItems() {
+//     if (mActiveProject) {
+//         const QString clipboardText = QGuiApplication::clipboard()->text();
+
+//         if (clipboardText.isEmpty() == false) {
+//             mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+//         }
+//     }
+// }
 
 void MainWindow::onGraphicsViewSelectionChanged() {
     // Get selected elements from graphics view

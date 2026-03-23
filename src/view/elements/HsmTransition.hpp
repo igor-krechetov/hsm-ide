@@ -11,10 +11,10 @@
 class QPainter;
 class QWidget;
 class QGraphicsSceneMouseEvent;
-class AutoGroupItem;
 
 namespace view {
 
+class AutoGroupItem;
 class ElementGripItem;
 
 class HsmTransition : public HsmElement {
@@ -33,6 +33,7 @@ public:
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
 
+    QList<QGraphicsItem*> hsmChildItems() const override;
     void beginConnection(HsmElement* fromElement, const QPointF& pos);
     bool isConnecting() const;
     void moveConnectionTo(const QPointF& pos);

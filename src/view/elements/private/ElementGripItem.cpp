@@ -1,4 +1,5 @@
 #include "ElementGripItem.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 
 #include <QCursor>
 #include <QDebug>
@@ -168,6 +169,10 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
     }
 
     return res;
+}
+
+int ElementGripItem::type() const {
+    return view::ELEMENT_TYPE_GRIP;
 }
 
 };  // namespace view

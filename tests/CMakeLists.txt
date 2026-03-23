@@ -18,6 +18,7 @@ set(TEST_SOURCES
     model/ModelRootStateTest.cpp
     model/ModelElementsFactoryTest.cpp
     model/StateMachineModelTest.cpp
+    model/StateHierarchyRulesTest.cpp
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
 )

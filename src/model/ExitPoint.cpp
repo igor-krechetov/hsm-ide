@@ -87,4 +87,15 @@ QVariant ExitPoint::getProperty(const QString& key) const {
     return State::getProperty(key);
 }
 
+void ExitPoint::copyEntityData(const StateMachineEntity& other) {
+    State::copyEntityData(other);
+
+    if (const ExitPoint* eOther = dynamic_cast<const ExitPoint*>(&other)) {
+        mEvent = eOther->mEvent;
+        mOnStateChangedCallback = eOther->mOnStateChangedCallback;
+        mOnEnteringCallback = eOther->mOnEnteringCallback;
+        mOnExitingCallback = eOther->mOnExitingCallback;
+    }
+}
+
 };  // namespace model

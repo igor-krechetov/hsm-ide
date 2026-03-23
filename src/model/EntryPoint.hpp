@@ -9,7 +9,7 @@ class Transition;
 
 class EntryPoint : public State {
 public:
-    explicit EntryPoint(const QString& name);
+    explicit EntryPoint();
     virtual ~EntryPoint() = default;
 
     void accept(class IModelVisitor* visitor) override;
@@ -28,6 +28,9 @@ public:
     QSharedPointer<StateMachineEntity> findChild(
         const EntityID_t id,
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
+
+    // NOTE: implement if element specific data will be added in future
+    // void copyEntityData(const StateMachineEntity& other) override;
 
 protected:
     bool forEachChildElement(

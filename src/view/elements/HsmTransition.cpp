@@ -73,6 +73,11 @@ void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelE
     onModelDataChanged();
 }
 
+QList<QGraphicsItem*> HsmTransition::hsmChildItems() const {
+    // transitions can't have subelements
+    return QList<QGraphicsItem*>();
+}
+
 void HsmTransition::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
     setConnectionGripsVisibility(true);
 }

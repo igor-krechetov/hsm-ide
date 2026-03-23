@@ -3,6 +3,8 @@
 #include <QGraphicsScene>
 #include <QPointF>
 
+#include "view/elements/ElementTypeIds.hpp"
+
 namespace view {
 
 HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
@@ -21,9 +23,7 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
         // TODO: account for subitems
         for (auto targetItem : targetItems) {
             if (nullptr != targetItem) {
-                QVariant elementType = targetItem->data(USERDATA_HSM_ELEMENT_TYPE);
-
-                if (elementType.isValid() && elementType.toInt() != static_cast<int>(view::HsmElementType::UNKNOWN)) {
+                if (IS_HSM_ELEMENT_TYPE(targetItem->type())) {
                     // NOTE: because QGraphicsObject is a child to both QObject and QGraphicsItem it's crucial
                     //       to use dynamic_cast. parentItem() != parentObject()
                     element = dynamic_cast<HsmElement*>(targetItem);
@@ -33,19 +33,19 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                             element = nullptr;
                         } else if (onlyConnectable && element->isConnectable() == false) {
                             qDebug() << "Target is not connectable: " << element->modelId()
-                                     << " | viewElementType=" << elementType << " | " << element;
+                                     << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if (onlyAcceptsConnections && element->acceptsConnections() == false) {
                             qDebug() << "Target does not accept connections: " << element->modelId()
-                                     << " | viewElementType=" << elementType << " | " << element;
+                                     << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if (onlyAcceptsChildren && element->acceptsChildElement(childType) == false) {
                             qDebug() << "Target doesn't accept children: " << element->modelId()
-                                     << " | viewElementType=" << elementType << " | " << element;
+                                     << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if ((true == ignoreSelected) && (element->isSelected() == true)) {
                             qDebug() << "Target is selected. Ignoring: modelId=" << element->modelId()
-                                     << " | viewElementType=" << elementType << " | " << element;
+                                     << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         }
 

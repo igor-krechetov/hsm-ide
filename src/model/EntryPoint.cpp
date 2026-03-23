@@ -5,8 +5,8 @@
 
 namespace model {
 
-EntryPoint::EntryPoint(const QString& name)
-    : State(name, StateType::ENTRYPOINT) {}
+EntryPoint::EntryPoint()
+    : State("EntryPoint", StateType::ENTRYPOINT) {}
 
 void EntryPoint::accept(class IModelVisitor* visitor) {
     if (visitor) {
@@ -92,5 +92,9 @@ bool EntryPoint::forEachChildElement(
 
     return processedAllChildren;
 }
+
+// void EntryPoint::copyEntityData(const StateMachineEntity& other) {
+//     State::copyEntityData(other);
+// }
 
 };  // namespace model

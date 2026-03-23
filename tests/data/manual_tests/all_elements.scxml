@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Untitled">
+    <state id="State_1">
+        <qt:editorinfo geometry="-187.00;-193.00;0;0;538.00;352.00"/>
+        <initial>
+            <qt:editorinfo geometry="222.00;50.00;0;0;42.00;42.00"/>
+            <transition event="NEW_EVENT" type="external" target="State_40"/>
+            <transition event="NEW_EVENT" type="external" target="State_7"/>
+        </initial>
+        <transition event="NEW_EVENT" type="external" target="State_23"/>
+        <final id="State_35">
+            <qt:editorinfo geometry="108.00;290.00;0;0;42.00;42.00"/>
+        </final>
+        <state id="State_40">
+            <qt:editorinfo geometry="31.00;134.00;0;0;202.00;120.00"/>
+            <transition event="NEW_EVENT" type="external" target="State_35"/>
+        </state>
+        <history id="State_59" type="shallow">
+            <qt:editorinfo geometry="350.00;50.00;0;0;42.00;42.00"/>
+        </history>
+        <state id="State_7">
+            <qt:editorinfo geometry="256.00;138.00;0;0;200.00;111.00"/>
+        </state>
+    </state>
+    <state id="State_23">
+        <transition event="NEW_EVENT" type="external" target="State_31"/>
+        <transition event="NEW_EVENT" type="external" target="State_59">
+            <qt:editorinfo localGeometry="600.31;-122.17"/>
+        </transition>
+        <xi:include href="" parse="xml">
+            <qt:editorinfo geometry="480.00;-89.00;0;0;242.00;142.00"/>
+        </xi:include>
+    </state>
+    <initial>
+        <qt:editorinfo geometry="8.00;-278.00;0;0;42.00;42.00"/>
+        <transition event="NEW_EVENT" type="external" target="State_1"/>
+    </initial>
+    <final id="State_31">
+        <qt:editorinfo geometry="579.00;123.00;0;0;42.00;42.00"/>
+    </final>
+</scxml>

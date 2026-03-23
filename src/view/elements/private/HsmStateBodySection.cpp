@@ -1,5 +1,7 @@
 #include "HsmStateBodySection.hpp"
 
+#include "view/elements/ElementTypeIds.hpp"
+
 #include "HsmElement.hpp"
 
 namespace view {
@@ -19,9 +21,7 @@ QVariant HsmStateBodySection::itemChange(GraphicsItemChange change, const QVaria
         mHasSubstates = false;
 
         for (QGraphicsItem* child : childItems()) {
-            QVariant userType = child->data(USERDATA_HSM_ELEMENT_TYPE);
-
-            if (userType.isValid()) {
+            if ( IS_HSM_ELEMENT_TYPE(child->type()) ) {
                 HsmElement* element = qgraphicsitem_cast<HsmElement*>(child);
 
                 if ((nullptr != element) && (element->elementType() != HsmElementType::TRANSITION)) {
@@ -37,6 +37,10 @@ QVariant HsmStateBodySection::itemChange(GraphicsItemChange change, const QVaria
     }
 
     return QGraphicsRectItem::itemChange(change, value);
+}
+
+int HsmStateBodySection::type() const {
+    return view::ELEMENT_TYPE_STATE_BODY_SECTION;
 }
 
 }  // namespace view

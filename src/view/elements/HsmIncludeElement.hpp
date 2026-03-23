@@ -20,10 +20,6 @@ public:
     explicit HsmIncludeElement(const QSizeF& size);
     virtual ~HsmIncludeElement() = default;
 
-    bool acceptsChildElement(const HsmElementType type) const override;
-
-    bool canBeTopLevel() const override;
-
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };
