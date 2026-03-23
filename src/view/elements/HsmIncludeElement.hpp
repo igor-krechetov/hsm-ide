@@ -20,8 +20,6 @@ public:
     explicit HsmIncludeElement(const QSizeF& size);
     virtual ~HsmIncludeElement() = default;
 
-    void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
-
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 };

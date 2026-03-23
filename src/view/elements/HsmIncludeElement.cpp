@@ -14,11 +14,6 @@ HsmIncludeElement::HsmIncludeElement(const QSizeF& size)
     setElementType(HsmElementType::INCLUDE);
 }
 
-void HsmIncludeElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
-    mBackgroundBrush = QBrush(QColor("#F5F0D8"));
-    HsmStateElement::init(modelEntity);
-}
-
 void HsmIncludeElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     const auto& theme = ThemeManager::instance().theme();
 

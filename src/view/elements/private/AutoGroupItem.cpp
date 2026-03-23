@@ -1,5 +1,6 @@
 #include "AutoGroupItem.hpp"
 #include "view/elements/ElementTypeIds.hpp"
+#include "view/theme/ThemeManager.hpp"
 
 #include <QChildEvent>
 #include <QGraphicsItem>
