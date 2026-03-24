@@ -2,6 +2,7 @@
 
 #include <QAction>
 #include <QClipboard>
+#include <QCursor>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
@@ -182,9 +183,12 @@ void MainWindow::handleClipboardCut() {
 void MainWindow::handleClipboardPaste() {
     if (mActiveProject) {
         const QString clipboardText = QGuiApplication::clipboard()->text();
+        QPointer<HsmGraphicsView> viewPtr = currentView();
 
-        if (clipboardText.isEmpty() == false) {
-            mActiveProject->pasteScxmlElements(clipboardText, currentView()->getSelectedElements());
+        if ((clipboardText.isEmpty() == false) && (nullptr != viewPtr)) {
+            const QPoint cursorPosInView = viewPtr->viewport()->mapFromGlobal(QCursor::pos());
+            const QPointF cursorScenePos = viewPtr->mapToScene(cursorPosInView);
+            mActiveProject->pasteScxmlElements(clipboardText, viewPtr->getSelectedElements(), cursorScenePos, true);
         }
     }
 }

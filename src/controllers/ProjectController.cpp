@@ -4,8 +4,8 @@
 #include <QFile>
 #include <QLoggingCategory>
 #include <QMap>
-#include <QMultiMap>
 #include <QMimeData>
+#include <QMultiMap>
 #include <QSet>
 #include <QTextStream>
 
@@ -301,7 +301,10 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
     return serializedData;
 }
 
-bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QList<model::EntityID_t>& selectedElementIDs) {
+bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
+                                           const QList<model::EntityID_t>& selectedElementIDs,
+                                           const QPointF& cursorScenePos,
+                                           const bool useCursorPosition) {
     bool pasted = false;
 
     if (mModel && (scxmlContent.isEmpty() == false)) {
@@ -318,6 +321,8 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
             // used to update references to ExitPoint/Final states
             QMultiMap<model::EntityID_t, QSharedPointer<model::Transition>> importedTransitions;
             QSharedPointer<model::State> rootState = importModel->root()->findChildStateByName(wrapperId);
+            QPointF importedTopLeft;
+            bool importedTopLeftInitialized = false;
 
             if (!rootState) {
                 rootState = importModel->root();
@@ -327,13 +332,28 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
                 [&](QSharedPointer<model::StateMachineEntity> parent, QSharedPointer<model::StateMachineEntity> entity) {
                     if (parent && entity && (parent == rootState) &&
                         (entity->type() == model::StateMachineEntity::Type::State)) {
-                        importedStates.push_back(entity.dynamicCast<model::State>());
-                        
+                        const auto importedState = entity.dynamicCast<model::State>();
+
+                        importedStates.push_back(importedState);
+
+                        if (importedState) {
+                            const QPointF importedPos = importedState->getPos();
+
+                            if (false == importedTopLeftInitialized) {
+                                importedTopLeft = importedPos;
+                                importedTopLeftInitialized = true;
+                            } else {
+                                importedTopLeft.setX(qMin(importedTopLeft.x(), importedPos.x()));
+                                importedTopLeft.setY(qMin(importedTopLeft.y(), importedPos.y()));
+                            }
+                        }
+
                         // collect direct transitions incase we'll need to update references
                         entity->forEachChildElement(
                             [&importedTransitions](QSharedPointer<model::StateMachineEntity> transitionParent,
-                                                  QSharedPointer<model::StateMachineEntity> transitionEntity) {
-                                if (transitionEntity && (transitionEntity->type() == model::StateMachineEntity::Type::Transition)) {
+                                                   QSharedPointer<model::StateMachineEntity> transitionEntity) {
+                                if (transitionEntity &&
+                                    (transitionEntity->type() == model::StateMachineEntity::Type::Transition)) {
                                     const auto transition = transitionEntity.dynamicCast<model::Transition>();
 
                                     if (transition) {
@@ -351,6 +371,25 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
                 },
                 1,
                 false);
+
+            QPointF pasteAnchorPos = QPointF(0.0, 0.0);
+
+            if (targetParent && (useCursorPosition == true)) {
+                if (targetParent == mModel->root()) {
+                    pasteAnchorPos = cursorScenePos;
+                } else {
+                    const QPointF targetParentScenePos = calculateStateScenePos(targetParent);
+                    const QPointF localCursorPos = cursorScenePos - targetParentScenePos;
+                    const QSizeF parentSize = targetParent->getSize();
+                    const bool cursorInsideParent = (localCursorPos.x() >= 0.0) && (localCursorPos.y() >= 0.0) &&
+                                                    (localCursorPos.x() <= parentSize.width()) &&
+                                                    (localCursorPos.y() <= parentSize.height());
+
+                    if (cursorInsideParent) {
+                        pasteAnchorPos = localCursorPos;
+                    }
+                }
+            }
 
             beginHistoryTransaction("Paste elements");
             // NOTE: prevent view from being updated. Due to transitions depending on elements order, we'll just update the
@@ -383,6 +422,9 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
                 }
 
                 if (newState && model::StateHierarchyRules::canAddEntityToParent(targetParent, newState)) {
+                    const QPointF sourcePos = state->getPos();
+                    const QPointF normalizedPos = sourcePos - importedTopLeft;
+                    newState->setPos(pasteAnchorPos + normalizedPos);
                     targetParent->addChild(newState);
                 } else {
                     qWarning() << "Cannot paste state " << newState->id() << " to target parent " << targetParent->id();
@@ -393,7 +435,7 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
             mIgnoreAddedModelEntities = false;
 
             qDebug() << "---- model after paste: " << mModel->name();
-            mModel->dump(); // TODO: debug
+            mModel->dump();  // TODO: debug
 
             refreshViewFromModel();
 
@@ -402,6 +444,20 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent, const QL
     }
 
     return pasted;
+}
+
+QPointF ProjectController::calculateStateScenePos(const QSharedPointer<model::State>& state) const {
+    QPointF scenePos;
+    QSharedPointer<model::StateMachineEntity> current = state;
+
+    if (mModel && mModel->root() && current) {
+        while (current && (current != mModel->root())) {
+            scenePos += current->getPos();
+            current = mModel->root()->findParentState(current->id());
+        }
+    }
+
+    return scenePos;
 }
 
 QSharedPointer<model::State> ProjectController::resolvePasteTargetParent(
@@ -440,6 +496,44 @@ QSharedPointer<model::State> ProjectController::resolvePasteTargetParent(
             for (const auto& candidate : selectedStates) {
                 if (candidate && targetParent && isAncestor(candidate, targetParent) && (candidate != targetParent)) {
                     targetParent = candidate;
+                }
+            }
+
+            bool targetIsAncestorForAll = true;
+
+            for (const auto& candidate : selectedStates) {
+                if (candidate && targetParent && (isAncestor(targetParent, candidate) == false)) {
+                    targetIsAncestorForAll = false;
+                    break;
+                }
+            }
+
+            if (false == targetIsAncestorForAll) {
+                QSharedPointer<model::State> firstParent;
+                bool allHaveSameParent = true;
+
+                for (const auto& candidate : selectedStates) {
+                    QSharedPointer<model::State> candidateParent;
+                    const auto parentEntity = (candidate ? mModel->root()->findParentState(candidate->id()) : nullptr);
+
+                    if (parentEntity) {
+                        candidateParent = parentEntity.dynamicCast<model::State>();
+                    }
+
+                    if (false == firstParent.isNull()) {
+                        if (candidateParent != firstParent) {
+                            allHaveSameParent = false;
+                            break;
+                        }
+                    } else {
+                        firstParent = candidateParent;
+                    }
+                }
+
+                if (allHaveSameParent && firstParent) {
+                    targetParent = firstParent;
+                } else {
+                    targetParent = mModel->root();
                 }
             }
         }
