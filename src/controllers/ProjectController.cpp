@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QMimeData>
 #include <QMultiMap>
+#include <QPolygonF>
 #include <QSet>
 #include <QTextStream>
 
@@ -397,6 +398,7 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
             //       and then refresh the view.
             mIgnoreAddedModelEntities = true;
             qDebug() << "---- importedStates.size" << importedStates.size();
+            const QPointF pasteOffset = pasteAnchorPos - importedTopLeft;
 
             for (const auto& state : importedStates) {
                 QSharedPointer<model::State> newState;
@@ -422,6 +424,34 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
                 }
 
                 if (newState && model::StateHierarchyRules::canAddEntityToParent(targetParent, newState)) {
+                    // NOTE: transition geometry stores grip points in parent coordinate system.
+                    //       For top-level pasted states we need to shift direct transition geometry
+                    //       by the same offset as states so transition shape is preserved.
+                    state->forEachChildElement(
+                        [&pasteOffset](QSharedPointer<model::StateMachineEntity> transitionParent,
+                                       QSharedPointer<model::StateMachineEntity> transitionEntity) {
+                            if (transitionParent && transitionEntity &&
+                                (transitionEntity->type() == model::StateMachineEntity::Type::Transition)) {
+                                QVariant geometryVar =
+                                    transitionEntity->getMetadata(model::StateMachineEntity::MetadataKey::GEOMETRY);
+
+                                if (geometryVar.isValid()) {
+                                    QPolygonF geometry = geometryVar.value<QPolygonF>();
+
+                                    for (auto& point : geometry) {
+                                        point += pasteOffset;
+                                    }
+
+                                    transitionEntity->setMetadata(model::StateMachineEntity::MetadataKey::GEOMETRY,
+                                                                  geometry);
+                                }
+                            }
+
+                            return true;
+                        },
+                        1,
+                        false);
+
                     const QPointF sourcePos = state->getPos();
                     const QPointF normalizedPos = sourcePos - importedTopLeft;
                     newState->setPos(pasteAnchorPos + normalizedPos);
