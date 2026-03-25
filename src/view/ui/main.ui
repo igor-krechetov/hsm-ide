@@ -875,7 +875,7 @@
   </customwidget>
   <customwidget>
    <class>HsmPropertiesTableView</class>
-   <extends>QTableView</extends>
+   <extends>QTreeView</extends>
    <header>view/widgets/HsmPropertiesTableView.hpp</header>
   </customwidget>
   <customwidget>

@@ -10,6 +10,7 @@ int runFinalStateTest(int argc, char** argv);
 int runEntryPointTest(int argc, char** argv);
 int runExitPointTest(int argc, char** argv);
 int runTransitionTest(int argc, char** argv);
+int runModelActionsTest(int argc, char** argv);
 int runIncludeEntityTest(int argc, char** argv);
 int runModelRootStateTest(int argc, char** argv);
 int runModelElementsFactoryTest(int argc, char** argv);
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     result |= runEntryPointTest(argc, argv);
     result |= runExitPointTest(argc, argv);
     result |= runTransitionTest(argc, argv);
+    result |= runModelActionsTest(argc, argv);
     result |= runIncludeEntityTest(argc, argv);
     result |= runModelRootStateTest(argc, argv);
     result |= runModelElementsFactoryTest(argc, argv);

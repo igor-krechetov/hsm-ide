@@ -6,6 +6,7 @@
 #include <QWeakPointer>
 
 #include "StateMachineEntity.hpp"
+#include "actions/IModelAction.hpp"
 #include "private/IdentifierString.hpp"
 
 namespace model {
@@ -31,13 +32,15 @@ public:
     // Getters
     const QString& event() const;
     TransitionType transitionType() const;
-    const QString& transitionCallback() const;
+    QSharedPointer<IModelAction> transitionAction() const;
     const QString& conditionCallback() const;
     bool expectedConditionValue() const;
 
     // Setters
     void setEvent(const QString& event);
     void setTransitionType(TransitionType type);
+    void setTransitionAction(const QSharedPointer<IModelAction>& action);
+    QString transitionCallback() const;
     void setTransitionCallback(const QString& callback);
     void setConditionCallback(const QString& callback);
     void setExpectedConditionValue(bool value);
@@ -57,7 +60,7 @@ private:
     QWeakPointer<State> mSource;
     QWeakPointer<State> mTarget;
     priv::IdentifierString mEvent;
-    priv::IdentifierString mTransitionCallback;
+    QSharedPointer<IModelAction> mTransitionAction;
     priv::IdentifierString mConditionCallback;
     bool mExpectedConditionValue = false;
 };

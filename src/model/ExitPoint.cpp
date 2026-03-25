@@ -1,5 +1,6 @@
 #include "ExitPoint.hpp"
 
+#include "actions/ModelActionFactory.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
@@ -18,16 +19,16 @@ const QString& ExitPoint::event() const {
     return mEvent;
 }
 
-const QString& ExitPoint::onStateChangedCallback() const {
-    return mOnStateChangedCallback;
+QSharedPointer<IModelAction> ExitPoint::onStateChangedAction() const {
+    return mOnStateChangedAction;
 }
 
-const QString& ExitPoint::onEnteringCallback() const {
-    return mOnEnteringCallback;
+QSharedPointer<IModelAction> ExitPoint::onEnteringAction() const {
+    return mOnEnteringAction;
 }
 
-const QString& ExitPoint::onExitingCallback() const {
-    return mOnExitingCallback;
+QSharedPointer<IModelAction> ExitPoint::onExitingAction() const {
+    return mOnExitingAction;
 }
 
 // Setters
@@ -36,19 +37,46 @@ void ExitPoint::setEvent(const QString& event) {
     emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
-void ExitPoint::setOnStateChangedCallback(const QString& callback) {
-    mOnStateChangedCallback = callback;
+void ExitPoint::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
+    mOnStateChangedAction = action;
     emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+void ExitPoint::setOnEnteringAction(const QSharedPointer<IModelAction>& action) {
+    mOnEnteringAction = action;
+    emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+void ExitPoint::setOnExitingAction(const QSharedPointer<IModelAction>& action) {
+    mOnExitingAction = action;
+    emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+QString ExitPoint::onStateChangedCallback() const {
+    return (mOnStateChangedAction ? mOnStateChangedAction->serialize() : QString());
+}
+
+QString ExitPoint::onEnteringCallback() const {
+    return (mOnEnteringAction ? mOnEnteringAction->serialize() : QString());
+}
+
+QString ExitPoint::onExitingCallback() const {
+    return (mOnExitingAction ? mOnExitingAction->serialize() : QString());
+}
+
+void ExitPoint::setOnStateChangedCallback(const QString& callback) {
+    setOnStateChangedAction(callback.isEmpty() ? QSharedPointer<IModelAction>()
+                                               : createModelActionFromData(callback, ModelAction::CALLBACK));
 }
 
 void ExitPoint::setOnEnteringCallback(const QString& callback) {
-    mOnEnteringCallback = callback;
-    emit modelDataChanged(sharedFromThis().toWeakRef());
+    setOnEnteringAction(callback.isEmpty() ? QSharedPointer<IModelAction>()
+                                           : createModelActionFromData(callback, ModelAction::CALLBACK));
 }
 
 void ExitPoint::setOnExitingCallback(const QString& callback) {
-    mOnExitingCallback = callback;
-    emit modelDataChanged(sharedFromThis().toWeakRef());
+    setOnExitingAction(callback.isEmpty() ? QSharedPointer<IModelAction>()
+                                          : createModelActionFromData(callback, ModelAction::CALLBACK));
 }
 
 QStringList ExitPoint::properties() const {
@@ -77,11 +105,11 @@ QVariant ExitPoint::getProperty(const QString& key) const {
     if (key == "event") {
         return mEvent;
     } else if (key == "onStateChangedCallback") {
-        return mOnStateChangedCallback;
+        return (mOnStateChangedAction ? QVariant(mOnStateChangedAction->serialize()) : QVariant(QString()));
     } else if (key == "onEnteringCallback") {
-        return mOnEnteringCallback;
+        return (mOnEnteringAction ? QVariant(mOnEnteringAction->serialize()) : QVariant(QString()));
     } else if (key == "onExitingCallback") {
-        return mOnExitingCallback;
+        return (mOnExitingAction ? QVariant(mOnExitingAction->serialize()) : QVariant(QString()));
     }
 
     return State::getProperty(key);
@@ -92,9 +120,9 @@ void ExitPoint::copyEntityData(const StateMachineEntity& other) {
 
     if (const ExitPoint* eOther = dynamic_cast<const ExitPoint*>(&other)) {
         mEvent = eOther->mEvent;
-        mOnStateChangedCallback = eOther->mOnStateChangedCallback;
-        mOnEnteringCallback = eOther->mOnEnteringCallback;
-        mOnExitingCallback = eOther->mOnExitingCallback;
+        mOnStateChangedAction = createModelActionFromData(eOther->onStateChangedCallback(), ModelAction::CALLBACK);
+        mOnEnteringAction = createModelActionFromData(eOther->onEnteringCallback(), ModelAction::CALLBACK);
+        mOnExitingAction = createModelActionFromData(eOther->onExitingCallback(), ModelAction::CALLBACK);
     }
 }
 

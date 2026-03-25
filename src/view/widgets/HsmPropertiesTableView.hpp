@@ -1,14 +1,15 @@
 #ifndef HSMPROPERTIESTABLEVIEW_HPP
 #define HSMPROPERTIESTABLEVIEW_HPP
 
-#include <QTableView>
+#include <QTreeView>
 
-class HsmPropertiesTableView : public QTableView {
+class HsmPropertiesTableView : public QTreeView {
     Q_OBJECT
 
 public:
     explicit HsmPropertiesTableView(QWidget* parent = nullptr);
     virtual ~HsmPropertiesTableView() = default;
+    void setModel(QAbstractItemModel* model) override;
 
 protected:
     void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;

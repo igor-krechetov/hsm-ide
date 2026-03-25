@@ -2,6 +2,7 @@
 #define FINALSTATE_HPP
 
 #include "State.hpp"
+#include "actions/IModelAction.hpp"
 
 namespace model {
 
@@ -13,9 +14,11 @@ public:
     void accept(class IModelVisitor* visitor) override;
 
     // Getters
-    const QString& onStateChangedCallback() const;
+    QSharedPointer<IModelAction> onStateChangedAction() const;
 
     // Setters
+    void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
+    QString onStateChangedCallback() const;
     void setOnStateChangedCallback(const QString& callback);
 
     bool setProperty(const QString& key, const QVariant& value) override;
@@ -25,7 +28,7 @@ public:
     void copyEntityData(const StateMachineEntity& other) override;
 
 private:
-    QString mOnStateChangedCallback;
+    QSharedPointer<IModelAction> mOnStateChangedAction;
 };
 
 };  // namespace model

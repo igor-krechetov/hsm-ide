@@ -3,6 +3,7 @@
 
 #include "State.hpp"
 #include "Transition.hpp"
+#include "actions/IModelAction.hpp"
 
 namespace model {
 
@@ -15,11 +16,19 @@ public:
     void accept(class IModelVisitor* visitor) override;
 
     // Getters
-    const QString& onStateChangedCallback() const;
-    const QString& onEnteringCallback() const;
-    const QString& onExitingCallback() const;
+    QSharedPointer<IModelAction> onStateChangedAction() const;
+    QSharedPointer<IModelAction> onEnteringAction() const;
+    QSharedPointer<IModelAction> onExitingAction() const;
 
     // Setters
+    void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
+    void setOnEnteringAction(const QSharedPointer<IModelAction>& action);
+    void setOnExitingAction(const QSharedPointer<IModelAction>& action);
+
+    // Backward compatibility wrappers
+    QString onStateChangedCallback() const;
+    QString onEnteringCallback() const;
+    QString onExitingCallback() const;
     void setOnStateChangedCallback(const QString& callback);
     void setOnEnteringCallback(const QString& callback);
     void setOnExitingCallback(const QString& callback);
@@ -54,9 +63,9 @@ public:
     void copyEntityData(const StateMachineEntity& other) override;
 
 protected:
-    QString mOnStateChangedCallback;
-    QString mOnEnteringCallback;
-    QString mOnExitingCallback;
+    QSharedPointer<IModelAction> mOnStateChangedAction;
+    QSharedPointer<IModelAction> mOnEnteringAction;
+    QSharedPointer<IModelAction> mOnExitingAction;
 
     QList<QSharedPointer<StateMachineEntity>> mChildren;
 };

@@ -26,6 +26,12 @@ set(MODEL_SOURCES
     model/StateMachineEntity.cpp
     model/StateMachineSerializer.cpp
     model/StateHierarchyRules.cpp
+    model/actions/CallbackAction.cpp
+    model/actions/TimerStartAction.cpp
+    model/actions/TimerStopAction.cpp
+    model/actions/TimerRestartAction.cpp
+    model/actions/SendEventAction.cpp
+    model/actions/ModelActionFactory.cpp
 )
 
 set(PROJECT_SOURCES

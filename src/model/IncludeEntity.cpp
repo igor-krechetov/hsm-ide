@@ -4,6 +4,7 @@
 #include <QStringList>
 
 #include "ModelUtils.hpp"
+#include "actions/ModelActionFactory.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
@@ -17,9 +18,9 @@ void IncludeEntity::promoteFrom(const QSharedPointer<RegularState>& state) {
     if (nullptr != state) {
         mName = state->name();
 
-        mOnStateChangedCallback = state->onStateChangedCallback();
-        mOnEnteringCallback = state->onEnteringCallback();
-        mOnExitingCallback = state->onExitingCallback();
+        mOnStateChangedAction = createModelActionFromData(state->onStateChangedCallback(), ModelAction::CALLBACK);
+        mOnEnteringAction = createModelActionFromData(state->onEnteringCallback(), ModelAction::CALLBACK);
+        mOnExitingAction = createModelActionFromData(state->onExitingCallback(), ModelAction::CALLBACK);
         mChildren = state->childrenEntities();
 
         for (auto& child : mChildren) {

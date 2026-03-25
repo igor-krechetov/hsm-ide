@@ -1,5 +1,6 @@
 #include "FinalState.hpp"
 
+#include "actions/ModelActionFactory.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
@@ -14,14 +15,23 @@ void FinalState::accept(class IModelVisitor* visitor) {
 }
 
 // Getters
-const QString& FinalState::onStateChangedCallback() const {
-    return mOnStateChangedCallback;
+QSharedPointer<IModelAction> FinalState::onStateChangedAction() const {
+    return mOnStateChangedAction;
 }
 
 // Setters
-void FinalState::setOnStateChangedCallback(const QString& callback) {
-    mOnStateChangedCallback = callback;
+void FinalState::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
+    mOnStateChangedAction = action;
     emit modelDataChanged(sharedFromThis().toWeakRef());
+}
+
+QString FinalState::onStateChangedCallback() const {
+    return (mOnStateChangedAction ? mOnStateChangedAction->serialize() : QString());
+}
+
+void FinalState::setOnStateChangedCallback(const QString& callback) {
+    setOnStateChangedAction(callback.isEmpty() ? QSharedPointer<IModelAction>()
+                                               : createModelActionFromData(callback, ModelAction::CALLBACK));
 }
 
 QStringList FinalState::properties() const {
@@ -42,7 +52,7 @@ bool FinalState::setProperty(const QString& key, const QVariant& value) {
 
 QVariant FinalState::getProperty(const QString& key) const {
     if (key == "onStateChangedCallback") {
-        return mOnStateChangedCallback;
+        return (mOnStateChangedAction ? QVariant(mOnStateChangedAction->serialize()) : QVariant(QString()));
     }
 
     return State::getProperty(key);
@@ -51,7 +61,7 @@ QVariant FinalState::getProperty(const QString& key) const {
 void FinalState::copyEntityData(const StateMachineEntity& other) {
     State::copyEntityData(other);
     if (const FinalState* fOther = dynamic_cast<const FinalState*>(&other)) {
-        mOnStateChangedCallback = fOther->mOnStateChangedCallback;
+        mOnStateChangedAction = createModelActionFromData(fOther->onStateChangedCallback(), ModelAction::CALLBACK);
     }
 }
 
