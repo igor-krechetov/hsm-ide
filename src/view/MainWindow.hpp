@@ -19,6 +19,7 @@ class HsmGraphicsView;
 class MainEditorController;
 class ProjectController;
 class SettingsController;
+class WorkspaceView;
 using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
 namespace model {
@@ -64,9 +65,6 @@ public slots:
     // void pasteClipboardItems();
     void onGraphicsViewSelectionChanged();
     void onModelTreeSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
-
-    // from Workspace Tree
-    void onOpenWorkspaceFile(const QModelIndex& file);
 
     // from HsmGraphicsView
     void onHsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);

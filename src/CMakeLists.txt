@@ -49,6 +49,7 @@ set(PROJECT_SOURCES
     view/widgets/HsmGraphicsView.cpp
     view/widgets/HsmTreeView.cpp
     view/widgets/HsmPropertiesTableView.cpp
+    view/widgets/WorkspaceView.cpp
     view/widgets/QClickableSlider.cpp
     view/widgets/QImageViewArea.cpp
     view/widgets/private/HsmEntityPropertyDelegate.cpp
@@ -79,7 +80,7 @@ set(PROJECT_SOURCES
 
     view/models/StateMachineTreeModel.cpp
     view/models/StateMachineEntityViewModel.cpp
-    view/models/NonEmptyDirFileSystemProxyModel.cpp
+    view/models/FilteredFileSystemProxyModel.cpp
 
     view/ui/main.ui
     view/ui/settings.ui
