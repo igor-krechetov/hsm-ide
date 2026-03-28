@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.6.0] - 2026-03-28
+### New
+- Workspace tree now lists nested subfolders recursively and shows SCXML files from all levels.
+- Added toggle button to show/hide empty folders in workspace tree (default: hidden).
+- Added workspace context menu actions for files/folders: New File, New Folder, Rename, Delete.
+- Added collapse workspace tree button
+- Enabled drag-and-drop move for files and folders inside the workspace tree.
+
 ## [0.5.1] - 2026-03-28
 ### Fix
 - [REQ-103c3] Resolve paste parent correctly when multiple sibling states are selected. If there is no selected ancestor that contains all selected states, paste now targets their common direct parent (or root if parents differ).

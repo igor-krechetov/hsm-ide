@@ -13,7 +13,7 @@ class ProjectController;
 using ProjectControllerPtr = QSharedPointer<ProjectController>;
 
 namespace model {
-    class StateMachineEntity;
+class StateMachineEntity;
 };
 
 class MainEditorController : public QObject {
@@ -34,6 +34,7 @@ public:
     const QList<ProjectControllerPtr>& openedProjects() const;
 
     ProjectControllerPtr getProjectByPath(const QString& projectPath) const;
+    void handleWorkspacePathRenamed(const QString& oldPath, const QString& newPath);
 
     void handleHsmElementDoubleClick(QWeakPointer<model::StateMachineEntity> entity);
 

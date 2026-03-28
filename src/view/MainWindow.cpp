@@ -5,7 +5,6 @@
 #include <QCursor>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFileSystemModel>
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QSignalBlocker>
@@ -15,9 +14,9 @@
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
-#include "view/models/NonEmptyDirFileSystemProxyModel.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
+#include "view/widgets/WorkspaceView.hpp"
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
@@ -47,6 +46,27 @@ MainWindow::MainWindow(MainEditorController* parent)
             updateRecentHsmMenu();
         }
     });
+
+    connect(ui->btnShowEmptyFolders, &QToolButton::toggled, ui->workspaceTree, &WorkspaceView::setShowEmptyFolders);
+    connect(ui->btnCreateWorkspaceFile,
+            &QToolButton::clicked,
+            ui->workspaceTree,
+            &WorkspaceView::createWorkspaceFileInSelection);
+    connect(ui->btnCreateWorkspaceFolder,
+            &QToolButton::clicked,
+            ui->workspaceTree,
+            &WorkspaceView::createWorkspaceFolderInSelection);
+    connect(ui->btnCollapseWorkspace, &QToolButton::clicked, ui->workspaceTree, &WorkspaceView::collapseWorkspaceTree);
+    connect(ui->workspaceTree, &WorkspaceView::workspaceFileActivated, this, [this](const QString& path) {
+        if (path.isEmpty() == false) {
+            mController->openProject(path);
+        }
+    });
+    connect(
+        ui->workspaceTree,
+        &WorkspaceView::workspacePathRenamed,
+        this,
+        [this](const QString& oldPath, const QString& newPath) { mController->handleWorkspacePathRenamed(oldPath, newPath); });
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
@@ -92,7 +112,7 @@ void MainWindow::handleOpenWorkspace() {
 void MainWindow::handleCloseWorkspace() {
     Q_ASSERT(ui->workspaceTree != nullptr);
 
-    ui->workspaceTree->setModel(nullptr);
+    ui->workspaceTree->clearWorkspace();
 }
 
 void MainWindow::handleNewFile() {
@@ -283,38 +303,10 @@ void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const Q
     selectModelEntityById(current.data(Qt::UserRole).toUInt());
 }
 
-void MainWindow::onOpenWorkspaceFile(const QModelIndex& index) {
-    qDebug() << "onOpenWorkspaceFile" << index;
-    view::NonEmptyDirFileSystemProxyModel* model =
-        qobject_cast<view::NonEmptyDirFileSystemProxyModel*>(ui->workspaceTree->model());
-
-    Q_ASSERT(nullptr != model);
-    const QString path = model->getFilePath(index);
-
-    if (path.isEmpty() == false) {
-        mController->openProject(path);
-    }
-}
-
 void MainWindow::openWorkspace(const QString& rootDir) {
     Q_ASSERT(ui->workspaceTree != nullptr);
-
-    // Use QFileSystemModel as source, NonEmptyDirFileSystemProxyModel as proxy
-    QFileSystemModel* fsModel = new QFileSystemModel(this);
-    fsModel->setRootPath(rootDir);
-    fsModel->setNameFilters({"*.scxml"});
-    fsModel->setNameFilterDisables(false);  // Hide all files that don't match
-
-    view::NonEmptyDirFileSystemProxyModel* proxyModel = new view::NonEmptyDirFileSystemProxyModel(this);
-    proxyModel->setSourceModel(fsModel);
-
-    ui->workspaceTree->setModel(proxyModel);
-    ui->workspaceTree->setRootIndex(proxyModel->mapFromSource(fsModel->index(rootDir)));
-
-    ui->workspaceTree->setColumnHidden(1, true);  // Size
-    ui->workspaceTree->setColumnHidden(2, true);  // Type
-    ui->workspaceTree->setColumnHidden(3, true);  // Date Modified
-    ui->workspaceTree->setHeaderHidden(true);
+    ui->workspaceTree->setWorkspaceRoot(rootDir);
+    ui->workspaceTree->setShowEmptyFolders(ui->btnShowEmptyFolders->isChecked());
 }
 
 void MainWindow::updateMenuItemsRecent(QMenu* menu,

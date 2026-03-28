@@ -41,6 +41,7 @@ public:
     bool importModel(const QString& path);
     bool exportModel();
     bool exportModel(const QString& path);
+    void updateModelPath(const QString& newPath);
 
     void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId);
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);

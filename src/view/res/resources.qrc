@@ -14,4 +14,10 @@
         <file>side-bar/edit.png</file>
         <file>side-bar/workdir.png</file>
     </qresource>
+    <qresource prefix="/icons/side-bar/workdir">
+        <file>side-bar/workdir/collapse_folders.png</file>
+        <file>side-bar/workdir/create_file.png</file>
+        <file>side-bar/workdir/create_folder.png</file>
+        <file>side-bar/workdir/show_empty_folders.png</file>
+    </qresource>
 </RCC>

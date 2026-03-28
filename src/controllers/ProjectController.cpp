@@ -174,6 +174,13 @@ bool ProjectController::exportModel(const QString& path) {
     return res;
 }
 
+void ProjectController::updateModelPath(const QString& newPath) {
+    if (newPath.isEmpty() == false) {
+        mModelPath = newPath;
+        emit projectModelChanged(this);
+    }
+}
+
 void ProjectController::handleViewDropEvent(const QString& elementTypeId,
                                             const QPointF& parentPos,
                                             const model::EntityID_t targetElementId) {

@@ -404,6 +404,9 @@
          </property>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="spacing">
+            <number>0</number>
+           </property>
            <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
@@ -419,8 +422,30 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnShowEmptyFolders">
+             <property name="minimumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Show empty folders</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">padding: 0px;</string>
+             </property>
              <property name="text">
               <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../res/resources.qrc">
+               <normaloff>:/icons/side-bar/workdir/side-bar/workdir/show_empty_folders.png</normaloff>:/icons/side-bar/workdir/side-bar/workdir/show_empty_folders.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
              </property>
              <property name="checkable">
               <bool>true</bool>
@@ -429,29 +454,98 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnCreateWorkspaceFile">
+             <property name="minimumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Create file</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">padding: 0px;</string>
+             </property>
              <property name="text">
               <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../res/resources.qrc">
+               <normaloff>:/icons/side-bar/workdir/side-bar/workdir/create_file.png</normaloff>:/icons/side-bar/workdir/side-bar/workdir/create_file.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="btnReloadWorkspace">
+            <widget class="QToolButton" name="btnCreateWorkspaceFolder">
+             <property name="minimumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Create folder</string>
+             </property>
              <property name="text">
               <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../res/resources.qrc">
+               <normaloff>:/icons/side-bar/workdir/side-bar/workdir/create_folder.png</normaloff>:/icons/side-bar/workdir/side-bar/workdir/create_folder.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="btnColapseWorkspace">
+            <widget class="QToolButton" name="btnCollapseWorkspace">
+             <property name="minimumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Collapse folders</string>
+             </property>
              <property name="text">
               <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../res/resources.qrc">
+               <normaloff>:/icons/side-bar/workdir/side-bar/workdir/collapse_folders.png</normaloff>:/icons/side-bar/workdir/side-bar/workdir/collapse_folders.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="autoRaise">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
           </layout>
          </item>
          <item>
-          <widget class="QTreeView" name="workspaceTree">
+          <widget class="WorkspaceView" name="workspaceTree">
            <property name="headerHidden">
             <bool>true</bool>
            </property>
@@ -784,6 +878,11 @@
    <extends>QTableView</extends>
    <header>view/widgets/HsmPropertiesTableView.hpp</header>
   </customwidget>
+  <customwidget>
+   <class>WorkspaceView</class>
+   <extends>QTreeView</extends>
+   <header>view/widgets/WorkspaceView.hpp</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="../res/resources.qrc"/>
@@ -982,22 +1081,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>workspaceTree</sender>
-   <signal>doubleClicked(QModelIndex)</signal>
-   <receiver>hsm_ide</receiver>
-   <slot>onOpenWorkspaceFile(QModelIndex)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>170</x>
-     <y>368</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>473</x>
-     <y>343</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionAbout</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
@@ -1107,7 +1190,6 @@
   <slot>handleCloseAllProjects()</slot>
   <slot>handleOpenWorkspace()</slot>
   <slot>handleCloseWorkspace()</slot>
-  <slot>onOpenWorkspaceFile(QModelIndex)</slot>
   <slot>handleAbout()</slot>
   <slot>handleClipboardCopy()</slot>
   <slot>handleClipboardCut()</slot>
