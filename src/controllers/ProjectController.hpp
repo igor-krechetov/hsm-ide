@@ -2,6 +2,7 @@
 #define PROJECTCONTROLLER_HPP
 
 #include <QObject>
+#include <QPointF>
 #include <QPointer>
 #include <QWeakPointer>
 
@@ -45,7 +46,10 @@ public:
     void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId);
     void handleDeleteElements(const QList<model::EntityID_t>& elementIDs);
     QString serializeElementsToScxml(const QList<model::EntityID_t>& elementIDs) const;
-    bool pasteScxmlElements(const QString& scxmlContent, const QList<model::EntityID_t>& selectedElementIDs = {});
+    bool pasteScxmlElements(const QString& scxmlContent,
+                            const QList<model::EntityID_t>& selectedElementIDs = {},
+                            const QPointF& cursorScenePos = QPointF(),
+                            const bool useCursorPosition = false);
     void beginHistoryTransaction(const QString& label);
     void commitHistoryTransaction();
     void cancelHistoryTransaction();
@@ -72,6 +76,8 @@ private:
     void refreshViewFromModel();
 
     QSharedPointer<model::State> resolvePasteTargetParent(const QList<model::EntityID_t>& selectedElementIDs) const;
+    // Find state's position within the sceene
+    QPointF calculateStateScenePos(const QSharedPointer<model::State>& state) const;
     void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                 QSharedPointer<model::StateMachineEntity> entity,
                                 const bool addChildren);
