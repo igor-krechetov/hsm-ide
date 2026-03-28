@@ -76,6 +76,7 @@ private:
     void refreshViewFromModel();
 
     QSharedPointer<model::State> resolvePasteTargetParent(const QList<model::EntityID_t>& selectedElementIDs) const;
+    // Find state's position within the sceene
     QPointF calculateStateScenePos(const QSharedPointer<model::State>& state) const;
     void handleModelEntityAdded(QSharedPointer<model::StateMachineEntity> parent,
                                 QSharedPointer<model::StateMachineEntity> entity,
