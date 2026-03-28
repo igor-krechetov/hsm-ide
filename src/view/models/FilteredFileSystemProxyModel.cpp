@@ -1,5 +1,6 @@
 #include "FilteredFileSystemProxyModel.hpp"
 
+#include <QStack>
 #include <QFileInfo>
 #include <QFileSystemModel>
 
@@ -21,13 +22,24 @@ bool FilteredFileSystemProxyModel::filterAcceptsRow(int source_row, const QModel
     bool result = false;
     QModelIndex index = sourceModel()->index(source_row, 0, source_parent);
     const QFileSystemModel* fsm = qobject_cast<const QFileSystemModel*>(sourceModel());
+    const QString entryPath = fsm->filePath(index);
+
+    // Filter out anything not under the root path
+    if (false == entryPath.startsWith(fsm->rootPath())) {
+        return false;
+    }
+
+    if (entryPath == fsm->rootPath()) {
+        return true;
+    }
+
     const bool isRoot = (source_parent.isValid() == false);
 
     if ((nullptr != fsm) && index.isValid()) {
         if ((true == fsm->isDir(index)) && (true == isRoot)) {
             result = true;
         } else if (true == fsm->isDir(index)) {
-            result = mShowEmptyFolders || hasScxmlRecursively(index);
+            result = mShowEmptyFolders || hasScxmlFiles(entryPath);
         } else {
             result = isScxmlFile(fsm->filePath(index));
         }
@@ -62,24 +74,40 @@ bool FilteredFileSystemProxyModel::isDir(const QModelIndex& proxyIndex) const {
     return result;
 }
 
-bool FilteredFileSystemProxyModel::hasScxmlRecursively(const QModelIndex& sourceIndex) const {
-    bool result = false;
-    const QFileSystemModel* fsm = qobject_cast<const QFileSystemModel*>(sourceModel());
+bool FilteredFileSystemProxyModel::hasScxmlFiles(const QString& path) const {
+    bool found = false;
+    QDir dir(path);
 
-    if ((nullptr != fsm) && sourceIndex.isValid()) {
-        const int rowCount = fsm->rowCount(sourceIndex);
-        for (int row = 0; (row < rowCount) && (result == false); ++row) {
-            QModelIndex childIndex = fsm->index(row, 0, sourceIndex);
+    if (dir.exists()) {
+        QStack<QDir> stack;
 
-            if (fsm->isDir(childIndex)) {
-                result = hasScxmlRecursively(childIndex);
+        stack.push(dir);
+
+        while (!stack.isEmpty() && !found) {
+            QDir currentDir = stack.pop();
+
+            // Check for files in the current directory
+            QFileInfoList files = currentDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+            for (const QFileInfo& fileInfo : files) {
+                if (isScxmlFile(fileInfo.absoluteFilePath())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            // Add subdirectories to the stack
+            if (false == found) {
+                QFileInfoList subdirs = currentDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+                for (const QFileInfo& subdirInfo : subdirs) {
+                    stack.push(QDir(subdirInfo.absoluteFilePath()));
+                }
             } else {
-                result = isScxmlFile(fsm->filePath(childIndex));
+                break;
             }
         }
     }
 
-    return result;
+    return found;
 }
 
 bool FilteredFileSystemProxyModel::isScxmlFile(const QString& filePath) const {

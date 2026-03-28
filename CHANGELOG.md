@@ -6,9 +6,7 @@ All notable changes to project will be documented in this file.
 - Workspace tree now lists nested subfolders recursively and shows SCXML files from all levels.
 - Added toggle button to show/hide empty folders in workspace tree (default: hidden).
 - Added workspace context menu actions for files/folders: New File, New Folder, Rename, Delete.
-- Added inline create-file flow for workspace tree with cancel-on-escape/focus-loss behavior.
-- Added collapse workspace tree button and fixed control naming typo (`btnCollapseWorkspace`).
-- Renamed workspace folder creation button (`btnCreateWorkspaceFolder`) from old reload naming.
+- Added collapse workspace tree button
 - Enabled drag-and-drop move for files and folders inside the workspace tree.
 
 ## [0.5.1] - 2026-03-28

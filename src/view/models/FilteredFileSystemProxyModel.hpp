@@ -18,7 +18,7 @@ public:
     bool isDir(const QModelIndex& proxyIndex) const;
 
 private:
-    bool hasScxmlRecursively(const QModelIndex& sourceIndex) const;
+    bool hasScxmlFiles(const QString& path) const;
     bool isScxmlFile(const QString& filePath) const;
     bool mShowEmptyFolders = false;
 
