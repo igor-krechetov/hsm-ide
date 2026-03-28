@@ -62,6 +62,11 @@ MainWindow::MainWindow(MainEditorController* parent)
             mController->openProject(path);
         }
     });
+    connect(
+        ui->workspaceTree,
+        &WorkspaceView::workspacePathRenamed,
+        this,
+        [this](const QString& oldPath, const QString& newPath) { mController->handleWorkspacePathRenamed(oldPath, newPath); });
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);

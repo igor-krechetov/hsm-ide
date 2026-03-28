@@ -1,15 +1,15 @@
-#ifndef NONEMPTYDIRFILESYSTEMPROXYMODEL_HPP
-#define NONEMPTYDIRFILESYSTEMPROXYMODEL_HPP
+#ifndef FILTEREDFILESYSTEMPROXYMODEL_HPP
+#define FILTEREDFILESYSTEMPROXYMODEL_HPP
 
 #include <QFileSystemModel>
 #include <QSortFilterProxyModel>
 
 namespace view {
 
-class NonEmptyDirFileSystemProxyModel : public QSortFilterProxyModel {
+class FilteredFileSystemProxyModel : public QSortFilterProxyModel {
     Q_OBJECT
 public:
-    explicit NonEmptyDirFileSystemProxyModel(QObject* parent = nullptr);
+    explicit FilteredFileSystemProxyModel(QObject* parent = nullptr);
 
     void setShowEmptyFolders(bool enabled);
     bool isShowEmptyFolders() const;
@@ -28,4 +28,4 @@ protected:
 
 }  // namespace view
 
-#endif  // NONEMPTYDIRFILESYSTEMPROXYMODEL_HPP
+#endif  // FILTEREDFILESYSTEMPROXYMODEL_HPP

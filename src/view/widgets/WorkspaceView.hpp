@@ -6,7 +6,7 @@
 class QFileSystemModel;
 
 namespace view {
-class NonEmptyDirFileSystemProxyModel;
+class FilteredFileSystemProxyModel;
 }
 
 class WorkspaceView : public QTreeView {
@@ -27,6 +27,7 @@ public:
 
 signals:
     void workspaceFileActivated(const QString& path);
+    void workspacePathRenamed(const QString& oldPath, const QString& newPath);
 
 private slots:
     void onContextMenuRequested(const QPoint& pos);
@@ -35,6 +36,7 @@ private slots:
     void onDoubleClickedItem(const QModelIndex& index);
 
 private:
+    void applyColumnVisibility();
     QModelIndex selectedWorkspaceIndex() const;
     QString selectedWorkspaceDir() const;
     void createWorkspaceFile(const QModelIndex& parentIndex);
@@ -47,7 +49,7 @@ private:
     QString mWorkspaceRootDir;
     QString mPendingWorkspaceFilePath;
     QFileSystemModel* mFsModel = nullptr;
-    view::NonEmptyDirFileSystemProxyModel* mProxyModel = nullptr;
+    view::FilteredFileSystemProxyModel* mProxyModel = nullptr;
 };
 
 #endif  // WORKSPACEVIEW_HPP

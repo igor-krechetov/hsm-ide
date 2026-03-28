@@ -11,7 +11,7 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 
-#include "view/models/NonEmptyDirFileSystemProxyModel.hpp"
+#include "view/models/FilteredFileSystemProxyModel.hpp"
 
 WorkspaceView::WorkspaceView(QWidget* parent)
     : QTreeView(parent) {
@@ -24,10 +24,7 @@ WorkspaceView::WorkspaceView(QWidget* parent)
     setDefaultDropAction(Qt::MoveAction);
     setEditTriggers(QAbstractItemView::EditKeyPressed | QAbstractItemView::SelectedClicked);
 
-    setColumnHidden(1, true);  // Size
-    setColumnHidden(2, true);  // Type
-    setColumnHidden(3, true);  // Date Modified
-    setHeaderHidden(true);
+    applyColumnVisibility();
 
     connect(this, &QWidget::customContextMenuRequested, this, &WorkspaceView::onContextMenuRequested);
     connect(this, &QTreeView::doubleClicked, this, &WorkspaceView::onDoubleClickedItem);
@@ -53,12 +50,13 @@ void WorkspaceView::setWorkspaceRoot(const QString& rootDir) {
     mFsModel->setRootPath(rootDir);
     mFsModel->setReadOnly(false);
 
-    mProxyModel = new view::NonEmptyDirFileSystemProxyModel(this);
+    mProxyModel = new view::FilteredFileSystemProxyModel(this);
     mProxyModel->setSourceModel(mFsModel);
     mProxyModel->setRecursiveFilteringEnabled(true);
 
     setModel(mProxyModel);
     setRootIndex(mProxyModel->mapFromSource(mFsModel->index(rootDir)));
+    applyColumnVisibility();
 
     connect(mFsModel, &QFileSystemModel::fileRenamed, this, &WorkspaceView::onFileRenamed);
 }
@@ -126,7 +124,8 @@ void WorkspaceView::onContextMenuRequested(const QPoint& pos) {
 }
 
 void WorkspaceView::onFileRenamed(const QString& path, const QString& oldName, const QString& newName) {
-    Q_UNUSED(path);
+    const QString oldPath = QDir(path).absoluteFilePath(oldName);
+    const QString newPath = QDir(path).absoluteFilePath(newName);
 
     if (false == mPendingWorkspaceFilePath.isEmpty()) {
         const QFileInfo oldInfo(mPendingWorkspaceFilePath);
@@ -134,6 +133,8 @@ void WorkspaceView::onFileRenamed(const QString& path, const QString& oldName, c
             mPendingWorkspaceFilePath = oldInfo.absoluteDir().filePath(newName);
         }
     }
+
+    emit workspacePathRenamed(oldPath, newPath);
 }
 
 void WorkspaceView::onEditorClosed(QWidget* editor, QAbstractItemDelegate::EndEditHint hint) {
@@ -281,4 +282,13 @@ void WorkspaceView::finalizePendingWorkspaceFile() {
 
         mPendingWorkspaceFilePath.clear();
     }
+}
+
+void WorkspaceView::applyColumnVisibility() {
+    if (nullptr != model()) {
+        for (int column = 1; column < model()->columnCount(); ++column) {
+            setColumnHidden(column, true);
+        }
+    }
+    setHeaderHidden(true);
 }

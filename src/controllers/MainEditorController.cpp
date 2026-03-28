@@ -7,10 +7,10 @@
 #include <algorithm>
 
 #include "ProjectController.hpp"
+#include "model/IncludeEntity.hpp"
+#include "model/ModelUtils.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
-#include "model/ModelUtils.hpp"
-#include "model/IncludeEntity.hpp"
 
 MainEditorController::MainEditorController()
     : QObject(nullptr)
@@ -128,6 +128,17 @@ ProjectControllerPtr MainEditorController::getProjectByPath(const QString& proje
     }
 
     return project;
+}
+
+void MainEditorController::handleWorkspacePathRenamed(const QString& oldPath, const QString& newPath) {
+    if ((oldPath.isEmpty() == false) && (newPath.isEmpty() == false)) {
+        for (const auto& project : mProjectControllers) {
+            if (project && (project->modelPath() == oldPath)) {
+                project->updateModelPath(newPath);
+                break;
+            }
+        }
+    }
 }
 
 void MainEditorController::handleHsmElementDoubleClick(QWeakPointer<model::StateMachineEntity> entity) {
