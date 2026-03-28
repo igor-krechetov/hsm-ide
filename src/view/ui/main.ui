@@ -435,14 +435,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="btnReloadWorkspace">
+            <widget class="QToolButton" name="btnCreateWorkspaceFolder">
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="btnColapseWorkspace">
+            <widget class="QToolButton" name="btnCollapseWorkspace">
              <property name="text">
               <string>...</string>
              </property>
@@ -451,7 +451,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QTreeView" name="workspaceTree">
+          <widget class="WorkspaceView" name="workspaceTree">
            <property name="headerHidden">
             <bool>true</bool>
            </property>
@@ -784,6 +784,11 @@
    <extends>QTableView</extends>
    <header>view/widgets/HsmPropertiesTableView.hpp</header>
   </customwidget>
+  <customwidget>
+   <class>WorkspaceView</class>
+   <extends>QTreeView</extends>
+   <header>view/widgets/WorkspaceView.hpp</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="../res/resources.qrc"/>
@@ -982,22 +987,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>workspaceTree</sender>
-   <signal>doubleClicked(QModelIndex)</signal>
-   <receiver>hsm_ide</receiver>
-   <slot>onOpenWorkspaceFile(QModelIndex)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>170</x>
-     <y>368</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>473</x>
-     <y>343</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionAbout</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
@@ -1107,7 +1096,6 @@
   <slot>handleCloseAllProjects()</slot>
   <slot>handleOpenWorkspace()</slot>
   <slot>handleCloseWorkspace()</slot>
-  <slot>onOpenWorkspaceFile(QModelIndex)</slot>
   <slot>handleAbout()</slot>
   <slot>handleClipboardCopy()</slot>
   <slot>handleClipboardCut()</slot>

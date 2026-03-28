@@ -49,6 +49,7 @@ set(PROJECT_SOURCES
     view/widgets/HsmGraphicsView.cpp
     view/widgets/HsmTreeView.cpp
     view/widgets/HsmPropertiesTableView.cpp
+    view/widgets/WorkspaceView.cpp
     view/widgets/QClickableSlider.cpp
     view/widgets/QImageViewArea.cpp
     view/widgets/private/HsmEntityPropertyDelegate.cpp
