@@ -49,10 +49,10 @@
 ***** REQ-103b1: Resizable and non-resizable elements <<done>>
 ***** REQ-103b2: Minimum size for resizable elements <<done>>
 ***** REQ-103b2: Moving elements <<done>>
-**** REQ-103c: Multi-select operations <<partial>>
+**** REQ-103c: Multi-select operations <<done>>
 ***** REQ-103c1: Copy <<done>>
 ***** REQ-103c2: Cut <<done>>
-***** REQ-103c3: Paste <<in_progress>>
+***** REQ-103c3: Paste <<done>>
 ***** REQ-103c4: Delete <<done>>
 **** REQ-103d: Delete selected elements <<done>>
 ***** REQ-103d1: Delete states <<done>>

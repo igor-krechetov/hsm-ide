@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.5.1] - 2026-03-28
+### Fix
+- [REQ-103c3] Resolve paste parent correctly when multiple sibling states are selected. If there is no selected ancestor that contains all selected states, paste now targets their common direct parent (or root if parents differ).
+- [REQ-103c3] Keeps existing cursor-anchor placement behavior while preserving relative positions for multi-element paste groups.
+- [REQ-103c3] Recalculate transition grip geometry metadata during paste by applying paste offset to GEOMETRY points.
+- [REQ-103c3] Ensures pasted transitions keep correct shape/location relative to moved pasted states.
+
+
 ## [0.5.0] - 2026-03-16
 ### New
 - [REQ-103c1, REQ-103c2, REQ-103c3] Copy, cut, paste HSM elements through SCXML clipboard serialization/deserialization
