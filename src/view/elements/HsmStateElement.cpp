@@ -8,11 +8,11 @@
 #include <QSignalBlocker>
 #include <QTextDocument>
 
-#include "view/elements/ElementTypeIds.hpp"
 #include "HsmTransition.hpp"
 #include "model/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
 #include "private/HsmStateTextItem.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 
 namespace view {
@@ -213,14 +213,14 @@ void HsmStateElement::onModelDataChanged() {
             // Update properties section text
             QStringList actions;
 
-            if (!entityPtr->onEnteringCallback().isEmpty()) {
-                actions << "onEntry: " + entityPtr->onEnteringCallback();
+            if (entityPtr->hasOnEnteringAction()) {
+                actions << "onEntry: " + entityPtr->onEnteringAction()->serialize();
             }
-            if (!entityPtr->onStateChangedCallback().isEmpty()) {
-                actions << "do: " + entityPtr->onStateChangedCallback();
+            if (entityPtr->hasOnStateChangedAction()) {
+                actions << "do: " + entityPtr->onStateChangedAction()->serialize();
             }
-            if (!entityPtr->onExitingCallback().isEmpty()) {
-                actions << "onExit: " + entityPtr->onExitingCallback();
+            if (entityPtr->hasOnExitingAction()) {
+                actions << "onExit: " + entityPtr->onExitingAction()->serialize();
             }
 
             mPropertiesSection->setPlainText(actions.join("\n"));
@@ -297,8 +297,8 @@ void HsmStateElement::layoutSelfTransitions() {
                     transition->recalculateLine();
                 }
             } else {
-                qCritical() << Q_FUNC_INFO
-                            << "unexpected child type in self-transitions section, expected TRANSITION, got" << child->type();
+                qCritical() << Q_FUNC_INFO << "unexpected child type in self-transitions section, expected TRANSITION, got"
+                            << child->type();
             }
         }
     }

@@ -11,8 +11,16 @@
 
 #include "model/HistoryState.hpp"
 #include "model/Transition.hpp"
+#include "model/actions/ModelActionFactory.hpp"
+#include "view/models/StateMachineEntityViewModel.hpp"
 
 namespace view {
+
+namespace {
+constexpr int cPropertyKeyRole = Qt::UserRole;
+constexpr int cPropertyPathRole = Qt::UserRole + 1;
+constexpr int cActionSubtypeRole = Qt::UserRole + 2;
+}  // namespace
 
 HsmEntityPropertyDelegate::HsmEntityPropertyDelegate(QObject* parent)
     : QStyledItemDelegate(parent) {
@@ -22,7 +30,15 @@ HsmEntityPropertyDelegate::HsmEntityPropertyDelegate(QObject* parent)
 QWidget* HsmEntityPropertyDelegate::createEditor(QWidget* parent,
                                                  const QStyleOptionViewItem& option,
                                                  const QModelIndex& index) const {
-    if (index.data(Qt::UserRole).toString() == model::Transition::cKeyTransitionType) {
+    if (index.data(cActionSubtypeRole).isValid()) {
+        QComboBox* combo = new QComboBox(parent);
+
+        for (const auto& actionName : model::ModelActionFactory::supportedActionNames()) {
+            combo->addItem(actionName);
+        }
+
+        return combo;
+    } else if (index.data(cPropertyKeyRole).toString() == model::Transition::cKeyTransitionType) {
         QComboBox* combo = new QComboBox(parent);
 
         combo->addItem(model::transitionTypeToString(model::TransitionType::EXTERNAL),
@@ -31,21 +47,28 @@ QWidget* HsmEntityPropertyDelegate::createEditor(QWidget* parent,
                        static_cast<int>(model::TransitionType::INTERNAL));
 
         return combo;
-    } else if (index.data(Qt::UserRole).toString() == model::Transition::cKeyExpectedConditionValue) {
+    } else if (index.data(cPropertyKeyRole).toString() == model::Transition::cKeyExpectedConditionValue) {
         QComboBox* combo = new QComboBox(parent);
 
-        combo->addItem("true", true);
-        combo->addItem("false", false);
+        combo->addItem(tr("true"), true);
+        combo->addItem(tr("false"), false);
 
         return combo;
-    } else if (index.data(Qt::UserRole).toString() == model::HistoryState::cKeyHistoryType) {
+    } else if (index.data(cPropertyPathRole).toString().endsWith(".singleshot")) {
+        QComboBox* combo = new QComboBox(parent);
+
+        combo->addItem(tr("true"), true);
+        combo->addItem(tr("false"), false);
+
+        return combo;
+    } else if (index.data(cPropertyKeyRole).toString() == model::HistoryState::cKeyHistoryType) {
         QComboBox* combo = new QComboBox(parent);
 
         combo->addItem(model::historyTypeToString(model::HistoryType::SHALLOW), static_cast<int>(model::HistoryType::SHALLOW));
         combo->addItem(model::historyTypeToString(model::HistoryType::DEEP), static_cast<int>(model::HistoryType::DEEP));
 
         return combo;
-    } else if (index.data(Qt::UserRole).toString() == "path") {
+    } else if (index.data(cPropertyKeyRole).toString() == "path") {
         // Use a line edit + button inside a widget
         QWidget* editor = new QWidget(parent);
         auto* layout = new QHBoxLayout(editor);
@@ -85,7 +108,7 @@ QWidget* HsmEntityPropertyDelegate::createEditor(QWidget* parent,
 
 void HsmEntityPropertyDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const {
     // TODO: should we rely on widget casting or UserRole from index?
-    if (index.data(Qt::UserRole).toString() == "path") {
+    if (index.data(cPropertyKeyRole).toString() == "path") {
         QLineEdit* line = editor->findChild<QLineEdit*>();
 
         if (line) {
@@ -95,13 +118,31 @@ void HsmEntityPropertyDelegate::setEditorData(QWidget* editor, const QModelIndex
             qFatal("HsmEntityPropertyDelegate: unexpected editor widget");
         }
     } else if (QComboBox* combo = qobject_cast<QComboBox*>(editor)) {
-        int idx = combo->findData(index.data(Qt::EditRole).toInt(), Qt::UserRole);
+        if (index.data(cActionSubtypeRole).isValid()) {
+            int idx = combo->findText(index.data(Qt::EditRole).toString());
 
-        // TODO: use user data instead of index
-        if (idx >= 0) {
-            combo->setCurrentIndex(idx);
+            if (idx >= 0) {
+                combo->setCurrentIndex(idx);
+            } else {
+                combo->setCurrentIndex(0);
+            }
+        } else if (index.data(cPropertyPathRole).toString().endsWith(".singleshot")) {
+            const bool boolValue = index.data(Qt::EditRole).toBool();
+            int idx = combo->findData(boolValue, Qt::UserRole);
+
+            if (idx >= 0) {
+                combo->setCurrentIndex(idx);
+            } else {
+                combo->setCurrentIndex(0);
+            }
         } else {
-            combo->setCurrentIndex(0);
+            int idx = combo->findData(index.data(Qt::EditRole).toInt(), Qt::UserRole);
+
+            if (idx >= 0) {
+                combo->setCurrentIndex(idx);
+            } else {
+                combo->setCurrentIndex(0);
+            }
         }
     } else {
         QStyledItemDelegate::setEditorData(editor, index);
@@ -109,7 +150,7 @@ void HsmEntityPropertyDelegate::setEditorData(QWidget* editor, const QModelIndex
 }
 
 void HsmEntityPropertyDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const {
-    if (index.data(Qt::UserRole).toString() == "path") {
+    if (index.data(cPropertyKeyRole).toString() == "path") {
         QLineEdit* line = editor->findChild<QLineEdit*>();
 
         if (line) {
@@ -118,7 +159,13 @@ void HsmEntityPropertyDelegate::setModelData(QWidget* editor, QAbstractItemModel
             qFatal("HsmEntityPropertyDelegate: unexpected editor widget");
         }
     } else if (QComboBox* combo = qobject_cast<QComboBox*>(editor)) {
-        model->setData(index, combo->currentData(Qt::UserRole), Qt::EditRole);
+        if (index.data(cActionSubtypeRole).isValid()) {
+            model->setData(index, combo->currentText(), Qt::EditRole);
+        } else if (index.data(cPropertyPathRole).toString().endsWith(".singleshot")) {
+            model->setData(index, combo->currentData(Qt::UserRole).toBool(), Qt::EditRole);
+        } else {
+            model->setData(index, combo->currentData(Qt::UserRole), Qt::EditRole);
+        }
     } else {
         QStyledItemDelegate::setModelData(editor, model, index);
     }

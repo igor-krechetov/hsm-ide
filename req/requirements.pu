@@ -20,7 +20,7 @@
 </style>
 
 * REQ-000: SCXML State Machine Editor
-** REQ-100: Core Editor Functionality
+** REQ-100: Core Editor Functionality <<partial>>
 *** REQ-101: SCXML domain model <<done>>
 **** REQ-101a: Atomic states <<done>>
 **** REQ-101b: Parallel states <<done>>
@@ -43,7 +43,7 @@
 **** REQ-102d: Internal/External transitions <<done>>
 **** REQ-102e: Self-transitions <<done>>
 **** REQ-102f: Transition actions <<done>>
-*** REQ-103: Element manipulation <<partial>>
+*** REQ-103: Element manipulation <<done>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
 ***** REQ-103b1: Resizable and non-resizable elements <<done>>
@@ -126,7 +126,7 @@
 **** REQ-108b: Callbacks renaming across existing elements
 **** REQ-108c: Callbacks name validation
 
-** REQ-200: UI/UX Requirements
+** REQ-200: UI/UX Requirements <<partial>>
 *** REQ-201: Main Layout <<done>>
 **** REQ-201a: Element palette (toolbox) <<done>>
 **** REQ-201b: Properties editor panel <<done>>
@@ -134,27 +134,45 @@
 **** REQ-201c1: Show/Hide primary side bar <<done>>
 **** REQ-201c2: Switch primary side bar panels <<done>>
 **** REQ-201c3: Retain custom panel sizes in primary side bar <<done>>
-*** REQ-202: Visualization features
-**** REQ-202a: Zoom/pan controls <<in_progress>>
-***** REQ-202a1: Custom cursor when zooming <<prio_low>>
-**** REQ-202b: Grid snapping
-**** REQ-202c: Element theming <<prio_low>>
-*** REQ-203: Workspace management
+*** REQ-202: Model view widget
+**** REQ-202a: Layouts <<prio_low>>
+***** REQ-202a1: Grid snapping <<prio_low>>
+**** REQ-202b: Custom cursors <<prio_low>>
+***** REQ-202b1: zoom in/out cursors <<prio_low>>
+**** REQ-202c: Floating menu
+***** REQ-202c1: show/hide menu on mouse hover
+***** REQ-202c2: zoom in/out controls
+***** REQ-202c3: fit to view shortcut
+***** REQ-202c3: reset zoom shortcut
+**** REQ-202d: View interaction <<done>>
+***** REQ-202d1: View pan <<done>>
+***** REQ-202d2: View zoom in <<done>>
+***** REQ-202d3: View zoom out <<done>>
+*** REQ-203: Workspace management <<partial>>
 **** REQ-203a: Open/Close Workspace directory <<done>>
 **** REQ-203b: Dependency graph visualization  <<prio_low>>
 **** REQ-203c: File inclusion hierarchy  <<prio_low>>
 **** REQ-203d: Cross-file reference highlighting  <<prio_low>>
-*** REQ-204: Menu Features
-**** REQ-204a: Edit menu
-***** REQ-204a1: Copy/Paste/Cut <<todo>>
-***** REQ-204a2: Delete <<partial>>
+*** REQ-204: Menu Features <<partial>>
+**** REQ-204a: Edit menu <<partial>>
+***** REQ-204a1: Copy/Paste/Cut <<done>>
+***** REQ-204a2: Delete <<done>>
 ***** REQ-204a3: Undo/Redo <<done>>
+***** REQ-204a4: Duplicate <<todo>>
+***** REQ-204a5: Find <<prio_low>>
+***** REQ-204a6: Select All <<todo>>
 **** REQ-204d: File menu <<done>>
 ***** REQ-204d1: Open <<done>>
 ***** REQ-204d2: Save <<done>>
 ***** REQ-204d3: Save As <<done>>
 ***** REQ-204d4: List of recent files <<done>>
 ***** REQ-204d5: List of recent workspaces <<done>>
+**** REQ-204e: View menu <<prio_low>>
+***** REQ-204e1: Zoom in <<prio_low>>
+***** REQ-204e2: Zoom out <<prio_low>>
+***** REQ-204e3: Reset zoom <<prio_low>>
+***** REQ-204e4: Fit to view <<prio_low>>
+***** REQ-204e5: Side bar shortcuts <<prio_low>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
@@ -172,19 +190,26 @@
 ***** REQ-205c3: edit element values <<done>>
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
+***** REQ-205c6: actions and properties editing <<in_progress>>
 **** REQ-205d: Support for viewing multiple state machines <<done>>
 ***** REQ-205d1: opening multiple projects simultaniously <<done>>
 ***** REQ-205d2: switching between open projects <<done>>
 ***** REQ-205d3: closing individual open project <<done>>
 ***** REQ-205d4: closing all open projects <<done>>
-*** REQ-206: Primary Side Bar
+*** REQ-206: Primary Side Bar <<partial>>
 **** REQ-206a: Workspace view <<done>>
+***** REQ-206a1: create file <<done>>
+***** REQ-206a2: create folder <<done>>
+***** REQ-206a3: delete file <<done>>
+***** REQ-206a4: collapse folders <<done>>
+***** REQ-206a5: show/hide empty folders <<done>>
+***** REQ-206a6: move files <<done>>
 **** REQ-206b: Editor elements list <<done>>
 **** REQ-206c: Debugging toolbar <<prio_low>>
 *** REQ-207: About Dialog <<done>>
-*** REQ-208: Themes
+*** REQ-208: Themes <<partial>>
 **** REQ-208a: Themes management <<todo>>
-**** REQ-208b: Default theme <<todo>>
+**** REQ-208b: Default theme <<done>>
 
 ** REQ-300: Import/Export <<partial>>
 *** REQ-301: SCXML file handling <<done>>

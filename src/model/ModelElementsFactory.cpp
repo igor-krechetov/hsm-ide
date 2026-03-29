@@ -94,7 +94,8 @@ QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointe
             res = QSharedPointer<State>(new IncludeEntity(source->name()));
             break;
         default:
-            qFatal("ModelElementsFactory::cloneStateEntity: Unexpected element type: %d", static_cast<int>(source->stateType()));
+            qFatal("ModelElementsFactory::cloneStateEntity: Unexpected element type: %d",
+                   static_cast<int>(source->stateType()));
             break;
     }
 
@@ -138,7 +139,7 @@ QSharedPointer<State> ModelElementsFactory::createFinalFrom(const QSharedPointer
 
     if (exitPoint) {
         state = QSharedPointer<FinalState>::create(exitPoint->name());
-        state->setOnStateChangedCallback(exitPoint->onStateChangedCallback());
+        state->setOnStateChangedAction(exitPoint->onStateChangedAction()->serialize());
     }
 
     return state;

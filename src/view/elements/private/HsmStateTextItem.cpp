@@ -1,5 +1,4 @@
 #include "HsmStateTextItem.hpp"
-#include "view/elements/ElementTypeIds.hpp"
 
 #include <QFocusEvent>
 #include <QGraphicsScene>
@@ -7,6 +6,7 @@
 #include <QPainter>
 #include <QTextDocument>
 
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 
 namespace view {

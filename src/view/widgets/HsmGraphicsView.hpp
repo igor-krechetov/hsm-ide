@@ -16,7 +16,7 @@ class ProjectController;
 namespace model {
 class StateMachineEntity;
 class IncludeEntity;
-}
+}  // namespace model
 
 namespace view {
 class HsmElement;

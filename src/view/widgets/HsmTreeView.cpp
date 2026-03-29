@@ -7,8 +7,8 @@
 #include <QMenu>
 #include <QSharedPointer>
 
-#include "view/models/StateMachineTreeModel.hpp"
 #include "model/StateMachineEntity.hpp"
+#include "view/models/StateMachineTreeModel.hpp"
 
 HsmTreeView::HsmTreeView(QWidget* parent)
     : QTreeView(parent) {}
@@ -175,7 +175,7 @@ void HsmTreeView::contextMenuEvent(QContextMenuEvent* event) {
     }
 }
 
-void HsmTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
+void HsmTreeView::mouseDoubleClickEvent(QMouseEvent* event) {
     QModelIndex idx = indexAt(event->pos());
 
     if (idx.isValid()) {
@@ -188,6 +188,5 @@ void HsmTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
             element = treeModel->entiryFromIndex(idx);
             emit elementDoubleClickEvent(element);
         }
-
     }
 }

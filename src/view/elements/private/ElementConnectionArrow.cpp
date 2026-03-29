@@ -1,10 +1,10 @@
 #include "ElementConnectionArrow.hpp"
-#include "view/elements/ElementTypeIds.hpp"
 
 #include <QCursor>
 #include <QGraphicsSceneMouseEvent>
 #include <QTransform>
 
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 
 namespace view {

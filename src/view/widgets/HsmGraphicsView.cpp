@@ -10,9 +10,9 @@
 #include <QScrollBar>
 #include <QWheelEvent>
 
-#include "view/elements/ElementTypeIds.hpp"
 #include "controllers/ProjectController.hpp"
 #include "view/common/ViewUtils.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/elements/HsmTransition.hpp"
@@ -411,8 +411,7 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
             if (parentSelectedElement != childSelectedElement) {
                 if (parentSelectedElement->containsChild(childSelectedElement) == false) {
                     qDebug() << "---- BEGIN DRAGGING, id=" << childSelectedElement->modelId()
-                            << "type=" << (int)childSelectedElement->elementType()
-                             << childSelectedElement;
+                             << "type=" << (int)childSelectedElement->elementType() << childSelectedElement;
 
                     // store position for secondary dragged element
                     mDragRevertPositions.insert(childSelectedElement, childSelectedElement->pos());

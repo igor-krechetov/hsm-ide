@@ -1,5 +1,4 @@
 #include "ElementGripItem.hpp"
-#include "view/elements/ElementTypeIds.hpp"
 
 #include <QCursor>
 #include <QDebug>
@@ -9,6 +8,7 @@
 
 #include "HsmElement.hpp"
 #include "ObjectUtils.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 
 namespace view {

@@ -4,6 +4,7 @@
 // #include <QGraphicsSceneMouseEvent>
 // #include <QPainter>
 #include <QDebug>
+
 #include "view/elements/ElementTypeIds.hpp"
 
 namespace view {

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.7.0] - 2026-03-29
+### New
+- Code restructuring to properly support element actions
+- [REQ-205c6] UI editor for HSM element actions
+
 ## [0.6.0] - 2026-03-28
 ### New
 - Workspace tree now lists nested subfolders recursively and shows SCXML files from all levels.

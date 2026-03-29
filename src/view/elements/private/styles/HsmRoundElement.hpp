@@ -19,7 +19,6 @@ protected:
 
     qreal radius() const;
     QPointF center() const;
-
 };
 
 };  // namespace view
