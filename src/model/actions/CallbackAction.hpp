@@ -15,7 +15,7 @@ public:
     bool deserialize(const QString& data) override;
 
 private:
-    QString mFunction;
+    QString mFunction = "callbackName";
 };
 
 }  // namespace model

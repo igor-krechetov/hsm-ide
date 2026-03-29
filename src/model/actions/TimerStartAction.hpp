@@ -15,8 +15,8 @@ public:
     bool deserialize(const QString& data) override;
 
 private:
-    QString mTimerId;
-    uint mInterval = 0;
+    QString mTimerId = "NEW_TIMER";
+    uint mInterval = 1000;
     bool mSingleshot = false;
 };
 

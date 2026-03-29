@@ -15,7 +15,7 @@ public:
     bool deserialize(const QString& data) override;
 
 private:
-    QString mTimerId;
+    QString mTimerId = "NEW_TIMER";
 };
 
 }  // namespace model

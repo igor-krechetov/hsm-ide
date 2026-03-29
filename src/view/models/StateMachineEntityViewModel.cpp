@@ -12,37 +12,6 @@
 #include "model/actions/ModelActionFactory.hpp"
 
 namespace view {
-
-namespace {
-
-QSharedPointer<model::IModelAction> actionFromVariant(const QVariant& value) {
-    QSharedPointer<model::IModelAction> res;
-
-    if (value.canConvert<QSharedPointer<model::IModelAction>>()) {
-        res = value.value<QSharedPointer<model::IModelAction>>();
-    } else {
-        res = model::ModelActionFactory::createModelActionFromData(value.toString(), model::ModelAction::NONE);
-    }
-
-    if (!res) {
-        res = model::ModelActionFactory::createModelAction(model::ModelAction::NONE);
-    }
-
-    return res;
-}
-
-QString sanitizeArgument(const QString& value) {
-    QString sanitized = value;
-
-    if (sanitized.contains(',') || sanitized.contains(' ')) {
-        sanitized = QString("\"%1\"").arg(sanitized.replace('"', "\\\""));
-    }
-
-    return sanitized;
-}
-
-}  // namespace
-
 StateMachineEntityViewModel::StateMachineEntityViewModel(const QSharedPointer<model::StateMachineModel>& model, QObject* parent)
     : QAbstractItemModel(parent)
     , mModel(model) {}
@@ -63,41 +32,20 @@ bool StateMachineEntityViewModel::hasSelectedEntity() const {
     return res;
 }
 
-bool StateMachineEntityViewModel::isActionProperty(const QString& key) const {
-    bool res = false;
-
-    if (key.endsWith("Action") || key == "action") {
-        res = true;
-    }
-
-    return res;
-}
-
 StateMachineEntityViewModel::ComplexPropertyType StateMachineEntityViewModel::complexTypeForProperty(const QString& key) const {
     ComplexPropertyType res = ComplexPropertyType::None;
 
-    if (isActionProperty(key)) {
+    if (key.endsWith("Action") || key == "action") {
         res = ComplexPropertyType::Action;
     }
 
     return res;
 }
-
-QStringList StateMachineEntityViewModel::selectedEntityProperties() const {
-    QStringList res;
-
-    if (hasSelectedEntity()) {
-        res = mSelectedEntity->properties();
-    }
-
-    return res;
-}
-
 void StateMachineEntityViewModel::rebuildNodes() {
     mTopNodes.clear();
 
     if (hasSelectedEntity()) {
-        const QStringList props = selectedEntityProperties();
+        const QStringList props = mSelectedEntity->properties();
 
         for (int i = 0; i < props.size(); ++i) {
             auto node = std::make_unique<PropertyNode>();
@@ -109,11 +57,12 @@ void StateMachineEntityViewModel::rebuildNodes() {
             node->complexType = complexTypeForProperty(node->key);
 
             if (node->complexType == ComplexPropertyType::Action) {
-                const ActionDescriptor descriptor = describeAction(actionFromVariant(mSelectedEntity->getProperty(node->key)));
-                const QStringList attrs = actionAttributesForSubtype(descriptor.subtype);
+                auto ptrAction = actionFromVariant(mSelectedEntity->getProperty(node->key));
+                const QStringList attrs = ptrAction->properties();
 
                 for (int childRow = 0; childRow < attrs.size(); ++childRow) {
                     auto child = std::make_unique<PropertyNode>();
+
                     child->row = childRow;
                     child->propertyRow = i;
                     child->type = NodeType::ActionAttribute;
@@ -192,22 +141,6 @@ QModelIndex StateMachineEntityViewModel::parent(const QModelIndex& index) const 
     return res;
 }
 
-QVariant StateMachineEntityViewModel::propertyRoleData(const PropertyNode& node, int role) const {
-    QVariant res;
-
-    if (role == PropertyKeyRole) {
-        res = node.key;
-    } else if (role == PropertyPathRole) {
-        res = node.key;
-
-        if (node.type == NodeType::ActionAttribute) {
-            res = QString("%1.%2").arg(node.key, node.actionAttribute);
-        }
-    }
-
-    return res;
-}
-
 QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyNode& node, int role) const {
     QVariant res;
 
@@ -216,8 +149,9 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
 
         if (role == Qt::DisplayRole || role == Qt::EditRole) {
             if (node.complexType == ComplexPropertyType::Action) {
-                const ActionDescriptor descriptor = describeAction(actionFromVariant(propertyValue));
-                res = actionSubtypeToDisplayString(descriptor.subtype);
+                auto ptrAction = actionFromVariant(propertyValue);
+
+                res = model::ModelActionFactory::actionName(ptrAction->type());
             } else {
                 res = propertyValue;
 
@@ -228,8 +162,9 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
                 }
             }
         } else if (role == ActionSubtypeRole && node.complexType == ComplexPropertyType::Action) {
-            const ActionDescriptor descriptor = describeAction(actionFromVariant(propertyValue));
-            res = actionSubtypeToDisplayString(descriptor.subtype);
+            auto ptrAction = actionFromVariant(propertyValue);
+
+            res = model::ModelActionFactory::actionName(ptrAction->type());
         }
     }
 
@@ -239,17 +174,10 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
 QVariant StateMachineEntityViewModel::formatActionAttributeValue(const PropertyNode& node, int role) const {
     QVariant res;
 
-    if (hasSelectedEntity()) {
-        const ActionDescriptor descriptor = describeAction(actionFromVariant(mSelectedEntity->getProperty(node.key)));
-        const QStringList attrs = actionAttributesForSubtype(descriptor.subtype);
-        const int idx = attrs.indexOf(node.actionAttribute);
-
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            if (idx >= 0 && idx < descriptor.args.size()) {
-                res = descriptor.args.at(idx);
-            } else {
-                res = QString();
-            }
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        if (hasSelectedEntity()) {
+            auto ptrAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+            res = ptrAction->getProperty(node.actionAttribute).toString();
         }
     }
 
@@ -274,7 +202,15 @@ QVariant StateMachineEntityViewModel::data(const QModelIndex& index, int role) c
         }
 
         if (!res.isValid()) {
-            res = propertyRoleData(*node, role);
+            if (role == PropertyKeyRole) {
+                res = node->key;
+            } else if (role == PropertyPathRole) {
+                res = node->key;
+
+                if (node->type == NodeType::ActionAttribute) {
+                    res = QString("%1.%2").arg(node->key, node->actionAttribute);
+                }
+            }
         }
     }
 
@@ -342,132 +278,41 @@ Qt::ItemFlags StateMachineEntityViewModel::flags(const QModelIndex& index) const
     return res;
 }
 
-StateMachineEntityViewModel::ActionDescriptor StateMachineEntityViewModel::describeAction(
-    const QSharedPointer<model::IModelAction>& action) const {
-    ActionDescriptor descriptor;
-    descriptor.subtype = model::ModelAction::NONE;
-
-    if (action) {
-        if (action->type() == model::ModelAction::TIMER_START) {
-            descriptor.subtype = model::ModelAction::TIMER_START;
-        } else if (action->type() == model::ModelAction::TIMER_STOP) {
-            descriptor.subtype = model::ModelAction::TIMER_STOP;
-        } else if (action->type() == model::ModelAction::TIMER_RESTART) {
-            descriptor.subtype = model::ModelAction::TIMER_RESTART;
-        } else if (action->type() == model::ModelAction::SEND_EVENT) {
-            descriptor.subtype = model::ModelAction::SEND_EVENT;
-        } else if (action->type() == model::ModelAction::CALLBACK) {
-            descriptor.subtype = model::ModelAction::CALLBACK;
-        } else {
-            descriptor.subtype = model::ModelAction::NONE;
-        }
-
-        const QStringList attrs = action->properties();
-
-        for (const auto& attr : attrs) {
-            descriptor.args.push_back(action->getProperty(attr).toString());
-        }
-    }
-
-    return descriptor;
-}
-
-QString StateMachineEntityViewModel::actionSubtypeToDisplayString(model::ModelAction subtype) const {
-    return model::ModelActionFactory::actionName(subtype);
-}
-
-model::ModelAction StateMachineEntityViewModel::actionSubtypeFromDisplayString(const QString& text) const {
-    return model::ModelActionFactory::actionTypeByName(text);
-}
-
-QStringList StateMachineEntityViewModel::actionAttributesForSubtype(model::ModelAction subtype) const {
-    QStringList res;
-    auto action = model::ModelActionFactory::createModelAction(subtype);
-
-    if (action) {
-        res = action->properties();
-    }
-
-    return res;
-}
-
-QStringList StateMachineEntityViewModel::defaultArgumentsForSubtype(model::ModelAction subtype) const {
-    QStringList res;
-    ActionDescriptor descriptor;
-    descriptor.subtype = subtype;
-
-    if (subtype == model::ModelAction::TIMER_START) {
-        descriptor.args = {"timer_id", "1000", "false"};
-    } else if (subtype == model::ModelAction::TIMER_STOP || subtype == model::ModelAction::TIMER_RESTART) {
-        descriptor.args = {"timer_id"};
-    } else if (subtype == model::ModelAction::SEND_EVENT) {
-        descriptor.args = {"event_id", "arguments"};
-    } else {
-        descriptor.args = {};
-    }
-
-    res = descriptor.args;
-
-    return res;
-}
-
-bool StateMachineEntityViewModel::applyPropertyValue(const QString& propName, const QVariant& newValue) {
-    bool res = false;
-
-    if (mBeginHistoryTransaction) {
-        mBeginHistoryTransaction(QString("Edit property: %1").arg(propName));
-    }
-
-    res = mSelectedEntity->setProperty(propName, newValue);
-
-    if (mCommitHistoryTransaction) {
-        mCommitHistoryTransaction();
-    }
-
-    qDebug() << "setProperty -> " << res;
-
-    return res;
-}
-
 bool StateMachineEntityViewModel::updatePropertyByNode(const PropertyNode& node, const QVariant& value, int role) {
     bool res = false;
 
     if (hasSelectedEntity() && role == Qt::EditRole) {
+        if (mBeginHistoryTransaction) {
+            mBeginHistoryTransaction(QString("Edit property: %1").arg(node.key));
+        }
+
         if (node.type == NodeType::Property) {
             QVariant newValue = value;
 
             if (node.complexType == ComplexPropertyType::Action) {
-                ActionDescriptor descriptor = describeAction(actionFromVariant(mSelectedEntity->getProperty(node.key)));
-                descriptor.subtype = actionSubtypeFromDisplayString(value.toString());
-                descriptor.args = defaultArgumentsForSubtype(descriptor.subtype);
-                auto action = model::ModelActionFactory::createModelAction(descriptor.subtype);
-                const QStringList attrs = action->properties();
+                auto ptrCurrentAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+                auto newActionType = model::ModelActionFactory::actionTypeByName(value.toString());
 
-                for (int i = 0; i < attrs.size(); ++i) {
-                    action->setProperty(attrs.at(i), descriptor.args.value(i));
+                if (newActionType != ptrCurrentAction->type()) {
+
+                    newValue = QVariant::fromValue(model::ModelActionFactory::createModelAction(newActionType));
                 }
-
-                newValue = QVariant::fromValue(action);
             }
 
-            res = applyPropertyValue(node.key, newValue);
+            res = mSelectedEntity->setProperty(node.key, newValue);
         } else if (node.type == NodeType::ActionAttribute) {
-            ActionDescriptor descriptor = describeAction(actionFromVariant(mSelectedEntity->getProperty(node.key)));
-            const QStringList attrs = actionAttributesForSubtype(descriptor.subtype);
-            const int idx = attrs.indexOf(node.actionAttribute);
+            Q_ASSERT(node.parent);
 
-            if (idx >= 0) {
-                while (descriptor.args.size() <= idx) {
-                    descriptor.args.push_back(QString());
-                }
+            if (nullptr != node.parent) {
+                auto ptrCurrentAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
 
-                descriptor.args[idx] = value.toString();
-                auto action = model::ModelActionFactory::createModelAction(descriptor.subtype);
-                for (int i = 0; i < attrs.size(); ++i) {
-                    action->setProperty(attrs.at(i), descriptor.args.value(i));
-                }
-                res = applyPropertyValue(node.key, QVariant::fromValue(action));
+                ptrCurrentAction->setProperty(node.actionAttribute, value);
+                res = mSelectedEntity->setProperty(node.parent->key, QVariant::fromValue(ptrCurrentAction));
             }
+        }
+
+        if (mCommitHistoryTransaction) {
+            mCommitHistoryTransaction();
         }
     }
 
@@ -491,15 +336,24 @@ bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVaria
     return res;
 }
 
-QStringList StateMachineEntityViewModel::valueOptions(int row) const {
-    Q_UNUSED(row);
-    return {};
-}
-
 void StateMachineEntityViewModel::setHistoryTransactionCallbacks(std::function<void(const QString&)> beginCallback,
                                                                  std::function<void()> commitCallback) {
     mBeginHistoryTransaction = std::move(beginCallback);
     mCommitHistoryTransaction = std::move(commitCallback);
+}
+
+QSharedPointer<model::IModelAction> StateMachineEntityViewModel::actionFromVariant(const QVariant& value) const {
+    QSharedPointer<model::IModelAction> res;
+
+    if (value.canConvert<QSharedPointer<model::IModelAction>>()) {
+        res = value.value<QSharedPointer<model::IModelAction>>();
+    } else {
+        res = model::ModelActionFactory::createModelActionFromData(value.toString(), model::ModelAction::NONE);
+    }
+
+    Q_ASSERT(res);
+
+    return res;
 }
 
 }  // namespace view

@@ -15,7 +15,7 @@ public:
     bool deserialize(const QString& data) override;
 
 private:
-    QString mEventId;
+    QString mEventId = "NEW_EVENT";
     QString mArguments;
 };
 
