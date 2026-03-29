@@ -15,25 +15,22 @@ public:
 
     void accept(class IModelVisitor* visitor) override;
 
-    // Getters
     const QString& event() const;
     QSharedPointer<IModelAction> onStateChangedAction() const;
     QSharedPointer<IModelAction> onEnteringAction() const;
     QSharedPointer<IModelAction> onExitingAction() const;
 
-    // Setters
+    bool hasOnStateChangedAction() const;
+    bool hasOnEnteringAction() const;
+    bool hasOnExitingAction() const;
+
     void setEvent(const QString& event);
     void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
     void setOnEnteringAction(const QSharedPointer<IModelAction>& action);
     void setOnExitingAction(const QSharedPointer<IModelAction>& action);
-
-    // Backward compatibility wrappers
-    QString onStateChangedCallback() const;
-    QString onEnteringCallback() const;
-    QString onExitingCallback() const;
-    void setOnStateChangedCallback(const QString& callback);
-    void setOnEnteringCallback(const QString& callback);
-    void setOnExitingCallback(const QString& callback);
+    void setOnStateChangedAction(const QString& actionData);
+    void setOnEnteringAction(const QString& actionData);
+    void setOnExitingAction(const QString& actionData);
 
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;

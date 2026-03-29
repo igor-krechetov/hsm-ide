@@ -5,6 +5,7 @@
 
 #include "controllers/MainEditorController.hpp"
 #include "model/ModelTypes.hpp"
+#include "model/actions/IModelAction.hpp"
 
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
@@ -12,6 +13,7 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setApplicationName("hsm-ide");
 
     qRegisterMetaType<model::EntityID_t>("model::EntityID_t");
+    qRegisterMetaType<QSharedPointer<model::IModelAction>>("QSharedPointer<model::IModelAction>");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

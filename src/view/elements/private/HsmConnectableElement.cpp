@@ -143,7 +143,6 @@ void HsmConnectableElement::removeConnectionArrowsForOtherElements(const QPointF
     }
 }
 
-
 void HsmConnectableElement::removeConnectionArrows() {
     if (hasVisibleArrows() == true) {
         for (const auto& direction : mArrows.keys()) {
@@ -220,9 +219,10 @@ void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
         const QPointF sceneMousePos = mapToScene(event->pos());
 
         if (sceneRect.contains(sceneMousePos)) {
-            // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast enough.
-            //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore (but need to account
-            //       for the arrow size)
+            // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast
+            // enough.
+            //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore
+            //       (but need to account for the arrow size)
             removeConnectionArrowsForOtherElements(sceneMousePos);
             createConnectionArrows();
         }

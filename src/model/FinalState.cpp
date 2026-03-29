@@ -6,7 +6,8 @@
 namespace model {
 
 FinalState::FinalState(const QString& name)
-    : State(name, StateType::FINAL) {}
+    : State(name, StateType::FINAL)
+    , mOnStateChangedAction(ModelActionFactory::createModelAction(ModelAction::NONE)) {}
 
 void FinalState::accept(class IModelVisitor* visitor) {
     if (visitor) {
@@ -14,35 +15,36 @@ void FinalState::accept(class IModelVisitor* visitor) {
     }
 }
 
-// Getters
 QSharedPointer<IModelAction> FinalState::onStateChangedAction() const {
     return mOnStateChangedAction;
 }
 
-// Setters
+bool FinalState::hasOnStateChangedAction() const {
+    return (mOnStateChangedAction && mOnStateChangedAction->type() != ModelAction::NONE);
+}
+
 void FinalState::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
-    mOnStateChangedAction = action;
+    mOnStateChangedAction = (action ? action : ModelActionFactory::createModelAction(ModelAction::NONE));
     emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
-QString FinalState::onStateChangedCallback() const {
-    return (mOnStateChangedAction ? mOnStateChangedAction->serialize() : QString());
-}
-
-void FinalState::setOnStateChangedCallback(const QString& callback) {
-    setOnStateChangedAction(callback.isEmpty() ? QSharedPointer<IModelAction>()
-                                               : createModelActionFromData(callback, ModelAction::CALLBACK));
+void FinalState::setOnStateChangedAction(const QString& actionData) {
+    setOnStateChangedAction(ModelActionFactory::createModelActionFromData(actionData, ModelAction::CALLBACK));
 }
 
 QStringList FinalState::properties() const {
-    return State::properties() + QStringList{"onStateChangedCallback"};
+    return State::properties() + QStringList{"onStateChangedAction"};
 }
 
 bool FinalState::setProperty(const QString& key, const QVariant& value) {
     bool handled = true;
 
-    if (key == "onStateChangedCallback") {
-        setOnStateChangedCallback(value.toString());
+    if (key == "onStateChangedAction") {
+        if (value.canConvert<QSharedPointer<IModelAction>>()) {
+            setOnStateChangedAction(value.value<QSharedPointer<IModelAction>>());
+        } else {
+            setOnStateChangedAction(value.toString());
+        }
     } else {
         handled = State::setProperty(key, value);
     }
@@ -51,8 +53,8 @@ bool FinalState::setProperty(const QString& key, const QVariant& value) {
 }
 
 QVariant FinalState::getProperty(const QString& key) const {
-    if (key == "onStateChangedCallback") {
-        return (mOnStateChangedAction ? QVariant(mOnStateChangedAction->serialize()) : QVariant(QString()));
+    if (key == "onStateChangedAction") {
+        return QVariant::fromValue(mOnStateChangedAction);
     }
 
     return State::getProperty(key);
@@ -61,7 +63,8 @@ QVariant FinalState::getProperty(const QString& key) const {
 void FinalState::copyEntityData(const StateMachineEntity& other) {
     State::copyEntityData(other);
     if (const FinalState* fOther = dynamic_cast<const FinalState*>(&other)) {
-        mOnStateChangedAction = createModelActionFromData(fOther->onStateChangedCallback(), ModelAction::CALLBACK);
+        mOnStateChangedAction =
+            ModelActionFactory::createModelActionFromData(fOther->onStateChangedAction()->serialize(), ModelAction::NONE);
     }
 }
 

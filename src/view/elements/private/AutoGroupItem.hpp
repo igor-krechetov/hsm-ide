@@ -12,7 +12,7 @@ class QPainter;
 
 namespace view {
 
-    class AutoGroupItem : public QGraphicsObject {
+class AutoGroupItem : public QGraphicsObject {
     Q_OBJECT
 public:
     AutoGroupItem(QGraphicsItem* parent = nullptr);

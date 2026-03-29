@@ -3,7 +3,7 @@
 namespace {
 constexpr const char* KEY_RECENT_HSM = "recent/hsm";
 constexpr const char* KEY_RECENT_WORKSPACES = "recent/workspaces";
-}
+}  // namespace
 
 SettingsController::SettingsController() {
     loadRecentItems();
@@ -63,7 +63,6 @@ void SettingsController::addPathToRecentList(const QString& path, QStringList& i
         mSettings.sync();
     }
 }
-
 
 void SettingsController::removePathFromRecentList(const QString& path, QStringList& items, const QString& settingsKey) {
     if (path.isEmpty() == false) {

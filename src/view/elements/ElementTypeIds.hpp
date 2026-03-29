@@ -2,6 +2,7 @@
 #define ELEMENTTYPEIDS_HPP
 
 #include <QGraphicsItem>
+
 #include "private/HsmElement.hpp"
 
 namespace view {
@@ -27,8 +28,8 @@ constexpr int ELEMENT_TYPE_STATE_TEXT = QGraphicsItem::UserType + 1005;
 
 // Add more as needed
 
-} // namespace view
+}  // namespace view
 
-#define IS_HSM_ELEMENT_TYPE(_type)      (((_type) >= view::HSM_ELEMENT_TYPE_BASE) && ((_type) < view::ELEMENT_TYPE_HELPERS_BASE))
+#define IS_HSM_ELEMENT_TYPE(_type) (((_type) >= view::HSM_ELEMENT_TYPE_BASE) && ((_type) < view::ELEMENT_TYPE_HELPERS_BASE))
 
-#endif // ELEMENTTYPEIDS_HPP
+#endif  // ELEMENTTYPEIDS_HPP

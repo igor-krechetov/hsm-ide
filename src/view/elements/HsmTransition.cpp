@@ -380,7 +380,7 @@ void HsmTransition::onEventEditFinished() {
 
         if (transitionConfigParts.size() == 2) {
             entityPtr->setEvent(transitionConfigParts[0]);
-            entityPtr->setTransitionCallback(transitionConfigParts[1]);
+            entityPtr->setTransitionAction(transitionConfigParts[1]);
         } else {
             entityPtr->setEvent(transitionConfigParts[0]);
         }
@@ -434,8 +434,8 @@ void HsmTransition::onModelDataChanged() {
         QSignalBlocker block(mLabelEvent);
         QSignalBlocker block2(mLabelCondition);
 
-        if (entityPtr->transitionCallback().isEmpty() == false) {
-            mLabelEvent->setPlainText(entityPtr->event() + " / " + entityPtr->transitionCallback());
+        if (entityPtr->hasTransitionAction()) {
+            mLabelEvent->setPlainText(entityPtr->event() + " / " + entityPtr->transitionAction()->serialize());
         } else {
             mLabelEvent->setPlainText(entityPtr->event());
         }

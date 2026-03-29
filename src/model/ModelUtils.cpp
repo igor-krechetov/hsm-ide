@@ -9,7 +9,7 @@ QString sanitiseIdentifier(const QString& input) {
 
     out.reserve(input.length());
 
-    for (const QChar &c : input) {
+    for (const QChar& c : input) {
         if (false == firstValidCharFound) {
             // First valid character must be a letter or underscore
             if (c.isLetter() || c == '_') {

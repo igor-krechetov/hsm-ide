@@ -3,17 +3,20 @@
 
 #include <QSharedPointer>
 #include <QStringList>
-#include <memory>
 
 #include "IModelAction.hpp"
 
 namespace model {
 
-QSharedPointer<IModelAction> createModelAction(ModelAction type);
-QSharedPointer<IModelAction> createModelActionFromData(const QString& data, ModelAction fallbackType = ModelAction::CALLBACK);
-QString actionName(ModelAction type);
-ModelAction actionTypeByName(const QString& name);
-QStringList supportedActionNames();
+class ModelActionFactory {
+public:
+    static QSharedPointer<IModelAction> createModelAction(ModelAction type = ModelAction::NONE);
+    static QSharedPointer<IModelAction> createModelActionFromData(const QString& data,
+                                                                  ModelAction fallbackType = ModelAction::NONE);
+    static QString actionName(ModelAction type);
+    static ModelAction actionTypeByName(const QString& name);
+    static QStringList supportedActionNames();
+};
 
 }  // namespace model
 

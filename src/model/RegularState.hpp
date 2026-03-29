@@ -25,13 +25,13 @@ public:
     void setOnEnteringAction(const QSharedPointer<IModelAction>& action);
     void setOnExitingAction(const QSharedPointer<IModelAction>& action);
 
-    // Backward compatibility wrappers
-    QString onStateChangedCallback() const;
-    QString onEnteringCallback() const;
-    QString onExitingCallback() const;
-    void setOnStateChangedCallback(const QString& callback);
-    void setOnEnteringCallback(const QString& callback);
-    void setOnExitingCallback(const QString& callback);
+    bool hasOnStateChangedAction() const;
+    bool hasOnEnteringAction() const;
+    bool hasOnExitingAction() const;
+
+    void setOnStateChangedAction(const QString& actionData);
+    void setOnEnteringAction(const QString& actionData);
+    void setOnExitingAction(const QString& actionData);
 
     bool addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void addChildState(const QSharedPointer<State>& child);

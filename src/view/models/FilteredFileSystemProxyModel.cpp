@@ -1,8 +1,8 @@
 #include "FilteredFileSystemProxyModel.hpp"
 
-#include <QStack>
 #include <QFileInfo>
 #include <QFileSystemModel>
+#include <QStack>
 
 namespace view {
 

@@ -286,8 +286,7 @@ void StateMachineModel::dump() const {
                     targetName = targetState->name();
                 }
 
-                qDebug() << "[TRANSITION] id:" << entity->id()
-                         << "src:" << sourceName << "[" << transition->sourceId() << "]"
+                qDebug() << "[TRANSITION] id:" << entity->id() << "src:" << sourceName << "[" << transition->sourceId() << "]"
                          << " target:" << targetName << "[" << transition->targetId() << "]"
                          << " event:" << transition->event();
             }

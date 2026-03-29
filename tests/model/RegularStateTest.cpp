@@ -12,28 +12,18 @@ private slots:
     void ChildAndTransitionSearch();
 };
 
-/**
- * @brief Verify regular state stores callbacks and supports property API.
- *
- * Use-case: User edits state callbacks in property panel.
- */
 void RegularStateTest::CallbackPropertiesRoundTrip() {
     auto state = QSharedPointer<model::RegularState>::create("S");
 
-    QVERIFY(state->setProperty("onEnteringCallback", "enterCb"));
-    QVERIFY(state->setProperty("onExitingCallback", "exitCb"));
-    QVERIFY(state->setProperty("onStateChangedCallback", "stateCb"));
+    QVERIFY(state->setProperty("onEnteringAction", "enterCb"));
+    QVERIFY(state->setProperty("onExitingAction", "exitCb"));
+    QVERIFY(state->setProperty("onStateChangedAction", "stateCb"));
 
-    QCOMPARE(QString("enterCb"), state->onEnteringCallback());
-    QCOMPARE(QString("exitCb"), state->onExitingCallback());
-    QCOMPARE(QString("stateCb"), state->onStateChangedCallback());
+    QCOMPARE(QString("enterCb"), state->onEnteringAction()->serialize());
+    QCOMPARE(QString("exitCb"), state->onExitingAction()->serialize());
+    QCOMPARE(QString("stateCb"), state->onStateChangedAction()->serialize());
 }
 
-/**
- * @brief Verify regular state child management and recursive search.
- *
- * Use-case: Hierarchical model resolves nested states and transitions by id and name.
- */
 void RegularStateTest::ChildAndTransitionSearch() {
     auto parent = QSharedPointer<model::RegularState>::create("Parent");
     auto child = QSharedPointer<model::RegularState>::create("Child");

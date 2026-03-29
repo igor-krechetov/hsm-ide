@@ -18,12 +18,6 @@ public:
     explicit StateMachineEntityViewModel(const QSharedPointer<model::StateMachineModel>& model, QObject* parent = nullptr);
     virtual ~StateMachineEntityViewModel() override;
 
-    enum CustomRoles {
-        PropertyKeyRole = Qt::UserRole,
-        PropertyPathRole,
-        ActionSubtypeRole,
-    };
-
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
@@ -41,6 +35,12 @@ public:
                                         std::function<void()> commitCallback);
 
 private:
+    enum CustomRoles {
+        PropertyKeyRole = Qt::UserRole,
+        PropertyPathRole,
+        ActionSubtypeRole,
+    };
+
     enum class NodeType {
         Property,
         ActionAttribute,
@@ -64,7 +64,7 @@ private:
     };
 
     struct ActionDescriptor {
-        model::ModelAction subtype = model::ModelAction::CALLBACK;
+        model::ModelAction subtype = model::ModelAction::NONE;
         QStringList args;
     };
 
@@ -80,15 +80,11 @@ private:
     QVariant formatActionAttributeValue(const PropertyNode& node, int role) const;
     QVariant propertyRoleData(const PropertyNode& node, int role) const;
 
-    ActionDescriptor parseActionDescriptor(const QString& rawValue) const;
-    QString buildActionValue(const ActionDescriptor& descriptor) const;
+    ActionDescriptor describeAction(const QSharedPointer<model::IModelAction>& action) const;
     QString actionSubtypeToDisplayString(model::ModelAction subtype) const;
     model::ModelAction actionSubtypeFromDisplayString(const QString& text) const;
     QStringList actionAttributesForSubtype(model::ModelAction subtype) const;
     QStringList defaultArgumentsForSubtype(model::ModelAction subtype) const;
-
-    QStringList parseActionArguments(const QString& rawArgs) const;
-    QString normalizeActionName(const QString& text) const;
 
     bool updatePropertyByNode(const PropertyNode& node, const QVariant& value, int role);
     bool applyPropertyValue(const QString& propName, const QVariant& newValue);

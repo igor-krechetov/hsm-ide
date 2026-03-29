@@ -71,7 +71,6 @@ public:
     QModelIndex findModelEntity(const model::EntityID_t id) const;
     QSharedPointer<model::StateMachineEntity> entiryFromIndex(const QModelIndex& index) const;
 
-
     bool removeRows(int row, int count, const QModelIndex& parent) override;
 
 private slots:

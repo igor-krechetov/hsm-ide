@@ -40,8 +40,8 @@ public:
     void setEvent(const QString& event);
     void setTransitionType(TransitionType type);
     void setTransitionAction(const QSharedPointer<IModelAction>& action);
-    QString transitionCallback() const;
-    void setTransitionCallback(const QString& callback);
+    bool hasTransitionAction() const;
+    void setTransitionAction(const QString& actionData);
     void setConditionCallback(const QString& callback);
     void setExpectedConditionValue(bool value);
     bool setProperty(const QString& key, const QVariant& value) override;

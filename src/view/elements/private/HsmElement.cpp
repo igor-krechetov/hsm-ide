@@ -7,11 +7,11 @@
 #include <QGraphicsView>
 #include <QMimeData>
 
-#include "view/elements/ElementTypeIds.hpp"
 #include "HsmResizableElement.hpp"
 #include "model/State.hpp"
 #include "model/StateHierarchyRules.hpp"
 #include "model/StateMachineEntity.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 
@@ -229,7 +229,7 @@ bool HsmElement::containsChild(HsmElement* child) const {
 
     // Why view::AutoGroupItem got added to hsm items in the first place?
     for (QGraphicsItem* item : hsmChildItems()) {
-        if ( IS_HSM_ELEMENT_TYPE(item->type()) ) {
+        if (IS_HSM_ELEMENT_TYPE(item->type())) {
             if (auto element = qgraphicsitem_cast<HsmElement*>(item)) {
                 if ((child == element) || (element->containsChild(child) == true)) {
                     res = true;
@@ -339,7 +339,9 @@ void HsmElement::forEachHsmChildElement(std::function<void(HsmElement*)> callbac
     }
 }
 
-int HsmElement::type() const { return HSM_ELEMENT_TYPE_BASE + static_cast<int>(mType); }
+int HsmElement::type() const {
+    return HSM_ELEMENT_TYPE_BASE + static_cast<int>(mType);
+}
 
 QRectF HsmElement::boundingRect() const {
     return mOuterRect;

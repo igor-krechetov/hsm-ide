@@ -6,7 +6,7 @@
 #include <QWeakPointer>
 
 namespace model {
-    class StateMachineEntity;
+class StateMachineEntity;
 };
 
 class HsmTreeView : public QTreeView {
@@ -23,7 +23,7 @@ signals:
 
 protected:
     void contextMenuEvent(QContextMenuEvent* event) override;
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 protected slots:
     void onModelReset();

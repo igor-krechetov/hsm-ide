@@ -13,13 +13,11 @@ public:
 
     void accept(class IModelVisitor* visitor) override;
 
-    // Getters
     QSharedPointer<IModelAction> onStateChangedAction() const;
+    bool hasOnStateChangedAction() const;
 
-    // Setters
     void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
-    QString onStateChangedCallback() const;
-    void setOnStateChangedCallback(const QString& callback);
+    void setOnStateChangedAction(const QString& actionData);
 
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;

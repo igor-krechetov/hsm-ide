@@ -38,16 +38,19 @@ QString CallbackAction::serialize() const {
 }
 
 bool CallbackAction::deserialize(const QString& data) {
-    bool res = true;
-    QString value = data.trimmed();
+    bool res = false;
+    const QString value = data.trimmed();
     QRegularExpression rgx(R"(^callback\((.*)\)$)");
     auto match = rgx.match(value);
 
     if (match.hasMatch()) {
-        value = match.captured(1).trimmed();
+        mFunction = match.captured(1).trimmed();
+        res = (mFunction.isEmpty() == false);
+    } else if (value.contains('(') == false && value.contains(')') == false && value.contains(' ') == false &&
+               value.contains('\t') == false && value.isEmpty() == false) {
+        mFunction = value;
+        res = true;
     }
-
-    mFunction = value;
 
     return res;
 }

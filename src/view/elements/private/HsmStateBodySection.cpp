@@ -1,8 +1,7 @@
 #include "HsmStateBodySection.hpp"
 
-#include "view/elements/ElementTypeIds.hpp"
-
 #include "HsmElement.hpp"
+#include "view/elements/ElementTypeIds.hpp"
 
 namespace view {
 
@@ -21,7 +20,7 @@ QVariant HsmStateBodySection::itemChange(GraphicsItemChange change, const QVaria
         mHasSubstates = false;
 
         for (QGraphicsItem* child : childItems()) {
-            if ( IS_HSM_ELEMENT_TYPE(child->type()) ) {
+            if (IS_HSM_ELEMENT_TYPE(child->type())) {
                 HsmElement* element = qgraphicsitem_cast<HsmElement*>(child);
 
                 if ((nullptr != element) && (element->elementType() != HsmElementType::TRANSITION)) {

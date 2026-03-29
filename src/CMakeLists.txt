@@ -27,6 +27,7 @@ set(MODEL_SOURCES
     model/StateMachineSerializer.cpp
     model/StateHierarchyRules.cpp
     model/actions/CallbackAction.cpp
+    model/actions/NoneAction.cpp
     model/actions/TimerStartAction.cpp
     model/actions/TimerStopAction.cpp
     model/actions/TimerRestartAction.cpp

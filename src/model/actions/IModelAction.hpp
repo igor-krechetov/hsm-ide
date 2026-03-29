@@ -1,12 +1,14 @@
 #ifndef IMODELACTION_HPP
 #define IMODELACTION_HPP
 
+#include <QMetaType>
+#include <QSharedPointer>
 #include <QStringList>
 #include <QVariant>
 
 namespace model {
 
-enum class ModelAction { CALLBACK, TIMER_START, TIMER_STOP, TIMER_RESTART, SEND_EVENT };
+enum class ModelAction { NONE, CALLBACK, TIMER_START, TIMER_STOP, TIMER_RESTART, SEND_EVENT };
 
 class IModelAction {
 public:
@@ -23,5 +25,8 @@ public:
 };
 
 }  // namespace model
+
+Q_DECLARE_METATYPE(QSharedPointer<model::IModelAction>)
+Q_DECLARE_METATYPE(model::ModelAction)
 
 #endif  // IMODELACTION_HPP

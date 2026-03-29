@@ -2,6 +2,7 @@
 #define ABOUTDIALOG_HPP
 
 #include <QDialog>
+
 #include "version.hpp"
 
 QT_BEGIN_NAMESPACE
@@ -11,11 +12,11 @@ QT_END_NAMESPACE
 class AboutDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit AboutDialog(QWidget *parent = nullptr);
+    explicit AboutDialog(QWidget* parent = nullptr);
     ~AboutDialog();
 
 private:
-    Ui_AboutDialog *ui = nullptr;
+    Ui_AboutDialog* ui = nullptr;
 };
 
-#endif // ABOUTDIALOG_HPP
+#endif  // ABOUTDIALOG_HPP
