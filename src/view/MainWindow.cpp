@@ -23,6 +23,7 @@ MainWindow::MainWindow(MainEditorController* parent)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
+    connect(ui->actionDuplicate, &QAction::triggered, this, &MainWindow::handleClipboardDuplicate);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -218,6 +219,11 @@ void MainWindow::handleSelectAll() {
 
     if (nullptr != viewPtr) {
         viewPtr->selectAllHsmElements();
+}
+
+void MainWindow::handleClipboardDuplicate() {
+    if (copySelectedItems() == true) {
+        handleClipboardPaste();
     }
 }
 
