@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.8.1] - 2026-04-05
+### Fixed
+- Sceene was loosing selection when interacting with main menu
+
 ## [0.8.0] - 2026-03-29
 ### New
 - [REQ-204a6] Added Edit -> Select All action handling in MainWindow to select all HSM elements in the active canvas.
