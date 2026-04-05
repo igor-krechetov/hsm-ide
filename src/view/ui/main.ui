@@ -1161,6 +1161,70 @@
    </hints>
   </connection>
   <connection>
+   <sender>actionZoomIn</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleZoomIn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionZoomOut</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleZoomOut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionResetZoom</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleResetZoom()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionFitToView</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleFitToView()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>actionRedo</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
@@ -1195,6 +1259,10 @@
   <slot>handleClipboardCut()</slot>
   <slot>handleClipboardPaste()</slot>
   <slot>handleUndo()</slot>
+  <slot>handleZoomIn()</slot>
+  <slot>handleZoomOut()</slot>
+  <slot>handleResetZoom()</slot>
+  <slot>handleFitToView()</slot>
   <slot>handleRedo()</slot>
  </slots>
 </ui>
