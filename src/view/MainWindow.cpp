@@ -257,6 +257,41 @@ void MainWindow::handleClipboardDuplicate() {
 }
 
 // =================================================================================================================
+// View menu items
+
+void MainWindow::handleZoomIn() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->zoomIn();
+    }
+}
+
+void MainWindow::handleZoomOut() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->zoomOut();
+    }
+}
+
+void MainWindow::handleResetZoom() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->resetZoom();
+    }
+}
+
+void MainWindow::handleFitToView() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->fitSceneToView();
+    }
+}
+
+// =================================================================================================================
 void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
 

@@ -64,6 +64,10 @@ public:
     QList<model::EntityID_t> getSelectedElements() const;
     void deleteSelectedItems();
     void clearSelection();
+    void zoomIn();
+    void zoomOut();
+    void resetZoom();
+    void fitSceneToView();
 
     bool keyboardShiftPressed() const;
     bool keyboardSpacePressed() const;
@@ -101,6 +105,8 @@ public slots:
     void dropElementEvent(view::HsmElement* element, const QPointF& scenePos);
 
 private:
+    void applyScale(const double scaleFactor);
+
     // only element or mimetype is expected to be provided
     bool handleElementDragEvent(const QPointF& scenePos, view::HsmElement* element, const QString& mimetype = "");
     bool handleElementDropEvent(view::HsmElement* element, const QPointF& scenePos);

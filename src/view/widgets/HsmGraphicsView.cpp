@@ -253,6 +253,24 @@ void HsmGraphicsView::clearSelection() {
     scene()->clearSelection();
 }
 
+void HsmGraphicsView::zoomIn() {
+    applyScale(1.15);
+}
+
+void HsmGraphicsView::zoomOut() {
+    applyScale(1.0 / 1.15);
+}
+
+void HsmGraphicsView::resetZoom() {
+    setTransform(QTransform());
+}
+
+void HsmGraphicsView::fitSceneToView() {
+    if ((nullptr != scene()) && (false == scene()->items().isEmpty())) {
+        fitInView(scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+    }
+}
+
 bool HsmGraphicsView::keyboardShiftPressed() const {
     return mKeyboardModifiers & ShiftModifier;
 }
@@ -604,16 +622,19 @@ void HsmGraphicsView::dropEvent(QDropEvent* event) {
 void HsmGraphicsView::wheelEvent(QWheelEvent* event) {
     if (event->modifiers() & Qt::ControlModifier) {
         // Zoom in/out
-        double scaleFactor = 1.15;
         if (event->angleDelta().y() > 0) {
-            scale(scaleFactor, scaleFactor);
+            zoomIn();
         } else {
-            scale(1.0 / scaleFactor, 1.0 / scaleFactor);
+            zoomOut();
         }
         event->accept();
     } else {
         QGraphicsView::wheelEvent(event);
     }
+}
+
+void HsmGraphicsView::applyScale(const double scaleFactor) {
+    scale(scaleFactor, scaleFactor);
 }
 
 void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
