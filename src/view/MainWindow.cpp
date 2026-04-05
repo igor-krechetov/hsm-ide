@@ -213,6 +213,14 @@ void MainWindow::handleClipboardPaste() {
     }
 }
 
+void MainWindow::handleSelectAll() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->selectAllHsmElements();
+    }
+}
+
 // =================================================================================================================
 void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
