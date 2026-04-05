@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.9.1] - 2026-04-05
+### Fix
+- About dialog was not displaying correct version information
+
 ## [0.9.0] - 2026-04-05
 ### New
 - Duplicate state elements through menu or Ctrl+D

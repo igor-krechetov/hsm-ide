@@ -3,8 +3,6 @@
 
 #include <QDialog>
 
-#include "version.hpp"
-
 QT_BEGIN_NAMESPACE
 class Ui_AboutDialog;
 QT_END_NAMESPACE
