@@ -17,12 +17,14 @@
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
 #include "view/widgets/WorkspaceView.hpp"
+#include "view/elements/private/HsmElement.hpp"
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
+    connect(ui->actionDuplicate, &QAction::triggered, this, &MainWindow::handleClipboardDuplicate);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -218,6 +220,39 @@ void MainWindow::handleSelectAll() {
 
     if (nullptr != viewPtr) {
         viewPtr->selectAllHsmElements();
+    }
+}
+
+void MainWindow::handleClipboardDuplicate() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
+        QPointer<view::HsmElement> ptrParent;
+
+        // we want to duplicate elements on the same level as selected item
+        // find if any of the selected elements has a parent and select the first one (in case of multiple elements)
+        for (const auto& id : selectedIds) {
+            QPointer<view::HsmElement> element = viewPtr->findHsmElement(id);
+
+            if (element) {
+                ptrParent = element->hsmParentItem();
+
+                if (nullptr != ptrParent) {
+                    break;
+                }
+            }
+        }
+
+        if (copySelectedItems() == true) {
+            viewPtr->clearSelection();
+
+            if (nullptr != ptrParent) {
+                viewPtr->selectHsmElement(ptrParent->modelId());
+            }
+
+            handleClipboardPaste();
+        }
     }
 }
 

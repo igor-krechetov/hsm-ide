@@ -336,6 +336,62 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
                 rootState = importModel->root();
             }
 
+            if (mModel && mModel->root()) {
+                QSet<QString> usedStateNames;
+
+                mModel->root()->forEachChildElement(
+                    [&usedStateNames](QSharedPointer<model::StateMachineEntity> parent,
+                                      QSharedPointer<model::StateMachineEntity> entity) {
+                        Q_UNUSED(parent);
+
+                        if (entity && (entity->type() == model::StateMachineEntity::Type::State)) {
+                            const auto state = entity.dynamicCast<model::State>();
+
+                            if (state) {
+                                usedStateNames.insert(state->name());
+                            }
+                        }
+
+                        return true;
+                    },
+                    model::StateMachineEntity::DEPTH_INFINITE,
+                    false);
+
+                auto generateUniqueStateName = [&usedStateNames](const QString& sourceName) {
+                    QString uniqueName = sourceName;
+
+                    if (usedStateNames.contains(uniqueName)) {
+                        uniqueName = sourceName + "_copy";
+
+                        while (usedStateNames.contains(uniqueName)) {
+                            uniqueName += "_copy";
+                        }
+                    }
+
+                    usedStateNames.insert(uniqueName);
+
+                    return uniqueName;
+                };
+
+                rootState->forEachChildElement(
+                    [&generateUniqueStateName](QSharedPointer<model::StateMachineEntity> parent,
+                                               QSharedPointer<model::StateMachineEntity> entity) {
+                        Q_UNUSED(parent);
+
+                        if (entity && (entity->type() == model::StateMachineEntity::Type::State)) {
+                            const auto state = entity.dynamicCast<model::State>();
+
+                            if (state) {
+                                state->setName(generateUniqueStateName(state->name()));
+                            }
+                        }
+
+                        return true;
+                    },
+                    model::StateMachineEntity::DEPTH_INFINITE,
+                    false);
+            }
+
             // iterate over top level elements to:
             // - collect states that needs to be pasted
             // - colelct direct transitions (for reference updates if needed)
