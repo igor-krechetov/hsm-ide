@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.8.0] - 2026-03-29
+### New
+- [REQ-204a6] Added Edit -> Select All action handling in MainWindow to select all HSM elements in the active canvas.
+
 ## [0.7.0] - 2026-03-29
 ### New
 - Code restructuring to properly support element actions

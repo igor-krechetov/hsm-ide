@@ -216,6 +216,18 @@ void HsmGraphicsView::selectHsmElement(const model::EntityID_t id) {
     }
 }
 
+void HsmGraphicsView::selectAllHsmElements() {
+    if (nullptr != scene()) {
+        scene()->clearSelection();
+
+        for (auto it = mElements.begin(); it != mElements.end(); ++it) {
+            if (nullptr != it.value()) {
+                it.value()->setSelected(true);
+            }
+        }
+    }
+}
+
 QList<model::EntityID_t> HsmGraphicsView::getSelectedElements() const {
     auto items = scene()->selectedItems();
     QList<model::EntityID_t> selectedHsmElements;

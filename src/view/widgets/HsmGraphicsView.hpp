@@ -60,6 +60,7 @@ public:
                                 const model::EntityID_t toElementId);
 
     void selectHsmElement(const model::EntityID_t id);
+    void selectAllHsmElements();
     QList<model::EntityID_t> getSelectedElements() const;
     void deleteSelectedItems();
 
