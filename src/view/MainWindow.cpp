@@ -216,7 +216,12 @@ void MainWindow::handleClipboardPaste() {
 
 void MainWindow::handleClipboardDuplicate() {
     if (copySelectedItems() == true) {
-        handleClipboardPaste();
+        QPointer<HsmGraphicsView> viewPtr = currentView();
+
+        if (nullptr != viewPtr) {
+            viewPtr->clearSelection();
+            handleClipboardPaste();
+        }
     }
 }
 

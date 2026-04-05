@@ -62,6 +62,7 @@ public:
     void selectHsmElement(const model::EntityID_t id);
     QList<model::EntityID_t> getSelectedElements() const;
     void deleteSelectedItems();
+    void clearSelection();
 
     bool keyboardShiftPressed() const;
     bool keyboardSpacePressed() const;

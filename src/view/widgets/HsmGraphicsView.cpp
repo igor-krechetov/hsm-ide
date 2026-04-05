@@ -237,6 +237,10 @@ void HsmGraphicsView::deleteSelectedItems() {
     }
 }
 
+void HsmGraphicsView::clearSelection() {
+    scene()->clearSelection();
+}
+
 bool HsmGraphicsView::keyboardShiftPressed() const {
     return mKeyboardModifiers & ShiftModifier;
 }
