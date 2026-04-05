@@ -220,6 +220,7 @@ void MainWindow::handleSelectAll() {
 
     if (nullptr != viewPtr) {
         viewPtr->selectAllHsmElements();
+    }
 }
 
 void MainWindow::handleClipboardDuplicate() {

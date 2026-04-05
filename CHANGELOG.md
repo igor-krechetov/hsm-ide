@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.9.0] - 2026-04-05
+### New
+- Duplicate state elements through menu or Ctrl+D
+
 ## [0.8.1] - 2026-04-05
 ### Fixed
 - Sceene was loosing selection when interacting with main menu
