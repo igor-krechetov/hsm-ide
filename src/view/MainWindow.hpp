@@ -54,6 +54,7 @@ public slots:
     void handleClipboardCopy();
     void handleClipboardCut();
     void handleClipboardPaste();
+    void handleClipboardDuplicate();
 
     void handleAbout();
 

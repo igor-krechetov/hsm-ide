@@ -23,6 +23,7 @@ MainWindow::MainWindow(MainEditorController* parent)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
+    connect(ui->actionDuplicate, &QAction::triggered, this, &MainWindow::handleClipboardDuplicate);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -210,6 +211,12 @@ void MainWindow::handleClipboardPaste() {
             const QPointF cursorScenePos = viewPtr->mapToScene(cursorPosInView);
             mActiveProject->pasteScxmlElements(clipboardText, viewPtr->getSelectedElements(), cursorScenePos, true);
         }
+    }
+}
+
+void MainWindow::handleClipboardDuplicate() {
+    if (copySelectedItems() == true) {
+        handleClipboardPaste();
     }
 }
 
