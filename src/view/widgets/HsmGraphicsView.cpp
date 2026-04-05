@@ -275,7 +275,6 @@ bool HsmGraphicsView::keyboardReparentModifierPressed() const {
 
 void HsmGraphicsView::focusOutEvent(QFocusEvent* event) {
     QGraphicsView::focusOutEvent(event);
-    scene()->clearSelection();
 }
 
 bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmElement* element, const QString& mimetype) {
@@ -583,6 +582,7 @@ void HsmGraphicsView::dropEvent(QDropEvent* event) {
     const QPointF scenePos = mapToScene(event->position().toPoint());
 
     if (auto controller = mProjectController.toStrongRef()) {
+        scene()->clearSelection();
         const QPointF parentPos = (mDragTargetElement == nullptr ? scenePos : mDragTargetElement->mapFromSceneToBody(scenePos));
 
         controller->handleViewDropEvent(
