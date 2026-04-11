@@ -23,7 +23,7 @@ class ElementGripItem : public QGraphicsObject {
     Q_OBJECT
 
 public:
-    constexpr static int cGripSize = 16;
+    constexpr static int cGripSize = 10;// TODO: move to theme
 
 public:
     explicit ElementGripItem(HsmElement* annotationElement, const GripDirection type = GripDirection::FreeMove);

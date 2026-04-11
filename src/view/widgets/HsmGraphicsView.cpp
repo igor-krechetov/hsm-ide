@@ -266,8 +266,25 @@ void HsmGraphicsView::resetZoom() {
 }
 
 void HsmGraphicsView::fitSceneToView() {
-    if ((nullptr != scene()) && (false == scene()->items().isEmpty())) {
-        fitInView(scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+    if ((nullptr != scene()) && (false == mElements.isEmpty())) {
+        QRectF boundingRect;
+        bool first = true;
+
+        for (auto it = mElements.begin(); it != mElements.end(); ++it) {
+            if (it.value()) {
+                QRectF itemRect = it.value()->sceneBoundingRect();
+                if (first) {
+                    boundingRect = itemRect;
+                    first = false;
+                } else {
+                    boundingRect = boundingRect.united(itemRect);
+                }
+            }
+        }
+
+        if (!first && boundingRect.isValid()) {
+            fitInView(boundingRect, Qt::KeepAspectRatio);
+        }
     }
 }
 

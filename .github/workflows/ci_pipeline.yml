@@ -1,0 +1,109 @@
+name: "CI/CD for HSM IDE"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  # --------------------------------------------------------
+  # VERIFY — only on main/dev (push or PR)
+  # --------------------------------------------------------
+  verify:
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@feature/hsmcpp-ci-integration
+
+  # --------------------------------------------------------
+  # BUILD — always runs (even if verify is skipped)
+  # --------------------------------------------------------
+  build:
+    needs: verify
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@feature/hsmcpp-ci-integration
+    if: >
+      always() &&
+      (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    with:
+      build_type: Release
+      platforms: "posix,windows"
+      install_qt: 'ON'
+      build_tests: 'ON'
+
+  # --------------------------------------------------------
+  # TEST — always runs after build
+  # --------------------------------------------------------
+  test:
+    needs: build
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
+    if: always() && (needs.build.result == 'success')
+    with:
+      platform: 'ubuntu'
+      install_qt: 'ON'
+      code_coverage: 'OFF'
+      upload_test_badges: 'OFF'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+  # --------------------------------------------------------
+  # AUTOTAG — only on push to *dev*
+  # --------------------------------------------------------
+  autotag:
+    needs: [test, verify]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.build.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.sast.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@feature/hsmcpp-ci-integration
+    with:
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+      commit_action: ${{ needs.verify.outputs.commit_action }}
+      commit_sha: ${{ github.sha }}
+    secrets:
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+
+  # --------------------------------------------------------
+  # DOCS — only on push to *main*
+  # --------------------------------------------------------
+  update_documentation:
+    needs: [verify, autotag]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.verify.result == 'success' &&
+      needs.autotag.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@feature/hsmcpp-ci-integration
+    with:
+      library_name: hsm-ide
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+    secrets:
+      HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+
+  # --------------------------------------------------------
+  # RELEASE — only on push to main (after docs)
+  # --------------------------------------------------------
+  release:
+    needs: [verify, update_documentation]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.verify.outputs.commit_action == 'r' &&
+      needs.verify.result == 'success' &&
+      needs.update_documentation.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@feature/hsmcpp-ci-integration
+    with:
+      commit_sha: ${{ github.sha }}
+      tag_version: ${{ needs.update_documentation.outputs.tag_name }}
+      builds: "build-artifacts-ubuntu,build-artifacts-windows"
+      release_description: |
+        Release ${{ needs.update_documentation.outputs.tag_name }}
+
+        - Built on Ubuntu and Windows
+        - Includes binaries for both platforms

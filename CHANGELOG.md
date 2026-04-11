@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.0] - 2026-04-11
+### New
+- Added sidepanel shortcuts to View menu
+- Implemented zoom, reset view, fit to view menu items
+
+### Fix
+- About dialog was not displaying correct version information
+
 ## [0.9.1] - 2026-04-05
 ### Fix
 - About dialog was not displaying correct version information

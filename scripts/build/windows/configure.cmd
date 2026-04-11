@@ -1,0 +1,12 @@
+@echo off
+set BUILD_DIR=%1
+set BUILD_TYPE=%2
+set CMAKE_ARGS=%3
+set SRC_DIR=%4
+set BUILD_TESTS=%5
+set BUILD_EXAMPLES=%6
+
+
+cmake -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
+    %CMAKE_ARGS% ^
+    "%SRC_DIR%"
