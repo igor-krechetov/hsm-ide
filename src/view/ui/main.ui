@@ -145,11 +145,18 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <widget class="QMenu" name="menuActiveSidePanel">
+     <property name="title">
+      <string>Active Side Panel</string>
+     </property>
+    </widget>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
     <addaction name="actionResetZoom"/>
     <addaction name="actionFitToView"/>
+    <addaction name="separator"/>
+    <addaction name="menuActiveSidePanel"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -263,11 +270,7 @@
           </widget>
          </item>
          <item>
-          <widget class="HsmPropertiesTableView" name="entityProperties">
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>true</bool>
-           </attribute>
-          </widget>
+          <widget class="HsmPropertiesTableView" name="entityProperties"/>
          </item>
         </layout>
        </widget>
@@ -659,6 +662,9 @@
    </property>
   </action>
   <action name="actionSettings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Settings</string>
    </property>
@@ -743,6 +749,9 @@
    </property>
   </action>
   <action name="actionFind">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Find</string>
    </property>
@@ -788,7 +797,7 @@
      <normaloff>:/icons/side-bar/side-bar/edit.png</normaloff>:/icons/side-bar/side-bar/edit.png</iconset>
    </property>
    <property name="text">
-    <string>EDIT</string>
+    <string>Design</string>
    </property>
    <property name="toolTip">
     <string>Switch to Design (Ctrl+Shift+E)</string>
@@ -806,7 +815,7 @@
      <normaloff>:/icons/side-bar/side-bar/workdir.png</normaloff>:/icons/side-bar/side-bar/workdir.png</iconset>
    </property>
    <property name="text">
-    <string>DIR</string>
+    <string>Workspace</string>
    </property>
    <property name="toolTip">
     <string>Switch to Workspace (Ctrl+Shift+B)</string>
@@ -824,7 +833,7 @@
      <normaloff>:/icons/side-bar/side-bar/debug.png</normaloff>:/icons/side-bar/side-bar/debug.png</iconset>
    </property>
    <property name="text">
-    <string>DEBUG</string>
+    <string>Debug</string>
    </property>
    <property name="toolTip">
     <string>Switch to Debug (Ctrl+Shift+D)</string>
@@ -854,6 +863,21 @@
   <action name="actionCloseWorkspace">
    <property name="text">
     <string>Close Workspace</string>
+   </property>
+  </action>
+  <action name="actionWorkspace">
+   <property name="text">
+    <string>Workspace</string>
+   </property>
+  </action>
+  <action name="actionDebug">
+   <property name="text">
+    <string>Debug</string>
+   </property>
+  </action>
+  <action name="actionDesign">
+   <property name="text">
+    <string>Design</string>
    </property>
   </action>
  </widget>
@@ -1177,6 +1201,70 @@
    </hints>
   </connection>
   <connection>
+   <sender>actionZoomIn</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleZoomIn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionZoomOut</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleZoomOut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionResetZoom</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleResetZoom()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionFitToView</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleFitToView()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>actionRedo</sender>
    <signal>triggered()</signal>
    <receiver>hsm_ide</receiver>
@@ -1212,6 +1300,10 @@
   <slot>handleClipboardPaste()</slot>
   <slot>handleSelectAll()</slot>
   <slot>handleUndo()</slot>
+  <slot>handleZoomIn()</slot>
+  <slot>handleZoomOut()</slot>
+  <slot>handleResetZoom()</slot>
+  <slot>handleFitToView()</slot>
   <slot>handleRedo()</slot>
  </slots>
 </ui>

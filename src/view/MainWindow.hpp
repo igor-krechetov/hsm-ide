@@ -56,6 +56,10 @@ public slots:
     void handleClipboardPaste();
     void handleSelectAll();
     void handleClipboardDuplicate();
+    void handleZoomIn();
+    void handleZoomOut();
+    void handleResetZoom();
+    void handleFitToView();
 
     void handleAbout();
 

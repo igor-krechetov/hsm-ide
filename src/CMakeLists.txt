@@ -1,7 +1,7 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
-add_definitions(-DDEBUG_RENDERING=1)
+# add_definitions(-DDEBUG_RENDERING=1)
 
 set(TS_FILES view/ts/hsm_ide_en_001.ts)
 

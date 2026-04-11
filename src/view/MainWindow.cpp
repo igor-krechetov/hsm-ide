@@ -33,6 +33,7 @@ MainWindow::MainWindow(MainEditorController* parent)
     QList<QAction*> sidebarActions = ui->leftSideBar->actions();
     for (QAction* action : sidebarActions) {
         connect(action, &QAction::toggled, this, &MainWindow::onSidebarActionTriggered);
+        ui->menuActiveSidePanel->addAction(action);
     }
 
     // Delete dummy tab
@@ -253,6 +254,41 @@ void MainWindow::handleClipboardDuplicate() {
 
             handleClipboardPaste();
         }
+    }
+}
+
+// =================================================================================================================
+// View menu items
+
+void MainWindow::handleZoomIn() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->zoomIn();
+    }
+}
+
+void MainWindow::handleZoomOut() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->zoomOut();
+    }
+}
+
+void MainWindow::handleResetZoom() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->resetZoom();
+    }
+}
+
+void MainWindow::handleFitToView() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->fitSceneToView();
     }
 }
 

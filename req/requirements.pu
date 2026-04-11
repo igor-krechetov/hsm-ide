@@ -78,22 +78,22 @@
 **** REQ-104b: Exit actions (onexit) <<done>>
 **** REQ-104c: State change callbacks <<done>>
 **** REQ-104d: Editing state name <<done>>
-*** REQ-105: Timing Features
-**** REQ-105a: Timer event configuration
-**** REQ-105b: Timeout transitions
-*** REQ-106: Modular Design
-**** REQ-106a: Dependency Visualization
+*** REQ-105: Timing Features <<prio_low>>
+**** REQ-105a: Timer event configuration <<prio_low>>
+**** REQ-105b: Timeout transitions <<prio_low>>
+*** REQ-106: Modular Design <<prio_low>>
+**** REQ-106a: Dependency Visualization <<prio_low>>
 ***** REQ-106a1: Display included files in current state machine <<done>>
-***** REQ-106a2: Visualize external state references
-***** REQ-106a3: Render dependency graphs for interconnected files
-**** REQ-106b: Change Management
-***** REQ-106b1: Detect modifications in included files
-***** REQ-106b2: Notify when referenced content changes
-***** REQ-106b3: Provide update/refresh mechanisms
-**** REQ-106c: Navigation
+***** REQ-106a2: Visualize external state references <<prio_low>>
+***** REQ-106a3: Render dependency graphs for interconnected files <<prio_low>>
+**** REQ-106b: Change Management <<prio_low>>
+***** REQ-106b1: Detect modifications in included files <<prio_low>>
+***** REQ-106b2: Notify when referenced content changes <<prio_low>>
+***** REQ-106b3: Provide update/refresh mechanisms <<prio_low>>
+**** REQ-106c: Navigation <<prio_low>>
 ***** REQ-106c1: Click-to-open for included files <<done>>
-***** REQ-106c2: Breadcrumb trails showing inclusion hierarchy
-***** REQ-106c3: Cross-file reference finder
+***** REQ-106c2: Breadcrumb trails showing inclusion hierarchy <<prio_low>>
+***** REQ-106c3: Cross-file reference finder <<prio_low>>
 **** REQ-106d: Validation  <<prio_low>>
 ***** REQ-106d1: Circular dependency checking  <<prio_low>>
 ***** REQ-106d2: Included file existence verification  <<prio_low>>
@@ -121,10 +121,10 @@
 ***** REQ-107n5: Final states <<done>>
 ***** REQ-107n6: Initial states <<done>>
 
-*** REQ-108: Callbacks management
-**** REQ-108a: Callbacks auto-suggestion
-**** REQ-108b: Callbacks renaming across existing elements
-**** REQ-108c: Callbacks name validation
+*** REQ-108: Callbacks management <<prio_low>>
+**** REQ-108a: Callbacks auto-suggestion <<prio_low>>
+**** REQ-108b: Callbacks renaming across existing elements <<prio_low>>
+**** REQ-108c: Callbacks name validation <<prio_low>>
 
 ** REQ-200: UI/UX Requirements <<partial>>
 *** REQ-201: Main Layout <<done>>
@@ -134,16 +134,17 @@
 **** REQ-201c1: Show/Hide primary side bar <<done>>
 **** REQ-201c2: Switch primary side bar panels <<done>>
 **** REQ-201c3: Retain custom panel sizes in primary side bar <<done>>
-*** REQ-202: Model view widget
+*** REQ-202: Model view widget <<partial>>
 **** REQ-202a: Layouts <<prio_low>>
-***** REQ-202a1: Grid snapping <<prio_low>>
+***** REQ-202a1: Grid rendering (on/off) <<prio_low>>
+***** REQ-202a2: Grid snapping <<prio_low>>
 **** REQ-202b: Custom cursors <<prio_low>>
 ***** REQ-202b1: zoom in/out cursors <<prio_low>>
-**** REQ-202c: Floating menu
-***** REQ-202c1: show/hide menu on mouse hover
-***** REQ-202c2: zoom in/out controls
-***** REQ-202c3: fit to view shortcut
-***** REQ-202c3: reset zoom shortcut
+**** REQ-202c: Floating menu <<prio_low>>
+***** REQ-202c1: show/hide menu on mouse hover <<prio_low>>
+***** REQ-202c2: zoom in/out controls <<prio_low>>
+***** REQ-202c3: fit to view shortcut <<prio_low>>
+***** REQ-202c3: reset zoom shortcut <<prio_low>>
 **** REQ-202d: View interaction <<done>>
 ***** REQ-202d1: View pan <<done>>
 ***** REQ-202d2: View zoom in <<done>>
@@ -158,21 +159,21 @@
 ***** REQ-204a1: Copy/Paste/Cut <<done>>
 ***** REQ-204a2: Delete <<done>>
 ***** REQ-204a3: Undo/Redo <<done>>
-***** REQ-204a4: Duplicate <<todo>>
+***** REQ-204a4: Duplicate <<done>>
 ***** REQ-204a5: Find <<prio_low>>
-***** REQ-204a6: Select All <<todo>>
+***** REQ-204a6: Select All <<done>>
 **** REQ-204d: File menu <<done>>
 ***** REQ-204d1: Open <<done>>
 ***** REQ-204d2: Save <<done>>
 ***** REQ-204d3: Save As <<done>>
 ***** REQ-204d4: List of recent files <<done>>
 ***** REQ-204d5: List of recent workspaces <<done>>
-**** REQ-204e: View menu <<prio_low>>
-***** REQ-204e1: Zoom in <<prio_low>>
-***** REQ-204e2: Zoom out <<prio_low>>
-***** REQ-204e3: Reset zoom <<prio_low>>
-***** REQ-204e4: Fit to view <<prio_low>>
-***** REQ-204e5: Side bar shortcuts <<prio_low>>
+**** REQ-204e: View menu <<done>>
+***** REQ-204e1: Zoom in <<done>>
+***** REQ-204e2: Zoom out <<done>>
+***** REQ-204e3: Reset zoom <<done>>
+***** REQ-204e4: Fit to view <<done>>
+***** REQ-204e5: Side bar shortcuts <<done>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
@@ -184,13 +185,13 @@
 ***** REQ-205b4.1: expand all action <<done>>
 ***** REQ-205b4.2: colapse all action <<done>>
 ***** REQ-205b4.3: remove item action <<done>>
-**** REQ-205c: Attributes editor <<prio_low>>
+**** REQ-205c: Attributes editor <<partial>>
 ***** REQ-205c1: custom view model <<done>>
 ***** REQ-205c2: show a list of attributes per element type <<done>>
 ***** REQ-205c3: edit element values <<done>>
 ***** REQ-205c4: events suggestion <<prio_low>>
 ***** REQ-205c5: callbacks suggestion <<prio_low>>
-***** REQ-205c6: actions and properties editing <<in_progress>>
+***** REQ-205c6: actions and properties editing <<done>>
 **** REQ-205d: Support for viewing multiple state machines <<done>>
 ***** REQ-205d1: opening multiple projects simultaniously <<done>>
 ***** REQ-205d2: switching between open projects <<done>>
@@ -208,7 +209,7 @@
 **** REQ-206c: Debugging toolbar <<prio_low>>
 *** REQ-207: About Dialog <<done>>
 *** REQ-208: Themes <<partial>>
-**** REQ-208a: Themes management <<todo>>
+**** REQ-208a: Themes management <<prio_low>>
 **** REQ-208b: Default theme <<done>>
 
 ** REQ-300: Import/Export <<partial>>
