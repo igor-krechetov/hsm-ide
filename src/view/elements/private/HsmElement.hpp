@@ -109,6 +109,7 @@ public:
     // Slot for model data changes
 public slots:
     virtual void onModelDataChanged();
+    virtual void viewTransformChanged();
 
 signals:
     void dragElementBegin(HsmElement* element, const QPointF& scenePos);

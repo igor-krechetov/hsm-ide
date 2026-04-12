@@ -110,6 +110,8 @@ view::HsmElement* HsmGraphicsView::createHsmElement(const QSharedPointer<model::
     connect(newElement, &view::HsmElement::dragElementEvent, this, &HsmGraphicsView::dragElementEvent);
     connect(newElement, &view::HsmElement::dropElementEvent, this, &HsmGraphicsView::dropElementEvent);
     connect(newElement, &view::HsmElement::elementDoubleClickEvent, this, &HsmGraphicsView::hsmElementDoubleClickEvent);
+    connect(newElement, &view::HsmElement::elementDoubleClickEvent, this, &HsmGraphicsView::hsmElementDoubleClickEvent);
+    connect(this, &HsmGraphicsView::transformChanged, newElement, &view::HsmElement::viewTransformChanged);
 
     mElements[modelElement->id()] = QPointer(newElement);
 
@@ -255,14 +257,17 @@ void HsmGraphicsView::clearSelection() {
 
 void HsmGraphicsView::zoomIn() {
     applyScale(1.15);
+    emit transformChanged();
 }
 
 void HsmGraphicsView::zoomOut() {
     applyScale(1.0 / 1.15);
+    emit transformChanged();
 }
 
 void HsmGraphicsView::resetZoom() {
     setTransform(QTransform());
+    emit transformChanged();
 }
 
 void HsmGraphicsView::fitSceneToView() {
@@ -284,6 +289,7 @@ void HsmGraphicsView::fitSceneToView() {
 
         if (!first && boundingRect.isValid()) {
             fitInView(boundingRect, Qt::KeepAspectRatio);
+            emit transformChanged();
         }
     }
 }
@@ -740,6 +746,10 @@ void HsmGraphicsView::mouseMoveEvent(QMouseEvent* event) {
     } else {
         QGraphicsView::mouseMoveEvent(event);
     }
+
+#ifdef DEBUG_RENDERING
+    emit mouseMoved(mapToScene(event->pos()));
+#endif
 }
 
 void HsmGraphicsView::mouseReleaseEvent(QMouseEvent* event) {

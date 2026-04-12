@@ -436,4 +436,8 @@ void HsmElement::onModelDataChanged() {
     update();
 }
 
+void HsmElement::viewTransformChanged() {
+    // do nothing
+}
+
 };  // namespace view

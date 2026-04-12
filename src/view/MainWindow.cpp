@@ -7,6 +7,8 @@
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QMessageBox>
+#include <QMimeData>
+#include <QScopedPointer>
 #include <QSignalBlocker>
 
 #include "./ui/ui_main.h"
@@ -14,10 +16,30 @@
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
+#include "view/elements/private/HsmElement.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
 #include "view/widgets/WorkspaceView.hpp"
-#include "view/elements/private/HsmElement.hpp"
+
+namespace {
+
+QMimeData* cloneMimeData(const QMimeData* source) {
+    QMimeData* clonedData = nullptr;
+
+    if (nullptr != source) {
+        const QStringList formats = source->formats();
+
+        clonedData = new QMimeData();
+
+        for (const auto& format : formats) {
+            clonedData->setData(format, source->data(format));
+        }
+    }
+
+    return clonedData;
+}
+
+}  // namespace
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
@@ -156,7 +178,10 @@ void MainWindow::handleSaveAs() {
             fileName += ".scxml";
         }
 
-        mActiveProject->exportModel(fileName);
+        if (mActiveProject->exportModel(fileName) && mSettingsController) {
+            mSettingsController->addRecentHsm(fileName);
+            updateRecentHsmMenu();
+        }
     }
 }
 
@@ -226,6 +251,8 @@ void MainWindow::handleSelectAll() {
 
 void MainWindow::handleClipboardDuplicate() {
     QPointer<HsmGraphicsView> viewPtr = currentView();
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    std::unique_ptr<QMimeData> originalClipboardData(cloneMimeData(clipboard->mimeData()));
 
     if (nullptr != viewPtr) {
         const QList<model::EntityID_t> selectedIds = viewPtr->getSelectedElements();
@@ -254,6 +281,10 @@ void MainWindow::handleClipboardDuplicate() {
 
             handleClipboardPaste();
         }
+    }
+
+    if (originalClipboardData) {
+        clipboard->setMimeData(originalClipboardData.release());
     }
 }
 
@@ -480,6 +511,9 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
 
     connect(scene, &QGraphicsScene::selectionChanged, this, &MainWindow::onGraphicsViewSelectionChanged);
     connect(newView, &HsmGraphicsView::hsmElementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
+#ifdef DEBUG_RENDERING
+    connect(newView, &HsmGraphicsView::mouseMoved, this, &MainWindow::onViewMouseMoved);
+#endif
 
     newView->setScene(scene);
     newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
@@ -551,6 +585,18 @@ void MainWindow::projectClosed(ProjectControllerPtr project) {
         }
     }
 }
+
+// =================================================================================================================
+#ifdef DEBUG_RENDERING
+void MainWindow::onViewMouseMoved(const QPointF& scenePos) {
+    // display position in the statusbar for scene and view
+    auto viewPos = currentView()->mapFromScene(scenePos);
+
+    ui->statusbar->showMessage(QString("Scene: %1, %2 | View: %3, %4")
+                                .arg(scenePos.x()).arg(scenePos.y())
+                                .arg(viewPos.x()).arg(viewPos.y()));
+}
+#endif // DEBUG_RENDERING
 
 // =================================================================================================================
 void MainWindow::selectModelEntityById(model::EntityID_t id) {

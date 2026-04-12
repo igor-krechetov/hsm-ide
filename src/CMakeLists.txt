@@ -1,7 +1,11 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
-# add_definitions(-DDEBUG_RENDERING=1)
+set(DEBUG_RENDERING False)
+
+if(DEBUG_RENDERING)
+    add_definitions(-DDEBUG_RENDERING=1)
+endif()
 
 set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
@@ -84,6 +88,8 @@ set(PROJECT_SOURCES
 
     view/elements/private/styles/HsmRectangularElement.cpp
     view/elements/private/styles/HsmRoundElement.cpp
+
+    $<$<BOOL:${DEBUG_RENDERING}>:view/elements/private/DebugRendering.cpp>
 
     view/models/StateMachineTreeModel.cpp
     view/models/StateMachineEntityViewModel.cpp

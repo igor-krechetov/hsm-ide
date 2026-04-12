@@ -81,6 +81,11 @@ public slots:
     void projectSelected(ProjectControllerPtr project);
     void projectClosed(ProjectControllerPtr project);
 
+#ifdef DEBUG_RENDERING
+private slots:
+    void onViewMouseMoved(const QPointF& scenePos);
+#endif
+
 private:
     void openWorkspace(const QString& rootDir);
     void updateMenuItemsRecent(QMenu* menu,
