@@ -36,27 +36,27 @@ public:
 signals:
     void elementConnected(const model::EntityID_t fromElementId, const model::EntityID_t toElementId);
 
-    // from HsmElement
-protected:
-    void updateBoundingRect(const QRectF& newRect) override;
+public slots:
+    void viewTransformChanged() override;
 
+// from HsmElement
 protected:
     bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
 
+    void updateBoundingRect(const QRectF& newRect) override;
     void updateHoverRect();
     void updateConnectionArrowsPos();
 
     // from QGraphicsObject
 protected:
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     bool eventFilter(QObject* obj, QEvent* event) override;
 
-    // void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
-
 private:
+    void handleHoverEvent(const QPointF& pos);
     void createConnectionArrows();
     void removeConnectionArrows();
     void removeConnectionArrowsForOtherElements(const QPointF& sceneMousePos);
@@ -72,7 +72,7 @@ private slots:
 private:
     // TODO: use smart pointers
     QMap<ElementConnectionArrow::Direction, ElementConnectionArrow*> mArrows;
-    QRectF mHoverRect;
+    QRectF mHoverRect;// contains VIEW based rect for tracking connection arrows
     bool mDrawConnectionLine = false;
 
     // TODO: replace with QSharedPointer

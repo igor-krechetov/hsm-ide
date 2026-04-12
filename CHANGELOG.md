@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.1] - 2026-04-11
+### Fix
+- add new file to recently opened HSM files on save
+- reset text selection from input field in HSM element or transition looses focus
+- dont modify clipboard content when duplicating HSM elements
+- dont scale connection arrows for HSM elements
+
 ## [0.10.0] - 2026-04-11
 ### New
 - Added sidepanel shortcuts to View menu

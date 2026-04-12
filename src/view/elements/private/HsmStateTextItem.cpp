@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QPainter>
 #include <QTextDocument>
+#include <QTextCursor>
 
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
@@ -57,6 +58,11 @@ void HsmStateTextItem::focusInEvent(QFocusEvent* event) {
 
 void HsmStateTextItem::focusOutEvent(QFocusEvent* event) {
     QGraphicsTextItem::focusOutEvent(event);
+
+    // Clear text selection
+    QTextCursor cursor = textCursor();
+    cursor.clearSelection();
+    setTextCursor(cursor);
 
     if (toPlainText() != mOriginalText) {
         emit editingFinished();

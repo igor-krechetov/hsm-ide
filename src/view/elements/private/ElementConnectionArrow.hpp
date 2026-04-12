@@ -46,15 +46,15 @@ protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 public:
-    static constexpr qreal mA = 10.0;
-    static constexpr qreal mB = 16.0;
-    static constexpr qreal mW = 3 * mA;
+    static constexpr qreal mA = 8.0;
+    static constexpr qreal mB = mA * 3.5;
+    static constexpr qreal mW = mA * 3.0;
 
 private:
     QPointF mPos;
+    QPainterPath mShapeArrow;
     QRectF mOuterRect;
     Direction mDirection;
-    QPainterPath mShapeArrow;
     bool mHovered = false;
 };
 

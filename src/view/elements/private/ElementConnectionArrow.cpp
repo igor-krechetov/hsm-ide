@@ -1,26 +1,27 @@
 #include "ElementConnectionArrow.hpp"
 
 #include <QCursor>
+#include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QTransform>
 
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
+#include "DebugRendering.hpp"
 
 namespace view {
 
 ElementConnectionArrow::ElementConnectionArrow(QGraphicsObject* annotationElement, Direction direction)
     : QGraphicsObject(annotationElement)
     , mDirection(direction)
-    , mOuterRect(-mW / 2, -mW / 2, mW, mW)
-    , mShapeArrow(initShape(direction)) {
+    , mShapeArrow(initShape(direction))
+    , mOuterRect(mShapeArrow.boundingRect()) {
     // qDebug() << "CREATE: ElementConnectionArrow: " << this;
     setAcceptHoverEvents(true);
     setZValue(11);
     setCursor(QCursor(Qt::PointingHandCursor));
-
-    // TODO: arrows should not scale with the sceene, but need to adjust bounding rect of the elements
-    // setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+    setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
 }
 
 void ElementConnectionArrow::setPos(const QPointF& pos) {
@@ -29,18 +30,18 @@ void ElementConnectionArrow::setPos(const QPointF& pos) {
     switch (mDirection) {
         case Direction::North:
             mPos.setX(pos.x());
-            mPos.setY(pos.y() - mW / 2 - offset);
+            mPos.setY(pos.y() - offset);
             break;
         case Direction::East:
-            mPos.setX(pos.x() + mW / 2 + offset);
+            mPos.setX(pos.x() + offset);
             mPos.setY(pos.y());
             break;
         case Direction::South:
             mPos.setX(pos.x());
-            mPos.setY(pos.y() + mW / 2 + offset);
+            mPos.setY(pos.y() + offset);
             break;
         case Direction::West:
-            mPos.setX(pos.x() - mW / 2 - offset);
+            mPos.setX(pos.x() - offset);
             mPos.setY(pos.y());
             break;
         default:
@@ -61,35 +62,53 @@ void ElementConnectionArrow::paint(QPainter* painter, const QStyleOptionGraphics
     painter->setBrush(mHovered ? theme.connectionArrow.invalidBrush : theme.connectionArrow.validBrush);
     painter->setPen(Qt::NoPen);
     painter->drawPath(mShapeArrow);
+
+#ifdef DEBUG_RENDERING
+    debugDrawX(painter, mPos);
+    painter->setBrush(Qt::NoBrush);
+    painter->drawRect(mOuterRect);
+#endif
 }
+
+/*
+
+    |    W   |
+--      33
+       ****
+      ******
+B    1******2
+       ****
+       ****
+       *PP*
+--    | A  |
+
+*/
 
 QPainterPath ElementConnectionArrow::initShape(const Direction direction) const {
     QTransform t;
     QPainterPath shape;
-    const qreal base = 0.55 * mB;
+    const qreal baseH = 0.55 * mB;
+    const qreal baseW = 0.55 * mW;
+    const qreal tipHight = mB - baseH;
     const qreal offset = (mW - mB) / 2;
 
-    shape.addRect(-base / 2, -2.0 * mA, base, 2.0 * mA);
-    shape.moveTo(-mW / 2 + offset, -2.0 * mA);
-    shape.lineTo(mW / 2 - offset, -2.0 * mA);
-    shape.lineTo(0, -mW);
-    shape.lineTo(-mW / 2 + offset, -2.0 * mA);
+    shape.addRect(mPos.x() - baseW / 2, 0, baseW, baseH);
+    shape.moveTo(-mW / 2, baseH);
+    shape.lineTo(mW / 2, baseH);
+    shape.lineTo(0, baseH + tipHight);
+    shape.lineTo(-mW / 2, baseH);
 
     switch (direction) {
         case Direction::North:
-            t.translate(0, mW / 2);
-            break;
-        case Direction::East:
-            t.translate(-mW / 2, 0);
-            t.rotate(90.0);
-            break;
-        case Direction::South:
-            t.translate(0, -mW / 2);
             t.rotate(180.0);
             break;
-        case Direction::West:
-            t.translate(mW / 2, 0);
+        case Direction::East:
             t.rotate(-90.0);
+            break;
+        case Direction::South:
+            break;
+        case Direction::West:
+            t.rotate(90.0);
             break;
         default:
             // do nothing

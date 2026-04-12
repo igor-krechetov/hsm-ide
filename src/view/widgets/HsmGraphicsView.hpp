@@ -81,6 +81,11 @@ public:
 
 signals:
     void hsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);
+    void transformChanged();
+
+#ifdef DEBUG_RENDERING
+    void mouseMoved(const QPointF& scenePos);
+#endif
 
 protected:
     void focusOutEvent(QFocusEvent* event) override;
