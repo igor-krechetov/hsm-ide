@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPointer>
 
+
 namespace view {
 
 class HsmStateTextItem : public QGraphicsTextItem {
@@ -31,6 +32,10 @@ protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
+
+private:
+    bool isPasteShortcut(const QKeyEvent* event) const;
+    void insertPlainTextFromClipboard();
 
 private:
     QString mOriginalText;
