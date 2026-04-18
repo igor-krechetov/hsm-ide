@@ -1,9 +1,15 @@
 #include "HsmStateTextItem.hpp"
 
+#include <QApplication>
+#include <QClipboard>
 #include <QFocusEvent>
 #include <QGraphicsScene>
+#include <QGraphicsSceneDragDropEvent>
 #include <QKeyEvent>
+#include <QKeySequence>
+#include <QMimeData>
 #include <QPainter>
+#include <QTextCursor>
 #include <QTextDocument>
 #include <QTextCursor>
 
@@ -70,17 +76,41 @@ void HsmStateTextItem::focusOutEvent(QFocusEvent* event) {
 }
 
 void HsmStateTextItem::keyPressEvent(QKeyEvent* event) {
-    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+    bool handled = false;
+
+    if (isPasteShortcut(event)) {
+        insertPlainTextFromClipboard();
+        handled = true;
+    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         emit editingFinished();
         event->ignore();  // Prevent newline
         clearFocus();
-        return;
+        handled = true;
+    } else if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete || event->text() != "\n") {
+        QGraphicsTextItem::keyPressEvent(event);
+        handled = true;
     }
 
-    if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete || event->text() != "\n") {
-        QGraphicsTextItem::keyPressEvent(event);
+    if (handled == false) {
+        // Ignore newline
     }
-    // Ignore newline
+}
+
+void HsmStateTextItem::dropEvent(QGraphicsSceneDragDropEvent* event) {
+    bool handled = false;
+
+    if (event && event->mimeData()) {
+        const QString droppedText = event->mimeData()->text();
+        if (droppedText.isEmpty() == false) {
+            textCursor().insertText(droppedText);
+            event->acceptProposedAction();
+            handled = true;
+        }
+    }
+
+    if (handled == false) {
+        QGraphicsTextItem::dropEvent(event);
+    }
 }
 
 QVariant HsmStateTextItem::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -111,6 +141,23 @@ void HsmStateTextItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
 int HsmStateTextItem::type() const {
     return view::ELEMENT_TYPE_STATE_TEXT;
+}
+
+bool HsmStateTextItem::isPasteShortcut(const QKeyEvent* event) const {
+    bool isPaste = false;
+
+    if (event) {
+        isPaste = event->matches(QKeySequence::Paste);
+    }
+
+    return isPaste;
+}
+
+void HsmStateTextItem::insertPlainTextFromClipboard() {
+    const QClipboard* clipboard = QApplication::clipboard();
+    if (clipboard) {
+        textCursor().insertText(clipboard->text(QClipboard::Clipboard));
+    }
 }
 
 }  // namespace view

@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QPointer>
 
+class QGraphicsSceneDragDropEvent;
+
 namespace view {
 
 class HsmStateTextItem : public QGraphicsTextItem {
@@ -28,11 +30,15 @@ protected:
     void focusInEvent(QFocusEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void dropEvent(QGraphicsSceneDragDropEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
 
 private:
+    bool isPasteShortcut(const QKeyEvent* event) const;
+    void insertPlainTextFromClipboard();
+
     QString mOriginalText;
     QGraphicsItem* mLogicalParent = nullptr;
 };
