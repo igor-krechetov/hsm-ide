@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.3] - 2026-04-18
+### Fixed
+- drop rich text formatting when pasting into HSM labels
+
 ## [0.10.2] - 2026-04-18
 ### Fixed
 - Allow transitions without events.

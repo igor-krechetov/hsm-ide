@@ -1,5 +1,5 @@
 [![GPL3 License](https://img.shields.io/badge/license-GPL3-blue.svg)](https://github.com/igor-krechetov/hsm-ide/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.10.2-green.svg)](https://github.com/igor-krechetov/hsm-ide/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.10.3-green.svg)](https://github.com/igor-krechetov/hsm-ide/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Releases
