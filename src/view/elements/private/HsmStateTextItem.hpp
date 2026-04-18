@@ -29,7 +29,6 @@ protected:
     void focusInEvent(QFocusEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
-    void dropEvent(QGraphicsSceneDragDropEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;

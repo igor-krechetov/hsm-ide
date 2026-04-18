@@ -4,15 +4,16 @@
 #include <QClipboard>
 #include <QFocusEvent>
 #include <QGraphicsScene>
-#include <QGraphicsSceneDragDropEvent>
 #include <QKeyEvent>
 #include <QKeySequence>
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 #include <QMimeData>
 >>>>>>> 00792cc ([refactoring] Force plain-text paste in state text editor)
+=======
+>>>>>>> db9676d ([0.10.3] block rich text from being inserted into text labels)
 #include <QPainter>
-#include <QTextCursor>
 #include <QTextDocument>
 #include <QTextCursor>
 
@@ -101,6 +102,7 @@ void HsmStateTextItem::keyPressEvent(QKeyEvent* event) {
     }
 }
 
+<<<<<<< HEAD
 void HsmStateTextItem::dropEvent(QGraphicsSceneDragDropEvent* event) {
     bool handled = false;
 
@@ -119,6 +121,8 @@ void HsmStateTextItem::dropEvent(QGraphicsSceneDragDropEvent* event) {
     }
 }
 
+=======
+>>>>>>> db9676d ([0.10.3] block rich text from being inserted into text labels)
 QVariant HsmStateTextItem::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionHasChanged) {
         emit positionChanged();
