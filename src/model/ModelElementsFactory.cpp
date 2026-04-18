@@ -104,7 +104,14 @@ QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointe
 
 QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QSharedPointer<State>& source,
                                                                         const QSharedPointer<State>& target) {
-    QSharedPointer<Transition> newTransition(new Transition(source, target, "NEW_EVENT"));
+    QString defaultEventName = "NEW_EVENT";
+    QSharedPointer<Transition> newTransition;
+
+    if (source && ((source->stateType() == StateType::INITIAL) || (source->stateType() == StateType::ENTRYPOINT))) {
+        defaultEventName = "";
+    }
+
+    newTransition = QSharedPointer<Transition>(new Transition(source, target, defaultEventName));
 
     if (false == source->addChild(newTransition)) {
         qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());

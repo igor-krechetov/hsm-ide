@@ -793,8 +793,8 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
 
         qDebug() << __LINE__ << "Found transition with event:" << event << "target:" << target;
 
-        if (event.isEmpty() || target.isEmpty()) {
-            handleParseError("Transition without event or target attribute");
+        if (target.isEmpty()) {
+            handleParseError("Transition without target attribute");
             mXmlReader->skipCurrentElement();
             return nullptr;
         }

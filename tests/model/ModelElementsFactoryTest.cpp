@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include "model/EntryPoint.hpp"
+#include "model/InitialState.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/RegularState.hpp"
 
@@ -28,6 +30,20 @@ void ModelElementsFactoryTest::CreatesExpectedElements() {
     QCOMPARE(QString("NEW_EVENT"), tr->event());
     QCOMPARE(s1, tr->source());
     QCOMPARE(s2, tr->target());
+
+    auto initial = model::ModelElementsFactory::createUniqueState(model::StateType::INITIAL).dynamicCast<model::InitialState>();
+    QVERIFY(initial);
+
+    auto trFromInitial = model::ModelElementsFactory::createUniqueTransition(initial, s1);
+    QVERIFY(trFromInitial);
+    QCOMPARE(QString(""), trFromInitial->event());
+
+    auto entry = model::ModelElementsFactory::createUniqueState(model::StateType::ENTRYPOINT).dynamicCast<model::EntryPoint>();
+    QVERIFY(entry);
+
+    auto trFromEntry = model::ModelElementsFactory::createUniqueTransition(entry, s2);
+    QVERIFY(trFromEntry);
+    QCOMPARE(QString(""), trFromEntry->event());
 }
 
 int runModelElementsFactoryTest(int argc, char** argv) {
