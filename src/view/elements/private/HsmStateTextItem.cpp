@@ -4,9 +4,15 @@
 #include <QClipboard>
 #include <QFocusEvent>
 #include <QGraphicsScene>
+#include <QGraphicsSceneDragDropEvent>
 #include <QKeyEvent>
 #include <QKeySequence>
+<<<<<<< HEAD
+=======
+#include <QMimeData>
+>>>>>>> 00792cc ([refactoring] Force plain-text paste in state text editor)
 #include <QPainter>
+#include <QTextCursor>
 #include <QTextDocument>
 #include <QTextCursor>
 
@@ -90,6 +96,26 @@ void HsmStateTextItem::keyPressEvent(QKeyEvent* event) {
 
     if (handled == false) {
         // Ignore newline
+<<<<<<< HEAD
+=======
+    }
+}
+
+void HsmStateTextItem::dropEvent(QGraphicsSceneDragDropEvent* event) {
+    bool handled = false;
+
+    if (event && event->mimeData()) {
+        const QString droppedText = event->mimeData()->text();
+        if (droppedText.isEmpty() == false) {
+            textCursor().insertText(droppedText);
+            event->acceptProposedAction();
+            handled = true;
+        }
+    }
+
+    if (handled == false) {
+        QGraphicsTextItem::dropEvent(event);
+>>>>>>> 00792cc ([refactoring] Force plain-text paste in state text editor)
     }
 }
 
