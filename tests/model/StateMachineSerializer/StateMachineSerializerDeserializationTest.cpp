@@ -209,8 +209,8 @@ void StateMachineSerializerDeserializationTest::DeserializeExternalAndInternalTr
  *
  * @startuml
  * state Region {
- *   [*] --> A : toA
- *   [*] --> B : toB
+ *   [*] --> A
+ *   [*] --> B
  * }
  * @enduml
  */
@@ -223,11 +223,11 @@ void StateMachineSerializerDeserializationTest::DeserializeEntryPointTransitions
 
     QVERIFY(model);
     bool hasInitialState = false;
-    bool hasTransitionToAorB = false;
+    bool hasTransitionWithEmptyEvent = false;
 
     model->root()->forEachChildElement(
-        [&hasInitialState, &hasTransitionToAorB](QSharedPointer<model::StateMachineEntity> parent,
-                                                 QSharedPointer<model::StateMachineEntity> child) {
+        [&hasInitialState, &hasTransitionWithEmptyEvent](QSharedPointer<model::StateMachineEntity> parent,
+                                                         QSharedPointer<model::StateMachineEntity> child) {
             Q_UNUSED(parent);
             bool keepWalking = true;
 
@@ -241,8 +241,9 @@ void StateMachineSerializerDeserializationTest::DeserializeEntryPointTransitions
                         auto& transitions = entry->transitions();
                         if (transitions.size() > 0) {
                             const QString target = transitions.first()->target()->name();
+                            const bool validTarget = (target == "A" || target == "B");
 
-                            hasTransitionToAorB = (target == "A" || target == "B");
+                            hasTransitionWithEmptyEvent = (validTarget && transitions.first()->event().isEmpty());
                         }
                     }
                 }
@@ -252,7 +253,7 @@ void StateMachineSerializerDeserializationTest::DeserializeEntryPointTransitions
         });
 
     QVERIFY(hasInitialState);
-    QVERIFY(hasTransitionToAorB);
+    QVERIFY(hasTransitionWithEmptyEvent);
 }
 
 /**

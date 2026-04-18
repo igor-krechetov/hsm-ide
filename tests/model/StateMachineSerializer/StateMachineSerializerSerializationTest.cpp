@@ -176,8 +176,8 @@ void StateMachineSerializerSerializationTest::SerializeExternalAndInternalTransi
  *
  * @startuml
  * state Region {
- *   [*] --> A : toA
- *   [*] --> B : toB
+ *   [*] --> A
+ *   [*] --> B
  * }
  * @enduml
  */
@@ -189,8 +189,8 @@ void StateMachineSerializerSerializationTest::SerializeEntryPointTransitions() {
     auto b = QSharedPointer<model::RegularState>::create("B");
     auto entry = QSharedPointer<model::EntryPoint>::create();
 
-    entry->addTransition(QSharedPointer<model::Transition>::create(entry, a, "toA"));
-    entry->addTransition(QSharedPointer<model::Transition>::create(entry, b, "toB"));
+    entry->addTransition(QSharedPointer<model::Transition>::create(entry, a, ""));
+    entry->addTransition(QSharedPointer<model::Transition>::create(entry, b, ""));
 
     root->addChildState(region);
     region->addChildState(a);
@@ -201,8 +201,10 @@ void StateMachineSerializerSerializationTest::SerializeEntryPointTransitions() {
     const QString scxml = serializer.serializeToScxml(model);
 
     QVERIFY(scxml.contains("<initial>"));
-    QVERIFY(scxml.contains("event=\"toA\""));
-    QVERIFY(scxml.contains("event=\"toB\""));
+    QVERIFY(scxml.contains("target=\"A\""));
+    QVERIFY(scxml.contains("target=\"B\""));
+    QVERIFY(scxml.contains("event=\"toA\"") == false);
+    QVERIFY(scxml.contains("event=\"toB\"") == false);
 }
 
 /**
