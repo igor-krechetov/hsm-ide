@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.2] - 2026-04-18
+### Fixed
+- Allow transitions without events.
+- Don't add default event for transitions from initial or entry point states
+
 ## [0.10.1] - 2026-04-11
 ### Fix
 - add new file to recently opened HSM files on save
