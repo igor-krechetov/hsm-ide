@@ -131,20 +131,17 @@ void ElementConnectionArrow::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
 }
 
 void ElementConnectionArrow::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    qDebug("PRESS - arrow");
-    emit connectionStarted(this, mapToScene(event->pos()));
+    emit connectionStarted(this, event->scenePos());
     event->accept();
 }
 
 void ElementConnectionArrow::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    qDebug("RELEASE - arrow");
-    emit connectionFinished(this, mapToScene(event->pos()));
+    emit connectionFinished(this, event->scenePos());
     QGraphicsObject::mouseReleaseEvent(event);
 }
 
 void ElementConnectionArrow::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    qDebug("RELEASE - mouseMoveEvent");
-    emit connectionPositionChanged(this, mapToScene(event->pos()));
+    emit connectionPositionChanged(this, event->scenePos());
     QGraphicsObject::mouseMoveEvent(event);
 }
 

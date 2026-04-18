@@ -10,9 +10,10 @@
 
 
 UX improvements:
+
+
+
 Add a way to grip nodes when creating a transition (keep adding nodes until user clicks on a conectable element). ESC or loose of focus cancels it.
-Connection arrows for substates are hidden to early.
-Transition arrows rendered incorrectly in the zoomed out view.
 Transition should be deleted if target state is deleted.
 Resize grip and transition connection grips overlap.
 Start changing title when user starts typing on a selected node/transition

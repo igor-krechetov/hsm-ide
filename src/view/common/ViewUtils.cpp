@@ -32,20 +32,20 @@ HsmElement* ViewUtils::topHsmElementAt(QGraphicsScene* scene,
                         if (ignoreElement == element) {
                             element = nullptr;
                         } else if (onlyConnectable && element->isConnectable() == false) {
-                            qDebug() << "Target is not connectable: " << element->modelId()
-                                     << " | viewElementType=" << targetItem->type() << " | " << element;
+                            // qDebug() << "Target is not connectable: " << element->modelId()
+                            //          << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if (onlyAcceptsConnections && element->acceptsConnections() == false) {
-                            qDebug() << "Target does not accept connections: " << element->modelId()
-                                     << " | viewElementType=" << targetItem->type() << " | " << element;
+                            // qDebug() << "Target does not accept connections: " << element->modelId()
+                            //          << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if (onlyAcceptsChildren && element->acceptsChildElement(childType) == false) {
-                            qDebug() << "Target doesn't accept children: " << element->modelId()
-                                     << " | viewElementType=" << targetItem->type() << " | " << element;
+                            // qDebug() << "Target doesn't accept children: " << element->modelId()
+                            //          << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         } else if ((true == ignoreSelected) && (element->isSelected() == true)) {
-                            qDebug() << "Target is selected. Ignoring: modelId=" << element->modelId()
-                                     << " | viewElementType=" << targetItem->type() << " | " << element;
+                            // qDebug() << "Target is selected. Ignoring: modelId=" << element->modelId()
+                            //          << " | viewElementType=" << targetItem->type() << " | " << element;
                             element = nullptr;
                         }
 

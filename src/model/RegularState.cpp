@@ -95,7 +95,8 @@ void RegularState::setOnExitingAction(const QString& actionData) {
 bool RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
     bool res = false;
 
-    if (child) {
+     // Prevent duplicates
+    if (child && mChildren.contains(child) == false) {
         mChildren.push_back(child);
         registerNewChild(child);
         res = true;
@@ -131,6 +132,8 @@ void RegularState::deleteChild(const EntityID_t id) {
 }
 
 void RegularState::deleteDirectChild(const QSharedPointer<StateMachineEntity>& child) {
+    qDebug() << "StateMachineModel::deleteDirectChild" << child->id();
+
     if (child) {
         // child->forEachChildElement(
         //     [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {

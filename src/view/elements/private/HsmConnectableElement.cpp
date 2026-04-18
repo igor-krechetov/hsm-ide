@@ -76,19 +76,39 @@ void HsmConnectableElement::handleHoverEvent(const QPointF& pos) {
     if (isConnectable() == true && hasVisibleArrows() == false) {
         const QPointF sceneMousePos = mapToScene(pos);
         auto* view = scene()->views().first();
+        auto viewMousePos = view->mapFromScene(sceneMousePos);
+        HsmConnectableElement* childWithArrows = nullptr;
 
-        if (hoverRect().contains( view->mapFromScene(sceneMousePos) ) == true) {
-            // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast
-            // enough.
-            //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore
-            //       (but need to account for the arrow size)
-            removeConnectionArrowsForOtherElements(sceneMousePos);
-            createConnectionArrows();
-        }
+        forEachHsmChildElement([&](HsmElement* child) {
+            auto* connectableChild = dynamic_cast<HsmConnectableElement*>(child);
+            if (connectableChild) {
+                if (connectableChild->isConnectable() && connectableChild->hasVisibleArrows()) {
+                    QRectF parentChildIntersection = hoverRect().adjusted(-10, -10, 10, 10);
 
-        auto parentConnectable = dynamic_cast<HsmConnectableElement*>(hsmParentItem().get());
-        if (parentConnectable) {
-            parentConnectable->removeConnectionArrows();
+                    if (connectableChild->hoverRect().contains(viewMousePos) && parentChildIntersection.contains(viewMousePos) == true) {
+                        childWithArrows = connectableChild;
+                    } else {
+                        connectableChild->removeConnectionArrows();
+                    }
+                }
+            }
+        }, 1);// NOTE: we only need to check direct children
+
+        // if there is a child with connection arrows and we are within it's hover area - do nothing
+        if (nullptr == childWithArrows) {
+            if (hoverRect().contains(viewMousePos) == true) {
+                // NOTE: For tightly compositioned elements, Qt sometimes doesnt send all hover events if user moves the mouse fast
+                // enough.
+                //       So we need to check all elements on the scene and remove arrows for those which are not hovered anymore
+                //       (but need to account for the arrow size)
+                removeConnectionArrowsForOtherElements(sceneMousePos);
+                createConnectionArrows();
+            }
+
+            auto parentConnectable = dynamic_cast<HsmConnectableElement*>(hsmParentItem().get());
+            if (parentConnectable) {
+                parentConnectable->removeConnectionArrows();
+            }
         }
     }
 }
@@ -245,12 +265,14 @@ QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arr
 }
 
 void HsmConnectableElement::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+    qDebug() << "----- hoverEnterEvent: " << modelId();
     updateHoverRect();
     handleHoverEvent(event->pos());
     HsmElement::hoverEnterEvent(event);
 }
 
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+    qDebug() << "----- hoverMoveEvent: " << modelId();
     handleHoverEvent(event->pos());
     HsmElement::hoverMoveEvent(event);
 }
