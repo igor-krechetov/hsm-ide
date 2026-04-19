@@ -14,10 +14,10 @@
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
+#include "view/elements/private/HsmElement.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
 #include "view/widgets/WorkspaceView.hpp"
-#include "view/elements/private/HsmElement.hpp"
 
 MainWindow::MainWindow(MainEditorController* parent)
     : QMainWindow(nullptr)
@@ -25,6 +25,8 @@ MainWindow::MainWindow(MainEditorController* parent)
     , mController(parent) {
     ui->setupUi(this);
     connect(ui->actionDuplicate, &QAction::triggered, this, &MainWindow::handleClipboardDuplicate);
+    connect(ui->actionShowGrid, &QAction::toggled, this, &MainWindow::handleToggleGrid);
+    connect(ui->actionSnapToGrid, &QAction::toggled, this, &MainWindow::handleToggleSnapToGrid);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -72,6 +74,8 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
+    ui->actionShowGrid->setChecked(true);
+    ui->actionSnapToGrid->setChecked(false);
     ui->actionUndo->setEnabled(false);
     ui->actionRedo->setEnabled(false);
 }
@@ -253,6 +257,22 @@ void MainWindow::handleClipboardDuplicate() {
 
             handleClipboardPaste();
         }
+    }
+}
+
+void MainWindow::handleToggleGrid(const bool enabled) {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->setGridVisible(enabled);
+    }
+}
+
+void MainWindow::handleToggleSnapToGrid(const bool enabled) {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->setSnapToGridEnabled(enabled);
     }
 }
 
@@ -448,6 +468,8 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
     newView->setScene(scene);
     newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    newView->setGridVisible(ui->actionShowGrid->isChecked());
+    newView->setSnapToGridEnabled(ui->actionSnapToGrid->isChecked());
 
     project->registerView(newView);
     ui->projectTabs->addTab(newView, project->name());
@@ -478,6 +500,8 @@ void MainWindow::projectSelected(ProjectControllerPtr project) {
 
         if (projectIndex != -1) {
             ui->projectTabs->setCurrentIndex(projectIndex);
+            mActiveProject->view()->setGridVisible(ui->actionShowGrid->isChecked());
+            mActiveProject->view()->setSnapToGridEnabled(ui->actionSnapToGrid->isChecked());
             ui->modelTree->setModel(mActiveProject->hsmStructureModel());
             ui->entityProperties->setModel(mActiveProject->hsmEntityViewModel());
             ui->entityProperties->setColumnWidth(0, 140);

@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.0] - 2026-04-10
+### New
+- Added optional grid rendering in main editor view with View -> Show Grid toggle.
+- Added optional snap-to-grid behavior with View -> Snap to Grid toggle for drag-and-drop and new element placement.
+- Added configurable grid size steps as part of theme settings.
+
 ## [0.9.1] - 2026-04-05
 ### Fix
 - About dialog was not displaying correct version information

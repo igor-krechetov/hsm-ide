@@ -11,6 +11,7 @@
 class QDragEnterEvent;
 class QDragMoveEvent;
 class QDropEvent;
+class QPainter;
 class ProjectController;
 
 namespace model {
@@ -74,11 +75,17 @@ public:
 
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
+    void setGridVisible(const bool visible);
+    bool isGridVisible() const;
+    void setSnapToGridEnabled(const bool enabled);
+    bool isSnapToGridEnabled() const;
+    QPointF snapPointToGrid(const QPointF& scenePos) const;
 
 signals:
     void hsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);
 
 protected:
+    void drawBackground(QPainter* painter, const QRectF& rect) override;
     void focusOutEvent(QFocusEvent* event) override;
 
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -127,6 +134,8 @@ private:
     QList<view::HsmElement*> mDraggedChildElements;
 
     QMap<view::HsmElement*, QPointF> mDragRevertPositions;
+    bool mGridVisible = true;
+    bool mSnapToGridEnabled = false;
 };
 
 #endif  // HSMGRAPHICSVIEW_HPP

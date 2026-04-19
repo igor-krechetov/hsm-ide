@@ -56,6 +56,8 @@ public slots:
     void handleClipboardPaste();
     void handleSelectAll();
     void handleClipboardDuplicate();
+    void handleToggleGrid(const bool enabled);
+    void handleToggleSnapToGrid(const bool enabled);
 
     void handleAbout();
 
