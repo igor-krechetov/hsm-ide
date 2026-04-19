@@ -30,7 +30,7 @@ GripDirectionType ElementBoundaryGripItem::directionType() const {
 }
 
 QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-    const QPointF valuePos = value.toPointF();
+    const QPointF valuePos = alignToGrid(value.toPointF());
     QVariant res;
     QPointF newPos;
 

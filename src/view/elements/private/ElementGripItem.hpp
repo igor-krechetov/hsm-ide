@@ -57,6 +57,9 @@ signals:
     void onGripMoveEnterEvent(ElementGripItem* gripItem);
     void onGripMoveLeaveEvent(ElementGripItem* gripItem);
 
+protected:
+    QPointF alignToGrid(const QPointF& localPos) const;
+
 private:
     HsmElement* mAnnotationElement = nullptr;
     GripDirection mGripDirection = GripDirection::FreeMove;
