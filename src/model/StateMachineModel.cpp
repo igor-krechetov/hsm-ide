@@ -163,6 +163,7 @@ QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const Entit
 
 // TODO: this probably will not work with transitions. decide how transitions will be moved
 bool StateMachineModel::moveElement(const EntityID_t elementId, const EntityID_t newParentId) {
+    qDebug() << "StateMachineModel::moveElement" << elementId << "->" << newParentId;
     bool moved = false;
 
     if (elementId != newParentId) {

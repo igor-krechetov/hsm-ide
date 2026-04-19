@@ -16,6 +16,10 @@ public:
     void exposeRegisterChild(const QSharedPointer<model::StateMachineEntity>& child) {
         registerNewChild(child);
     }
+
+    void exposeUnregisterChild(const QSharedPointer<model::StateMachineEntity>& child) {
+        unregisterChild(child);
+    }
 };
 
 class StateMachineEntityTest : public QObject {
@@ -24,6 +28,7 @@ class StateMachineEntityTest : public QObject {
 private slots:
     void MetadataAndGeometryAccessors();
     void ChildSignalsPropagate();
+    void ChildSignalsDontPropagateAfterUnregister();
 };
 
 /**
@@ -56,6 +61,26 @@ void StateMachineEntityTest::ChildSignalsPropagate() {
 
     parent->exposeRegisterChild(child);
 
+    QCOMPARE(1, spy.count());
+}
+
+/**
+ * @brief Verify child signals stop propagation after unregister.
+ *
+ * Use-case: Entity moves between parents should not keep stale signal links.
+ */
+void StateMachineEntityTest::ChildSignalsDontPropagateAfterUnregister() {
+    auto parent = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
+    auto child = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
+    auto nested = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
+
+    QSignalSpy spy(parent.get(), &model::StateMachineEntity::childAdded);
+
+    parent->exposeRegisterChild(child);
+    QCOMPARE(1, spy.count());
+
+    parent->exposeUnregisterChild(child);
+    child->exposeRegisterChild(nested);
     QCOMPARE(1, spy.count());
 }
 

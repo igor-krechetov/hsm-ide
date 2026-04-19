@@ -1,7 +1,7 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
-set(DEBUG_RENDERING False)
+set(DEBUG_RENDERING True)
 
 if(DEBUG_RENDERING)
     add_definitions(-DDEBUG_RENDERING=1)

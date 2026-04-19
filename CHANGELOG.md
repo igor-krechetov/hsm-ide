@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.4] - 2026-04-18
+### Fixed
+- self-transition for a substate is added twice
+- adding substates to selected states doesnt work
+- connecting transitions rendered incorrectly in the zoomed out view
+- connection arrows for substates are hidden too early
+
 ## [0.10.3] - 2026-04-18
 ### Fixed
 - drop rich text formatting when pasting into HSM labels

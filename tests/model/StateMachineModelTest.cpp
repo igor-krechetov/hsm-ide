@@ -1,3 +1,4 @@
+#include <QSignalSpy>
 #include <QtTest>
 
 #include "model/ModelElementsFactory.hpp"
@@ -12,6 +13,7 @@ class StateMachineModelTest : public QObject {
 private slots:
     void MoveAndReconnectElements();
     void CloneTransitionsUsesNewStateReferences();
+    void ReparentedStateChildAddedIsEmittedOnce();
 };
 
 /**
@@ -46,10 +48,8 @@ void StateMachineModelTest::CloneTransitionsUsesNewStateReferences() {
     auto sourceModel = QSharedPointer<model::StateMachineModel>::create("Source");
     auto sourceRoot = sourceModel->root();
 
-    auto sourceA =
-        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
-    auto sourceB =
-        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto sourceA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto sourceB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
 
     sourceRoot->addChildState(sourceA);
     sourceRoot->addChildState(sourceB);
@@ -90,6 +90,27 @@ void StateMachineModelTest::CloneTransitionsUsesNewStateReferences() {
     QCOMPARE(destinationTransition->target().data(), destinationB.data());
     QVERIFY(destinationTransition->source().data() != sourceA.data());
     QVERIFY(destinationTransition->target().data() != sourceB.data());
+}
+
+void StateMachineModelTest::ReparentedStateChildAddedIsEmittedOnce() {
+    auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
+    auto root = model->root();
+
+    auto topLevelParent =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto childState =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+
+    root->addChildState(topLevelParent);
+    root->addChildState(childState);
+
+    QVERIFY(model->moveElement(childState->id(), topLevelParent->id()));
+
+    QSignalSpy addedSpy(model.get(), &model::StateMachineModel::modelEntityAdded);
+    auto selfTransition = model::ModelElementsFactory::createUniqueTransition(childState, childState);
+
+    QVERIFY(selfTransition);
+    QCOMPARE(addedSpy.count(), 1);
 }
 
 int runStateMachineModelTest(int argc, char** argv) {

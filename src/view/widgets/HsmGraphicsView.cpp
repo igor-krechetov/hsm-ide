@@ -333,7 +333,7 @@ bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmE
         sourceElementType = element->elementType();
     }
 
-    targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, true, element, sourceElementType);
+    targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, mimetype.isEmpty(), element, sourceElementType);
 
     qDebug() << "--- handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : 0) << "mimetype"
              << mimetype << (int)sourceElementType << "target=" << (targetElement ? targetElement->modelId() : 0)
