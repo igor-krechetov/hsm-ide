@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.1] - 2026-04-19
+### Fixed
+- Snap-to-grid is now applied when moving transition grips and state resize grips.
+
 ## [0.10.0] - 2026-04-10
 ### New
 - Added optional grid rendering in main editor view with View -> Show Grid toggle.

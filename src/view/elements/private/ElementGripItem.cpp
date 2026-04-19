@@ -3,6 +3,7 @@
 #include <QCursor>
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QMetaMethod>
 #include <QPainter>
 
@@ -10,6 +11,7 @@
 #include "ObjectUtils.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
+#include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
 
@@ -136,9 +138,17 @@ void ElementGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     // printf("ElementGripItem::mouseMoveEvent\n");
     QPointF delta = event->scenePos() - mLastPos;
+    QPointF sceneTargetPos = scenePos() + delta;
 
-    moveBy(delta.x(), delta.y());
-    mLastPos = event->scenePos();
+    sceneTargetPos = alignToGrid(sceneTargetPos);
+
+    if (parentItem() != nullptr) {
+        setPos(parentItem()->mapFromScene(sceneTargetPos));
+    } else {
+        setPos(sceneTargetPos);
+    }
+
+    mLastPos = sceneTargetPos;
 }
 
 void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
@@ -152,11 +162,13 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
     QVariant res;
 
     if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        if (false == annotationElement()->onGripMoved(this, value.toPointF())) {
+        const QPointF alignedPos = alignToGrid(value.toPointF());
+
+        if (false == annotationElement()->onGripMoved(this, alignedPos)) {
             qDebug() << pos() << " -> " << value;
             res = pos();
         } else {
-            res = QGraphicsObject::itemChange(change, value);
+            res = QGraphicsObject::itemChange(change, alignedPos);
         }
     } else {
         res = QGraphicsObject::itemChange(change, value);
@@ -173,6 +185,23 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
 
 int ElementGripItem::type() const {
     return view::ELEMENT_TYPE_GRIP;
+}
+
+QPointF ElementGripItem::alignToGrid(const QPointF& localPos) const {
+    QPointF alignedPos = localPos;
+    HsmGraphicsView* hsmView = nullptr;
+
+    if (scene() != nullptr && scene()->views().isEmpty() == false) {
+        hsmView = dynamic_cast<HsmGraphicsView*>(scene()->views().first());
+    }
+
+    if (hsmView != nullptr && hsmView->isSnapToGridEnabled()) {
+        const QPointF scenePos = mapToScene(localPos);
+        const QPointF snappedScenePos = hsmView->snapPointToGrid(scenePos);
+        alignedPos = mapFromScene(snappedScenePos);
+    }
+
+    return alignedPos;
 }
 
 };  // namespace view
