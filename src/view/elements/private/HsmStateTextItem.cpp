@@ -7,8 +7,8 @@
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QPainter>
-#include <QTextDocument>
 #include <QTextCursor>
+#include <QTextDocument>
 
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
@@ -42,6 +42,23 @@ HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent, QGraphicsItem* logical
 void HsmStateTextItem::makeMovable(const bool enable) {
     setFlag(QGraphicsItem::ItemIsMovable, enable);
     setFlag(QGraphicsItem::ItemIsSelectable, enable);
+}
+
+void HsmStateTextItem::beginEditMode() {
+    setFocus(Qt::OtherFocusReason);
+
+    QTextCursor cursor = textCursor();
+    cursor.select(QTextCursor::Document);
+    setTextCursor(cursor);
+}
+
+void HsmStateTextItem::beginTypingMode(const QString& newText) {
+    setPlainText(newText);
+    setFocus(Qt::OtherFocusReason);
+
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::End);
+    setTextCursor(cursor);
 }
 
 void HsmStateTextItem::focusInEvent(QFocusEvent* event) {

@@ -34,6 +34,8 @@ public:
     void normalizeElementRect() override;
 
     QPointF mapFromSceneToBody(const QPointF& point) const override;
+    void beginNameEditMode();
+    void beginNameTypingMode(const QString& newText);
 
 protected:
     bool isInitialized() const;

@@ -5,7 +5,6 @@
 #include <QObject>
 #include <QPointer>
 
-
 namespace view {
 
 class HsmStateTextItem : public QGraphicsTextItem {
@@ -17,6 +16,8 @@ public:
 
     void makeMovable(const bool enable);
     void link(const QPointer<HsmStateTextItem>& other);
+    void beginEditMode();
+    void beginTypingMode(const QString& newText);
 
     int type() const override;
 

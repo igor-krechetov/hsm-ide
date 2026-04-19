@@ -200,6 +200,18 @@ QPointF HsmStateElement::mapFromSceneToBody(const QPointF& point) const {
     return mBodySection->mapFromScene(point);
 }
 
+void HsmStateElement::beginNameEditMode() {
+    if (mStateNameLabel != nullptr) {
+        mStateNameLabel->beginEditMode();
+    }
+}
+
+void HsmStateElement::beginNameTypingMode(const QString& newText) {
+    if (mStateNameLabel != nullptr) {
+        mStateNameLabel->beginTypingMode(newText);
+    }
+}
+
 void HsmStateElement::onModelDataChanged() {
     qDebug() << "---- HsmStateElement::onModelDataChanged";
     if (isInitialized()) {

@@ -683,6 +683,18 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
     }
 }
 
+void HsmTransition::beginEventEditMode() {
+    if (mLabelEvent != nullptr) {
+        mLabelEvent->beginEditMode();
+    }
+}
+
+void HsmTransition::beginEventTypingMode(const QString& newText) {
+    if (mLabelEvent != nullptr) {
+        mLabelEvent->beginTypingMode(newText);
+    }
+}
+
 int HsmTransition::findGripIndex(const ElementGripItem* grip) {
     int gripIndex = -1;
 

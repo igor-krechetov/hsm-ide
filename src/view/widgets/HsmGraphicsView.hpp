@@ -121,6 +121,8 @@ private:
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
     // view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
     view::HsmResizableElement* elementToHsmResizableElement(view::HsmElement* element) const;
+    bool beginSelectedElementEditing();
+    bool beginSelectedElementTyping(const QString& text);
 
     void forEachSelectedElement(std::function<void(view::HsmElement*)> callback);
 
