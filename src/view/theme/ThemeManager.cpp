@@ -38,6 +38,8 @@ view::theme::Theme ThemeManager::createDefaultTheme() {
 
     defaultTheme.grid.majorLinePen = QPen(Qt::lightGray, 1.0, Qt::DashLine);
     defaultTheme.grid.minorLinePen = QPen(Qt::lightGray, 1.0, Qt::DashLine);
+    defaultTheme.grid.majorLineStep = 100.0;
+    defaultTheme.grid.minorLineStep = 20.0;
 
     defaultTheme.grip.color = QColor("red");
     defaultTheme.grip.hoverColor = QColor("green");

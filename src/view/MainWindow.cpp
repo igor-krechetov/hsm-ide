@@ -46,6 +46,8 @@ MainWindow::MainWindow(MainEditorController* parent)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
+    connect(ui->actionShowGrid, &QAction::toggled, this, &MainWindow::handleToggleGrid);
+    connect(ui->actionSnapToGrid, &QAction::toggled, this, &MainWindow::handleToggleSnapToGrid);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -94,6 +96,8 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Select default side menu
     ui->actionShowTabHsmElements->setChecked(true);
+    ui->actionShowGrid->setChecked(true);
+    ui->actionSnapToGrid->setChecked(false);
     ui->actionUndo->setEnabled(false);
     ui->actionRedo->setEnabled(false);
 }
@@ -331,6 +335,22 @@ void MainWindow::handleFitToView() {
     }
 }
 
+void MainWindow::handleToggleGrid(const bool enabled) {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->setGridVisible(enabled);
+    }
+}
+
+void MainWindow::handleToggleSnapToGrid(const bool enabled) {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->setSnapToGridEnabled(enabled);
+    }
+}
+
 // =================================================================================================================
 void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
@@ -526,6 +546,8 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
     newView->setScene(scene);
     newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    newView->setGridVisible(ui->actionShowGrid->isChecked());
+    newView->setSnapToGridEnabled(ui->actionSnapToGrid->isChecked());
 
     project->registerView(newView);
     ui->projectTabs->addTab(newView, project->name());
@@ -556,6 +578,8 @@ void MainWindow::projectSelected(ProjectControllerPtr project) {
 
         if (projectIndex != -1) {
             ui->projectTabs->setCurrentIndex(projectIndex);
+            mActiveProject->view()->setGridVisible(ui->actionShowGrid->isChecked());
+            mActiveProject->view()->setSnapToGridEnabled(ui->actionSnapToGrid->isChecked());
             ui->modelTree->setModel(mActiveProject->hsmStructureModel());
             ui->entityProperties->setModel(mActiveProject->hsmEntityViewModel());
             ui->entityProperties->setColumnWidth(0, 140);

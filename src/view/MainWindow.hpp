@@ -55,12 +55,18 @@ public slots:
     void handleClipboardCut();
     void handleClipboardPaste();
     void handleSelectAll();
+<<<<<<< HEAD
     void handleEditSelected();
     void handleDuplicateSelected();
     void handleZoomIn();
     void handleZoomOut();
     void handleResetZoom();
     void handleFitToView();
+=======
+    void handleClipboardDuplicate();
+    void handleToggleGrid(const bool enabled);
+    void handleToggleSnapToGrid(const bool enabled);
+>>>>>>> 9d7b923 ([0.10.0] add grid rendering and snap-to-grid controls)
 
     void handleAbout();
 
