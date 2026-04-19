@@ -14,6 +14,10 @@ HsmPropertiesTableView::HsmPropertiesTableView(QWidget* parent)
 }
 
 void HsmPropertiesTableView::setModel(QAbstractItemModel* model) {
+    if (QAbstractItemModel* oldModel = QTreeView::model()) {
+        disconnect(oldModel, nullptr, this, nullptr);
+    }
+
     QTreeView::setModel(model);
 
     if (model) {

@@ -107,8 +107,11 @@ void HsmResizableElement::normalizeElementRect() {
     // Update position of child items
     forEachHsmChildElement(
         [&](HsmElement* child) {
-            qDebug() << "child:" << child->pos() << " -> " << (child->pos() - newPositionDelta);
-            child->setPos(child->pos() - newPositionDelta);
+            // Skip transitions as they are recalculated on state position changes
+            if (child->elementType() != HsmElementType::TRANSITION) {
+                qDebug() << "child:" << child->pos() << " -> " << (child->pos() - newPositionDelta);
+                child->setPos(child->pos() - newPositionDelta);
+            }
         },
         1);
 

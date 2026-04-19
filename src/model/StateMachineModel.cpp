@@ -209,7 +209,6 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId,
                 // Need to move transition to a new parent and change source
                 qDebug() << "---- reset old source";
                 QSignalBlocker block(currentSourceElement.get());
-
                 currentSourceElement->deleteChild(transitionId);
             }
 
@@ -218,12 +217,14 @@ bool StateMachineModel::reconnectElements(const EntityID_t transitionId,
                 transitionPtr->setSource(newSourceElement);
 
                 if (newSourceElement) {
+                    QSignalBlocker block(newSourceElement.get());
                     newSourceElement->addChild(transitionPtr);
                 }
             }
             transitionPtr->setTarget(mModelRoot->findState(newToElementId));
             qDebug() << transitionPtr->sourceId() << transitionPtr->targetId();
 
+            emit modelChanged();
             res = true;
         } else {
             qCritical() << "Failed to find transition with id " << transitionId;

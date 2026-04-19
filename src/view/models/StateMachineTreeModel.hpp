@@ -73,7 +73,7 @@ public:
 
     bool removeRows(int row, int count, const QModelIndex& parent) override;
 
-private slots:
+public slots:
     void onModelChanged();
     void onModelDataChanged(QWeakPointer<model::StateMachineEntity> entity);
 

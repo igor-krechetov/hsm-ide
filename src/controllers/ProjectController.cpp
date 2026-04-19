@@ -125,8 +125,6 @@ bool ProjectController::importModel(const QString& path) {
         file.close();
 
         {
-            // block signals so we dont send unnecessary projectModelChanged updates
-            QSignalBlocker blocker(this);
             model::StateMachineSerializer serializer;
 
             if (true == serializer.deserializeFromScxml(scxmlContent, mModel)) {
@@ -750,6 +748,7 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
 
 void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntity> parent,
                                            QWeakPointer<model::StateMachineEntity> entity) {
+    qDebug() << "ProjectController::modelEntityDeleted: parent=" << parent.lock()->id() << " child=" << entity.lock()->id();
     auto ptrEntity = entity.lock();
 
     if (ptrEntity) {
@@ -927,5 +926,8 @@ void ProjectController::refreshViewFromModel() {
                 -1,
                 false);
         }
+
+        // trigger rebuild of the view model
+        mHsmStructureViewModel->onModelChanged();
     }
 }

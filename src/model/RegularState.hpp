@@ -5,6 +5,8 @@
 #include "Transition.hpp"
 #include "actions/IModelAction.hpp"
 
+#include <QSet>
+
 namespace model {
 
 class RegularState : public State {
@@ -61,6 +63,10 @@ public:
         const bool postOrderTraversal = true) override;
 
     void copyEntityData(const StateMachineEntity& other) override;
+
+private:
+    QSet<EntityID_t> collectStateIdsForDeletion(const QSharedPointer<StateMachineEntity>& rootEntity);
+    QSet<EntityID_t> collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot, const QSet<EntityID_t>& stateIds);
 
 protected:
     QSharedPointer<IModelAction> mOnStateChangedAction;
