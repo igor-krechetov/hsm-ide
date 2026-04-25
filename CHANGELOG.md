@@ -8,6 +8,8 @@ All notable changes to project will be documented in this file.
 - Delete linked transitions when deleting a state
 - Transitions incorrectly rendered after resizing parent state with substate movement
 - Self-transition label incorrectly positioned and not resized on value change
+- Start changing title when user starts typing on a selected state/transition
+- Start state/transition renaming on pressing F2
 
 ## [0.10.4] - 2026-04-18
 ### Fixed

@@ -46,7 +46,6 @@ MainWindow::MainWindow(MainEditorController* parent)
     , ui(new Ui_hsm_ide)
     , mController(parent) {
     ui->setupUi(this);
-    connect(ui->actionDuplicate, &QAction::triggered, this, &MainWindow::handleClipboardDuplicate);
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -249,7 +248,16 @@ void MainWindow::handleSelectAll() {
     }
 }
 
-void MainWindow::handleClipboardDuplicate() {
+void MainWindow::handleEditSelected() {
+    QPointer<HsmGraphicsView> viewPtr = currentView();
+
+    if (nullptr != viewPtr) {
+        viewPtr->setFocus();
+        viewPtr->beginSelectedElementEditing();
+    }
+}
+
+void MainWindow::handleDuplicateSelected() {
     QPointer<HsmGraphicsView> viewPtr = currentView();
     QClipboard* clipboard = QGuiApplication::clipboard();
     std::unique_ptr<QMimeData> originalClipboardData(cloneMimeData(clipboard->mimeData()));
