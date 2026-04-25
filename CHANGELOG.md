@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.2] - 2026-04-19
+### Fixed
+- Improved grip dragging with snap-to-grid enabled by removing oscillation/jitter between grid intersections.
+
 ## [0.10.1] - 2026-04-19
 ### Fixed
 - Snap-to-grid is now applied when moving transition grips and state resize grips.

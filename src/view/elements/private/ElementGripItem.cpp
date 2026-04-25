@@ -138,17 +138,9 @@ void ElementGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     // printf("ElementGripItem::mouseMoveEvent\n");
     QPointF delta = event->scenePos() - mLastPos;
-    QPointF sceneTargetPos = scenePos() + delta;
 
-    sceneTargetPos = alignToGrid(sceneTargetPos);
-
-    if (parentItem() != nullptr) {
-        setPos(parentItem()->mapFromScene(sceneTargetPos));
-    } else {
-        setPos(sceneTargetPos);
-    }
-
-    mLastPos = sceneTargetPos;
+    moveBy(delta.x(), delta.y());
+    mLastPos = event->scenePos();
 }
 
 void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
