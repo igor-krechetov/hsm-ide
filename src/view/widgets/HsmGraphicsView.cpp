@@ -672,7 +672,7 @@ void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
 
         if (event->isAutoRepeat() == false && event->key() == Qt::Key_F2) {
             handledByInlineEdit = beginSelectedElementEditing();
-        } else if (hasTextInputModifier == false && hasTypedSymbol == true) {
+        } else if (hasTextInputModifier == false && hasTypedSymbol == true && isStateTextItemFocused() == false) {
             handledByInlineEdit = beginSelectedElementTyping(event->text());
         }
     }
@@ -842,6 +842,20 @@ view::HsmResizableElement* HsmGraphicsView::elementToHsmResizableElement(view::H
     }
 
     return resizableElement;
+}
+
+bool HsmGraphicsView::isStateTextItemFocused() const {
+    bool isFocused = false;
+
+    if (scene() != nullptr) {
+        const QGraphicsItem* focusedItem = scene()->focusItem();
+
+        if (focusedItem != nullptr) {
+            isFocused = (focusedItem->type() == view::ELEMENT_TYPE_STATE_TEXT);
+        }
+    }
+
+    return isFocused;
 }
 
 void HsmGraphicsView::forEachSelectedElement(std::function<void(view::HsmElement*)> callback) {
