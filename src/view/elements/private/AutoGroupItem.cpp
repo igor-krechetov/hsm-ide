@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QTimer>
 
+#include "HsmStateTextItem.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 
@@ -15,6 +16,11 @@ AutoGroupItem::AutoGroupItem(QGraphicsItem* parent)
     setFlags(ItemIsMovable | ItemSendsGeometryChanges);
 }
 
+void AutoGroupItem::setDirection(const AutoLayoutDirection direction) {
+    mLayoutDirection = direction;
+    relayout();
+}
+
 void AutoGroupItem::makeMovable(const bool enable) {
     setFlag(QGraphicsItem::ItemIsMovable, enable);
     setFlag(QGraphicsItem::ItemIsSelectable, enable);
@@ -23,13 +29,23 @@ void AutoGroupItem::makeMovable(const bool enable) {
 QRectF AutoGroupItem::boundingRect() const {
     QRectF newRect = childrenBoundingRect();
 
-    if (mLastRect != newRect) {
-        mLastRect = childrenBoundingRect();
-        QTimer::singleShot(0, this, SLOT(relayout()));
-        emit geometryChanged();
-    }
 
     return newRect;
+}
+
+void AutoGroupItem::addItem(QGraphicsItem* item) {
+    if (nullptr != item) {
+        prepareGeometryChange();
+        item->setParentItem(this);
+
+        if (nullptr != item && item->type() == view::ELEMENT_TYPE_STATE_TEXT) {
+            HsmStateTextItem* stateTextItem = dynamic_cast<HsmStateTextItem*>(item);
+
+            connect(stateTextItem, &HsmStateTextItem::editingFinished, this, &AutoGroupItem::relayout);
+        }
+    }
+
+    update();
 }
 
 void AutoGroupItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) {
@@ -58,7 +74,18 @@ void AutoGroupItem::childEvent(QChildEvent* event) {
 }
 
 void AutoGroupItem::relayout() {
-    QList<QGraphicsItem*> validChildren;
+    switch (mLayoutDirection) {
+        case AutoLayoutDirection::HORIZONTAL:
+            relayoutHorizontal();
+            break;
+        case AutoLayoutDirection::VERTICAL:
+            relayoutVertical();
+            break;
+    }
+}
+
+void AutoGroupItem::relayoutVertical() {
+    QMap<int, QGraphicsItem*> validChildren;
     qreal maxWidth = 0;
 
     // 1. Collect visible children and find maximum width
@@ -67,26 +94,65 @@ void AutoGroupItem::relayout() {
             continue;
         }
 
-        validChildren.append(item);
+        validChildren.insert(item->data(static_cast<int>(AutoLayoutDirection::VERTICAL)).toInt(), item);
         maxWidth = qMax(maxWidth, item->boundingRect().width());
     }
 
-    if (validChildren.isEmpty()) {
-        return;
+    if (validChildren.isEmpty() == false) {
+        // 2. Adjust X to horizontally center each child based on maxWidth
+        int offsetY = 0;
+
+        for (int index = 0; index < validChildren.size(); ++index) {
+            QGraphicsItem* item = validChildren.value(index);
+            const qreal y = item->pos().y();
+            const qreal childWidth = item->boundingRect().width();
+
+            if (childWidth == maxWidth) {
+                item->setPos(0, offsetY);
+            } else {
+                // Center X: shift so that each item is centered relative to max width
+                qreal x = (maxWidth - childWidth) / 2.0;
+
+                item->setPos(x, offsetY);
+            }
+
+            offsetY += item->boundingRect().height() + 3;  // Add some spacing between items
+        }
+    }
+}
+
+void AutoGroupItem::relayoutHorizontal() {
+    QMap<int, QGraphicsItem*> validChildren;
+    qreal maxHeight = 0;
+
+    // 1. Collect visible children and find maximum height
+    for (QGraphicsItem* item : childItems()) {
+        if (!item->isVisible()) {
+            continue;
+        }
+
+        validChildren.insert(item->data(static_cast<int>(AutoLayoutDirection::HORIZONTAL)).toInt(), item);
+        maxHeight = qMax(maxHeight, item->boundingRect().height());
     }
 
-    // 2. Adjust X to horizontally center each child based on maxWidth
-    for (QGraphicsItem* item : validChildren) {
-        const qreal y = item->pos().y();
-        const qreal childWidth = item->boundingRect().width();
+    if (validChildren.isEmpty() == false) {
+        int offsetX = 0;
 
-        if (childWidth == maxWidth) {
-            item->setPos(0, y);
-        } else {
-            // Center X: shift so that each item is centered relative to max width
-            qreal x = (maxWidth - childWidth) / 2.0;
+        // 2. Adjust Y to vertically center each child based on maxHeight
+        for (int index = 0; index < validChildren.size(); ++index) {
+            QGraphicsItem* item = validChildren.value(index);
+            const qreal childHeight = item->boundingRect().height();
 
-            item->setPos(x, y);
+            if (childHeight == maxHeight) {
+                item->setPos(offsetX, 0);
+            } else {
+                // Center Y: shift so that each item is centered relative to max height
+                qreal y = (maxHeight - childHeight) / 2.0;
+
+                item->setPos(offsetX, y);
+            }
+
+            offsetX += item->boundingRect().width() + 3;  // Add some spacing between items
         }
     }
 }

@@ -95,7 +95,7 @@ void RegularState::setOnExitingAction(const QString& actionData) {
 bool RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
     bool res = false;
 
-     // Prevent duplicates
+    // Prevent duplicates
     if (child && mChildren.contains(child) == false) {
         mChildren.push_back(child);
         registerNewChild(child);
@@ -123,10 +123,24 @@ void RegularState::deleteChild(const EntityID_t id) {
     QSharedPointer<StateMachineEntity> parent = findParentState(id);
 
     if (parent) {
+        QSharedPointer<StateMachineEntity> targetChild = parent->findChild(id);
+
+        if (targetChild && (targetChild->type() == StateMachineEntity::Type::State)) {
+            // NOTE: in general, connecting transitions to substates is not allowed. But there is at least one exception - history states
+            //       so need to collect a list of substates to search for all transitions that needs to be removed
+            const QSet<EntityID_t> deletedStateIds = collectStateIdsForDeletion(targetChild);
+            const QSet<EntityID_t> transitionIdsToDelete =
+                collectLinkedTransitionIds(sharedFromThis().dynamicCast<RegularState>(), deletedStateIds);
+
+            for (const EntityID_t transitionId : transitionIdsToDelete) {
+                deleteChild(transitionId);
+            }
+        }
+
         if (parent.get() == this) {
-            deleteDirectChild(findChild(id));
+            deleteDirectChild(targetChild);
         } else {
-            parent->deleteChild(id);
+            parent->deleteDirectChild(targetChild);
         }
     }
 }
@@ -350,6 +364,58 @@ void RegularState::copyEntityData(const StateMachineEntity& other) {
 
         // mChildren is not copied as it represents owned children, not shallow data
     }
+}
+
+// =================================================================================================================
+// Private
+QSet<EntityID_t> RegularState::collectStateIdsForDeletion(const QSharedPointer<StateMachineEntity>& rootEntity) {
+    QSet<EntityID_t> stateIds;
+
+    if (rootEntity && (rootEntity->type() == StateMachineEntity::Type::State)) {
+        stateIds.insert(rootEntity->id());
+        rootEntity->forEachChildElement(
+            [&stateIds](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> child) {
+                bool continueTraversal = true;
+                Q_UNUSED(parent);
+
+                if (child && (child->type() == StateMachineEntity::Type::State)) {
+                    stateIds.insert(child->id());
+                }
+
+                return continueTraversal;
+            },
+            StateMachineEntity::DEPTH_INFINITE,
+            false);
+    }
+
+    return stateIds;
+}
+
+QSet<EntityID_t> RegularState::collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot, const QSet<EntityID_t>& stateIds) {
+    QSet<EntityID_t> transitionIds;
+
+    if (searchRoot && (stateIds.isEmpty() == false)) {
+        searchRoot->forEachChildElement(
+            [&transitionIds, &stateIds](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> child) {
+                bool continueTraversal = true;
+                Q_UNUSED(parent);
+
+                if (child && (child->type() == StateMachineEntity::Type::Transition)) {
+                    const QSharedPointer<Transition> transition = child.dynamicCast<Transition>();
+
+                    if (transition &&
+                        (stateIds.contains(transition->sourceId()) || stateIds.contains(transition->targetId()))) {
+                        transitionIds.insert(transition->id());
+                    }
+                }
+
+                return continueTraversal;
+            },
+            StateMachineEntity::DEPTH_INFINITE,
+            false);
+    }
+
+    return transitionIds;
 }
 
 };  // namespace model

@@ -177,6 +177,7 @@
     <addaction name="actionPaste"/>
     <addaction name="actionDelete"/>
     <addaction name="separator"/>
+    <addaction name="actionEdit"/>
     <addaction name="actionDuplicate"/>
     <addaction name="separator"/>
     <addaction name="actionFind"/>
@@ -880,6 +881,14 @@
     <string>Design</string>
    </property>
   </action>
+  <action name="actionEdit">
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -1280,6 +1289,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDuplicate</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleDuplicateSelected()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionEdit</sender>
+   <signal>triggered()</signal>
+   <receiver>hsm_ide</receiver>
+   <slot>handleEditSelected()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>343</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>deleteSelectedItems()</slot>
@@ -1305,5 +1346,7 @@
   <slot>handleResetZoom()</slot>
   <slot>handleFitToView()</slot>
   <slot>handleRedo()</slot>
+  <slot>handleDuplicateSelected()</slot>
+  <slot>handleEditSelected()</slot>
  </slots>
 </ui>

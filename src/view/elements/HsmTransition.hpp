@@ -39,6 +39,8 @@ public:
     void moveConnectionTo(const QPointF& pos);
     void connectElements(HsmElement* fromElement, HsmElement* toElement);
     void disconnectElements();
+    void beginEventEditMode();
+    void beginEventTypingMode(const QString& newText);
 
     inline bool isSelfTransition() const;
 

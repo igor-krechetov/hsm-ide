@@ -10,6 +10,7 @@ class RegularStateTest : public QObject {
 private slots:
     void CallbackPropertiesRoundTrip();
     void ChildAndTransitionSearch();
+    void DeleteStateRemovesIncomingAndOutgoingTransitions();
 };
 
 void RegularStateTest::CallbackPropertiesRoundTrip() {
@@ -39,6 +40,46 @@ void RegularStateTest::ChildAndTransitionSearch() {
 
     parent->deleteChild(child->id());
     QCOMPARE(QSharedPointer<model::State>(), parent->findState(child->id()));
+}
+
+/*
+@startuml
+state A
+state B
+state C {
+    state H
+}
+
+A -> C
+B -> H
+@enduml
+*/
+void RegularStateTest::DeleteStateRemovesIncomingAndOutgoingTransitions() {
+    auto root = QSharedPointer<model::RegularState>::create("Root");
+    auto stateA = QSharedPointer<model::RegularState>::create("A");
+    auto stateB = QSharedPointer<model::RegularState>::create("B");
+    auto stateC = QSharedPointer<model::RegularState>::create("C");
+    auto stateH = QSharedPointer<model::RegularState>::create("H");
+
+    root->addChildState(stateA);
+    root->addChildState(stateB);
+    root->addChildState(stateC);
+    stateC->addChildState(stateH);
+
+    auto transitionTop = QSharedPointer<model::Transition>::create(stateA, stateC, "A_to_C");
+    auto transitionSubstate = QSharedPointer<model::Transition>::create(stateB, stateH, "B_to_H");
+    stateA->addTransition(transitionTop);
+    stateB->addTransition(transitionSubstate);
+
+    QVERIFY(root->findTransition(transitionTop->id()));
+    QVERIFY(root->findTransition(transitionSubstate->id()));
+
+    root->deleteChild(stateC->id());
+
+    QCOMPARE(QSharedPointer<model::State>(), root->findState(stateC->id()));
+    QCOMPARE(QSharedPointer<model::State>(), root->findState(stateH->id()));
+    QCOMPARE(QSharedPointer<model::Transition>(), root->findTransition(transitionTop->id()));
+    QCOMPARE(QSharedPointer<model::Transition>(), root->findTransition(transitionSubstate->id()));
 }
 
 int runRegularStateTest(int argc, char** argv) {

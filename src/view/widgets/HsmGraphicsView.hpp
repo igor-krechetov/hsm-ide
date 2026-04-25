@@ -69,6 +69,8 @@ public:
     void resetZoom();
     void fitSceneToView();
 
+    bool beginSelectedElementEditing();
+
     bool keyboardShiftPressed() const;
     bool keyboardSpacePressed() const;
     bool keyboardCtrlPressed() const;
@@ -121,6 +123,8 @@ private:
     view::HsmElement* itemToHsmElement(QGraphicsItem* item) const;
     // view::HsmResizableElement* itemToHsmResizableElement(QGraphicsItem* item) const;
     view::HsmResizableElement* elementToHsmResizableElement(view::HsmElement* element) const;
+    bool isStateTextItemFocused() const;
+    bool beginSelectedElementTyping(const QString& text);
 
     void forEachSelectedElement(std::function<void(view::HsmElement*)> callback);
 

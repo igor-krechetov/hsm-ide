@@ -58,19 +58,26 @@ void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelE
 
     // Create label
     mLabel = new AutoGroupItem(this);
+    mLabelEvent = new HsmStateTextItem(nullptr, this);
+    mLabelCondition = new HsmStateTextItem(nullptr, this);
 
-    mLabelEvent = new HsmStateTextItem(mLabel, this);
-    mLabelCondition = new HsmStateTextItem(mLabel, this);
+    // configure labels order
+    mLabelEvent->setData(static_cast<int>(AutoLayoutDirection::VERTICAL), 1);
+    mLabelCondition->setData(static_cast<int>(AutoLayoutDirection::VERTICAL), 0);
 
-    mLabelCondition->setPos(0, 0);
-    mLabelEvent->setPos(0, mLabelCondition->boundingRect().height());
+    mLabelEvent->setData(static_cast<int>(AutoLayoutDirection::HORIZONTAL), 0);
+    mLabelCondition->setData(static_cast<int>(AutoLayoutDirection::HORIZONTAL), 1);
+
+    mLabel->setDirection(AutoLayoutDirection::VERTICAL);
+    mLabel->addItem(mLabelEvent);
+    mLabel->addItem(mLabelCondition);
 
     connect(mLabel, &AutoGroupItem::geometryChanged, this, &HsmTransition::recalculateLabelPosition);
-    connect(mLabelEvent, &HsmStateTextItem::editingFinished, this, &HsmTransition::onEventEditFinished);
-    connect(mLabelCondition, &HsmStateTextItem::editingFinished, this, &HsmTransition::onConditionEditFinished);
 
     // Pull latest data from the model
     onModelDataChanged();
+    // If called directly, labels wont have their geometry updated and label will be incorrectly positioned
+    QTimer::singleShot(0, this, SLOT(recalculateLine()));
 }
 
 QList<QGraphicsItem*> HsmTransition::hsmChildItems() const {
@@ -257,7 +264,8 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
         recalculateLine();
 
         if (mLabel) {
-            mLabel->makeMovable(mFromElement != mToElement);
+            mLabel->makeMovable(isSelfTransition() == false);
+            mLabel->setDirection(isSelfTransition() ? AutoLayoutDirection::HORIZONTAL : AutoLayoutDirection::VERTICAL);
         }
     }
 }
@@ -565,21 +573,25 @@ void HsmTransition::recalculateLine() {
 
 void HsmTransition::recalculateLabelPosition() {
     // Don't position label for self-transitions
-    if (isSelfTransition() == false && mLabel && mLinePath.size() >= 2) {
-        // Always position label as central point plus offset
-        QPointF mid;
-        const int n = mLinePath.size();
+    if (isSelfTransition() == false) {
+        if (mLabel && mLinePath.size() >= 2) {
+            // Always position label as central point plus offset
+            QPointF mid;
+            const int n = mLinePath.size();
 
-        if (n % 2 == 0) {
-            const int midIdx = n / 2 - 1;
+            if (n % 2 == 0) {
+                const int midIdx = n / 2 - 1;
 
-            mid = (mLinePath[midIdx] + mLinePath[midIdx + 1]) / 2.0;
-        } else {
-            mid = mLinePath[n / 2];
+                mid = (mLinePath[midIdx] + mLinePath[midIdx + 1]) / 2.0;
+            } else {
+                mid = mLinePath[n / 2];
+            }
+
+            mLabel->setPos(mid + mLabelOffset - mLabel->boundingRect().center());
         }
-
-        mLabel->setPos(mid + mLabelOffset - mLabel->boundingRect().center());
     }
+
+    mLabel->relayout();
 }
 
 // =================================================================================================================
@@ -680,6 +692,18 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
                 emit transitionReconnected(modelId(), mFromElement->modelId(), targetElement->modelId());
             }
         }
+    }
+}
+
+void HsmTransition::beginEventEditMode() {
+    if (mLabelEvent != nullptr) {
+        mLabelEvent->beginEditMode();
+    }
+}
+
+void HsmTransition::beginEventTypingMode(const QString& newText) {
+    if (mLabelEvent != nullptr) {
+        mLabelEvent->beginTypingMode(newText);
     }
 }
 

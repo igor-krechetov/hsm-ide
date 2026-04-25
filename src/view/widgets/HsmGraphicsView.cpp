@@ -333,7 +333,8 @@ bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmE
         sourceElementType = element->elementType();
     }
 
-    targetElement = view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, mimetype.isEmpty(), element, sourceElementType);
+    targetElement =
+        view::ViewUtils::topHsmElementAt(scene(), scenePos, false, false, true, mimetype.isEmpty(), element, sourceElementType);
 
     qDebug() << "--- handleElementDragEvent: " << scenePos << "elem=" << (element ? element->modelId() : 0) << "mimetype"
              << mimetype << (int)sourceElementType << "target=" << (targetElement ? targetElement->modelId() : 0)
@@ -661,33 +662,54 @@ void HsmGraphicsView::applyScale(const double scaleFactor) {
 }
 
 void HsmGraphicsView::keyPressEvent(QKeyEvent* event) {
-    QGraphicsView::keyPressEvent(event);
+    bool handledByInlineEdit = false;
 
-    // If the scene didn't accept it, we can handle it here if needed
-    if (!event->isAccepted()) {
-        if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
-            qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
-            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
-            QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
-            event->accept();
-        } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
-            qDebug() << "PRESS: CTRL";
+    if (event != nullptr) {
+        const Qt::KeyboardModifiers modifiers = event->modifiers();
+        const bool hasTextInputModifier =
+            ((modifiers & Qt::ControlModifier) || (modifiers & Qt::AltModifier) || (modifiers & Qt::MetaModifier));
+        const bool hasTypedSymbol = (event->text().isEmpty() == false) && (event->text().at(0).isPrint() == true);
 
-            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
-            qDebug() << mKeyboardModifiers;
-        } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_R) {
-            qDebug() << "PRESS: R";
-            if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
-                QGuiApplication::changeOverrideCursor(Qt::DragMoveCursor);
-                forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
+        if (event->isAutoRepeat() == false && event->key() == Qt::Key_F2) {
+            handledByInlineEdit = beginSelectedElementEditing();
+        } else if (hasTextInputModifier == false && hasTypedSymbol == true && isStateTextItemFocused() == false) {
+            handledByInlineEdit = beginSelectedElementTyping(event->text());
+        }
+    }
 
-                if (mDragTargetElement) {
-                    mDragTargetElement->hightlight(true);
+    if (handledByInlineEdit == true) {
+        event->accept();
+    }
+
+    if ((handledByInlineEdit == false) && (event != nullptr)) {
+        QGraphicsView::keyPressEvent(event);
+
+        // If the scene didn't accept it, we can handle it here if needed
+        if (!event->isAccepted()) {
+            if (false == event->isAutoRepeat() && event->key() == Qt::Key_Space) {
+                qDebug() << "PRESS: " << event->key() << "   " << event->isAutoRepeat();
+                mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::SpaceModifier);
+                QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
+                event->accept();
+            } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_Control) {
+                qDebug() << "PRESS: CTRL";
+
+                mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::ControlModifier);
+                qDebug() << mKeyboardModifiers;
+            } else if (false == event->isAutoRepeat() && event->key() == Qt::Key_R) {
+                qDebug() << "PRESS: R";
+                if (mDraggedElement && mDraggedElement->hsmParentItem() != nullptr) {
+                    QGuiApplication::changeOverrideCursor(Qt::DragMoveCursor);
+                    forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(true); });
+
+                    if (mDragTargetElement) {
+                        mDragTargetElement->hightlight(true);
+                    }
                 }
-            }
 
-            mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::R_Modifier);
-            qDebug() << mKeyboardModifiers;
+                mKeyboardModifiers = static_cast<KeyboardModifier>(mKeyboardModifiers | HsmGraphicsView::R_Modifier);
+                qDebug() << mKeyboardModifiers;
+            }
         }
     }
 }
@@ -822,6 +844,20 @@ view::HsmResizableElement* HsmGraphicsView::elementToHsmResizableElement(view::H
     return resizableElement;
 }
 
+bool HsmGraphicsView::isStateTextItemFocused() const {
+    bool isFocused = false;
+
+    if (scene() != nullptr) {
+        const QGraphicsItem* focusedItem = scene()->focusItem();
+
+        if (focusedItem != nullptr) {
+            isFocused = (focusedItem->type() == view::ELEMENT_TYPE_STATE_TEXT);
+        }
+    }
+
+    return isFocused;
+}
+
 void HsmGraphicsView::forEachSelectedElement(std::function<void(view::HsmElement*)> callback) {
     auto items = scene()->selectedItems();
     QList<model::EntityID_t> selectedHsmElements;
@@ -833,4 +869,64 @@ void HsmGraphicsView::forEachSelectedElement(std::function<void(view::HsmElement
             callback(ptr);
         }
     }
+}
+
+bool HsmGraphicsView::beginSelectedElementEditing() {
+    bool isEditingStarted = false;
+
+    if (scene() != nullptr) {
+        const auto selectedItems = scene()->selectedItems();
+
+        if (selectedItems.size() == 1) {
+            auto* selectedElement = itemToHsmElement(selectedItems.first());
+
+            if (selectedElement != nullptr) {
+                auto* selectedState = dynamic_cast<view::HsmStateElement*>(selectedElement);
+
+                if (selectedState != nullptr) {
+                    selectedState->beginNameEditMode();
+                    isEditingStarted = true;
+                } else {
+                    auto* selectedTransition = dynamic_cast<view::HsmTransition*>(selectedElement);
+
+                    if (selectedTransition != nullptr) {
+                        selectedTransition->beginEventEditMode();
+                        isEditingStarted = true;
+                    }
+                }
+            }
+        }
+    }
+
+    return isEditingStarted;
+}
+
+bool HsmGraphicsView::beginSelectedElementTyping(const QString& text) {
+    bool isEditingStarted = false;
+
+    if (scene() != nullptr) {
+        const auto selectedItems = scene()->selectedItems();
+
+        if (selectedItems.size() == 1) {
+            auto* selectedElement = itemToHsmElement(selectedItems.first());
+
+            if (selectedElement != nullptr) {
+                auto* selectedState = dynamic_cast<view::HsmStateElement*>(selectedElement);
+
+                if (selectedState != nullptr) {
+                    selectedState->beginNameTypingMode(text);
+                    isEditingStarted = true;
+                } else {
+                    auto* selectedTransition = dynamic_cast<view::HsmTransition*>(selectedElement);
+
+                    if (selectedTransition != nullptr) {
+                        selectedTransition->beginEventTypingMode(text);
+                        isEditingStarted = true;
+                    }
+                }
+            }
+        }
+    }
+
+    return isEditingStarted;
 }

@@ -265,14 +265,12 @@ QSizeF HsmConnectableElement::getArrowSize(ElementConnectionArrow::Direction arr
 }
 
 void HsmConnectableElement::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
-    qDebug() << "----- hoverEnterEvent: " << modelId();
     updateHoverRect();
     handleHoverEvent(event->pos());
     HsmElement::hoverEnterEvent(event);
 }
 
 void HsmConnectableElement::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    qDebug() << "----- hoverMoveEvent: " << modelId();
     handleHoverEvent(event->pos());
     HsmElement::hoverMoveEvent(event);
 }

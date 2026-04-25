@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.10.5] - 2026-04-19
+### Fixed
+- Model structure view not updated when opening the project
+- Extra transition created when changing transition source
+- Delete linked transitions when deleting a state
+- Transitions incorrectly rendered after resizing parent state with substate movement
+- Self-transition label incorrectly positioned and not resized on value change
+- Start changing title when user starts typing on a selected state/transition
+- Start state/transition renaming on pressing F2
+
 ## [0.10.4] - 2026-04-18
 ### Fixed
 - self-transition for a substate is added twice
