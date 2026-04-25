@@ -7,6 +7,7 @@ All notable changes to project will be documented in this file.
 - Extra transition created when changing transition source
 - Delete linked transitions when deleting a state
 - Transitions incorrectly rendered after resizing parent state with substate movement
+- Self-transition label incorrectly positioned and not resized on value change
 
 ## [0.10.4] - 2026-04-18
 ### Fixed
