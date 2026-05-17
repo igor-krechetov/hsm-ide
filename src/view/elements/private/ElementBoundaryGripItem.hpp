@@ -13,7 +13,7 @@ class ElementBoundaryGripItem : public ElementGripItem {
     Q_OBJECT
 public:
     ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection type);
-    virtual ~ElementBoundaryGripItem() = default;
+    virtual ~ElementBoundaryGripItem();
 
     HsmResizableElement* annotationElement() const;
 
@@ -23,6 +23,10 @@ public:
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
 private:
     GripDirectionType mGripDirectionType;

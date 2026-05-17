@@ -12,7 +12,7 @@
 #include <QWheelEvent>
 #include <cmath>
 
-#include "controllers/ProjectController.hpp"
+#include "controllers/IProjectController.hpp"
 #include "view/common/ViewUtils.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
@@ -66,13 +66,27 @@ QPointF HsmGraphicsView::snapPointToGrid(const QPointF& scenePos) const {
     QPointF snappedPos = scenePos;
 
     if (mSnapToGridEnabled) {
-        const auto& gridTheme = ThemeManager::instance().theme().grid;
-        const qreal step = gridTheme.minorLineStep;
+        snappedPos = alignPointToGrid(snappedPos);
+    }
 
-        if (step > 0.0) {
-            snappedPos.setX(qRound(scenePos.x() / step) * step);
-            snappedPos.setY(qRound(scenePos.y() / step) * step);
-        }
+    return snappedPos;
+}
+
+QPointF HsmGraphicsView::alignPointToGrid(const QPointF& scenePos) {
+    QPointF snappedPos = scenePos;
+    const auto& gridTheme = ThemeManager::instance().theme().grid;
+    const qreal step = gridTheme.minorLineStep;
+
+    if (step > 0.0) {
+        // Snap to nearest grid point, rounding ties down
+        const qreal eps = 1e-9;
+        const qreal x = scenePos.x();
+        const qreal y = scenePos.y();
+        const qreal snappedX = std::floor((x + step * 0.5 - eps) / step) * step;
+        const qreal snappedY = std::floor((y + step * 0.5 - eps) / step) * step;
+
+        snappedPos.setX(snappedX);
+        snappedPos.setY(snappedY);
     }
 
     return snappedPos;
@@ -110,11 +124,7 @@ void HsmGraphicsView::drawBackground(QPainter* painter, const QRectF& rect) {
     }
 }
 
-QWeakPointer<ProjectController> HsmGraphicsView::projectController() const {
-    return mProjectController;
-}
-
-void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>& controller) {
+void HsmGraphicsView::setProjectController(const QWeakPointer<IProjectController>& controller) {
     mProjectController = controller;
 
     // qDebug() << "--- INIT";
@@ -314,7 +324,12 @@ QList<model::EntityID_t> HsmGraphicsView::getSelectedElements() const {
 
 void HsmGraphicsView::deleteSelectedItems() {
     if (auto controller = mProjectController.toStrongRef()) {
-        controller->handleDeleteElements(getSelectedElements());
+        QSignalBlocker blocker(this);
+
+        QList<model::EntityID_t> selectedElements = getSelectedElements();
+
+        clearSelection();
+        controller->handleDeleteElements(selectedElements);
     }
 }
 

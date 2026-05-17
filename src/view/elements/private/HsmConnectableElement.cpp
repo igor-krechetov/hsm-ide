@@ -229,7 +229,7 @@ void HsmConnectableElement::updateBoundingRect(const QRectF& newRect) {
     updateConnectionArrowsPos();
 }
 
-bool HsmConnectableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
+bool HsmConnectableElement::onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) {
     const bool canResize = HsmElement::onGripMoved(selectedGrip, pos);
 
     if (true == canResize) {
@@ -313,24 +313,24 @@ void HsmConnectableElement::viewTransformChanged() {
     updateConnectionArrowsPos();
 }
 
-void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const QPointF& pos) {
+void HsmConnectableElement::beginConnection(ElementConnectionArrow* arrow, const QPointF& sceenePos) {
     qDebug() << Q_FUNC_INFO;
     mDrawConnectionLine = true;
     mConnection = std::make_shared<HsmTransition>();
     mConnection->init(nullptr);
-    mConnection->beginConnection(this, pos);
     scene()->addItem(mConnection.get());
+    mConnection->beginConnection(this, sceenePos);
 }
 
 // TODO: do we still need it?
-void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
+void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& sceenePos) {
     qDebug() << Q_FUNC_INFO;
     mDrawConnectionLine = false;
 
     if (mConnection) {
         QPointer<HsmElement> targetElement = mConnection->connectionCandidate();
 
-        qDebug() << "FINISH - arrow. Target" << targetElement << pos;
+        qDebug() << "FINISH - arrow. Target" << targetElement << sceenePos;
         scene()->removeItem(mConnection.get());
         mConnection.reset();
 
@@ -342,9 +342,9 @@ void HsmConnectableElement::finishConnectionLine(ElementConnectionArrow* arrow, 
     }
 }
 
-void HsmConnectableElement::updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos) {
+void HsmConnectableElement::updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& sceenePos) {
     if (mConnection) {
-        mConnection->moveConnectionTo(pos);
+        mConnection->moveConnectionTo(sceenePos);
     }
 }
 

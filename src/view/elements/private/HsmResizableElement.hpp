@@ -45,7 +45,7 @@ public:
     QSizeF minSize() const;
 
 public slots:
-    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
+    bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) override;
     void onGripLostFocus(ElementBoundaryGripItem* grip);
 
 protected:

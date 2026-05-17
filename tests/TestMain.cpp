@@ -18,6 +18,7 @@ int runStateMachineModelTest(int argc, char** argv);
 int runStateHierarchyRulesTest(int argc, char** argv);
 int runStateMachineSerializerSerializationTest(int argc, char** argv);
 int runStateMachineSerializerDeserializationTest(int argc, char** argv);
+int runHsmGraphicsViewTest(int argc, char** argv);
 
 // void silentMessageHandler(QtMsgType, const QMessageLogContext &, const QString &) {
 //     // Do nothing → suppress all messages
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
     result |= runStateHierarchyRulesTest(argc, argv);
     result |= runStateMachineSerializerSerializationTest(argc, argv);
     result |= runStateMachineSerializerDeserializationTest(argc, argv);
+    result |= runHsmGraphicsViewTest(argc, argv);
 
     return result;
 }

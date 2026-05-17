@@ -363,7 +363,7 @@ void MainWindow::projectTabSelected(int index) {
         QPointer<HsmGraphicsView> view = getViewByIndex(index);
 
         if (nullptr != view) {
-            mController->switchToProject(view->projectController());
+            mController->switchToProject(view->projectController<ProjectController>());
         }
     }
 }
@@ -373,7 +373,7 @@ void MainWindow::projectTabCloseRequested(int index) {
         QPointer<HsmGraphicsView> view = getViewByIndex(index);
 
         if (nullptr != view) {
-            mController->closeProject(view->projectController());
+            mController->closeProject(view->projectController<ProjectController>());
         }
     }
 }

@@ -22,6 +22,8 @@ set(TEST_SOURCES
     model/StateHierarchyRulesTest.cpp
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
+
+    view/HsmGraphicsViewTest.cpp
 )
 
 add_executable(ModelTests ${TEST_SOURCES})
@@ -29,12 +31,14 @@ add_executable(ModelTests ${TEST_SOURCES})
 target_include_directories(ModelTests PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/model
+    ${CMAKE_SOURCE_DIR}/src/view
 )
 
 target_link_libraries(ModelTests PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Test
     model
+    view
 )
 
 target_compile_definitions(ModelTests PRIVATE

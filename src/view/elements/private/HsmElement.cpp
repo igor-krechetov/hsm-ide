@@ -283,8 +283,10 @@ void HsmElement::setHsmParentItem(HsmElement* parent) {
     mHsmParent = parent;
 }
 
-bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
-    // TODO: impl
+bool HsmElement::onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) {
+    (void)selectedGrip;
+    (void)pos;
+
     return true;
 }
 

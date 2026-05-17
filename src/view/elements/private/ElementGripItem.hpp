@@ -34,6 +34,12 @@ public:
 
     HsmElement* annotationElement() const;
     QRectF boundingRect() const override;
+    // Visual position of the grip. Normallly same as pos() unless grip is being dragged.
+    // During dragging physical position doesnt change till dragging is finished, but 
+    // rendering position changes
+    QPointF renderingPos() const;
+    QPointF renderingPosScene() const;
+
 
     GripDirection direction() const;
 
@@ -51,6 +57,7 @@ public:
     int type() const override;
 
 signals:
+    void gripMoved(ElementGripItem* grip, const QPointF& delta);
     void onGripDoubleClick(ElementGripItem* gripItem);
     void onGripLostFocus(ElementGripItem* gripItem);
     // void onGripMoved(ElementGripItem* gripItem, const QPointF& pos);
@@ -65,8 +72,17 @@ private:
     GripDirection mGripDirection = GripDirection::FreeMove;
     QRectF mGripRect;
     bool mHovered = false;
-    QPointF mLastPos;
     bool mDragging = false;
+
+protected:
+    QPointF mLastDragPos;
+    QPointF mLastScenePos;
+    QPointF mLastSceneDelta;
+    QPointF mRenderingOffset;
+
+    QPointF mDragStartScenePos;
+    QPointF mStartGripScenePos;
+    QPointF mRenderingOffsetAtDragStart;
 };
 
 };  // namespace view

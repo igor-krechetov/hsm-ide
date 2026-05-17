@@ -142,7 +142,6 @@
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuView">
-<<<<<<< HEAD
     <property name="title">
      <string>&amp;View</string>
     </property>
@@ -151,13 +150,11 @@
       <string>Active Side Panel</string>
      </property>
     </widget>
-=======
    <property name="title">
     <string>&amp;View</string>
    </property>
     <addaction name="actionShowGrid"/>
     <addaction name="actionSnapToGrid"/>
->>>>>>> 9d7b923 ([0.10.0] add grid rendering and snap-to-grid controls)
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>

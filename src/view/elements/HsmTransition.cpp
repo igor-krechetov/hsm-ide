@@ -198,7 +198,9 @@ bool HsmTransition::isConnecting() const {
 
 void HsmTransition::moveConnectionTo(const QPointF& pos) {
     if (true == isConnecting()) {
+        const auto prevPos = mDestGrip->pos();
         mDestGrip->setPos(pos);
+        onGripMoved(mDestGrip, pos - prevPos);
     } else {
         qDebug() << "WARNING: unexpected moveConnectionTo call";
     }
@@ -470,7 +472,6 @@ void HsmTransition::recalculateLine() {
         mLinePath.removeLast();
     }
 
-    // TODO: decide how to snap transition to items
     if ((nullptr != mFromElement) && (nullptr != mToElement)) {
         if (mFromElement != mToElement) {
             QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
@@ -527,7 +528,7 @@ void HsmTransition::recalculateLine() {
             mDestGrip->setPos(mLinePath.last());
         }
     } else if (nullptr != mFromElement) {
-        currentMovePos = mDestGrip->pos();
+        currentMovePos = mDestGrip->renderingPos();
 
         QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
         QPointF pointFrom;
@@ -542,7 +543,7 @@ void HsmTransition::recalculateLine() {
         mLinePath.append(currentMovePos);
         mSrcGrip->setPos(pointFrom);
     } else if (nullptr != mToElement) {
-        currentMovePos = mSrcGrip->pos();
+        currentMovePos = mSrcGrip->renderingPos();
 
         QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
         QPointF pointTo;
@@ -601,8 +602,8 @@ void HsmTransition::setConnectionGripsVisibility(const bool visible) {
     mDestGrip->setVisible(visible);
 }
 
-bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos) {
-    if (mLinePath.isEmpty() == false) {
+bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {
+    if ((nullptr != grip) && (mLinePath.isEmpty() == false)) {
         const int gripIndex = findGripIndex(grip);
 
         if (gripIndex >= 0) {
@@ -610,16 +611,16 @@ bool HsmTransition::onGripMoved(const ElementGripItem* grip, const QPointF& pos)
             if ((gripIndex > 0 && gripIndex < (mLinePath.size() - 1)) ||
                 (isConnecting() == true &&
                  ((mFromElement == nullptr && grip == mSrcGrip) || (mToElement == nullptr && grip == mDestGrip)))) {
-                mLinePath[gripIndex] = pos;
+                mLinePath[gripIndex] = grip->renderingPos();
                 recalculateLine();
-                updateBoundingRect();
+                update();
             }
         }
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
             // Check if there is an element under cursor and highlight it
             QPointer<HsmElement> element =
-                ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
+                ViewUtils::topHsmElementAt(scene(), grip->renderingPosScene(), false, true, false, false, nullptr);
 
             if (mLastConnectionTarget != element) {
                 if (mLastConnectionTarget) {
@@ -671,10 +672,9 @@ void HsmTransition::onGripMoveLeaveEvent(ElementGripItem* gripItem) {
     // TODO: implement
     if (isConnecting() == true) {
         if (gripItem == mSrcGrip || gripItem == mDestGrip) {
-            QPointF pos = gripItem->pos();
             // check if there is an element which accepts connections
             HsmElement* targetElement =
-                ViewUtils::topHsmElementAt(scene(), mapToScene(pos), false, true, false, false, nullptr);
+                ViewUtils::topHsmElementAt(scene(), gripItem->renderingPosScene(), false, true, false, false, nullptr);
 
             if (nullptr == targetElement) {
                 targetElement = mPrevConnectedElement;
@@ -746,6 +746,9 @@ void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
             mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
             // TODO: validate
             mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
+
+            connect(grip, &ElementGripItem::gripMoved, this, &HsmTransition::onGripMoved);
+
             // Recalculate line in case label position needs to be changed
             recalculateLine();
         }

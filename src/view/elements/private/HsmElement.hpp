@@ -20,6 +20,13 @@ namespace view {
 
 class ElementGripItem;
 
+class IHsmElementGripHandler {
+public:
+    virtual ~IHsmElementGripHandler() = default;
+
+    virtual bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& delta) = 0;
+};
+
 enum class HsmElementType {
     UNKNOWN,
 
@@ -35,7 +42,7 @@ enum class HsmElementType {
 
 // TODO: subscribe to model data chages and redraw HsmElement
 
-class HsmElement : public QGraphicsObject {
+class HsmElement : public QGraphicsObject, public IHsmElementGripHandler {
     Q_OBJECT
 public:
     constexpr static int DEPTH_INFINITE = -1;
@@ -103,8 +110,7 @@ public:
     void setHsmParentItem(HsmElement* parent);
     inline QPointer<HsmElement> hsmParentItem() const;
 
-    // TODO: move to an interface
-    virtual bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos);
+    bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& delta) override;
 
     // Slot for model data changes
 public slots:

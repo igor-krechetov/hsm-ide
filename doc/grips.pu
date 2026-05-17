@@ -1,0 +1,17 @@
+@startuml
+
+participant qt
+participant ElementGripItem as grip
+participant HsmTransition as t
+
+qt -> grip: mouse press
+
+qt -> grip++: mouse move
+    grip -> t: onGripMoved
+return
+
+qt -> grip++: onItemChanged
+    grip -> t: emit gripMoved
+return
+
+@enduml

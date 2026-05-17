@@ -20,8 +20,8 @@ view::theme::Theme ThemeManager::createDefaultTheme() {
     view::theme::Theme defaultTheme;
 
     defaultTheme.node.borderPen = QPen(QColor("#5A80A8"), 2.0, Qt::SolidLine);
-    defaultTheme.node.highlightBorderPen = QPen(QColor("#2E75C8"), 3.0, Qt::DotLine);
-    defaultTheme.node.selectedBorderPen = QPen(QColor("#1E62D0"), 3.0, Qt::DotLine);
+    defaultTheme.node.highlightBorderPen = QPen(QColor("#FFA000"), 3.0, Qt::DotLine);
+    defaultTheme.node.selectedBorderPen = QPen(QColor("#2E75C8"), 3.0, Qt::DotLine);
     defaultTheme.node.backgroundBrush = QBrush(QColor("#E8F1FA"));
     defaultTheme.node.substateBackgroundBrush = QBrush(QColor("#DFF4E5"));
     defaultTheme.node.includeBackgroundBrush = QBrush(QColor("#F5F0D8"));

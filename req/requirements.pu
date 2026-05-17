@@ -135,9 +135,9 @@
 **** REQ-201c2: Switch primary side bar panels <<done>>
 **** REQ-201c3: Retain custom panel sizes in primary side bar <<done>>
 *** REQ-202: Model view widget <<partial>>
-**** REQ-202a: Layouts <<prio_low>>
-***** REQ-202a1: Grid rendering (on/off) <<prio_low>>
-***** REQ-202a2: Grid snapping <<prio_low>>
+**** REQ-202a: Layouts <<done>>
+***** REQ-202a1: Grid rendering (on/off) <<done>>
+***** REQ-202a2: Grid snapping <<done>>
 **** REQ-202b: Custom cursors <<prio_low>>
 ***** REQ-202b1: zoom in/out cursors <<prio_low>>
 **** REQ-202c: Floating menu <<prio_low>>

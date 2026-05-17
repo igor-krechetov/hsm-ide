@@ -87,7 +87,7 @@ bool hasSelectedAncestor(const QSharedPointer<model::ModelRootState>& rootState,
 }  // namespace
 
 ProjectController::ProjectController(const QString& id, QObject* parent)
-    : QObject(parent)
+    : IProjectController(parent)
     , mId(id)
     , mModel(new model::StateMachineModel("Untitled"))
     , mHistoryController(new ModificationHistoryController(mModel)) {

@@ -7,6 +7,7 @@
 #include <QWeakPointer>
 
 #include "model/StateMachineModel.hpp"
+#include "IProjectController.hpp"
 
 class HsmGraphicsView;
 
@@ -22,7 +23,7 @@ class StateMachineEntityViewModel;
 
 class ModificationHistoryController;
 
-class ProjectController : public QObject, public QEnableSharedFromThis<ProjectController> {
+class ProjectController : public IProjectController {
     Q_OBJECT
 public:
     explicit ProjectController(const QString& id, QObject* parent = nullptr);

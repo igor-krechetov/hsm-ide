@@ -4,6 +4,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QTimer>
 namespace view {
 
 HsmResizableElement::HsmResizableElement(const HsmElementType elementType, const QSizeF& size)
@@ -29,7 +30,6 @@ bool HsmResizableElement::isResizable() const {
 
 void HsmResizableElement::updateBoundingRect(const QRectF& newRect) {
     HsmConnectableElement::updateBoundingRect(newRect);
-    qDebug() << Q_FUNC_INFO;
     // Resize parent to fit new size of current item
     resizeParentToFitChildItem();
 }
@@ -181,7 +181,7 @@ void HsmResizableElement::onGripLostFocus(ElementBoundaryGripItem* grip) {
     setGripVisibility(isSelected() || mGripSelected);
 }
 
-bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& gripPos) {
+bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPointF& gripPos) {
     if (gripPos.isNull()) {
         qDebug() << "SKIP NULL DELTA";
         return false;
@@ -259,8 +259,8 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
             break;
     }
 
-    // qDebug() << "GRIP MOVED: " << (int)gripDirection << " POS: " << gripPos << " -> " << newPositionDelta;
-    // qDebug() << "NEW POS: " << pos() << " -> " << pos() + newPositionDelta << " : " << newOuterRect;
+    // qDebug() << "------- Elem:onGripMoved: mOuterRect=" << mOuterRect << ", newOuterRect=" << newOuterRect
+    //          << ", gripPos=" << gripPos;
 
     newOuterRect.moveTo(0, 0);
 
@@ -272,15 +272,6 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
         childrenSize.adjust(-newPositionDelta.x(), -newPositionDelta.y(), -newPositionDelta.x(), -newPositionDelta.y());
     }
 
-    // qDebug() << "CHILD RECT:" << childrenSize << "NEW RECT:" << newOuterRect << "DELTA:" << newPositionDelta;
-    // qDebug() << childrenSize.topLeft() << childrenSize.bottomRight();
-
-    // qDebug() << (newOuterRect.width() > childrenSize.width())
-    //          << (newOuterRect.height() > childrenSize.height())
-    //          << (childrenSize.bottom() < newOuterRect.bottom())
-    //          << (childrenSize.right() < newOuterRect.right())
-    //          << (childrenSize.top() > newOuterRect.top())
-    //          << (childrenSize.left() > newOuterRect.left());
 
     if (childrenSize.isNull() ||
         (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
@@ -311,61 +302,34 @@ bool HsmResizableElement::onGripMoved(const ElementGripItem* selectedGrip, const
 
     // TODO: would be nice to resume resizing only when cursor reaches the grip again
 
-    // if (canResize == false) {
-    //     QPointF viewPos = mapFromScene(pos);
-    //     QPointF screenPos = scene()->views().first()->viewport()->mapToGlobal(viewPos);
-    //     qDebug() << Q_FUNC_INFO << pos << viewPos << screenPos;
-    //     QCursor::setPos(screenPos.toPoint());
-    // }
-
-    return canResize;
+    // qDebug() << "----- CAN RESIZE=" << canResize;
+    return canResize && HsmConnectableElement::onGripMoved(selectedGrip, gripPos);
 }
 
-// TODO: check
-// int HsmResizableElement::indexOf(const QPointF& p) {
-//     for (int i = 0; i < 4; ++i) {
-//         if (p == point(i)) {
-//             return i;
-//         }
-//     }
-
-//     return -1;
-// }
 
 QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
     const QPointF elementCenter = mOuterRect.center();
     qreal xCenter = elementCenter.x();
     qreal yCenter = elementCenter.y();
+    constexpr int gripOffsetEdges = 0;
+    constexpr int gripOffsetCorners = 0;
     // TODO: replace hardcoded 2 with values from style class (when implemented)
     // TODO: account for round edge riadus (also based on style)
     QMap<GripDirection, QPointF> positions = {
-        {GripDirection::North, QPointF(xCenter, mOuterRect.top() + 2)},
-        {GripDirection::NorthEast, QPointF(mOuterRect.topRight().x() - 3, mOuterRect.topRight().y() + 3)},
-        {GripDirection::East, QPointF(mOuterRect.right() - 2, yCenter)},
-        {GripDirection::SouthEast, QPointF(mOuterRect.bottomRight().x() - 3, mOuterRect.bottomRight().y() - 3)},
-        {GripDirection::South, QPointF(xCenter, mOuterRect.bottom() - 2)},
-        {GripDirection::SouthWest, QPointF(mOuterRect.bottomLeft().x() + 3, mOuterRect.bottomLeft().y() - 3)},
-        {GripDirection::West, QPointF(mOuterRect.left() + 2, yCenter)},
-        {GripDirection::NorthWest, QPointF(mOuterRect.topLeft().x() + 3, mOuterRect.topLeft().y() + 3)}};
+        {GripDirection::North, QPointF(xCenter, mOuterRect.top() + gripOffsetEdges)},
+        {GripDirection::NorthEast,
+         QPointF(mOuterRect.topRight().x() - gripOffsetCorners, mOuterRect.topRight().y() + gripOffsetCorners)},
+        {GripDirection::East, QPointF(mOuterRect.right() - gripOffsetEdges, yCenter)},
+        {GripDirection::SouthEast,
+         QPointF(mOuterRect.bottomRight().x() - gripOffsetCorners, mOuterRect.bottomRight().y() - gripOffsetCorners)},
+        {GripDirection::South, QPointF(xCenter, mOuterRect.bottom() - gripOffsetEdges)},
+        {GripDirection::SouthWest,
+         QPointF(mOuterRect.bottomLeft().x() + gripOffsetCorners, mOuterRect.bottomLeft().y() - gripOffsetCorners)},
+        {GripDirection::West, QPointF(mOuterRect.left() + gripOffsetEdges, yCenter)},
+        {GripDirection::NorthWest,
+         QPointF(mOuterRect.topLeft().x() + gripOffsetCorners, mOuterRect.topLeft().y() + gripOffsetCorners)}};
     return positions[gripDirection];
 }
-
-// QRectF HsmResizableElement::boundingRect() const {
-//     return mOuterRect;
-// }
-
-// void HsmResizableElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-//     Q_UNUSED(option)
-//     Q_UNUSED(widget)
-
-//     if (true == mResizeMode) {
-//         painter->setPen(mPenSelectedBorder);
-//         painter->drawRoundedRect(mOuterRect, 5, 5);
-
-//         painter->drawEllipse(QPointF(0, 0), 5, 5);
-//         painter->drawPoint(0, 0);
-//     }
-// }
 
 QVariant HsmResizableElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
@@ -391,12 +355,15 @@ ElementBoundaryGripItem* HsmResizableElement::createGrip(GripDirection direction
     // TODO: use smart pointers
     ElementBoundaryGripItem* grip = new ElementBoundaryGripItem(this, direction);
 
-    // grip->setRect(-2.5, -2.5, 5, 5);
-    // grip->setData(0, QVariant(static_cast<int>(direction)));
     grip->init();
     grip->setEnabled(false);
     grip->setPos(gripPoint(direction));
     grip->setEnabled(true);
+
+    connect(grip, &ElementBoundaryGripItem::onGripMoveLeaveEvent, this, [&](ElementGripItem* gripItem) {
+        updateGripsPosition(QList{gripItem->direction()});
+        update();
+    });
 
     return grip;
 }
