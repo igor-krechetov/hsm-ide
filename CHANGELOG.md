@@ -1,7 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
-## [0.11.0] - 2026-04-19
+## [0.11.1] - 2026-05-17
+### Fix
+- fix z-order for transition label
+
+## [0.11.0] - 2026-05-17
 ### New
 - [REQ-202a1] Show/hide grid
 - [REQ-202a2] Snap to grid
