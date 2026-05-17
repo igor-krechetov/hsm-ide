@@ -158,7 +158,7 @@ target_include_directories(common PRIVATE
 )
 
 target_link_libraries(model PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(view PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets common)
+target_link_libraries(view PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets common model)
 target_link_libraries(common PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}

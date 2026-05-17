@@ -69,6 +69,7 @@ void HsmTransition::init(const QSharedPointer<model::StateMachineEntity>& modelE
     mLabelCondition->setData(static_cast<int>(AutoLayoutDirection::HORIZONTAL), 1);
 
     mLabel->setDirection(AutoLayoutDirection::VERTICAL);
+    mLabel->setZValue(-1);
     mLabel->addItem(mLabelEvent);
     mLabel->addItem(mLabelCondition);
 

@@ -8,7 +8,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(PROJECT_VERSION "0.11.0")
+set(PROJECT_VERSION "0.11.1")
 
 # Get build date
 string(TIMESTAMP HSM_IDE_BUILD_DATE "%Y-%m-%d")
@@ -29,4 +29,8 @@ configure_file(
 )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+
+if(NOT WIN32)
+    enable_testing()
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+endif()

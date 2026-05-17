@@ -27,10 +27,7 @@ void AutoGroupItem::makeMovable(const bool enable) {
 }
 
 QRectF AutoGroupItem::boundingRect() const {
-    QRectF newRect = childrenBoundingRect();
-
-
-    return newRect;
+    return childrenBoundingRect();
 }
 
 void AutoGroupItem::addItem(QGraphicsItem* item) {
