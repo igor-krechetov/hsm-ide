@@ -3,8 +3,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
 
 enable_testing()
 
-set(TEST_SOURCES
-    TestMain.cpp
+set(TEST_OBJECTS
     model/ModelTypesTest.cpp
     model/StateMachineEntityTest.cpp
     model/RegularStateTest.cpp
@@ -22,27 +21,40 @@ set(TEST_SOURCES
     model/StateHierarchyRulesTest.cpp
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
-
     view/HsmGraphicsViewTest.cpp
 )
 
-add_executable(ModelTests ${TEST_SOURCES})
+foreach(testObject ${TEST_OBJECTS})
+    get_filename_component(testName ${testObject} NAME_WE)
 
-target_include_directories(ModelTests PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/model
-    ${CMAKE_SOURCE_DIR}/src/view
-)
+    if(COMMAND qt_add_test)
+        qt_add_test(${testName}
+            SOURCES
+                TestMain.cpp
+                ${testObject}
+        )
+    else()
+        add_executable(${testName}
+            TestMain.cpp
+            ${testObject}
+        )
+        add_test(NAME ${testName} COMMAND ${testName})
+    endif()
 
-target_link_libraries(ModelTests PRIVATE
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Test
-    model
-    view
-)
+    target_include_directories(${testName} PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/model
+        ${CMAKE_SOURCE_DIR}/src/view
+    )
 
-target_compile_definitions(ModelTests PRIVATE
-    HSM_IDE_TEST_SCXML_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/tests/data/scxml"
-)
+    target_link_libraries(${testName} PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Test
+        model
+        view
+    )
 
-add_test(NAME ModelTests COMMAND ModelTests)
+    target_compile_definitions(${testName} PRIVATE
+        HSM_IDE_TEST_SCXML_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/tests/data/scxml"
+    )
+endforeach()
