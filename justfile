@@ -31,9 +31,21 @@ build: configure
 run:
     {{BUILD_DIR}}/src/hsm_ide
 
-test: build
-    {{BUILD_DIR}}/tests/ModelTests
-
 build_run: build run
 
 clean_build: clean build
+
+test: build
+    ctest --test-dir {{BUILD_DIR}}
+
+list_tests:
+    ctest --test-dir {{BUILD_DIR}} -N
+
+list_test_usecases testname:
+    {{BUILD_DIR}}/tests/{{testname}} -functions
+
+one_test testname: build
+    ctest --test-dir {{BUILD_DIR}} -R {{testname}}
+
+test_usecase testname usecase:
+    {{BUILD_DIR}}/tests/{{testname}} {{usecase}}

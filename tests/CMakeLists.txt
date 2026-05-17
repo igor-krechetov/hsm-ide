@@ -1,8 +1,6 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test)
 
-enable_testing()
-
 set(TEST_OBJECTS
     model/ModelTypesTest.cpp
     model/StateMachineEntityTest.cpp
