@@ -16,3 +16,10 @@ Resize grip and transition connection grips overlap.
 Design decision:
 - what will transition with event do if defined for initial state?
 
+
+
+
+Adding transition points above the transition label is impossbile. Change z-order?
+
+
+In some specific case moving transition grips starts to render incorrectly.

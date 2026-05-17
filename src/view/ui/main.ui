@@ -150,6 +150,11 @@
       <string>Active Side Panel</string>
      </property>
     </widget>
+   <property name="title">
+    <string>&amp;View</string>
+   </property>
+    <addaction name="actionShowGrid"/>
+    <addaction name="actionSnapToGrid"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -660,6 +665,22 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+0</string>
+   </property>
+  </action>
+  <action name="actionShowGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Grid</string>
+   </property>
+  </action>
+  <action name="actionSnapToGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Snap to Grid</string>
    </property>
   </action>
   <action name="actionSettings">
@@ -1348,5 +1369,7 @@
   <slot>handleRedo()</slot>
   <slot>handleDuplicateSelected()</slot>
   <slot>handleEditSelected()</slot>
+  <slot>handleToggleGrid(bool)</slot>
+  <slot>handleToggleSnapToGrid(bool)</slot>
  </slots>
 </ui>

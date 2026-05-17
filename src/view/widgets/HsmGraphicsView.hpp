@@ -11,7 +11,8 @@
 class QDragEnterEvent;
 class QDragMoveEvent;
 class QDropEvent;
-class ProjectController;
+class QPainter;
+class IProjectController;
 
 namespace model {
 class StateMachineEntity;
@@ -40,8 +41,9 @@ public:
     HsmGraphicsView(QWidget* parent = nullptr);
     virtual ~HsmGraphicsView();
 
-    QWeakPointer<ProjectController> projectController() const;
-    void setProjectController(const QWeakPointer<ProjectController>& controller);
+    template <class T>
+    QWeakPointer<T> projectController() const;
+    void setProjectController(const QWeakPointer<IProjectController>& controller);
 
     view::HsmElement* createHsmElement(const QSharedPointer<model::StateMachineEntity>& modelElement,
                                        const QString& elementTypeId,
@@ -80,6 +82,13 @@ public:
 
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;
+    void setGridVisible(const bool visible);
+    bool isGridVisible() const;
+    void setSnapToGridEnabled(const bool enabled);
+    bool isSnapToGridEnabled() const;
+    QPointF snapPointToGrid(const QPointF& scenePos) const;
+
+    static QPointF alignPointToGrid(const QPointF& scenePos);
 
 signals:
     void hsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);
@@ -90,6 +99,7 @@ signals:
 #endif
 
 protected:
+    void drawBackground(QPainter* painter, const QRectF& rect) override;
     void focusOutEvent(QFocusEvent* event) override;
 
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -131,7 +141,7 @@ private:
 private:
     // Weak cache of all elements attached to the view. Flat structure will allow easy search for elements
     QMap<model::EntityID_t, QPointer<view::HsmElement>> mElements;
-    QWeakPointer<ProjectController> mProjectController;
+    QWeakPointer<IProjectController> mProjectController;
     QPoint mLastPanPoint;
     bool mPanning = false;
     KeyboardModifier mKeyboardModifiers = KeyboardModifier::NoModifier;
@@ -142,6 +152,13 @@ private:
     QList<view::HsmElement*> mDraggedChildElements;
 
     QMap<view::HsmElement*, QPointF> mDragRevertPositions;
+    bool mGridVisible = true;
+    bool mSnapToGridEnabled = false;
 };
+
+template <class T>
+QWeakPointer<T> HsmGraphicsView::projectController() const {
+    return qSharedPointerObjectCast<T>(mProjectController).toWeakRef();
+}
 
 #endif  // HSMGRAPHICSVIEW_HPP

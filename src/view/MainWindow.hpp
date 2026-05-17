@@ -61,6 +61,8 @@ public slots:
     void handleZoomOut();
     void handleResetZoom();
     void handleFitToView();
+    void handleToggleGrid(const bool enabled);
+    void handleToggleSnapToGrid(const bool enabled);
 
     void handleAbout();
 

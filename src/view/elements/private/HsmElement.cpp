@@ -283,8 +283,10 @@ void HsmElement::setHsmParentItem(HsmElement* parent) {
     mHsmParent = parent;
 }
 
-bool HsmElement::onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) {
-    // TODO: impl
+bool HsmElement::onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) {
+    (void)selectedGrip;
+    (void)pos;
+
     return true;
 }
 
@@ -370,7 +372,13 @@ void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant& value) {
-    if (QGraphicsItem::ItemPositionHasChanged == change) {
+    QVariant newValue = value;
+
+    if (QGraphicsItem::ItemPositionChange == change) {
+        if (auto* view = hsmView()) {
+            newValue = view->snapPointToGrid(value.toPointF());
+        }
+    } else if (QGraphicsItem::ItemPositionHasChanged == change) {
         if (DragMode::SINGLE == mDragMode || DragState::PREPARE == mDragState) {
             QGraphicsView* view = scene()->views().first();
             auto itemPos = view->mapToScene(view->mapFromGlobal(QCursor::pos()));
@@ -403,7 +411,7 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
         });
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return QGraphicsItem::itemChange(change, newValue);
 }
 
 void HsmElement::dragEnterEvent(QGraphicsSceneDragDropEvent* event) {

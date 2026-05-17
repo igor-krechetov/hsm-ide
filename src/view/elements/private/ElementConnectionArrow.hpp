@@ -32,9 +32,9 @@ private:
     QPainterPath initShape(const Direction direction) const;
 
 signals:
-    void connectionPositionChanged(ElementConnectionArrow*, QPointF);
-    void connectionStarted(ElementConnectionArrow*, QPointF);
-    void connectionFinished(ElementConnectionArrow*, QPointF);
+    void connectionPositionChanged(ElementConnectionArrow*, const QPointF& sceenePos);
+    void connectionStarted(ElementConnectionArrow*, const QPointF& sceenePos);
+    void connectionFinished(ElementConnectionArrow*, const QPointF& sceenePos);
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;

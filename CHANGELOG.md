@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.11.0] - 2026-04-19
+### New
+- [REQ-202a1] Show/hide grid
+- [REQ-202a2] Snap to grid
+
+### Fixed
+- Use different color for selected/highlighted states
+- Deleting multiple selected elements causing a crash due to grips trying to send notification to already deleted parent
+
 ## [0.10.5] - 2026-04-19
 ### Fixed
 - Model structure view not updated when opening the project

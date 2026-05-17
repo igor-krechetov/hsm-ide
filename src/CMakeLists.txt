@@ -1,7 +1,7 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
-set(DEBUG_RENDERING True)
+set(DEBUG_RENDERING False)
 
 if(DEBUG_RENDERING)
     add_definitions(-DDEBUG_RENDERING=1)
@@ -39,19 +39,7 @@ set(MODEL_SOURCES
     model/actions/ModelActionFactory.cpp
 )
 
-set(PROJECT_SOURCES
-    main.cpp
-    common/ObjectUtils.cpp
-
-    controllers/MainEditorController.cpp
-    controllers/ModificationHistoryController.cpp
-    controllers/ProjectController.cpp
-    controllers/SettingsController.cpp
-    # controllers/RecentFilesManager.cpp
-
-    view/MainWindow.cpp
-    view/AboutDialog.cpp
-
+set(VIEW_SOURCES
     view/common/ViewUtils.cpp
 
     view/theme/ThemeManager.cpp
@@ -94,6 +82,22 @@ set(PROJECT_SOURCES
     view/models/StateMachineTreeModel.cpp
     view/models/StateMachineEntityViewModel.cpp
     view/models/FilteredFileSystemProxyModel.cpp
+    )
+
+set(COMMON_SOURCES common/ObjectUtils.cpp)
+
+set(PROJECT_SOURCES
+    main.cpp
+
+    controllers/MainEditorController.cpp
+    controllers/ModificationHistoryController.cpp
+    controllers/IProjectController.cpp
+    controllers/ProjectController.cpp
+    controllers/SettingsController.cpp
+    # controllers/RecentFilesManager.cpp
+
+    view/MainWindow.cpp
+    view/AboutDialog.cpp
 
     view/ui/main.ui
     view/ui/settings.ui
@@ -101,7 +105,10 @@ set(PROJECT_SOURCES
     ${TS_FILES}
 )
 
+
 qt_add_library(model STATIC ${MODEL_SOURCES})
+qt_add_library(view STATIC ${VIEW_SOURCES})
+qt_add_library(common STATIC ${COMMON_SOURCES})
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_resources(GENERATED_RESOURCE_FILES ${RESOURCE_FILES})
@@ -138,13 +145,26 @@ target_include_directories(model PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
 )
+target_include_directories(view PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_include_directories(common PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
+)
 
-target_link_libraries(model PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(model PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(view PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets common)
+target_link_libraries(common PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                            ${CMAKE_SOURCE_DIR}/include
                                            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>)
-target_link_libraries(hsm_ide PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets model)
+target_link_libraries(hsm_ide PRIVATE model view common)
 
 set_target_properties(hsm_ide PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

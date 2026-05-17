@@ -35,6 +35,8 @@ struct TransitionStyle {
 struct GridStyle {
     QPen majorLinePen;
     QPen minorLinePen;
+    qreal majorLineStep = 100.0;
+    qreal minorLineStep = 20.0;
 };
 
 struct GripStyle {

@@ -9,6 +9,10 @@
 
 namespace view {
 
+ElementBoundaryGripItem::~ElementBoundaryGripItem() {
+    qDebug() << "DELETE: " << this;
+}
+
 ElementBoundaryGripItem::ElementBoundaryGripItem(HsmResizableElement* annotationElement, const GripDirection type)
     : ElementGripItem(annotationElement, type) {
     if ((GripDirection::North == direction()) || (GripDirection::South == direction())) {
@@ -30,63 +34,29 @@ GripDirectionType ElementBoundaryGripItem::directionType() const {
 }
 
 QVariant ElementBoundaryGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-    const QPointF valuePos = value.toPointF();
     QVariant res;
-    QPointF newPos;
 
-    if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        newPos = QPointF(pos());
-
-        // qDebug() << "ElementBoundaryGripItem: MOVE:" << pos() << " -> " << valuePos;
-
-        if (GripDirectionType::Horizontal == mGripDirectionType) {
-            newPos.setX(valuePos.x());
-        } else if (GripDirectionType::Vertical == mGripDirectionType) {
-            newPos.setY(valuePos.y());
-        } else {
-            newPos.setX(valuePos.x());
-            newPos.setY(valuePos.y());
-        }
-
-        if (false == annotationElement()->onGripMoved(this, newPos - pos())) {
-            newPos = pos();
-        } else {
-            switch (direction()) {
-                case GripDirection::SouthWest:
-                case GripDirection::West:
-                    newPos.setX(0);
-                    break;
-                case GripDirection::NorthWest:
-                    newPos.setX(0);
-                    newPos.setY(0);
-                    break;
-                case GripDirection::North:
-                case GripDirection::NorthEast:
-                    newPos.setY(0);
-                    break;
-
-                case GripDirection::East:
-                case GripDirection::SouthEast:
-                case GripDirection::South:
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        res = newPos;
-    } else {
-        res = ElementGripItem::itemChange(change, value);
-    }
+    res = ElementGripItem::itemChange(change, value);
 
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
         if (false == isSelected()) {
-            annotationElement()->onGripLostFocus(this);
+            emit onGripLostFocus(this);
         }
     }
 
     return res;
+}
+
+void ElementBoundaryGripItem::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    ElementGripItem::mousePressEvent(event);
+}
+
+void ElementBoundaryGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    ElementGripItem::mouseReleaseEvent(event);
+}
+
+void ElementBoundaryGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    ElementGripItem::mouseMoveEvent(event);
 }
 
 int ElementBoundaryGripItem::type() const {

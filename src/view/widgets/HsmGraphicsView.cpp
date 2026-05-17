@@ -7,10 +7,12 @@
 #include <QKeyEvent>
 #include <QMimeData>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QScrollBar>
 #include <QWheelEvent>
+#include <cmath>
 
-#include "controllers/ProjectController.hpp"
+#include "controllers/IProjectController.hpp"
 #include "view/common/ViewUtils.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
@@ -43,11 +45,86 @@ HsmGraphicsView::~HsmGraphicsView() {
     qDebug() << "DELETE HsmGraphicsView:" << this;
 }
 
-QWeakPointer<ProjectController> HsmGraphicsView::projectController() const {
-    return mProjectController;
+void HsmGraphicsView::setGridVisible(const bool visible) {
+    mGridVisible = visible;
+    viewport()->update();
 }
 
-void HsmGraphicsView::setProjectController(const QWeakPointer<ProjectController>& controller) {
+bool HsmGraphicsView::isGridVisible() const {
+    return mGridVisible;
+}
+
+void HsmGraphicsView::setSnapToGridEnabled(const bool enabled) {
+    mSnapToGridEnabled = enabled;
+}
+
+bool HsmGraphicsView::isSnapToGridEnabled() const {
+    return mSnapToGridEnabled;
+}
+
+QPointF HsmGraphicsView::snapPointToGrid(const QPointF& scenePos) const {
+    QPointF snappedPos = scenePos;
+
+    if (mSnapToGridEnabled) {
+        snappedPos = alignPointToGrid(snappedPos);
+    }
+
+    return snappedPos;
+}
+
+QPointF HsmGraphicsView::alignPointToGrid(const QPointF& scenePos) {
+    QPointF snappedPos = scenePos;
+    const auto& gridTheme = ThemeManager::instance().theme().grid;
+    const qreal step = gridTheme.minorLineStep;
+
+    if (step > 0.0) {
+        // Snap to nearest grid point, rounding ties down
+        const qreal eps = 1e-9;
+        const qreal x = scenePos.x();
+        const qreal y = scenePos.y();
+        const qreal snappedX = std::floor((x + step * 0.5 - eps) / step) * step;
+        const qreal snappedY = std::floor((y + step * 0.5 - eps) / step) * step;
+
+        snappedPos.setX(snappedX);
+        snappedPos.setY(snappedY);
+    }
+
+    return snappedPos;
+}
+
+void HsmGraphicsView::drawBackground(QPainter* painter, const QRectF& rect) {
+    QGraphicsView::drawBackground(painter, rect);
+
+    const auto& gridTheme = ThemeManager::instance().theme().grid;
+    const qreal minorStep = gridTheme.minorLineStep;
+    const qreal majorStep = gridTheme.majorLineStep;
+
+    if (mGridVisible && minorStep > 0.0 && majorStep > 0.0) {
+        const qreal left = std::floor(rect.left() / minorStep) * minorStep;
+        const qreal right = std::ceil(rect.right() / minorStep) * minorStep;
+        const qreal top = std::floor(rect.top() / minorStep) * minorStep;
+        const qreal bottom = std::ceil(rect.bottom() / minorStep) * minorStep;
+
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing, false);
+
+        for (qreal x = left; x <= right; x += minorStep) {
+            const bool isMajor = std::fmod(std::fabs(x), majorStep) < (minorStep * 0.5);
+            painter->setPen(isMajor ? gridTheme.majorLinePen : gridTheme.minorLinePen);
+            painter->drawLine(QLineF(x, top, x, bottom));
+        }
+
+        for (qreal y = top; y <= bottom; y += minorStep) {
+            const bool isMajor = std::fmod(std::fabs(y), majorStep) < (minorStep * 0.5);
+            painter->setPen(isMajor ? gridTheme.majorLinePen : gridTheme.minorLinePen);
+            painter->drawLine(QLineF(left, y, right, y));
+        }
+
+        painter->restore();
+    }
+}
+
+void HsmGraphicsView::setProjectController(const QWeakPointer<IProjectController>& controller) {
     mProjectController = controller;
 
     // qDebug() << "--- INIT";
@@ -247,7 +324,12 @@ QList<model::EntityID_t> HsmGraphicsView::getSelectedElements() const {
 
 void HsmGraphicsView::deleteSelectedItems() {
     if (auto controller = mProjectController.toStrongRef()) {
-        controller->handleDeleteElements(getSelectedElements());
+        QSignalBlocker blocker(this);
+
+        QList<model::EntityID_t> selectedElements = getSelectedElements();
+
+        clearSelection();
+        controller->handleDeleteElements(selectedElements);
     }
 }
 
@@ -625,7 +707,7 @@ void HsmGraphicsView::dropEvent(QDropEvent* event) {
              << "mDragTargetElement=" << mDragTargetElement << "pos" << event->position() << "scenePos"
              << mapToScene(event->position().toPoint());
     // event contains position of the drop in the local coordinate system of the receiving widget
-    const QPointF scenePos = mapToScene(event->position().toPoint());
+    const QPointF scenePos = snapPointToGrid(mapToScene(event->position().toPoint()));
 
     if (auto controller = mProjectController.toStrongRef()) {
         scene()->clearSelection();

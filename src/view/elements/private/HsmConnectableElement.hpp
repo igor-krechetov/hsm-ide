@@ -43,7 +43,7 @@ public slots:
 
 // from HsmElement
 protected:
-    bool onGripMoved(const ElementGripItem* selectedGrip, const QPointF& pos) override;
+    bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) override;
 
     void updateBoundingRect(const QRectF& newRect) override;
     void updateHoverRect();
@@ -66,9 +66,9 @@ private:
     QSizeF getArrowSize(ElementConnectionArrow::Direction arrowDirection) const;
 
 private slots:
-    void beginConnection(ElementConnectionArrow* arrow, const QPointF& pos);
-    void finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos);
-    void updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& pos);
+    void beginConnection(ElementConnectionArrow* arrow, const QPointF& sceenePos);
+    void finishConnectionLine(ElementConnectionArrow* arrow, const QPointF& sceenePos);
+    void updateConnectionLine(ElementConnectionArrow* arrow, const QPointF& sceenePos);
 
 private:
     // TODO: use smart pointers

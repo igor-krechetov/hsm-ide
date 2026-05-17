@@ -73,9 +73,9 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     std::tuple<bool, QPointF, int> isPointOnTheLine(const QPointF& pos);
 
-    bool onGripMoved(const ElementGripItem* grip, const QPointF& pos) override;
-
 protected slots:
+    bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& delta) override;
+
     void onGripDoubleClick(ElementGripItem* grip);
     void onGripMoveEnterEvent(ElementGripItem* gripItem);
     void onGripMoveLeaveEvent(ElementGripItem* gripItem);

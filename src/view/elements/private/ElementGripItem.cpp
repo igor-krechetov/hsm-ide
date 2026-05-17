@@ -3,6 +3,7 @@
 #include <QCursor>
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QMetaMethod>
 #include <QPainter>
 
@@ -10,6 +11,7 @@
 #include "ObjectUtils.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
+#include "view/widgets/HsmGraphicsView.hpp"
 
 namespace view {
 
@@ -37,7 +39,7 @@ void ElementGripItem::init() {
     tryConnectSignal(this, "onGripMoveEnterEvent(ElementGripItem*)", parentObject(), "onGripMoveEnterEvent(ElementGripItem*)");
     tryConnectSignal(this, "onGripMoveLeaveEvent(ElementGripItem*)", parentObject(), "onGripMoveLeaveEvent(ElementGripItem*)");
 
-    setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemSendsGeometryChanges);
+    setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
     setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     setAcceptHoverEvents(true);
     setZValue(11);
@@ -83,21 +85,31 @@ QRectF ElementGripItem::boundingRect() const {
     return mGripRect;
 }
 
+QPointF ElementGripItem::renderingPos() const {
+    return pos() + mRenderingOffset;
+}
+
+QPointF ElementGripItem::renderingPosScene() const {
+    return scenePos() + mRenderingOffset;
+}
+
 void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    const auto& theme = ThemeManager::instance().theme();
-    painter->setBrush(mHovered ? theme.grip.hoverColor : theme.grip.color);
-    painter->setPen(Qt::NoPen);
-    painter->drawEllipse(mGripRect);
+    if (false == mDragging) {
+        const auto& theme = ThemeManager::instance().theme();
+        painter->setBrush(mHovered ? theme.grip.hoverColor : theme.grip.color);
+        painter->setPen(Qt::NoPen);
+        painter->drawEllipse(mGripRect.adjusted(mRenderingOffset.x(), mRenderingOffset.y(), mRenderingOffset.x(), mRenderingOffset.y()));
 
-#ifdef DEBUG_RENDERING
-    // draw small X at the center of the grip
-    painter->setPen(ThemeManager::instance().theme().grip.debugPen);
-    painter->drawLine(QPointF(-cGripSize / 4, -cGripSize / 4), QPointF(cGripSize / 4, cGripSize / 4));
-    painter->drawLine(QPointF(-cGripSize / 4, cGripSize / 4), QPointF(cGripSize / 4, -cGripSize / 4));
-#endif  // DEBUG_RENDERING
+    #ifdef DEBUG_RENDERING
+        // draw small X at the center of the grip
+        painter->setPen(ThemeManager::instance().theme().grip.debugPen);
+        painter->drawLine(QPointF(-cGripSize / 4, -cGripSize / 4), QPointF(cGripSize / 4, cGripSize / 4));
+        painter->drawLine(QPointF(-cGripSize / 4, cGripSize / 4), QPointF(cGripSize / 4, -cGripSize / 4));
+    #endif  // DEBUG_RENDERING
+    }
 }
 
 void ElementGripItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
@@ -118,49 +130,111 @@ void ElementGripItem::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
 }
 
 void ElementGripItem::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    // printf("ElementGripItem::mousePressEvent\n");
-    mLastPos = event->scenePos();
+    mLastDragPos = event->scenePos();
+    mLastScenePos = scenePos();
+    mRenderingOffset = QPointF();
+
+    mDragStartScenePos = event->scenePos();
+    mStartGripScenePos = scenePos();
+    mRenderingOffsetAtDragStart = mRenderingOffset;
+
     event->accept();
     mDragging = true;
-    qDebug() << "emit onGripMoveEnterEvent";
     emit onGripMoveEnterEvent(this);
 }
 
 void ElementGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     event->accept();
     mDragging = false;
+    mLastDragPos = QPointF();
+
+    if (renderingPos() != pos()) {
+        setPos(renderingPos());
+    }
+
+    mRenderingOffset = QPointF();
     qDebug() << "emit onGripMoveLeaveEvent";
     emit onGripMoveLeaveEvent(this);
 }
 
-void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    // printf("ElementGripItem::mouseMoveEvent\n");
-    QPointF delta = event->scenePos() - mLastPos;
+void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
+{
+    const QPointF currentMouseScene = event->scenePos();
 
-    moveBy(delta.x(), delta.y());
-    mLastPos = event->scenePos();
+    // 1. Compute total drag delta from start (stable, no accumulation error)
+    QPointF totalDelta = currentMouseScene - mDragStartScenePos;
+
+    // 2. Constrain movement based on grip direction
+    switch (mGripDirection) {
+        case GripDirection::North:
+        case GripDirection::South:
+            totalDelta.setX(0);
+            break;
+
+        case GripDirection::East:
+        case GripDirection::West:
+            totalDelta.setY(0);
+            break;
+    }
+
+    // 3. Compute intended target position in scene space
+    QPointF targetScenePos = mStartGripScenePos + totalDelta;
+
+    // 4. Snap in scene space (single source of truth)
+    QPointF snappedScenePos = alignToGrid(targetScenePos);
+
+    // 5. Convert to rendering offset relative to CURRENT position
+    QPointF newRenderingOffset = mRenderingOffsetAtDragStart +
+                                (snappedScenePos - mStartGripScenePos);
+
+    // qDebug() << "----- ElementGripItem: mouse move: (1) mGripDirection=" << (int)mGripDirection
+    //         << ", newRenderingOffset=" << newRenderingOffset
+    //         << ", scenePos=" << scenePos();
+
+    switch(mGripDirection) {
+        case GripDirection::North:
+        case GripDirection::South:
+            newRenderingOffset.setX(0);
+            break;
+
+        case GripDirection::East:
+        case GripDirection::West:
+            newRenderingOffset.setY(0);
+            break;
+    }
+
+    // 6. Compute delta to apply
+    QPointF delta = newRenderingOffset - mRenderingOffset;
+
+    // qDebug() << "----- ElementGripItem: mouse move: delta=" << delta
+    //         << ", totalDelta=" << totalDelta
+    //         << ", currentMouseScene=" << currentMouseScene
+    //         <<", targetScenePos=" << targetScenePos
+    //         << ", snappedScenePos=" << snappedScenePos
+    //         << ", newRenderingOffset=" << newRenderingOffset
+    //         <<", mRenderingOffsetAtDragStart=" << mRenderingOffsetAtDragStart
+    //         << ", mDragStartScenePos=" << mDragStartScenePos
+    //         << ", mStartGripScenePos=" << mStartGripScenePos;
+
+    if (!delta.isNull()) {
+        if (mAnnotationElement->onGripMoved(this, delta)) {
+            mRenderingOffset = newRenderingOffset;
+            emit gripMoved(this, delta);
+        }
+    }
+
+    QGraphicsItem::mouseMoveEvent(event);
 }
 
 void ElementGripItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
-    printf("ElementGripItem::mouseDoubleClickEvent\n");
     emit onGripDoubleClick(this);
     QGraphicsObject::mouseDoubleClickEvent(event);
 }
 
 QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& value) {
-    // qDebug() << "ElementGripItem::itemChange: " << change;
     QVariant res;
 
-    if ((QGraphicsItem::ItemPositionChange == change) && isEnabled()) {
-        if (false == annotationElement()->onGripMoved(this, value.toPointF())) {
-            qDebug() << pos() << " -> " << value;
-            res = pos();
-        } else {
-            res = QGraphicsObject::itemChange(change, value);
-        }
-    } else {
-        res = QGraphicsObject::itemChange(change, value);
-    }
+    res = QGraphicsObject::itemChange(change, value);
 
     if (change == QGraphicsItem::ItemSelectedHasChanged) {
         if (false == isSelected()) {
@@ -173,6 +247,20 @@ QVariant ElementGripItem::itemChange(GraphicsItemChange change, const QVariant& 
 
 int ElementGripItem::type() const {
     return view::ELEMENT_TYPE_GRIP;
+}
+
+QPointF ElementGripItem::alignToGrid(const QPointF& scenePos) const {
+    QPointF alignedPos = scenePos;
+
+    if (scene() != nullptr && scene()->views().isEmpty() == false) {
+        HsmGraphicsView* hsmView = dynamic_cast<HsmGraphicsView*>(scene()->views().first());
+
+        if (hsmView != nullptr) {
+            alignedPos = hsmView->snapPointToGrid(scenePos);
+        }
+    }
+
+    return alignedPos;
 }
 
 };  // namespace view
