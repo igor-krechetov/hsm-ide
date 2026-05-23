@@ -29,6 +29,7 @@ MainEditorController::~MainEditorController() {
 }
 
 int MainEditorController::start() {
+    mMainWindow.setWindowIcon(QIcon(":/icons/hsm_ide.png"));
     mMainWindow.show();
 
     // Create initial empty project

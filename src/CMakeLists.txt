@@ -178,6 +178,16 @@ install(TARGETS hsm_ide
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+install(FILES ${CMAKE_SOURCE_DIR}/packaging/hsm_ide.desktop
+    DESTINATION share/applications
+)
+
+install(FILES view/res/hsm_ide.png DESTINATION share/icons/hicolor/16x16/apps)
+install(FILES view/res/hsm_ide.png DESTINATION share/icons/hicolor/32x32/apps)
+install(FILES view/res/hsm_ide.png DESTINATION share/icons/hicolor/64x64/apps)
+install(FILES view/res/hsm_ide.png DESTINATION share/icons/hicolor/128x128/apps)
+install(FILES view/res/hsm_ide.png DESTINATION share/icons/hicolor/256x256/apps)
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(hsm_ide)
 endif()

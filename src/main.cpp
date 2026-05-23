@@ -11,6 +11,11 @@ int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("hsmcpp");
     QCoreApplication::setApplicationName("hsm-ide");
+    QGuiApplication::setApplicationDisplayName("HSM IDE");
+    QGuiApplication::setDesktopFileName("hsm_ide");
+    QGuiApplication::setWindowIcon(QIcon(":/icons/hsm_ide.png"));
+
+    qDebug() << QGuiApplication::windowIcon().isNull();
 
     qRegisterMetaType<model::EntityID_t>("model::EntityID_t");
     qRegisterMetaType<QSharedPointer<model::IModelAction>>("QSharedPointer<model::IModelAction>");

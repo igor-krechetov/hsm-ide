@@ -8,7 +8,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(PROJECT_VERSION "0.11.1")
+set(PROJECT_VERSION "0.11.2")
 
 # Get build date
 string(TIMESTAMP HSM_IDE_BUILD_DATE "%Y-%m-%d")
@@ -25,6 +25,12 @@ execute_process(
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp.in
     ${CMAKE_BINARY_DIR}/gen/version.hpp
+    @ONLY
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.in
+    ${CMAKE_BINARY_DIR}/version
     @ONLY
 )
 

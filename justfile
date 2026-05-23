@@ -17,7 +17,7 @@ configure:
     export PATH=$PATH:~/Qt/6.3.0/gcc_64/bin
     mkdir -p {{BUILD_DIR}}
     cd {{BUILD_DIR}}
-    {{CMAKE_TOOL}} ..
+    {{CMAKE_TOOL}} -DCMAKE_INSTALL_PREFIX=/usr ..
 
 build: configure
     #!/usr/bin/env bash
