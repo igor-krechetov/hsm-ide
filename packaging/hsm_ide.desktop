@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=hsm ide
+Exec=hsm_ide
+Icon=hsm_ide
+StartupWMClass=HSM_IDE-x86_64.AppImage
+Categories=Utility;
+Terminal=false

@@ -44,6 +44,7 @@ jobs:
       platform: 'ubuntu'
       install_qt: 'ON'
       code_coverage: 'OFF'
+      # TODO: tests should generate badges
       upload_test_badges: 'OFF'
     permissions:
       contents: read
@@ -54,12 +55,11 @@ jobs:
   # AUTOTAG — only on push to *dev*
   # --------------------------------------------------------
   autotag:
-    needs: [test, verify]
+    needs: [verify, test]
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
-      needs.build.result == 'success' &&
-      needs.test.result == 'success' &&
-      needs.sast.result == 'success'
+      needs.verify.result == 'success' &&
+      needs.test.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@feature/hsmcpp-ci-integration
     with:
       commit_version: ${{ needs.verify.outputs.commit_version }}
@@ -68,6 +68,8 @@ jobs:
     secrets:
       BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
       BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+    permissions:
+      contents: write
 
   # --------------------------------------------------------
   # DOCS — only on push to *main*
@@ -91,19 +93,22 @@ jobs:
   # RELEASE — only on push to main (after docs)
   # --------------------------------------------------------
   release:
-    needs: [verify, update_documentation]
+    needs: [verify, autotag]
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
-      needs.verify.outputs.commit_action == 'r' &&
       needs.verify.result == 'success' &&
-      needs.update_documentation.result == 'success'
+      needs.verify.outputs.commit_action == 'r' &&
+      needs.autotag.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@feature/hsmcpp-ci-integration
     with:
       commit_sha: ${{ github.sha }}
-      tag_version: ${{ needs.update_documentation.outputs.tag_name }}
+      tag_version: ${{ needs.autotag.outputs.tag_name }}
       builds: "build-artifacts-ubuntu,build-artifacts-windows"
+      # TODO: make proper release notes
       release_description: |
-        Release ${{ needs.update_documentation.outputs.tag_name }}
+        Release ${{ needs.autotag.outputs.tag_name }}
 
         - Built on Ubuntu and Windows
         - Includes binaries for both platforms
+    permissions:
+      contents: write

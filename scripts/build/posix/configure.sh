@@ -9,6 +9,7 @@ build_tests="$5"
 build_examples="$6"
 
 cmake -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" \
+  -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   $cmake_args \
   "$src_dir"
