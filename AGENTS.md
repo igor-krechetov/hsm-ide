@@ -17,6 +17,9 @@ The hsm-ide repository is an Integrated Development Environment designed for cre
     };
 
 
+## Building and running tests
+- use "just" tool and read ./justfile for a list of available instructions
+
 ## Testing instructions
 - Update/create new unit tests for changes in the model classes from 'src/model'
 

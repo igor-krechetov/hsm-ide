@@ -19,10 +19,15 @@
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
+                    // "text": "-enable-pretty-printing",
+                    "text": "disable pretty-printer .*",
                     "ignoreFailures": true
                 }
-            ]
+            ],
+            "symbolLoadInfo": {
+                "loadAll": false,
+                "exceptionList": "hsm_ide"
+            }
         }
     ]
 }

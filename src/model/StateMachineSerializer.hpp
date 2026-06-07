@@ -91,15 +91,22 @@ private:
 
     QString parseOnEntry();
     QString parseOnExit();
+    QString parseScript();
     QString parseInvoke();
 
     QString tryGetElementAttribute(const QString& name);
+
+    void postprocessQtStateGeometry();
+    void applyQtGeometryToState(const QSharedPointer<StateMachineEntity>& entity,
+                                const QSharedPointer<StateMachineEntity>& parent);
 
 private:
     QSharedPointer<QXmlStreamWriter> mXmlWriter;
     QSharedPointer<QXmlStreamReader> mXmlReader;
 
     QMap<EntityID_t, QString> mTransitionTargets;
+    QMap<EntityID_t, QString> mQtGeometryStrings;
+    QMap<EntityID_t, QString> mQtSceneGeometryStrings;
     QSharedPointer<model::StateMachineModel> mModel;
 };
 

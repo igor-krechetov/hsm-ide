@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" xmlns:xi="http://www.w3.org/2001/XInclude" encoding="UTF-8" name="qt_geometry_02" qt:editorversion="7.0.0" initial="state_1">
+    <qt:editorinfo initialGeometry="-802.36;47.05;0;0;46;46"/>
+    <state id="state_1">
+        <qt:editorinfo scenegeometry="-488.45;-3.33;-646.62;-301.36;775.51;742.82" geometry="-488.45;-3.33;-158.17;-298.03;775.51;742.82"/>
+        <initial>
+            <qt:editorinfo scenegeometry="-482.20;-210.39;-482.20;-210.39;46;46" geometry="6.25;-207.06;0;0;46;46"/>
+            <transition target="state_1_1"/>
+        </initial>
+        <transition type="external" event="EVENT_1" target="state_2"/>
+        <state id="state_1_1">
+            <qt:editorinfo scenegeometry="-497.85;-80.66;-557.85;-130.66;197.31;100" geometry="-9.40;-77.33;-60;-50;197.31;100"/>
+        </state>
+    </state>
+    <state id="state_2">
+        <qt:editorinfo scenegeometry="956.09;-43.83;680.96;-273.81;832.18;687.72" geometry="956.09;-43.83;-275.13;-229.98;832.18;687.72"/>
+        <state id="state_2_1">
+            <qt:editorinfo scenegeometry="1060.91;-71.45;821.41;-122.68;301.90;155.71" geometry="108.33;-17.28;-239.50;-51.23;301.90;155.71"/>
+        </state>
+    </state>
+</scxml>
