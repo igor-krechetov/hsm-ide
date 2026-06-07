@@ -1,4 +1,7 @@
 #include <QtTest>
+#include <QPointF>
+#include <QPolygonF>
+#include <QSizeF>
 
 #include "../TestPaths.hpp"
 #include "model/ExitPoint.hpp"
@@ -20,8 +23,12 @@ private slots:
     void DeserializeDeepHistory();
     void DeserializeShallowHistory();
     void DeserializeSubstatesHierarchy();
+    void DeserializeStateGeometryWithDelayedParentParsing();
+    void DeserializeQtGeometryFixture();
+    void DeserializeQtTransitionGeometry();
     void DeserializeMultipleTransitionsForSingleState();
     void DeserializeExternalAndInternalTransitions();
+    void DeserializeTransitionScript();
     void DeserializeEntryPointTransitions();
     void DeserializeExitPointAndTargetingTransition();
     void DeserializeIncludeEntity();
@@ -132,6 +139,115 @@ void StateMachineSerializerDeserializationTest::DeserializeSubstatesHierarchy() 
 }
 
 /**
+ * @brief Validate deserialization of nested state geometry when parent geometry appears after child nodes.
+ *
+ * Use-case: Ensure Qt editorinfo geometry is stored and applied after the full state tree is available.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeStateGeometryWithDelayedParentParsing() {
+    const QString scxml = R"(
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="TestMachine" xmlns:qt="http://www.qt.io/2015/02/scxml-ext">
+  <state id="Parent">
+    <state id="Child">
+      <qt:editorinfo geometry="80;80;-20;-20;40;40"/>
+    </state>
+    <qt:editorinfo geometry="100;100;-50;-50;100;100"/>
+  </state>
+</scxml>)";
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto parent = model->root()->findChildStateByName("Parent").dynamicCast<model::RegularState>();
+    auto child = model->root()->findChildStateByName("Child").dynamicCast<model::RegularState>();
+
+    QVERIFY(parent);
+    QVERIFY(child);
+    QCOMPARE(parent->getPos(), QPointF(50.0, 50.0));
+    QCOMPARE(parent->getSize(), QSizeF(100.0, 100.0));
+    QCOMPARE(child->getPos(), QPointF(10.0, 10.0));
+    QCOMPARE(child->getSize(), QSizeF(40.0, 40.0));
+}
+
+/**
+ * @brief Validate Qt geometry deserialization for a real fixture.
+ *
+ * Use-case: Ensure positions are read from nested Qt editorinfo metadata with a full state tree.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeQtGeometryFixture() {
+    const QString scxml = test::loadScxmlFixture("qt_compatibility/qt_geometry_02.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto state_1 = model->root()->findChildStateByName("state_1").dynamicCast<model::RegularState>();
+    auto state_1_1 = model->root()->findChildStateByName("state_1_1").dynamicCast<model::RegularState>();
+    auto state_2 = model->root()->findChildStateByName("state_2").dynamicCast<model::RegularState>();
+    auto state_2_2 = model->root()->findChildStateByName("state_2_1").dynamicCast<model::RegularState>();
+
+    QVERIFY(state_1);
+    QVERIFY(state_1_1);
+    QVERIFY(state_2);
+    QVERIFY(state_2_2);
+
+    QCOMPARE(state_1->getPos(), QPointF(-646.62, -301.36));
+    QCOMPARE(state_1->getSize(), QSizeF(775.51, 742.82));
+
+    QCOMPARE(state_1_1->getPos(), QPointF(88.77, 170.70));
+    QCOMPARE(state_1_1->getSize(), QSizeF(197.31, 100.0));
+
+    QCOMPARE(state_2->getPos(), QPointF(680.96, -273.81));
+    QCOMPARE(state_2->getSize(), QSizeF(832.18, 687.72));
+
+    QCOMPARE(state_2_2->getPos(), QPointF(140.45, 151.13));
+    QCOMPARE(state_2_2->getSize(), QSizeF(301.90, 155.71));
+}
+
+/**
+ * @brief Validate Qt transition geometry deserialization for a real fixture.
+ *
+ * Use-case: Ensure transition event positions are preserved for qt:editorinfo localGeometry.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeQtTransitionGeometry() {
+    const QString scxml = test::loadScxmlFixture("qt_compatibility/qt_geometry_03.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto state_1 = model->root()->findChildStateByName("state_1").dynamicCast<model::RegularState>();
+    QVERIFY(state_1);
+
+    QSharedPointer<model::Transition> transition;
+    for (const auto& child : state_1->childrenEntities()) {
+        if (child->type() == model::StateMachineEntity::Type::Transition) {
+            auto candidate = child.dynamicCast<model::Transition>();
+            if (candidate && candidate->event() == "event_2") {
+                transition = candidate;
+                break;
+            }
+        }
+    }
+
+    QVERIFY(transition);
+    QVariant geometryData = transition->getMetadata(model::StateMachineEntity::MetadataKey::GEOMETRY);
+    QVERIFY(geometryData.isValid());
+
+    const QPolygonF linePath = geometryData.value<QPolygonF>();
+    QCOMPARE(linePath.size(), 3);
+
+    const QPointF intermediatePoint = linePath[1];
+    const double expectedX = state_1->getMetadata(model::StateMachineEntity::MetadataKey::QT_DELTA_X).toDouble() - 121.82;
+    const double expectedY = state_1->getMetadata(model::StateMachineEntity::MetadataKey::QT_DELTA_Y).toDouble();
+
+    QVERIFY(qAbs(intermediatePoint.x() - expectedX) < 0.01);
+    QVERIFY(qAbs(intermediatePoint.y() - expectedY) < 0.01);
+}
+
+/**
  * @brief Validate deserialization of multiple transitions on one state.
  *
  * Use-case: Ensure a single state can hold multiple outgoing transitions.
@@ -200,6 +316,51 @@ void StateMachineSerializerDeserializationTest::DeserializeExternalAndInternalTr
 
     QVERIFY(seenExternal);
     QVERIFY(seenInternal);
+}
+
+/**
+ * @brief Validate deserialization of transition script content.
+ *
+ * Use-case: Ensure `<transition><script>...</script></transition>` is parsed into transition action metadata.
+ *
+ * @startuml
+ * state state_1 {
+ *   state state_1_1
+ *   state state_1_2
+ *   state_1_1 --> state_1_2 : EVENT_1
+ * }
+ * @enduml
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTransitionScript() {
+    const QString scxml = test::loadScxmlFixture("transitions/transition_script.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto state_1_1 = model->root()->findChildStateByName("state_1_1").dynamicCast<model::RegularState>();
+    QVERIFY(state_1_1);
+
+    bool foundScriptTransition = false;
+    state_1_1->forEachChildElement([&foundScriptTransition](QSharedPointer<model::StateMachineEntity> parent,
+                                                             QSharedPointer<model::StateMachineEntity> child) {
+        Q_UNUSED(parent);
+        bool keepWalking = true;
+
+        if (child->type() == model::StateMachineEntity::Type::Transition) {
+            auto transition = child.dynamicCast<model::Transition>();
+            if (transition && transition->event() == "EVENT_1") {
+                foundScriptTransition = transition->hasTransitionAction() &&
+                                       transition->transitionAction()->serialize() == "callback_name" &&
+                                       transition->target() && transition->target()->name() == "state_1_2";
+            }
+        }
+
+        return keepWalking;
+    });
+
+    QVERIFY(foundScriptTransition);
 }
 
 /**

@@ -1,6 +1,7 @@
 temp
 .vscode/settings.json
 *.code-workspace
+tools
 
 # Qt
 build-*

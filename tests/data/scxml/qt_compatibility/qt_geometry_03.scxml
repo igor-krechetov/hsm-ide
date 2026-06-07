@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" xmlns:xi="http://www.w3.org/2001/XInclude" encoding="UTF-8" name="qt_geometry" qt:editorversion="7.0.0">
+    <state id="state_1">
+        <qt:editorinfo scenegeometry="576.80;1021.58;527.33;553.88;1470.69;2045.61" geometry="576.80;1021.58;-49.47;-467.70;1470.69;2045.61"/>
+        <transition type="external" event="event_1" target="state_2">
+            <qt:editorinfo startTargetFactors="8.89;3.92"/>
+        </transition>
+        <transition type="external" event="event_2" target="state_2">
+            <qt:editorinfo localGeometry="-121.82;0" movePoint="-120.70;-5.68" startTargetFactors="2.33;24.11"/>
+        </transition>
+    </state>
+    <state id="state_2">
+        <qt:editorinfo scenegeometry="316.78;198.04;373.03;221.04;133.50;100" geometry="316.78;198.04;56.25;23;133.50;100"/>
+    </state>
+</scxml>

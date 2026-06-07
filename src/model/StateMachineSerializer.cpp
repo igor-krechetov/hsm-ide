@@ -126,11 +126,14 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
 
     mModel = outModel;
     mModel->clearModel();
+    mTransitionTargets.clear();
+    mQtGeometryStrings.clear();
+    mQtSceneGeometryStrings.clear();
     mXmlReader = QSharedPointer<QXmlStreamReader>::create(scxml);
 
     while (!mXmlReader->atEnd() && !mXmlReader->hasError()) {
         QXmlStreamReader::TokenType token = mXmlReader->readNext();
-        qDebug() << __LINE__ << "Token type:" << token << "Name:" << mXmlReader->name();
+        qDebug() << __LINE__ << "Token type:" << mXmlReader->tokenString() << "Name:" << mXmlReader->name();
 
         if (token == QXmlStreamReader::StartDocument) {
             continue;
@@ -151,7 +154,7 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
 
                 if (!entity) {
                     qWarning() << "Failed to parse entity at line" << mXmlReader->lineNumber();
-                    mXmlReader->skipCurrentElement();  // DO we need this?
+                    // mXmlReader->skipCurrentElement();  // DO we need this?
                 }
             }
         }
@@ -160,6 +163,8 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
     if (mXmlReader->hasError()) {
         handleParseError(mXmlReader->errorString());
     }
+
+    postprocessQtStateGeometry();
 
     // Set targets for parsed transitions. We do this after all states are created.
     // because transitions can reference states that are defined later in the SCXML.
@@ -176,7 +181,52 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
         }
     }
 
+    // Resolve Qt transition localGeometry after parsing the full state tree.
+    for (const EntityID_t transitionId : mTransitionTargets.keys()) {
+        QSharedPointer<model::Transition> transition = mModel->root()->findTransition(transitionId);
+
+        if (!transition) {
+            continue;
+        }
+
+        QSharedPointer<model::State> sourceState = transition->source();
+        if (!sourceState) {
+            continue;
+        }
+
+        QVariant geometryData = transition->getMetadata(StateMachineEntity::MetadataKey::GEOMETRY);
+        if (!geometryData.isValid()) {
+            continue;
+        }
+
+        if (!sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).isValid() ||
+            !sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).isValid() ||
+            !sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X).isValid() ||
+            !sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y).isValid()) {
+            continue;
+        }
+
+        const double sourceX = sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble();
+        const double sourceY = sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble();
+        const double deltaX = sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X).toDouble();
+        const double deltaY = sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y).toDouble();
+
+        const QPointF sourceDelta(deltaX, deltaY);
+
+        QPolygonF linePath = geometryData.value<QPolygonF>();
+
+        // Only update if line has intermediate points. Skip first and last points
+        if (linePath.size() > 2) {
+            for (auto i = 1; i < (linePath.size() - 1); ++i) {
+                linePath[i] += sourceDelta;
+            }
+        }
+
+        transition->setMetadata(StateMachineEntity::MetadataKey::GEOMETRY, linePath);
+    }
+
     mModel.clear();
+    mQtGeometryStrings.clear();
     // TODO: handle parsing errors
     return true;
 }
@@ -298,6 +348,11 @@ void StateMachineSerializer::visitFinalState(const FinalState* finalState) {
     if (nullptr != finalState) {
         mXmlWriter->writeStartElement("final");
         mXmlWriter->writeAttribute("id", finalState->name());
+
+        if (finalState->event().isEmpty() == false) {
+            mXmlWriter->writeAttribute("event", finalState->event());
+        }
+
         serializeEntryMetadata(finalState);
 
         SCXML_SERIALIZE_ACTION(finalState, hasOnStateChangedAction, onStateChangedAction, "onentry", "script");
@@ -464,7 +519,7 @@ void StateMachineSerializer::serializeEntryMetadata(const StateMachineEntity* en
 }
 
 void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity) {
-    qDebug() << "deserializeEntryMetadata" << mXmlReader->name();
+    qDebug() << "deserializeEntryMetadata: " << mXmlReader->name() << ", id=" << entity->id();
     if (nullptr != entity) {
         if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"editorinfo"))) {
             QString localGeometryValue = tryGetElementAttribute("localGeometry");
@@ -492,19 +547,27 @@ void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity
                 linePath.append(QPointF(0, 0));  // end point
                 entity->setMetadata(StateMachineEntity::MetadataKey::GEOMETRY, linePath);
             } else {
+                QString sceneGeometryValue = tryGetElementAttribute("scenegeometry");
                 QString geometryValue = tryGetElementAttribute("geometry");
-                QStringList geometryParts = geometryValue.split(';');
 
-                if (geometryParts.size() == 6) {
-                    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, geometryParts[0].toDouble());
-                    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, geometryParts[1].toDouble());
-                    entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, geometryParts[4].toDouble());
-                    entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, geometryParts[5].toDouble());
-                } else {
-                    handleParseError("Invalid geometry format in qt:editorinfo");
+                if (!sceneGeometryValue.isEmpty()) {
+                    const QStringList sceneGeometryParts = sceneGeometryValue.split(';');
+                    if (sceneGeometryParts.size() == 6) {
+                        mQtSceneGeometryStrings.insert(entity->id(), sceneGeometryValue);
+                    } else {
+                        handleParseError(QString("Invalid scenegeometry format in qt:editorinfo: ") + sceneGeometryValue +
+                                         ", entity=" + QString::number(entity->id()));
+                    }
+                } else if (!geometryValue.isEmpty()) {
+                    const QStringList geometryParts = geometryValue.split(';');
+                    if (geometryParts.size() == 6) {
+                        mQtGeometryStrings.insert(entity->id(), geometryValue);
+                    } else {
+                        handleParseError(QString("Invalid geometry format in qt:editorinfo: ") + geometryValue +
+                                         ", entity=" + QString::number(entity->id()));
+                    }
                 }
             }
-
             mXmlReader->readNext();
         }
     } else {
@@ -518,6 +581,82 @@ void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity
  */
 void StateMachineSerializer::handleParseError(const QString& errorMessage) {
     qWarning() << "Parse error:" << errorMessage;
+}
+
+void StateMachineSerializer::postprocessQtStateGeometry() {
+    if (!mModel) {
+        return;
+    }
+
+    const QSharedPointer<model::ModelRootState> rootState = mModel->root();
+    if (!rootState) {
+        return;
+    }
+
+    auto applyToChild = [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> child) {
+        Q_UNUSED(parent);
+        applyQtGeometryToState(child, parent);
+        return true;
+    };
+
+    rootState->forEachChildElement(applyToChild, StateMachineEntity::DEPTH_INFINITE, false);
+}
+
+void StateMachineSerializer::applyQtGeometryToState(const QSharedPointer<StateMachineEntity>& entity,
+                                                    const QSharedPointer<StateMachineEntity>& parent) {
+    if (!entity) {
+        return;
+    }
+
+    const QString geometryValue = mQtSceneGeometryStrings.contains(entity->id())
+                                      ? mQtSceneGeometryStrings.value(entity->id())
+                                      : mQtGeometryStrings.value(entity->id());
+
+    if (geometryValue.isEmpty()) {
+        return;
+    }
+
+    const QStringList geometryParts = geometryValue.split(';');
+
+    if (geometryParts.size() != 6) {
+        handleParseError(QString("Invalid geometry format in qt:editorinfo: ") + geometryValue +
+                         ", entity=" + QString::number(entity->id()));
+        return;
+    }
+
+    double topX = 0.0;
+    double topY = 0.0;
+    const double w = geometryParts[4].toDouble();
+    const double h = geometryParts[5].toDouble();
+
+    if (mQtSceneGeometryStrings.contains(entity->id())) {
+        topX = geometryParts[2].toDouble();
+        topY = geometryParts[3].toDouble();
+    } else {
+        const double centerX = geometryParts[0].toDouble();
+        const double centerY = geometryParts[1].toDouble();
+        const double offsetX = geometryParts[2].toDouble();
+        const double offsetY = geometryParts[3].toDouble();
+        topX = centerX + offsetX;
+        topY = centerY + offsetY;
+    }
+
+    if (parent) {
+        const QVariant parentX = parent->getMetadata(StateMachineEntity::MetadataKey::POSITION_X);
+        const QVariant parentY = parent->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y);
+
+        if (parentX.isValid() && parentY.isValid()) {
+            topX -= parentX.toDouble();
+            topY -= parentY.toDouble();
+        }
+    }
+
+    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, topX);
+    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, topY);
+    entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, w);
+    entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, h);
+    entity->setMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X, topX + w / 2.0);
+    entity->setMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y, topY + h / 2.0);
 }
 
 bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent) {
@@ -587,7 +726,7 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
             QSharedPointer<Transition> ptrParent = parent.dynamicCast<Transition>();
 
             if (ptrParent) {
-                ptrParent->setTransitionAction(parseInvoke());
+                ptrParent->setTransitionAction(parseScript());
             } else {
                 qWarning() << "script elements outside of transition nodes are not supported. skipping";
             }
@@ -715,8 +854,10 @@ QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
 
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"final"))) {
         const QString stateId = mXmlReader->attributes().value("id").toString();
+        const QString eventAttr = tryGetElementAttribute("event");
 
         entity = QSharedPointer<FinalState>::create(stateId);
+        entity->setEvent(eventAttr);
 
         // TODO: handle errors
         parseAllChildEntities(entity);
@@ -921,6 +1062,21 @@ QString StateMachineSerializer::parseOnExit() {
 
     if (content.isEmpty()) {
         handleParseError("onexit element without script or with invalid content");
+    }
+
+    return content;
+}
+
+QString StateMachineSerializer::parseScript() {
+    qDebug() << "parseScript:" << mXmlReader->name();
+    QString content;
+
+    if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"script"))) {
+        content = mXmlReader->readElementText();
+
+        if (content.isEmpty()) {
+            handleParseError("script element without content");
+        }
     }
 
     return content;

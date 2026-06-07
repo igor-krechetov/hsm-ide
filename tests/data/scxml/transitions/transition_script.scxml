@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" xmlns:xi="http://www.w3.org/2001/XInclude" encoding="UTF-8" name="transition_script" qt:editorversion="7.0.0">
+    <state id="state_1">
+        <state id="state_1_1">
+            <transition type="external" event="EVENT_1" target="state_1_2">
+                <script>callback_name</script>
+            </transition>
+        </state>
+        <state id="state_1_2" />
+    </state>
+</scxml>

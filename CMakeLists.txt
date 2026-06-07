@@ -8,7 +8,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(PROJECT_VERSION "0.11.2")
+set(PROJECT_VERSION "0.11.3")
 
 # Get build date
 string(TIMESTAMP HSM_IDE_BUILD_DATE "%Y-%m-%d")
@@ -33,6 +33,9 @@ configure_file(
     ${CMAKE_BINARY_DIR}/version
     @ONLY
 )
+
+# Flags for debug build
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -g")
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
 

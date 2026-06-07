@@ -23,6 +23,17 @@ bool FinalState::hasOnStateChangedAction() const {
     return (mOnStateChangedAction && mOnStateChangedAction->type() != ModelAction::NONE);
 }
 
+const QString& FinalState::event() const {
+    return mEvent;
+}
+
+void FinalState::setEvent(const QString& event) {
+    if (mEvent != event) {
+        mEvent = event;
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
+}
+
 void FinalState::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
     mOnStateChangedAction = (action ? action : ModelActionFactory::createModelAction(ModelAction::NONE));
     emit modelDataChanged(sharedFromThis().toWeakRef());

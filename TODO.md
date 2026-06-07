@@ -3,9 +3,12 @@
 
 - Hierarchy rules
 -- only one initial element is allowed (consider)
-- hsm element selection and highlight have same effect
-- App version in about dlg
 - Create consts for all model element keys
+
+
+- Final state serialisation with event needs fixing
+- test with large HSM
+
 
 ONGOING:
 
@@ -16,10 +19,6 @@ Resize grip and transition connection grips overlap.
 Design decision:
 - what will transition with event do if defined for initial state?
 
-
-
-
-Adding transition points above the transition label is impossbile. Change z-order?
-
-
 In some specific case moving transition grips starts to render incorrectly.
+
+

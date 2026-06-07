@@ -25,7 +25,7 @@ public:
     constexpr static int DEPTH_INFINITE = -1;
 
 public:
-    enum class MetadataKey { POSITION_X, POSITION_Y, WIDTH, HEIGHT, GEOMETRY };
+    enum class MetadataKey { POSITION_X, POSITION_Y, WIDTH, HEIGHT, GEOMETRY, QT_DELTA_X, QT_DELTA_Y };
 
 public:
     enum class Type { Invalid, State, Transition };  // namespace model
@@ -85,8 +85,6 @@ signals:
 private:
     EntityID_t mId = 0;
     Type mElementType = Type::Invalid;
-
-    // x, y, width, height, geomerty
     QMap<MetadataKey, QVariant> mMetadata;
 };
 

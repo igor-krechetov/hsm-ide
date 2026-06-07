@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.11.3] - 2026-06-07
+### Fix
+- deserialisation of SCXML with Qt Creator specific tags
+
 ## [0.11.2] - 2026-05-23
 ### Fix
 - configure app icon

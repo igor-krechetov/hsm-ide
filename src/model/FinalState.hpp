@@ -16,6 +16,9 @@ public:
     QSharedPointer<IModelAction> onStateChangedAction() const;
     bool hasOnStateChangedAction() const;
 
+    const QString& event() const;
+    void setEvent(const QString& event);
+
     void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
     void setOnStateChangedAction(const QString& actionData);
 
@@ -26,6 +29,7 @@ public:
     void copyEntityData(const StateMachineEntity& other) override;
 
 private:
+    QString mEvent;
     QSharedPointer<IModelAction> mOnStateChangedAction;
 };
 
