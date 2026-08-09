@@ -19,14 +19,16 @@ public:
     virtual bool exportModel(const QString& path) = 0;
     virtual void updateModelPath(const QString& newPath) = 0;
 
-    virtual void handleViewDropEvent(const QString& elementTypeId, const QPointF& parentPos, const model::EntityID_t targetElementId) = 0;
+    virtual void handleViewDropEvent(const QString& elementTypeId,
+                                     const QPointF& parentPos,
+                                     const model::EntityID_t targetElementId) = 0;
     virtual void handleViewMoveEvent(const model::EntityID_t draggedElementId, const model::EntityID_t targetElementId) = 0;
     virtual void handleDeleteElements(const QList<model::EntityID_t>& elementIDs) = 0;
     virtual QString serializeElementsToScxml(const QList<model::EntityID_t>& elementIDs) const = 0;
     virtual bool pasteScxmlElements(const QString& scxmlContent,
-                            const QList<model::EntityID_t>& selectedElementIDs = {},
-                            const QPointF& cursorScenePos = QPointF(),
-                            const bool useCursorPosition = false) = 0;
+                                    const QList<model::EntityID_t>& selectedElementIDs = {},
+                                    const QPointF& cursorScenePos = QPointF(),
+                                    const bool useCursorPosition = false) = 0;
     virtual void beginHistoryTransaction(const QString& label) = 0;
     virtual void commitHistoryTransaction() = 0;
     virtual void cancelHistoryTransaction() = 0;

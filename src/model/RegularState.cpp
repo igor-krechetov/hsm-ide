@@ -126,7 +126,8 @@ void RegularState::deleteChild(const EntityID_t id) {
         QSharedPointer<StateMachineEntity> targetChild = parent->findChild(id);
 
         if (targetChild && (targetChild->type() == StateMachineEntity::Type::State)) {
-            // NOTE: in general, connecting transitions to substates is not allowed. But there is at least one exception - history states
+            // NOTE: in general, connecting transitions to substates is not allowed. But there is at least one exception -
+            // history states
             //       so need to collect a list of substates to search for all transitions that needs to be removed
             const QSet<EntityID_t> deletedStateIds = collectStateIdsForDeletion(targetChild);
             const QSet<EntityID_t> transitionIdsToDelete =
@@ -391,7 +392,8 @@ QSet<EntityID_t> RegularState::collectStateIdsForDeletion(const QSharedPointer<S
     return stateIds;
 }
 
-QSet<EntityID_t> RegularState::collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot, const QSet<EntityID_t>& stateIds) {
+QSet<EntityID_t> RegularState::collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot,
+                                                          const QSet<EntityID_t>& stateIds) {
     QSet<EntityID_t> transitionIds;
 
     if (searchRoot && (stateIds.isEmpty() == false)) {

@@ -114,6 +114,10 @@ bool HsmElement::isDragged() const {
     return ((DragState::DRAGGING == mDragState && DragMode::SINGLE == mDragMode) || DragMode::GROUP == mDragMode);
 }
 
+bool HsmElement::isInDragState() const {
+    return (DragState::DRAGGING == mDragState);
+}
+
 // void HsmElement::setModelId(const model::EntityID_t modelElementId) {
 //     mModelElementId = modelElementId;
 // }
@@ -360,6 +364,14 @@ void HsmElement::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     mDragState = DragState::PREPARE;
 }
 
+void HsmElement::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    // Store the actual cursor scene position before the base class calls setPos().
+    // This is needed because ItemPositionChange only sees the element's proposed
+    // position (offset from cursor by grab offset), not the real cursor location.
+    mDragCursorScenePos = event->scenePos();
+    QGraphicsItem::mouseMoveEvent(event);
+}
+
 void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsItem::mouseReleaseEvent(event);
 
@@ -376,19 +388,50 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
 
     if (QGraphicsItem::ItemPositionChange == change) {
         if (auto* view = hsmView()) {
-            newValue = view->snapPointToGrid(value.toPointF());
+            if (view->isSnapToGridEnabled()) {
+                // Snap in scene space to avoid drift when the parent's coordinate
+                // system shifts (e.g., bodySection moves during resizeToFitChildItem).
+                // Convert proposed local pos to scene, snap, convert back.
+                const QPointF proposedLocal = value.toPointF();
+                QPointF proposedScene;
+
+                if (parentItem() != nullptr) {
+                    proposedScene = parentItem()->mapToScene(proposedLocal);
+                } else {
+                    proposedScene = proposedLocal;
+                }
+
+                const QPointF snappedScene = HsmGraphicsView::alignPointToGrid(proposedScene);
+
+                if (parentItem() != nullptr) {
+                    newValue = parentItem()->mapFromScene(snappedScene);
+                } else {
+                    newValue = snappedScene;
+                }
+
+                qDebug() << "SNAP:" << modelId() << "local=" << proposedLocal << "scene=" << proposedScene
+                         << "snapped=" << snappedScene << "result=" << newValue.toPointF() << "curPos=" << pos();
+            }
         }
     } else if (QGraphicsItem::ItemPositionHasChanged == change) {
+        qDebug() << "POS_CHANGED:" << modelId() << "newPos=" << pos() << "scenePos=" << scenePos() << "mode=" << (int)mDragMode
+                 << "state=" << (int)mDragState << "isDragged=" << isDragged();
+
         if (DragMode::SINGLE == mDragMode || DragState::PREPARE == mDragState) {
             QGraphicsView* view = scene()->views().first();
             auto itemPos = view->mapToScene(view->mapFromGlobal(QCursor::pos()));
 
             if (DragState::PREPARE == mDragState) {
                 mDragState = DragState::DRAGGING;
-                emit dragElementBegin(this, itemPos);
+                emit dragElementBegin(this, mDragCursorScenePos);
             } else {
                 emit dragElementEvent(this, itemPos);
             }
+        } else if (DragState::DRAGGING == mDragState) {
+            // Internal child drag (DragMode::NONE) — emit using the raw cursor scene
+            // position (stored during ItemPositionChange) so the view highlights the
+            // element under the cursor, not under the snapped element position
+            emit dragElementEvent(this, mDragCursorScenePos);
         }
 
         if (isDragged() == false) {

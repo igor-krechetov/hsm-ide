@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.11.4] - 2026-08-09
+### New
+- build configurable logs output
+- added unit tests for drap operations
+
+### Fix
+- Moving elements with snap to grid is not working correctly.
+- Automatic resizing of parent element incorrect with snap to grid enabled
+- Moving elements with snap to grid is not working correctly.
+
 ## [0.11.3] - 2026-06-07
 ### Fix
 - deserialisation of SCXML with Qt Creator specific tags

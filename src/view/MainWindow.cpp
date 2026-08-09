@@ -624,11 +624,10 @@ void MainWindow::onViewMouseMoved(const QPointF& scenePos) {
     // display position in the statusbar for scene and view
     auto viewPos = currentView()->mapFromScene(scenePos);
 
-    ui->statusbar->showMessage(QString("Scene: %1, %2 | View: %3, %4")
-                                .arg(scenePos.x()).arg(scenePos.y())
-                                .arg(viewPos.x()).arg(viewPos.y()));
+    ui->statusbar->showMessage(
+        QString("Scene: %1, %2 | View: %3, %4").arg(scenePos.x()).arg(scenePos.y()).arg(viewPos.x()).arg(viewPos.y()));
 }
-#endif // DEBUG_RENDERING
+#endif  // DEBUG_RENDERING
 
 // =================================================================================================================
 void MainWindow::selectModelEntityById(model::EntityID_t id) {

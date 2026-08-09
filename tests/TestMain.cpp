@@ -21,9 +21,10 @@ int runStateHierarchyRulesTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerSerializationTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewTest(int argc, char** argv) __attribute__((weak));
+int runHsmElementDragTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
-    qputenv("QT_LOGGING_RULES", "*.debug=false;*.warning=false;");
+    qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
 
     if (qEnvironmentVariableIsEmpty("HSM_IDE_TEST_SCXML_ROOT")) {
 #ifdef HSM_IDE_TEST_SCXML_ROOT_DEFAULT
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
         runStateMachineSerializerSerializationTest,
         runStateMachineSerializerDeserializationTest,
         runHsmGraphicsViewTest,
+        runHsmElementDragTest,
     };
 
     for (const auto test : tests) {

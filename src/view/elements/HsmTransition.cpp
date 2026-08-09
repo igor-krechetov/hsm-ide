@@ -604,6 +604,7 @@ void HsmTransition::setConnectionGripsVisibility(const bool visible) {
 }
 
 bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {
+    qDebug() << "----- onGripMoved: " << delta << ", grip: " << grip;
     if ((nullptr != grip) && (mLinePath.isEmpty() == false)) {
         const int gripIndex = findGripIndex(grip);
 
@@ -612,10 +613,16 @@ bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {
             if ((gripIndex > 0 && gripIndex < (mLinePath.size() - 1)) ||
                 (isConnecting() == true &&
                  ((mFromElement == nullptr && grip == mSrcGrip) || (mToElement == nullptr && grip == mDestGrip)))) {
+                qDebug() << "--- updated gripIndex=" << gripIndex << ", old pos=" << mLinePath[gripIndex]
+                         << ", new pos=" << grip->renderingPos();
                 mLinePath[gripIndex] = grip->renderingPos();
                 recalculateLine();
                 update();
+            } else {
+                qDebug() << "ignoring onGripMoved call for grip index: " << gripIndex;
             }
+        } else {
+            qWarning() << "unexpected onGripMoved call. grip not found in lineGrips";
         }
 
         if (isConnecting() == true && (0 == gripIndex || gripIndex == (mLinePath.size() - 1))) {
@@ -635,6 +642,8 @@ bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {
                 mLastConnectionTarget = element;
             }
         }
+    } else {
+        qWarning() << "unexpected onGripMoved call. grip is null or linePath is empty";
     }
 
     return true;
@@ -747,8 +756,6 @@ void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
             mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
             // TODO: validate
             mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);
-
-            connect(grip, &ElementGripItem::gripMoved, this, &HsmTransition::onGripMoved);
 
             // Recalculate line in case label position needs to be changed
             recalculateLine();

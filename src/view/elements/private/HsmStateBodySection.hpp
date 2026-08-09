@@ -21,6 +21,10 @@ signals:
     void substatesChanged(const bool hasSubstates);
 
 protected:
+#ifdef DEBUG_RENDERING
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+#endif
+
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private:

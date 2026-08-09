@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Untitled">
+    <state id="State_3">
+        <qt:editorinfo geometry="-220.00;-260.00;0;0;465.00;485.00"/>
+        <transition event="NEW_EVENT" type="external" target="State_7">
+            <qt:editorinfo localGeometry="380.00;-240.00;480.00;-240.00"/>
+        </transition>
+        <state id="State_12">
+            <qt:editorinfo geometry="20.00;40.00;0;0;200.00;100.00"/>
+            <transition event="NEW_EVENT" type="external" target="State_51">
+                <qt:editorinfo localGeometry="320.00;60.00;380.00;160.00"/>
+            </transition>
+        </state>
+        <state id="State_51">
+            <qt:editorinfo geometry="220.00;280.00;0;0;200.00;120.00"/>
+        </state>
+    </state>
+    <state id="State_7">
+        <qt:editorinfo geometry="360.00;0.00;0;0;240.00;140.00"/>
+    </state>
+</scxml>

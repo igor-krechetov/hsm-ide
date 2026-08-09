@@ -73,12 +73,12 @@ public:
 
     bool beginSelectedElementEditing();
 
-    bool keyboardShiftPressed() const;
-    bool keyboardSpacePressed() const;
-    bool keyboardCtrlPressed() const;
-    bool keyboardAltPressed() const;
-    bool keyboardModifierPressed(const KeyboardModifier modifier) const;
-    bool keyboardReparentModifierPressed() const;
+    virtual bool keyboardShiftPressed() const;
+    virtual bool keyboardSpacePressed() const;
+    virtual bool keyboardCtrlPressed() const;
+    virtual bool keyboardAltPressed() const;
+    virtual bool keyboardModifierPressed(const KeyboardModifier modifier) const;
+    virtual bool keyboardReparentModifierPressed() const;
 
     QPointer<view::HsmElement> findHsmElement(const model::EntityID_t id) const;
     QPointer<view::HsmTransition> findHsmTransition(const model::EntityID_t id) const;

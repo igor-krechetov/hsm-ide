@@ -23,7 +23,7 @@ class ElementGripItem : public QGraphicsObject {
     Q_OBJECT
 
 public:
-    constexpr static int cGripSize = 10;// TODO: move to theme
+    constexpr static int cGripSize = 10;  // TODO: move to theme
 
 public:
     explicit ElementGripItem(HsmElement* annotationElement, const GripDirection type = GripDirection::FreeMove);
@@ -35,11 +35,10 @@ public:
     HsmElement* annotationElement() const;
     QRectF boundingRect() const override;
     // Visual position of the grip. Normallly same as pos() unless grip is being dragged.
-    // During dragging physical position doesnt change till dragging is finished, but 
+    // During dragging physical position doesnt change till dragging is finished, but
     // rendering position changes
     QPointF renderingPos() const;
     QPointF renderingPosScene() const;
-
 
     GripDirection direction() const;
 

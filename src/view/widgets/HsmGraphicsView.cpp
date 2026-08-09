@@ -89,6 +89,8 @@ QPointF HsmGraphicsView::alignPointToGrid(const QPointF& scenePos) {
         snappedPos.setY(snappedY);
     }
 
+    qDebug() << "------ alignPointToGrid: scenePos=" << scenePos << ", snappedPos=" << snappedPos;
+
     return snappedPos;
 }
 
@@ -592,6 +594,8 @@ void HsmGraphicsView::dragElementBegin(view::HsmElement* element, const QPointF&
         mDraggedElement->setDragMode(true);
     } else {
         QGuiApplication::setOverrideCursor(Qt::OpenHandCursor);
+        // Set NONE mode on the dragged element (internal move within parent)
+        mDraggedElement->setDragMode(false);
         forEachSelectedElement([&](view::HsmElement* element) { element->setDragMode(false); });
     }
 
@@ -630,8 +634,9 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
 
                 selectedElement->setGroupDragMode(false);
 
-                if ((nullptr != selectedElement) && (selectedElement->hsmParentItem() == nullptr) ||
-                    keyboardReparentModifierPressed()) {
+                if ((nullptr != selectedElement) &&
+                    ((selectedElement->hsmParentItem() == nullptr) || keyboardReparentModifierPressed() ||
+                     ((nullptr != mDragTargetElement) && (mDragTargetElement != currentParent)))) {
                     qDebug() << "------ dropElementEvent:ALLOWED: NEW PARENT or TOP";
                     // If we are dragging element into a new parent or to a top level
                     // const auto targetElementId = (mDragTargetElement == nullptr ? model::INVALID_MODEL_ID :
@@ -655,8 +660,26 @@ void HsmGraphicsView::dropElementEvent(view::HsmElement* element, const QPointF&
                 // NOTE: has to be after disconnecting the child from old parrent (if applicable)
                 //       otherwise previous parent gets resized incorrectly
                 if (nullptr != currentParent) {
+                    qDebug() << "---- currentParent pre-normalize pos=" << currentParent->pos()
+                             << "outerRect=" << currentParent->elementRect() << "selected pos=" << selectedElement->pos()
+                             << "selected scenePos=" << scenePos;
                     // NOTE: need to normalize parent bounding rect and position since it might have gone negative
                     currentParent->normalizeElementRect();
+                    qDebug() << "---- currentParent post-normalize pos=" << currentParent->pos()
+                             << "outerRect=" << currentParent->elementRect();
+
+                    // Normalize ancestor elements that may have expanded due to cascading resizeToFitChildItem
+                    view::HsmElement* ancestor = currentParent->hsmParentItem();
+
+                    while (nullptr != ancestor) {
+                        view::HsmResizableElement* resizableAncestor = elementToHsmResizableElement(ancestor);
+
+                        if (nullptr != resizableAncestor) {
+                            resizableAncestor->normalizeElementRect();
+                        }
+
+                        ancestor = ancestor->hsmParentItem();
+                    }
                 }
             } else {
                 qDebug() << "------ dropElementEvent:BLOCK ELEMENT" << selectedElement;

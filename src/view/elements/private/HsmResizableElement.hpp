@@ -58,7 +58,7 @@ private:
     ElementBoundaryGripItem* createGrip(GripDirection direction);
 
 protected:
-    static constexpr int cChildPadding = 5;
+    static constexpr int cChildPadding = 0;
 
 private:
     QMap<GripDirection, ElementBoundaryGripItem*> mGrips;

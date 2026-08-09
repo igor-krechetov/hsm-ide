@@ -1,12 +1,30 @@
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTools)
 
+###################################
+# Debug settings
 set(DEBUG_RENDERING False)
+set(DEBUG_OUTPUT_FILE False)
+set(DEBUG_OUTPUT_CONSOLE True)
 
 if(DEBUG_RENDERING)
     add_definitions(-DDEBUG_RENDERING=1)
 endif()
 
+if(DEBUG_OUTPUT_FILE)
+    set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "DEBUG_OUTPUT_FILE=1")
+endif()
+
+if(DEBUG_OUTPUT_CONSOLE)
+    get_source_file_property(_main_defs main.cpp COMPILE_DEFINITIONS)
+    if(_main_defs)
+        set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${_main_defs};DEBUG_OUTPUT_CONSOLE=1")
+    else()
+        set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "DEBUG_OUTPUT_CONSOLE=1")
+    endif()
+endif()
+
+###################################
 set(TS_FILES view/ts/hsm_ide_en_001.ts)
 
 set(RESOURCE_FILES view/res/resources.qrc)
@@ -82,6 +100,8 @@ set(VIEW_SOURCES
     view/models/StateMachineTreeModel.cpp
     view/models/StateMachineEntityViewModel.cpp
     view/models/FilteredFileSystemProxyModel.cpp
+
+    controllers/IProjectController.cpp
     )
 
 set(COMMON_SOURCES common/ObjectUtils.cpp)
@@ -91,7 +111,6 @@ set(PROJECT_SOURCES
 
     controllers/MainEditorController.cpp
     controllers/ModificationHistoryController.cpp
-    controllers/IProjectController.cpp
     controllers/ProjectController.cpp
     controllers/SettingsController.cpp
     # controllers/RecentFilesManager.cpp

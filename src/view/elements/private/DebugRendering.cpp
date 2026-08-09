@@ -1,4 +1,5 @@
 #include "DebugRendering.hpp"
+
 #include "view/theme/ThemeManager.hpp"
 
 namespace view {

@@ -6,8 +6,8 @@
 #include <QPointer>
 #include <QWeakPointer>
 
-#include "model/StateMachineModel.hpp"
 #include "IProjectController.hpp"
+#include "model/StateMachineModel.hpp"
 
 class HsmGraphicsView;
 

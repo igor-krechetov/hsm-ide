@@ -20,6 +20,7 @@ set(TEST_OBJECTS
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
     view/HsmGraphicsViewTest.cpp
+    view/HsmElementDragTest.cpp
 )
 
 foreach(testObject ${TEST_OBJECTS})
