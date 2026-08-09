@@ -294,7 +294,6 @@ bool StateMachineEntityViewModel::updatePropertyByNode(const PropertyNode& node,
                 auto newActionType = model::ModelActionFactory::actionTypeByName(value.toString());
 
                 if (newActionType != ptrCurrentAction->type()) {
-
                     newValue = QVariant::fromValue(model::ModelActionFactory::createModelAction(newActionType));
                 }
             }

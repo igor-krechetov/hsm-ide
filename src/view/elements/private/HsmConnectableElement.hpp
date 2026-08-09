@@ -41,7 +41,7 @@ signals:
 public slots:
     void viewTransformChanged() override;
 
-// from HsmElement
+    // from HsmElement
 protected:
     bool onGripMoved(ElementGripItem* selectedGrip, const QPointF& pos) override;
 
@@ -51,7 +51,7 @@ protected:
 
     // from QGraphicsObject
 protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
@@ -73,7 +73,7 @@ private slots:
 private:
     // TODO: use smart pointers
     QMap<ElementConnectionArrow::Direction, ElementConnectionArrow*> mArrows;
-    QRectF mHoverRect;// contains VIEW based rect for tracking connection arrows
+    QRectF mHoverRect;  // contains VIEW based rect for tracking connection arrows
     bool mDrawConnectionLine = false;
 
     // TODO: replace with QSharedPointer

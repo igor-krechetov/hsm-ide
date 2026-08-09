@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <QSignalBlocker>
 #include <QTextDocument>
+#include <cmath>
 
 #include "HsmTransition.hpp"
 #include "model/RegularState.hpp"
@@ -169,6 +170,8 @@ void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
         qreal dh = parentNewBodyRect.height() - parentBodyRect.height();
 
         if (parentBodyRect != parentNewBodyRect) {
+            qDebug() << "RESIZE_FIT:" << modelId() << "childRect=" << childRect << "bodyRect=" << parentBodyRect
+                     << "newBodyRect=" << parentNewBodyRect << "outerRect=" << parentRect << "->" << parentNewRect;
             if (parentBodyRect.left() != parentNewBodyRect.left()) {
                 parentNewRect.adjust(-dw - cChildPadding, 0, 0, 0);
             }
@@ -182,16 +185,50 @@ void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
                 parentNewRect.adjust(0, 0, 0, dh + cChildPadding);
             }
 
+            // Suppress bodySection movement only when the triggering child is being
+            // actively dragged. This prevents the acceleration bug where bodySection
+            // shift corrupts the scene-space snap on subsequent mouse events.
+            // For cascading resizes (parent expanding within grandparent), bodySection
+            // movement is allowed since it doesn't affect the dragged element's mapping.
+            const bool childIsDragging = child->isInDragState();
+            if (childIsDragging) {
+                mSuppressBodySectionMovement = true;
+            }
             resizeElement(parentNewRect);
             resizeParentToFitChildItem();
+            mSuppressBodySectionMovement = false;
         }
     }
 
+    if (child->isInDragState()) {
+        mSuppressBodySectionMovement = true;
+    }
     layoutSections();
+    mSuppressBodySectionMovement = false;
 }
 
 void HsmStateElement::normalizeElementRect() {
+    // Compensate child positions for the parent pos shift that normalizeElementRect will cause.
+    // When bodySection.pos.x tracked outerRect.left() during the drag, no X-compensation is
+    // needed (the bodySection reset cancels the parent shift). But when bodySection movement
+    // was suppressed (during resizeToFitChildItem for dragged children), bodySection stayed
+    // at its original position while outerRect went negative. In that case, we must also
+    // compensate children's X positions for the parent pos shift.
+    const qreal xShift = mOuterRect.left() - (mBodySection != nullptr ? mBodySection->pos().x() : 0.0);
+    const qreal yShift = mOuterRect.top();
+
+    if (mBodySection != nullptr && (std::abs(xShift) > 1e-9 || std::abs(yShift) > 1e-9)) {
+        for (QGraphicsItem* child : mBodySection->childItems()) {
+            const auto savedFlags = child->flags();
+            child->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+            child->setPos(child->pos().x() - xShift, child->pos().y() - yShift);
+            child->setFlags(savedFlags);
+        }
+    }
+
+    mSuppressChildCompensation = true;
     HsmRectangularElement::normalizeElementRect();
+    mSuppressChildCompensation = false;
 
     layoutSections();
 }
@@ -210,6 +247,14 @@ void HsmStateElement::beginNameTypingMode(const QString& newText) {
     if (mStateNameLabel != nullptr) {
         mStateNameLabel->beginTypingMode(newText);
     }
+}
+
+QRectF HsmStateElement::bodyBoundingRect() const {
+    return (mBodySection != nullptr ? mBodySection->boundingRect() : QRectF());
+}
+
+QRectF HsmStateElement::sceneBodyBoundingRect() const {
+    return (mBodySection != nullptr ? mBodySection->sceneBoundingRect() : QRectF());
 }
 
 void HsmStateElement::onModelDataChanged() {
@@ -288,8 +333,36 @@ void HsmStateElement::layoutSections() {
         mPropertiesSeparator->setLine(rect.left() + cOuterBorderAdjustment, y, rect.right() - cOuterBorderAdjustment, y);
         y += SECTION_SPACING;
 
-        // Body section
-        mBodySection->setRect(rect.left(), y, w, rect.bottom() - y);
+        // Body section: use setPos for x so bodySection->pos().x() tracks outerRect.left()
+        const qreal oldBodyX = mBodySection->pos().x();
+        const qreal newBodyX = rect.left();
+
+        if (!mSuppressBodySectionMovement) {
+            mBodySection->setPos(newBodyX, 0);
+            mBodySection->setRect(0, y, w, rect.bottom() - y);
+
+            // Compensate child X positions so their scene positions don't shift
+            const qreal deltaX = newBodyX - oldBodyX;
+
+            if (std::abs(deltaX) > 1e-9 && !mSuppressChildCompensation) {
+                qDebug() << "COMPENSATE:" << modelId() << "bodyX:" << oldBodyX << "->" << newBodyX << "deltaX=" << deltaX;
+                for (QGraphicsItem* child : mBodySection->childItems()) {
+                    const QPointF oldChildPos = child->pos();
+                    const auto savedFlags = child->flags();
+                    child->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+                    child->setPos(child->pos() - QPointF(deltaX, 0));
+                    child->setFlags(savedFlags);
+                    qDebug() << "  child pos:" << oldChildPos << "->" << child->pos() << "flags_after=" << child->flags();
+                }
+            }
+        } else {
+            // During resizeToFitChildItem: keep bodySection at its current X position.
+            // Moving it shifts the coordinate system, causing the scene-space snap to
+            // produce incorrect results on the next mouse event (the acceleration bug).
+            // bodySection will be moved to the correct position by normalizeElementRect.
+            // Use rect.left() as the rect's x-origin so the body covers the full expanded area.
+            mBodySection->setRect(rect.left(), y, w, rect.bottom() - y);
+        }
 
         // Calculate minimum height based on content
         setMinHeight(headerHeight + SECTION_SPACING + selfTransHeight + SECTION_SPACING + propsHeight + SECTION_SPACING +

@@ -6,6 +6,7 @@
 
 namespace view {
 
+// TODO: size of round elements should be a multiple of the grid size
 HsmRoundElement::HsmRoundElement(const HsmElementType elementType)
     : HsmConnectableElement(elementType, QSizeF(40, 40)) {}
 
@@ -21,6 +22,14 @@ void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
     } else {
         painter->setPen(theme.node.borderPen);
     }
+
+#ifdef DEBUG_RENDERING
+    painter->setPen(QPen(Qt::red, 1, Qt::DashLine));
+    painter->drawRect(mOuterRect);
+
+    painter->drawEllipse(QPointF(0, 0), 5, 5);
+    painter->drawPoint(0, 0);
+#endif
 }
 
 qreal HsmRoundElement::radius() const {

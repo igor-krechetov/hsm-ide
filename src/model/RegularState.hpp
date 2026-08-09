@@ -1,11 +1,11 @@
 #ifndef REGULARSTATE_HPP
 #define REGULARSTATE_HPP
 
+#include <QSet>
+
 #include "State.hpp"
 #include "Transition.hpp"
 #include "actions/IModelAction.hpp"
-
-#include <QSet>
 
 namespace model {
 
@@ -66,7 +66,8 @@ public:
 
 private:
     QSet<EntityID_t> collectStateIdsForDeletion(const QSharedPointer<StateMachineEntity>& rootEntity);
-    QSet<EntityID_t> collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot, const QSet<EntityID_t>& stateIds);
+    QSet<EntityID_t> collectLinkedTransitionIds(const QSharedPointer<RegularState>& searchRoot,
+                                                const QSet<EntityID_t>& stateIds);
 
 protected:
     QSharedPointer<IModelAction> mOnStateChangedAction;

@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QIODevice>
 #include <QString>
+#include <QDebug>
 
 namespace test {
 
@@ -16,7 +17,11 @@ inline QString scxmlDataRoot() {
         if (envValue.isEmpty() == false) {
             root = QString::fromUtf8(envValue);
         } else {
+#ifdef HSM_IDE_TEST_SCXML_ROOT_DEFAULT
+            root = QStringLiteral(HSM_IDE_TEST_SCXML_ROOT_DEFAULT);
+#else
             root = QStringLiteral("tests/data/scxml");
+#endif
         }
 
         return root;
@@ -29,6 +34,8 @@ inline QString loadScxmlFixture(const QString& filename) {
     QString content;
     const QString fullPath = scxmlDataRoot() + "/" + filename;
     QFile file(fullPath);
+
+    qDebug() << "loadScxmlFixture: " << fullPath;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         content = QString::fromUtf8(file.readAll());

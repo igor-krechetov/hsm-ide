@@ -19,6 +19,7 @@ Resize grip and transition connection grips overlap.
 Design decision:
 - what will transition with event do if defined for initial state?
 
-In some specific case moving transition grips starts to render incorrectly.
+Change icon color from black to something of a better contrast.
+
 
 

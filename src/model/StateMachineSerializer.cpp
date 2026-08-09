@@ -608,9 +608,8 @@ void StateMachineSerializer::applyQtGeometryToState(const QSharedPointer<StateMa
         return;
     }
 
-    const QString geometryValue = mQtSceneGeometryStrings.contains(entity->id())
-                                      ? mQtSceneGeometryStrings.value(entity->id())
-                                      : mQtGeometryStrings.value(entity->id());
+    const QString geometryValue = mQtSceneGeometryStrings.contains(entity->id()) ? mQtSceneGeometryStrings.value(entity->id())
+                                                                                 : mQtGeometryStrings.value(entity->id());
 
     if (geometryValue.isEmpty()) {
         return;

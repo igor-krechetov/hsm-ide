@@ -1,5 +1,9 @@
 #include "HsmStateBodySection.hpp"
 
+#ifdef DEBUG_RENDERING
+  #include <QPainter>
+#endif  // DEBUG_RENDERING
+
 #include "HsmElement.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 
@@ -12,6 +16,16 @@ HsmStateBodySection::HsmStateBodySection(QGraphicsItem* parent)
 bool HsmStateBodySection::hasSubstates() const {
     return mHasSubstates;
 }
+
+#ifdef DEBUG_RENDERING
+void HsmStateBodySection::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    QGraphicsRectItem::paint(painter, option, widget);
+
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QColor(255, 0, 0, 50));
+    painter->drawRect(rect());
+}
+#endif  // DEBUG_RENDERING
 
 QVariant HsmStateBodySection::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemChildAddedChange == change || QGraphicsItem::ItemChildRemovedChange == change) {

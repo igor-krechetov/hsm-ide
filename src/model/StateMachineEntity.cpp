@@ -117,8 +117,16 @@ QVariant StateMachineEntity::getProperty(const QString& key) const {
 void StateMachineEntity::registerNewChild(const QSharedPointer<StateMachineEntity>& child) {
     // Propagate subscription: connect child's modelEntityAdded to this
     QObject::connect(child.get(), &StateMachineEntity::childAdded, this, &StateMachineEntity::childAdded, Qt::UniqueConnection);
-    QObject::connect(child.get(), &StateMachineEntity::childRemoved, this, &StateMachineEntity::childRemoved, Qt::UniqueConnection);
-    QObject::connect(child.get(), &StateMachineEntity::modelDataChanged, this, &StateMachineEntity::modelDataChanged, Qt::UniqueConnection);
+    QObject::connect(child.get(),
+                     &StateMachineEntity::childRemoved,
+                     this,
+                     &StateMachineEntity::childRemoved,
+                     Qt::UniqueConnection);
+    QObject::connect(child.get(),
+                     &StateMachineEntity::modelDataChanged,
+                     this,
+                     &StateMachineEntity::modelDataChanged,
+                     Qt::UniqueConnection);
 
     emit childAdded(sharedFromThis().toWeakRef(), child.toWeakRef());
 }

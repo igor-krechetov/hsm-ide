@@ -37,6 +37,9 @@ public:
     void beginNameEditMode();
     void beginNameTypingMode(const QString& newText);
 
+    QRectF bodyBoundingRect() const;
+    QRectF sceneBodyBoundingRect() const;
+
 protected:
     bool isInitialized() const;
     void updateBoundingRect(const QRectF& newRect = QRectF()) override;
@@ -70,6 +73,11 @@ private:
     QGraphicsLineItem* mHeaderSeparator = nullptr;
     QGraphicsLineItem* mSelfTransitionsSeparator = nullptr;
     QGraphicsLineItem* mPropertiesSeparator = nullptr;
+
+    // When true, layoutSections will not adjust child positions (for normalizeElementRect)
+    bool mSuppressChildCompensation = false;
+    // When true, layoutSections skips bodySection pos update and child compensation (during resizeToFitChildItem)
+    bool mSuppressBodySectionMovement = false;
 };
 
 };  // namespace view

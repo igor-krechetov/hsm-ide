@@ -101,14 +101,15 @@ void ElementGripItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
         const auto& theme = ThemeManager::instance().theme();
         painter->setBrush(mHovered ? theme.grip.hoverColor : theme.grip.color);
         painter->setPen(Qt::NoPen);
-        painter->drawEllipse(mGripRect.adjusted(mRenderingOffset.x(), mRenderingOffset.y(), mRenderingOffset.x(), mRenderingOffset.y()));
+        painter->drawEllipse(
+            mGripRect.adjusted(mRenderingOffset.x(), mRenderingOffset.y(), mRenderingOffset.x(), mRenderingOffset.y()));
 
-    #ifdef DEBUG_RENDERING
+#ifdef DEBUG_RENDERING
         // draw small X at the center of the grip
         painter->setPen(ThemeManager::instance().theme().grip.debugPen);
         painter->drawLine(QPointF(-cGripSize / 4, -cGripSize / 4), QPointF(cGripSize / 4, cGripSize / 4));
         painter->drawLine(QPointF(-cGripSize / 4, cGripSize / 4), QPointF(cGripSize / 4, -cGripSize / 4));
-    #endif  // DEBUG_RENDERING
+#endif  // DEBUG_RENDERING
     }
 }
 
@@ -136,6 +137,7 @@ void ElementGripItem::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
     mDragStartScenePos = event->scenePos();
     mStartGripScenePos = scenePos();
+    // TODO: mRenderingOffsetAtDragStart seems to always stay 0,0. Need to review
     mRenderingOffsetAtDragStart = mRenderingOffset;
 
     event->accept();
@@ -157,8 +159,7 @@ void ElementGripItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     emit onGripMoveLeaveEvent(this);
 }
 
-void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
-{
+void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     const QPointF currentMouseScene = event->scenePos();
 
     // 1. Compute total drag delta from start (stable, no accumulation error)
@@ -184,14 +185,13 @@ void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
     QPointF snappedScenePos = alignToGrid(targetScenePos);
 
     // 5. Convert to rendering offset relative to CURRENT position
-    QPointF newRenderingOffset = mRenderingOffsetAtDragStart +
-                                (snappedScenePos - mStartGripScenePos);
+    QPointF newRenderingOffset = mRenderingOffsetAtDragStart + (snappedScenePos - mStartGripScenePos);
 
     // qDebug() << "----- ElementGripItem: mouse move: (1) mGripDirection=" << (int)mGripDirection
     //         << ", newRenderingOffset=" << newRenderingOffset
     //         << ", scenePos=" << scenePos();
 
-    switch(mGripDirection) {
+    switch (mGripDirection) {
         case GripDirection::North:
         case GripDirection::South:
             newRenderingOffset.setX(0);
@@ -217,9 +217,16 @@ void ElementGripItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
     //         << ", mStartGripScenePos=" << mStartGripScenePos;
 
     if (!delta.isNull()) {
+        // NOTE: annotated elements would need to know new rendering position
+        //       but if grip movement will be rejected we need to revert it back to previous rendering offset
+        const auto oldRenderingOffset = mRenderingOffset;
+
+        mRenderingOffset = newRenderingOffset;
+
         if (mAnnotationElement->onGripMoved(this, delta)) {
-            mRenderingOffset = newRenderingOffset;
             emit gripMoved(this, delta);
+        } else {
+            mRenderingOffset = oldRenderingOffset;
         }
     }
 

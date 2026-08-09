@@ -70,6 +70,7 @@ public:
     void setDragMode(const bool dragging);
     void setGroupDragMode(const bool enableGroup);
     bool isDragged() const;
+    bool isInDragState() const;
 
     HsmElementType elementType() const;
     QRectF elementRect() const;
@@ -141,6 +142,7 @@ protected:
     QRectF boundingRect() const override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     QVariant itemChange(const GraphicsItemChange change, const QVariant& value) override;
 
@@ -159,6 +161,7 @@ private:
     DragState mDragState = DragState::NONE;
     DragMode mDragMode = DragMode::NONE;
     bool mHightlight = false;
+    QPointF mDragCursorScenePos;
 };
 
 inline QPointer<HsmElement> HsmElement::hsmParentItem() const {

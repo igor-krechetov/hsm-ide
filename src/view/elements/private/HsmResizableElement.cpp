@@ -56,7 +56,9 @@ void HsmResizableElement::resizeElement(const QRectF& newRect) {
 }
 
 void HsmResizableElement::resizeToFitChildItem(HsmElement* child) {
-    if (isDirectChild(child) == true) {
+    qDebug() << "===================================== RESIZE";
+
+    if (child->hsmParentItem() == this) {
         // Get child bounding rectangle in parent coordinates
         QRectF childRect = child->mapRectToParent(child->elementRect());
         // Get parent's current rectangle
@@ -99,21 +101,16 @@ void HsmResizableElement::normalizeElementRect() {
 
     newOuterRect.moveTo(0, 0);
 
+    // Normalization is a pure coordinate transform (no visual change).
+    // Suppress itemChange to avoid triggering handleLayoutBeforeCommit
+    // which could erroneously resize ancestor elements.
+    const auto savedFlags = flags();
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
     setPos(pos() + newPositionDelta);
+    setFlags(savedFlags);
+
     updateBoundingRect(newOuterRect);
-
     updateGripsPosition(updateGrips);
-
-    // Update position of child items
-    forEachHsmChildElement(
-        [&](HsmElement* child) {
-            // Skip transitions as they are recalculated on state position changes
-            if (child->elementType() != HsmElementType::TRANSITION) {
-                qDebug() << "child:" << child->pos() << " -> " << (child->pos() - newPositionDelta);
-                child->setPos(child->pos() - newPositionDelta);
-            }
-        },
-        1);
 
     update();
     notifyGeometryChanged();
@@ -259,19 +256,20 @@ bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPoin
             break;
     }
 
-    // qDebug() << "------- Elem:onGripMoved: mOuterRect=" << mOuterRect << ", newOuterRect=" << newOuterRect
-    //          << ", gripPos=" << gripPos;
+    qDebug() << "------- Elem:onGripMoved: mOuterRect=" << mOuterRect << ", newOuterRect=" << newOuterRect
+             << ", gripPos=" << gripPos;
 
     newOuterRect.moveTo(0, 0);
 
     bool canResize = true;
     QRectF childrenSize = childrenRect();
 
-    // qDebug() << childrenSize << newOuterRect << elementRect();
+    qDebug() << childrenSize << newOuterRect << elementRect();
     if (childrenSize.isNull() == false) {
         childrenSize.adjust(-newPositionDelta.x(), -newPositionDelta.y(), -newPositionDelta.x(), -newPositionDelta.y());
     }
 
+    qDebug() << "--------- newOuterRect=" << newOuterRect << ", childrenSize=" << childrenSize;
 
     if (childrenSize.isNull() ||
         (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
@@ -288,6 +286,7 @@ bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPoin
                 updateGripsPosition(updateGrips);
 
                 // Update position of child items
+                qDebug() << "----- Update position of child items: " << newPositionDelta;
                 forEachHsmChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
                 update();
                 notifyGeometryChanged();
@@ -302,10 +301,9 @@ bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPoin
 
     // TODO: would be nice to resume resizing only when cursor reaches the grip again
 
-    // qDebug() << "----- CAN RESIZE=" << canResize;
+    qDebug() << "----- CAN RESIZE=" << canResize;
     return canResize && HsmConnectableElement::onGripMoved(selectedGrip, gripPos);
 }
-
 
 QPointF HsmResizableElement::gripPoint(GripDirection gripDirection) {
     const QPointF elementCenter = mOuterRect.center();

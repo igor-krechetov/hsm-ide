@@ -6,9 +6,9 @@
 #include <QGraphicsView>
 #include <QTransform>
 
+#include "DebugRendering.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
-#include "DebugRendering.hpp"
 
 namespace view {
 

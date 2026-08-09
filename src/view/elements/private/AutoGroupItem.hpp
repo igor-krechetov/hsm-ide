@@ -12,10 +12,7 @@ class QPainter;
 
 namespace view {
 
-enum class AutoLayoutDirection : int {
-    HORIZONTAL = 0,
-    VERTICAL = 1
-};
+enum class AutoLayoutDirection : int { HORIZONTAL = 0, VERTICAL = 1 };
 
 class AutoGroupItem : public QGraphicsObject {
     Q_OBJECT
