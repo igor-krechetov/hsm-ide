@@ -27,6 +27,7 @@ HsmStateTextItem::HsmStateTextItem(QGraphicsItem* parent, QGraphicsItem* logical
 
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     document()->setDocumentMargin(0);
+    setCursor(Qt::IBeamCursor);
 
     QObject::connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this, [this]() {
         const auto& theme = ThemeManager::instance().theme();

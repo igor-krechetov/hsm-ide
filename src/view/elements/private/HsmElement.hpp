@@ -162,6 +162,7 @@ private:
     DragMode mDragMode = DragMode::NONE;
     bool mHightlight = false;
     QPointF mDragCursorScenePos;
+    qreal mOriginalZValue = 0;
 };
 
 inline QPointer<HsmElement> HsmElement::hsmParentItem() const {

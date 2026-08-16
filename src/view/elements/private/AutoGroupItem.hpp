@@ -6,6 +6,7 @@
 #include <QVariant>
 
 class QGraphicsItem;
+class QGraphicsSceneHoverEvent;
 class QChildEvent;
 class QMetaObject;
 class QPainter;
@@ -34,6 +35,8 @@ signals:
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void childEvent(QChildEvent* event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
 
 public slots:
     void relayout();
@@ -46,6 +49,8 @@ private:
     // needs to be mutable so we can update it in boundingRect()
     mutable QRectF mLastRect;
     AutoLayoutDirection mLayoutDirection = AutoLayoutDirection::VERTICAL;
+    bool mMovable = false;
+    bool mHovered = false;
 };
 
 };  // namespace view

@@ -1,7 +1,17 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+
+## [0.12.0] - 2025-01-27
+### New
+- Change cursor to indicate when transition label can be moved
+- Show transition grip nodes only when mouse cursor is over the transition
+
+### Fix
+- Dragged element rendered behind transitions and grip items due to incorrect z-order
+
 ## [0.11.4] - 2026-08-09
+
 ### New
 - build configurable logs output
 - added unit tests for drap operations

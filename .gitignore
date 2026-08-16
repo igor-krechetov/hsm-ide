@@ -2,6 +2,7 @@ temp
 .vscode/settings.json
 *.code-workspace
 tools
+.kiro
 
 # Qt
 build-*

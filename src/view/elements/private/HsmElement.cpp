@@ -376,6 +376,7 @@ void HsmElement::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsItem::mouseReleaseEvent(event);
 
     if (DragState::DRAGGING == mDragState) {
+        setZValue(mOriginalZValue);
         emit dropElementEvent(this, event->scenePos());
     }
 
@@ -423,6 +424,8 @@ QVariant HsmElement::itemChange(const GraphicsItemChange change, const QVariant&
 
             if (DragState::PREPARE == mDragState) {
                 mDragState = DragState::DRAGGING;
+                mOriginalZValue = zValue();
+                setZValue(100);
                 emit dragElementBegin(this, mDragCursorScenePos);
             } else {
                 emit dragElementEvent(this, itemPos);

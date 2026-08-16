@@ -126,6 +126,12 @@ private slots:
     void threeLevelDragLeftThenUp();
     void reparentChildFromOneParentToAnother();
     void reparentChildToSiblingWithinSameParent();
+    void dragZValueRaisedDuringDrag();
+    void dragZValueRestoredAfterDrop();
+    void preservationZValueAtRest();
+    void preservationZValueClickWithoutDrag();
+    void preservationZValueAfterDragCycle();
+    void preservationZValueRandomInteractions();
 
 private:
     void compareNormalized(const QString& elementName, const QRectF& oldRect, const QRectF& newRect);
@@ -1184,6 +1190,310 @@ void HsmElementDragTest::reparentChildToSiblingWithinSameParent() {
              "stateC2 should contain stateC1 as a child after drop");
     QVERIFY2(!stateP->isDirectChild(stateC1),
              "stateP should no longer have stateC1 as a direct child");
+}
+
+// ---------------------------------------------------------------------------
+// Bug Condition Exploration: Z-value raised to 100 during active drag
+// Validates: Requirements 1.1, 1.2, 2.1, 2.2
+// Property 1: Bug Condition - Dragged Element Z-Value Not Raised
+// EXPECTED TO FAIL on unfixed code (confirms bug exists)
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::dragZValueRaisedDuringDrag() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    auto model = QSharedPointer<model::RegularState>::create("testState");
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    // Verify initial z-value is 3
+    QCOMPARE(element->zValue(), 3.0);
+
+    // Begin drag — puts element in PREPARE state with SINGLE mode
+    DragTestHelper::beginDrag(element);
+
+    // First simulateDragMove triggers PREPARE->DRAGGING transition
+    DragTestHelper::simulateDragMove(element, QPointF(1, 0));
+
+    // Bug condition: z-value should be raised to 100 during active drag
+    // On unfixed code this will be 3 (BUG) — test expected to FAIL
+    QVERIFY2(element->zValue() == 100.0,
+             qPrintable(QString("Bug condition confirmed: z-value during drag is %1 (expected 100). "
+                                "Element renders behind transitions (z=5) and grip items (z=11).")
+                            .arg(element->zValue())));
+
+    DragTestHelper::endDrag(element);
+}
+
+// ---------------------------------------------------------------------------
+// Bug Condition Exploration: Z-value restored to original after drop
+// Validates: Requirements 2.1, 2.2
+// Property 1: Bug Condition - Z-value restoration after drag ends
+// EXPECTED TO FAIL on unfixed code (since z-value is never raised, restoration is N/A,
+// but we test the full expected behavior cycle)
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::dragZValueRestoredAfterDrop() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    auto model = QSharedPointer<model::RegularState>::create("testState");
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    const qreal originalZValue = element->zValue();
+    QCOMPARE(originalZValue, 3.0);
+
+    // Perform a complete drag cycle: begin, move, end
+    DragTestHelper::beginDrag(element);
+    DragTestHelper::simulateDragMove(element, QPointF(10, 0));
+
+    // During drag, z-value should be 100 (bug condition — will fail on unfixed code)
+    QVERIFY2(element->zValue() == 100.0,
+             qPrintable(QString("Bug condition confirmed: z-value during drag is %1 (expected 100).")
+                            .arg(element->zValue())));
+
+    DragTestHelper::endDrag(element);
+
+    // After drop, z-value should be restored to original
+    QVERIFY2(element->zValue() == originalZValue,
+             qPrintable(QString("Z-value after drop is %1 (expected %2).")
+                            .arg(element->zValue())
+                            .arg(originalZValue)));
+}
+
+// ---------------------------------------------------------------------------
+// Preservation Property: Z-value at rest is always 3
+// Validates: Requirements 3.1
+// Property 2: Preservation - Non-Drag Z-Value Unchanged
+// Elements that are not being dragged should always have z-value == 3
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::preservationZValueAtRest() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    // Create multiple elements at various positions
+    auto model1 = QSharedPointer<model::RegularState>::create("state1");
+    auto model2 = QSharedPointer<model::RegularState>::create("state2");
+    auto model3 = QSharedPointer<model::RegularState>::create("state3");
+
+    view::HsmElement* element1 =
+        view.createHsmElement(model1, "state", QPointF(0, 0), QSizeF(200, 100), model::INVALID_MODEL_ID);
+    view::HsmElement* element2 =
+        view.createHsmElement(model2, "state", QPointF(250, 0), QSizeF(200, 100), model::INVALID_MODEL_ID);
+    view::HsmElement* element3 =
+        view.createHsmElement(model3, "state", QPointF(500, 0), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    // All elements at rest should have z-value == 3
+    QCOMPARE(element1->zValue(), 3.0);
+    QCOMPARE(element2->zValue(), 3.0);
+    QCOMPARE(element3->zValue(), 3.0);
+
+    // Select elements — selection should not affect z-value
+    element1->setSelected(true);
+    QCOMPARE(element1->zValue(), 3.0);
+
+    element2->setSelected(true);
+    QCOMPARE(element2->zValue(), 3.0);
+
+    // Deselect — z-value still unchanged
+    element1->setSelected(false);
+    QCOMPARE(element1->zValue(), 3.0);
+}
+
+// ---------------------------------------------------------------------------
+// Preservation Property: Click without drag leaves z-value unchanged
+// Validates: Requirements 3.2
+// Property 2: Preservation - Non-Drag Z-Value Unchanged
+// Press + release without movement should never modify z-value
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::preservationZValueClickWithoutDrag() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    auto model = QSharedPointer<model::RegularState>::create("testState");
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    const qreal originalZValue = element->zValue();
+    QCOMPARE(originalZValue, 3.0);
+
+    // Simulate multiple click-without-drag cycles using random positions on the element
+    std::mt19937 rng(123);
+    std::uniform_real_distribution<qreal> distX(0.0, 200.0);
+    std::uniform_real_distribution<qreal> distY(0.0, 100.0);
+
+    for (int i = 0; i < 20; ++i) {
+        const QPointF clickLocalPos(distX(rng), distY(rng));
+        const QPointF clickScenePos = element->mapToScene(clickLocalPos);
+
+        // Press event
+        QGraphicsSceneMouseEvent pressEvent(QEvent::GraphicsSceneMousePress);
+        pressEvent.setButton(Qt::LeftButton);
+        pressEvent.setButtons(Qt::LeftButton);
+        pressEvent.setScenePos(clickScenePos);
+        pressEvent.setPos(clickLocalPos);
+        scene.sendEvent(element, &pressEvent);
+
+        // Immediately release without any movement
+        QGraphicsSceneMouseEvent releaseEvent(QEvent::GraphicsSceneMouseRelease);
+        releaseEvent.setButton(Qt::LeftButton);
+        releaseEvent.setButtons(Qt::NoButton);
+        releaseEvent.setScenePos(clickScenePos);
+        releaseEvent.setPos(clickLocalPos);
+        scene.sendEvent(element, &releaseEvent);
+
+        // Z-value must remain unchanged after click-without-drag
+        QVERIFY2(element->zValue() == originalZValue,
+                 qPrintable(QString("Click %1: z-value changed from %2 to %3 after click-without-drag at (%4, %5)")
+                                .arg(i)
+                                .arg(originalZValue)
+                                .arg(element->zValue())
+                                .arg(clickScenePos.x())
+                                .arg(clickScenePos.y())));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Preservation Property: Z-value restored after full drag+release cycle
+// Validates: Requirements 3.3
+// Property 2: Preservation - Non-Drag Z-Value Unchanged
+// After a complete drag operation (begin, move, end), z-value returns to original
+// On unfixed code: z-value is never raised so it trivially stays at 3 throughout
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::preservationZValueAfterDragCycle() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    auto model = QSharedPointer<model::RegularState>::create("testState");
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    const qreal originalZValue = element->zValue();
+    QCOMPARE(originalZValue, 3.0);
+
+    // Perform multiple drag cycles with varying displacements
+    std::mt19937 rng(456);
+    std::uniform_real_distribution<qreal> distDelta(-50.0, 50.0);
+
+    for (int i = 0; i < 10; ++i) {
+        const QPointF delta(distDelta(rng), distDelta(rng));
+
+        DragTestHelper::beginDrag(element);
+        DragTestHelper::simulateDragMove(element, delta);
+        DragTestHelper::endDrag(element);
+
+        // After each complete drag cycle, z-value must be back to original
+        QVERIFY2(element->zValue() == originalZValue,
+                 qPrintable(QString("Drag cycle %1: z-value after drop is %2 (expected %3). "
+                                    "Delta was (%4, %5)")
+                                .arg(i)
+                                .arg(element->zValue())
+                                .arg(originalZValue)
+                                .arg(delta.x())
+                                .arg(delta.y())));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Preservation Property: Random interaction sequences preserve z-value
+// Validates: Requirements 3.1, 3.2, 3.3, 3.4
+// Property 2: Preservation - Non-Drag Z-Value Unchanged
+// For random sequences of clicks, selections, and complete drag cycles,
+// the element's z-value is always == originalZValue when not actively dragged
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::preservationZValueRandomInteractions() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+
+    auto model = QSharedPointer<model::RegularState>::create("testState");
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+
+    const qreal originalZValue = element->zValue();
+    QCOMPARE(originalZValue, 3.0);
+
+    // Random interaction types:
+    // 0 = click-without-drag (press + release, no movement)
+    // 1 = select/deselect toggle
+    // 2 = full drag cycle (begin, move, end)
+    // 3 = double-click simulation (two presses and releases)
+    std::mt19937 rng(789);
+    std::uniform_int_distribution<int> actionDist(0, 3);
+    std::uniform_real_distribution<qreal> posDist(-50.0, 50.0);
+
+    for (int i = 0; i < 50; ++i) {
+        const int action = actionDist(rng);
+
+        switch (action) {
+            case 0: {
+                // Click-without-drag
+                const QPointF clickScenePos = element->scenePos() + QPointF(50, 30);
+
+                QGraphicsSceneMouseEvent pressEvent(QEvent::GraphicsSceneMousePress);
+                pressEvent.setButton(Qt::LeftButton);
+                pressEvent.setButtons(Qt::LeftButton);
+                pressEvent.setScenePos(clickScenePos);
+                pressEvent.setPos(element->mapFromScene(clickScenePos));
+                scene.sendEvent(element, &pressEvent);
+
+                QGraphicsSceneMouseEvent releaseEvent(QEvent::GraphicsSceneMouseRelease);
+                releaseEvent.setButton(Qt::LeftButton);
+                releaseEvent.setButtons(Qt::NoButton);
+                releaseEvent.setScenePos(clickScenePos);
+                releaseEvent.setPos(element->mapFromScene(clickScenePos));
+                scene.sendEvent(element, &releaseEvent);
+                break;
+            }
+            case 1: {
+                // Toggle selection
+                element->setSelected(!element->isSelected());
+                break;
+            }
+            case 2: {
+                // Full drag cycle
+                const QPointF delta(posDist(rng), posDist(rng));
+                DragTestHelper::beginDrag(element);
+                DragTestHelper::simulateDragMove(element, delta);
+                DragTestHelper::endDrag(element);
+                break;
+            }
+            case 3: {
+                // Double-click simulation (two quick press+release)
+                const QPointF clickScenePos = element->scenePos() + QPointF(50, 30);
+
+                for (int click = 0; click < 2; ++click) {
+                    QGraphicsSceneMouseEvent pressEvent(QEvent::GraphicsSceneMousePress);
+                    pressEvent.setButton(Qt::LeftButton);
+                    pressEvent.setButtons(Qt::LeftButton);
+                    pressEvent.setScenePos(clickScenePos);
+                    pressEvent.setPos(element->mapFromScene(clickScenePos));
+                    scene.sendEvent(element, &pressEvent);
+
+                    QGraphicsSceneMouseEvent releaseEvent(QEvent::GraphicsSceneMouseRelease);
+                    releaseEvent.setButton(Qt::LeftButton);
+                    releaseEvent.setButtons(Qt::NoButton);
+                    releaseEvent.setScenePos(clickScenePos);
+                    releaseEvent.setPos(element->mapFromScene(clickScenePos));
+                    scene.sendEvent(element, &releaseEvent);
+                }
+                break;
+            }
+        }
+
+        // After every interaction, z-value must be at original when not actively in drag
+        QVERIFY2(element->zValue() == originalZValue,
+                 qPrintable(QString("Interaction %1 (action=%2): z-value is %3 (expected %4)")
+                                .arg(i)
+                                .arg(action)
+                                .arg(element->zValue())
+                                .arg(originalZValue)));
+    }
 }
 
 void HsmElementDragTest::compareNormalized(const QString& elementName, const QRectF& oldElementRect, const QRectF& newElementRect) {
