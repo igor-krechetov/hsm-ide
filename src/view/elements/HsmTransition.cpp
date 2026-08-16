@@ -87,11 +87,13 @@ QList<QGraphicsItem*> HsmTransition::hsmChildItems() const {
 }
 
 void HsmTransition::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
-    setConnectionGripsVisibility(true);
+    setAllGripsVisibility(true);
 }
 
 void HsmTransition::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
-    setConnectionGripsVisibility(isSelected());
+    if ((false == isSelected()) && (false == mConnecting)) {
+        setAllGripsVisibility(false);
+    }
 }
 
 void HsmTransition::updateBoundingRect(const QRectF& newRect) {
@@ -252,6 +254,7 @@ void HsmTransition::connectElements(HsmElement* fromElement, HsmElement* toEleme
 
                         grip->init();
                         grip->setPos(gripPos);
+                        grip->setVisible(false);
                         mLineGrips.insert(mLineGrips.begin() + gripIndex, grip);
                     }
 
@@ -454,8 +457,10 @@ void HsmTransition::onModelDataChanged() {
         if (entityPtr->conditionCallback().isEmpty() == false) {
             const QString condValue = (entityPtr->expectedConditionValue() == true ? "true" : "false");
             mLabelCondition->setPlainText("<<" + entityPtr->conditionCallback() + " == " + condValue + ">>");
+            mLabelCondition->setVisible(true);
         } else {
             mLabelCondition->setPlainText("");
+            mLabelCondition->setVisible(false);
         }
 
         QTimer::singleShot(0, this, SLOT(recalculateLabelPosition()));
@@ -598,9 +603,12 @@ void HsmTransition::recalculateLabelPosition() {
 
 // =================================================================================================================
 // Grip notifications
-void HsmTransition::setConnectionGripsVisibility(const bool visible) {
-    mSrcGrip->setVisible(visible);
-    mDestGrip->setVisible(visible);
+void HsmTransition::setAllGripsVisibility(const bool visible) {
+    for (auto* grip : mLineGrips) {
+        if (nullptr != grip) {
+            grip->setVisible(visible);
+        }
+    }
 }
 
 bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {
@@ -733,7 +741,14 @@ int HsmTransition::findGripIndex(const ElementGripItem* grip) {
 
 QVariant HsmTransition::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (QGraphicsItem::ItemSelectedHasChanged == change) {
-        setConnectionGripsVisibility(isSelected());
+        if (true == isSelected()) {
+            setAllGripsVisibility(true);
+        } else {
+            // Hide grips unless the transition is currently hovered
+            if (false == isUnderMouse()) {
+                setAllGripsVisibility(false);
+            }
+        }
     }
     // No need to connect to xChanged/yChanged
     return QGraphicsItem::itemChange(change, value);
@@ -753,6 +768,7 @@ void HsmTransition::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
 
             grip->init();
             grip->setPos(std::get<1>(result));
+            grip->setVisible(true);
             mLinePath.insert(std::get<2>(result) + 1, std::get<1>(result));
             // TODO: validate
             mLineGrips.insert(mLineGrips.begin() + std::get<2>(result) + 1, grip);

@@ -1,7 +1,9 @@
 #include "AutoGroupItem.hpp"
 
 #include <QChildEvent>
+#include <QCursor>
 #include <QGraphicsItem>
+#include <QGraphicsSceneHoverEvent>
 #include <QPainter>
 #include <QTimer>
 
@@ -14,6 +16,7 @@ namespace view {
 AutoGroupItem::AutoGroupItem(QGraphicsItem* parent)
     : QGraphicsObject(parent) {
     setFlags(ItemIsMovable | ItemSendsGeometryChanges);
+    setAcceptHoverEvents(true);
 }
 
 void AutoGroupItem::setDirection(const AutoLayoutDirection direction) {
@@ -22,12 +25,17 @@ void AutoGroupItem::setDirection(const AutoLayoutDirection direction) {
 }
 
 void AutoGroupItem::makeMovable(const bool enable) {
+    mMovable = enable;
     setFlag(QGraphicsItem::ItemIsMovable, enable);
     setFlag(QGraphicsItem::ItemIsSelectable, enable);
+
+    if (false == enable) {
+        unsetCursor();
+    }
 }
 
 QRectF AutoGroupItem::boundingRect() const {
-    return childrenBoundingRect();
+    return childrenBoundingRect().adjusted(-5, -5, 5, 5);
 }
 
 void AutoGroupItem::addItem(QGraphicsItem* item) {
@@ -46,7 +54,18 @@ void AutoGroupItem::addItem(QGraphicsItem* item) {
 }
 
 void AutoGroupItem::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) {
-    // Optional: draw bounding box (debug)
+    if (true == mMovable && true == mHovered) {
+        const auto& theme = ThemeManager::instance().theme();
+        QColor highlightColor = theme.node.selectedBorderPen.color();
+        highlightColor.setAlpha(30);
+
+        p->save();
+        p->setPen(Qt::NoPen);
+        p->setBrush(QBrush(highlightColor));
+        p->drawRoundedRect(childrenBoundingRect().adjusted(-2, -2, 2, 2), 3.0, 3.0);
+        p->restore();
+    }
+
 #ifdef DEBUG_RENDERING
     const auto& theme = ThemeManager::instance().theme();
     p->setPen(theme.grid.majorLinePen);
@@ -99,9 +118,8 @@ void AutoGroupItem::relayoutVertical() {
         // 2. Adjust X to horizontally center each child based on maxWidth
         int offsetY = 0;
 
-        for (int index = 0; index < validChildren.size(); ++index) {
-            QGraphicsItem* item = validChildren.value(index);
-            const qreal y = item->pos().y();
+        for (auto it = validChildren.cbegin(); it != validChildren.cend(); ++it) {
+            QGraphicsItem* item = it.value();
             const qreal childWidth = item->boundingRect().width();
 
             if (childWidth == maxWidth) {
@@ -136,8 +154,8 @@ void AutoGroupItem::relayoutHorizontal() {
         int offsetX = 0;
 
         // 2. Adjust Y to vertically center each child based on maxHeight
-        for (int index = 0; index < validChildren.size(); ++index) {
-            QGraphicsItem* item = validChildren.value(index);
+        for (auto it = validChildren.cbegin(); it != validChildren.cend(); ++it) {
+            QGraphicsItem* item = it.value();
             const qreal childHeight = item->boundingRect().height();
 
             if (childHeight == maxHeight) {
@@ -152,6 +170,24 @@ void AutoGroupItem::relayoutHorizontal() {
             offsetX += item->boundingRect().width() + 3;  // Add some spacing between items
         }
     }
+}
+
+void AutoGroupItem::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+    mHovered = true;
+
+    if (true == mMovable) {
+        setCursor(QCursor(Qt::SizeAllCursor));
+        update();
+    }
+
+    QGraphicsObject::hoverEnterEvent(event);
+}
+
+void AutoGroupItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
+    mHovered = false;
+    unsetCursor();
+    update();
+    QGraphicsObject::hoverLeaveEvent(event);
 }
 
 int AutoGroupItem::type() const {

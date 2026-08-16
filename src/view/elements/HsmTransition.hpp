@@ -91,7 +91,7 @@ public slots:
     void recalculateLine();
 
 private:
-    void setConnectionGripsVisibility(const bool visible);
+    void setAllGripsVisibility(const bool visible);
 
 private:
     QPointer<HsmElement> mFromElement;

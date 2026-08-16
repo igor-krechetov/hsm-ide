@@ -21,6 +21,8 @@ set(TEST_OBJECTS
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
     view/HsmGraphicsViewTest.cpp
     view/HsmElementDragTest.cpp
+    view/AutoGroupItemCursorTest.cpp
+    view/HsmTransitionGripVisibilityTest.cpp
 )
 
 foreach(testObject ${TEST_OBJECTS})

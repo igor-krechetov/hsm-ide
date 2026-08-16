@@ -1,0 +1,199 @@
+@startuml
+
+!theme plain
+skinparam groupInheritance 1
+skinparam Shadowing false
+skinparam Class {
+    BackgroundColor White
+    ArrowColor #0078d7
+    BorderColor #0078d7
+}
+hide methods
+hide fields
+
+title HSM IDE Class Relationships
+
+package "Model" {
+  class StateMachineModel
+  class StateMachineEntity <<QObject>>
+  class State
+  class RegularState
+  class ModelRootState
+  class Transition
+  class FinalState
+  class HistoryState
+  class InitialState
+  class EntryPoint
+  class ExitPoint
+  class IncludeEntity
+
+  package "Actions" {
+    interface IModelAction
+    class ModelActionFactory
+    class CallbackAction
+    class SendEventAction
+    class TimerStartAction
+    class TimerStopAction
+    class TimerRestartAction
+    class NoneAction
+
+    IModelAction <|.. CallbackAction
+    IModelAction <|.. SendEventAction
+    IModelAction <|.. TimerStartAction
+    IModelAction <|.. TimerStopAction
+    IModelAction <|.. TimerRestartAction
+    IModelAction <|.. NoneAction
+    ModelActionFactory ..> IModelAction : creates
+  }
+
+  interface IModelVisitor
+  class ModelElementsFactory
+  class StateHierarchyRules
+  class StateMachineSerializer
+
+  StateMachineEntity <|-- State
+  StateMachineEntity <|-- Transition
+  State <|-- FinalState
+  State <|-- HistoryState
+  State <|-- EntryPoint
+  State <|-- InitialState
+  State <|-- ExitPoint
+
+  RegularState --|> State
+  ModelRootState --|> RegularState
+  IncludeEntity --|> RegularState
+
+  EntryPoint "1" *-- "0..*" Transition: contains
+  InitialState "1" *-- "0..1" Transition: contains
+  HistoryState "1" *-- "0..1" Transition: default transition
+
+  StateMachineModel "1" *-- "1" ModelRootState : contains
+  RegularState "1" *-- "0..*" StateMachineEntity: children
+
+  Transition "1" --> "2" State: references (source, target)
+  RegularState "1" *-- "0..*" IModelAction: actions
+  ExitPoint "1" *-- "0..*" IModelAction: actions
+  FinalState "1" *-- "0..1" IModelAction: action
+
+  StateMachineSerializer ..|> IModelVisitor
+  StateMachineSerializer ..> StateMachineModel : serializes
+  ModelElementsFactory ..> State : creates
+  ModelElementsFactory ..> Transition : creates
+}
+
+package "View" {
+  package "Models" {
+    class StateMachineEntityViewModel <<QAbstractItemModel>>
+    class StateMachineTreeModel <<QAbstractItemModel>>
+    class FilteredFileSystemProxyModel <<QSortFilterProxyModel>>
+  }
+
+  class MainWindow <<QMainWindow>>
+  class AboutDialog <<QDialog>>
+  class HsmGraphicsView <<QGraphicsView>>
+  class HsmTreeView <<QTreeView>>
+  class HsmPropertiesTableView <<QTreeView>>
+  class HsmElementsList <<QListWidget>>
+  class WorkspaceView <<QTreeView>>
+
+  package "Elements" {
+    class HsmElement <<QGraphicsObject>>
+    class HsmConnectableElement
+    class HsmResizableElement
+    class HsmRectangularElement
+    class HsmRoundElement
+    class HsmStateElement
+    class HsmIncludeElement
+    class HsmTransition
+    class HsmEntryPointElement
+    class HsmExitPointElement
+    class HsmFinalElement
+    class HsmHistoryElement
+    class HsmInitialElement
+
+    HsmConnectableElement -up-|> HsmElement
+    HsmResizableElement -up-|> HsmConnectableElement
+    HsmRectangularElement -up-|> HsmResizableElement
+    HsmRoundElement -up-|> HsmConnectableElement
+
+    HsmStateElement --|> HsmRectangularElement
+    HsmIncludeElement --|> HsmStateElement
+
+    HsmRoundElement <|-- HsmEntryPointElement
+    HsmRoundElement <|-- HsmExitPointElement
+    HsmRoundElement <|-- HsmFinalElement
+    HsmRoundElement <|-- HsmHistoryElement
+    HsmRoundElement <|-- HsmInitialElement
+    HsmElement <|-- HsmTransition
+  }
+
+  MainWindow "1" *-- "1" HsmGraphicsView : contains
+  MainWindow "1" *-- "1" HsmTreeView : contains
+  MainWindow "1" *-- "1" HsmElementsList : contains
+  MainWindow "1" *-- "1" HsmPropertiesTableView : contains
+  MainWindow "1" *-- "1" WorkspaceView : contains
+
+  HsmTreeView "1" *-- "1" StateMachineTreeModel : contains
+  HsmPropertiesTableView "1" *-- "1" StateMachineEntityViewModel : contains
+}
+
+package "Supporting Elements" {
+  class ElementGripItem <<QGraphicsObject>>
+  class ElementBoundaryGripItem
+  class ElementConnectionArrow <<QGraphicsObject>>
+  class HsmElementsFactory
+  class ThemeManager <<singleton>>
+
+  ElementGripItem <|-- ElementBoundaryGripItem
+  HsmResizableElement "1" *-- "0..8" ElementBoundaryGripItem : boundary grips
+  HsmConnectableElement "1" *-- "0..4" ElementConnectionArrow : arrows
+  HsmConnectableElement "1" -- "0..*" HsmTransition: transitions
+  HsmElementsFactory ..> HsmElement : creates
+}
+
+package "Controller" {
+  class MainEditorController <<QObject>>
+  interface IProjectController <<QObject>>
+  class ProjectController
+  class ModificationHistoryController
+  class SettingsController
+  class RecentFilesManager
+
+  IProjectController <|-- ProjectController
+  MainEditorController "1" *-- "0..*" ProjectController
+  MainEditorController "1" *-- "1" MainWindow
+  ProjectController "1" *-- "1" ModificationHistoryController
+  ProjectController "1" *-- "1" StateMachineModel : owns
+  ProjectController "1" *-- "1" StateMachineTreeModel : owns
+  ProjectController "1" *-- "1" StateMachineEntityViewModel : owns
+
+  MainWindow "1" *-- "1" SettingsController
+}
+
+' Model-View-Controller Relationships
+MainEditorController --> StateMachineModel : manipulates
+StateMachineModel ..> MainEditorController : notifies
+MainWindow ..> MainEditorController : sends events
+
+StateMachineEntityViewModel "1" o-- "1" StateMachineEntity: references
+StateMachineTreeModel "1" o-- "1" StateMachineModel: references
+
+' Element Connections
+HsmTransition "1" --> "1" HsmElement : from
+HsmTransition "1" --> "1" HsmElement : to
+
+' View-Model Mapping
+HsmElement "1" o-- "1" StateMachineEntity: references
+HsmTransition ..> Transition : represents
+HsmEntryPointElement ..> EntryPoint : represents
+HsmExitPointElement ..> ExitPoint : represents
+HsmFinalElement ..> FinalState : represents
+HsmHistoryElement ..> HistoryState : represents
+HsmStateElement ..> RegularState : represents
+HsmInitialElement ..> InitialState : represents
+HsmIncludeElement ..> IncludeEntity : represents
+
+' View-Controller Mapping
+HsmGraphicsView ..> IProjectController: reference
+
+@enduml
