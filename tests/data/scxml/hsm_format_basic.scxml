@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:hsm="https://hsm-ide.dev/scxml"
+       version="1.0" name="HsmBasicMachine">
+    <state id="Idle" hsm:uid="10">
+        <transition event="start" type="external" target="Running" hsm:uid="30"/>
+    </state>
+    <state id="Running" hsm:uid="20"/>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="10" x="100" y="200" width="120" height="60"/>
+            <hsm:state uid="20" x="400" y="200" width="120" height="60"/>
+            <hsm:transition uid="30">
+                <hsm:points geometry="220,230;300,230"/>
+                <hsm:label x="260" y="210"/>
+            </hsm:transition>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

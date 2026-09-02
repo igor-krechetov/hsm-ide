@@ -6,9 +6,9 @@
 #include <functional>
 #include <memory>
 
-#include "model/StateMachineEntity.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/actions/IModelAction.hpp"
+#include "model/elements/StateMachineEntity.hpp"
 
 namespace view {
 

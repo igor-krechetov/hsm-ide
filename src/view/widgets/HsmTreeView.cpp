@@ -7,7 +7,7 @@
 #include <QMenu>
 #include <QSharedPointer>
 
-#include "model/StateMachineEntity.hpp"
+#include "model/elements/StateMachineEntity.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
 
 HsmTreeView::HsmTreeView(QWidget* parent)

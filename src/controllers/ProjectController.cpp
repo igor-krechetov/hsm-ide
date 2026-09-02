@@ -12,16 +12,16 @@
 
 #include "ObjectUtils.hpp"
 #include "controllers/ModificationHistoryController.hpp"
-#include "model/EntryPoint.hpp"
-#include "model/ExitPoint.hpp"
-#include "model/InitialState.hpp"
 #include "model/ModelElementsFactory.hpp"
-#include "model/ModelRootState.hpp"
-#include "model/RegularState.hpp"
 #include "model/StateHierarchyRules.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/EntryPoint.hpp"
+#include "model/elements/ExitPoint.hpp"
+#include "model/elements/InitialState.hpp"
+#include "model/elements/ModelRootState.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
 #include "view/elements/HsmTransition.hpp"
 #include "view/elements/private/HsmElement.hpp"  // TODO: move out from private
 #include "view/models/StateMachineEntityViewModel.hpp"
@@ -34,11 +34,12 @@ namespace {
 
 QSharedPointer<model::State> cloneStateTree(const QSharedPointer<model::State>& sourceState,
                                             const QSharedPointer<model::State>& targetParent,
-                                            QMap<model::EntityID_t, QSharedPointer<model::State>>& clonedStates) {
+                                            QMap<model::EntityID_t, QSharedPointer<model::State>>& clonedStates,
+                                            model::EntityIdGenerator& generator) {
     QSharedPointer<model::State> clonedState;
 
     if (sourceState) {
-        clonedState = model::ModelElementsFactory::cloneStateEntity(sourceState);
+        clonedState = model::ModelElementsFactory::cloneStateEntity(sourceState, generator);
 
         if (clonedState) {
             const model::EntityID_t sourceStateId = sourceState->id();
@@ -47,13 +48,13 @@ QSharedPointer<model::State> cloneStateTree(const QSharedPointer<model::State>& 
             clonedStates.insert(sourceState->id(), clonedState);
 
             sourceState->forEachChildElement(
-                [&clonedStates, &clonedState, &sourceStateId](QSharedPointer<model::StateMachineEntity> parent,
-                                                              QSharedPointer<model::StateMachineEntity> child) {
+                [&clonedStates, &clonedState, &sourceStateId, &generator](QSharedPointer<model::StateMachineEntity> parent,
+                                                                          QSharedPointer<model::StateMachineEntity> child) {
                     bool continueTraversal = true;
 
                     if (parent && (parent->id() == sourceStateId) && child &&
                         (child->type() == model::StateMachineEntity::Type::State)) {
-                        cloneStateTree(child.dynamicCast<model::State>(), clonedState, clonedStates);
+                        cloneStateTree(child.dynamicCast<model::State>(), clonedState, clonedStates, generator);
                     }
 
                     return continueTraversal;
@@ -257,7 +258,7 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
         }
 
         for (const auto& sourceState : topLevelSelectedStates) {
-            cloneStateTree(sourceState, tempModel->root(), stateCopies);
+            cloneStateTree(sourceState, tempModel->root(), stateCopies, tempModel->idGenerator());
         }
 
         for (auto stateIt = stateCopies.constBegin(); stateIt != stateCopies.constEnd(); ++stateIt) {
@@ -301,7 +302,7 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
         }
 
         model::StateMachineSerializer serializer;
-        serializedData = serializer.serializeToScxml(tempModel, false).trimmed();
+        serializedData = serializer.serializeToScxml(tempModel, model::SerializationFormat::HSM, false).trimmed();
     }
 
     return serializedData;
@@ -475,10 +476,12 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
                 // NOTE: because <initial> and <final> are treated differently depending if they are in top-level or
                 //       a substate, we ony know how to handle them right before adding them to the sceene
                 if (state->stateType() == model::StateType::ENTRYPOINT && targetParent == mModel->root()) {
-                    newState = model::ModelElementsFactory::createInitialFrom(state.dynamicCast<model::EntryPoint>());
+                    newState = model::ModelElementsFactory::createInitialFrom(state.dynamicCast<model::EntryPoint>(),
+                                                                              mModel->idGenerator());
                 } else if (state->stateType() == model::StateType::EXITPOINT && targetParent == mModel->root()) {
                     // TODO: how do we update references to transitions pointing to this element?
-                    newState = model::ModelElementsFactory::createFinalFrom(state.dynamicCast<model::ExitPoint>());
+                    newState = model::ModelElementsFactory::createFinalFrom(state.dynamicCast<model::ExitPoint>(),
+                                                                            mModel->idGenerator());
 
                     // iterate over importedTransitions for state-id()
                     auto range = importedTransitions.equal_range(state->id());
@@ -708,7 +711,7 @@ void ProjectController::connectElements(const model::EntityID_t fromElementId, c
     beginHistoryTransaction("Create transition");
     auto source = mModel->root()->findState(fromElementId);
     auto target = mModel->root()->findState(toElementId);
-    auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target);
+    auto newTransition = model::ModelElementsFactory::createUniqueTransition(source, target, mModel->idGenerator());
     commitHistoryTransaction();
 }
 
@@ -808,7 +811,7 @@ void ProjectController::createElement(const QString& elementTypeId,
     auto it = sElementTypes.find(elementTypeId);
 
     if (sElementTypes.end() != it) {
-        auto newModelElement = model::ModelElementsFactory::createUniqueState(it->second);
+        auto newModelElement = model::ModelElementsFactory::createUniqueState(it->second, mModel->idGenerator());
         auto parentState = mModel->root()->findRegularState(parentElementId);
 
         qDebug() << Q_FUNC_INFO << parentState;

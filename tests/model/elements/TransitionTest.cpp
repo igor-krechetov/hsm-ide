@@ -1,7 +1,9 @@
 #include <QtTest>
 
-#include "model/RegularState.hpp"
-#include "model/Transition.hpp"
+#include "model/private/EntityIdGenerator.hpp"
+#include "model/ModelElementsFactory.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
 
 class TransitionTest : public QObject {
     Q_OBJECT
@@ -16,10 +18,17 @@ private slots:
  * Use-case: Transition stores event, callback and guard condition values.
  */
 void TransitionTest::PropertiesAndSourceTargetManagement() {
-    auto s1 = QSharedPointer<model::RegularState>::create("S1");
-    auto s2 = QSharedPointer<model::RegularState>::create("S2");
-    auto s3 = QSharedPointer<model::RegularState>::create("S3");
-    auto tr = QSharedPointer<model::Transition>::create(s1, s2, "E");
+    model::EntityIdGenerator gen;
+    auto s1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                  .dynamicCast<model::RegularState>();
+    s1->setName("S1");
+    auto s2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                  .dynamicCast<model::RegularState>();
+    s2->setName("S2");
+    auto s3 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                  .dynamicCast<model::RegularState>();
+    s3->setName("S3");
+    auto tr = model::ModelElementsFactory::createTransitionWithId(s1, s2, "E", gen.generateNextId());
 
     QVERIFY(tr->setProperty("event", "E2"));
     QVERIFY(tr->setProperty("conditionCallback", "isReady"));

@@ -7,8 +7,8 @@
 #include <algorithm>
 
 #include "ProjectController.hpp"
-#include "model/IncludeEntity.hpp"
 #include "model/ModelUtils.hpp"
+#include "model/elements/IncludeEntity.hpp"
 #include "view/MainWindow.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
 

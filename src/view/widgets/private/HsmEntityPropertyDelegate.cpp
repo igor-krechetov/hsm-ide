@@ -9,9 +9,9 @@
 #include <QTimer>
 #include <QVariant>
 
-#include "model/HistoryState.hpp"
-#include "model/Transition.hpp"
 #include "model/actions/ModelActionFactory.hpp"
+#include "model/elements/HistoryState.hpp"
+#include "model/elements/Transition.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 
 namespace view {

@@ -3,8 +3,8 @@
 
 #include <QSharedPointer>
 
-#include "State.hpp"
-#include "StateMachineEntity.hpp"
+#include "elements/State.hpp"
+#include "elements/StateMachineEntity.hpp"
 
 namespace model {
 

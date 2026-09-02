@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="qt_layout" qt:editorversion="7.0.0">
+    <state id="State_1">
+        <qt:editorinfo geometry="11.23;171.57;-60;-50;120;100" scenegeometry="11.23;171.57;-48.77;121.57;120;100"/>
+        <transition type="external" event="Transition_1" target="State_2">
+            <qt:editorinfo localGeometry="0;420.28" endTargetFactors="12.10;41.45"/>
+        </transition>
+    </state>
+    <state id="State_2">
+        <qt:editorinfo geometry="256.31;464.65;-154.03;-100.21;591.02;548.66" scenegeometry="256.31;464.65;102.28;364.44;591.02;548.66"/>
+        <state id="State_3">
+            <qt:editorinfo geometry="1.54;66.37;-60;-50;120;100" scenegeometry="257.85;531.02;197.85;481.02;120;100"/>
+            <transition type="external" event="Transition_3" target="State_5">
+                <qt:editorinfo localGeometry="303.58;0"/>
+            </transition>
+        </state>
+        <transition type="external" event="Transition_2" target="State_4">
+            <qt:editorinfo movePoint="83.73;28.60"/>
+        </transition>
+        <final id="Final_1">
+            <qt:editorinfo geometry="148.58;122.54;-20;-20;40;40" scenegeometry="404.89;587.19;384.89;567.19;40;40"/>
+        </final>
+        <state id="State_5">
+            <qt:editorinfo geometry="280.83;298.20;-86.13;-88.98;222.29;219.23" scenegeometry="537.14;762.85;451.01;673.87;222.29;219.23"/>
+            <transition type="external" event="Transition_4" target="State_3">
+                <qt:editorinfo localGeometry="-309.26;0.32" endTargetFactors="45.87;70.25"/>
+            </transition>
+            <transition type="external" event="Transition_5" target="Final_1">
+                <qt:editorinfo localGeometry="-44.35;-196.29"/>
+            </transition>
+            <state id="State_6">
+                <qt:editorinfo geometry="56.16;60.25;-60;-50;120;100" scenegeometry="593.30;823.10;533.30;773.10;120;100"/>
+            </state>
+        </state>
+    </state>
+    <state id="State_4">
+        <qt:editorinfo geometry="977.29;155.23;-60;-50;120;100" scenegeometry="977.29;155.23;917.29;105.23;120;100"/>
+    </state>
+</scxml>

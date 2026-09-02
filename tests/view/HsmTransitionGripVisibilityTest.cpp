@@ -4,8 +4,8 @@
 #include <QGraphicsView>
 #include <QtTest>
 
-#include "model/RegularState.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/elements/HsmTransition.hpp"
 #include "view/elements/private/ElementGripItem.hpp"

@@ -4,7 +4,9 @@
 #include <cmath>
 #include <random>
 
-#include "model/RegularState.hpp"
+#include "model/private/EntityIdGenerator.hpp"
+#include "model/ModelElementsFactory.hpp"
+#include "model/elements/RegularState.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
@@ -921,9 +923,16 @@ void HsmElementDragTest::reparentChildFromOneParentToAnother() {
     view.setSnapToGridEnabled(false);
 
     // Create model entities
-    auto modelA = QSharedPointer<model::RegularState>::create("stateA");
-    auto modelB = QSharedPointer<model::RegularState>::create("stateB");
-    auto modelC = QSharedPointer<model::RegularState>::create("stateC");
+    model::EntityIdGenerator gen;
+    auto modelA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    modelA->setName("stateA");
+    auto modelB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    modelB->setName("stateB");
+    auto modelC = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    modelC->setName("stateC");
 
     // Create two top-level states (A on the left, B on the right) and child C inside A
     view::HsmElement* stateA = view.createHsmElement(modelA, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
@@ -1050,9 +1059,16 @@ void HsmElementDragTest::reparentChildToSiblingWithinSameParent() {
     view.setProjectController(controller.toWeakRef());
 
     // Create model entities
-    auto modelP = QSharedPointer<model::RegularState>::create("parent");
-    auto modelC1 = QSharedPointer<model::RegularState>::create("childOne");
-    auto modelC2 = QSharedPointer<model::RegularState>::create("childTwo");
+    model::EntityIdGenerator gen;
+    auto modelP = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    modelP->setName("parent");
+    auto modelC1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                       .dynamicCast<model::RegularState>();
+    modelC1->setName("childOne");
+    auto modelC2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                       .dynamicCast<model::RegularState>();
+    modelC2->setName("childTwo");
 
     // Create parent P and two children: C1 (left side) and C2 (right side, larger)
     // C2 is placed far enough right that the grab offset (50px) will cause

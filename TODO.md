@@ -22,4 +22,7 @@ Design decision:
 Change icon color from black to something of a better contrast.
 
 
+Round elements not aligned to rect ones
+SCXML is not serialised correctly.
+
 

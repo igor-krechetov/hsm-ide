@@ -2,6 +2,16 @@
 All notable changes to project will be documented in this file.
 
 
+## [0.13.0] - 2026-09-02
+### New
+- [REQ-301] HSM-native SCXML metadata format with UID-based element identification
+- [REQ-301a] Automatic serialization format detection (HSM vs Qt Creator)
+- [REQ-301] Pluggable metadata serialization strategies
+### Fix
+- Correct serialization/deserialization of SCXML with Qt Creator specific geometry tags
+### Refactoring
+- Extract EntityIdGenerator for deterministic entity ID assignment
+- Reorganize model element sources under src/model/elements and serializers under src/model/private/serializer
 ## [0.12.0] - 2025-01-27
 ### New
 - Change cursor to indicate when transition label can be moved

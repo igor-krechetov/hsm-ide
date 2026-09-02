@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:hsm="https://hsm-ide.dev/scxml"
+       version="1.0" name="HsmDuplicateUidsMachine">
+    <state id="First" hsm:uid="7"/>
+    <state id="Second" hsm:uid="7"/>
+    <state id="Third" hsm:uid="20"/>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="7" x="100" y="100" width="80" height="50"/>
+            <hsm:state uid="20" x="300" y="100" width="80" height="50"/>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

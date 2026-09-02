@@ -5,11 +5,11 @@
 #include <QSignalBlocker>
 
 #include "ModelElementsFactory.hpp"
-#include "ModelRootState.hpp"
-#include "RegularState.hpp"
-#include "State.hpp"
-#include "StateMachineEntity.hpp"
-#include "Transition.hpp"
+#include "elements/ModelRootState.hpp"
+#include "elements/RegularState.hpp"
+#include "elements/State.hpp"
+#include "elements/StateMachineEntity.hpp"
+#include "elements/Transition.hpp"
 
 namespace model {
 
@@ -17,7 +17,7 @@ namespace {}
 
 StateMachineModel::StateMachineModel(const QString& name, QObject* parent)
     : QObject(parent) {
-    mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT).dynamicCast<ModelRootState>();
+    mModelRoot = ModelElementsFactory::createUniqueState(StateType::MODEL_ROOT, mIdGenerator).dynamicCast<ModelRootState>();
 
     // Subscribe to modelEntityAdded for mModelRoot
     QObject::connect(mModelRoot.data(), &StateMachineEntity::childAdded, this, &StateMachineModel::modelChanged);
@@ -61,7 +61,7 @@ StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) 
 
             if (entity->type() == StateMachineEntity::Type::State) {
                 auto sourceState = entity.dynamicCast<State>();
-                auto newState = ModelElementsFactory::cloneStateEntity(sourceState);
+                auto newState = ModelElementsFactory::cloneStateEntity(sourceState, mIdGenerator);
 
                 if (!newState) {
                     return false;
@@ -152,13 +152,24 @@ void StateMachineModel::clearModel() {
     if (mModelRoot) {
         mModelRoot->deleteAllChildren();
     }
+
+    mIdGenerator.reset();
+    mIdGenerator.registerRestoredId(mModelRoot->id());
+}
+
+EntityIdGenerator& StateMachineModel::idGenerator() {
+    return mIdGenerator;
+}
+
+const EntityIdGenerator& StateMachineModel::idGenerator() const {
+    return mIdGenerator;
 }
 
 QSharedPointer<Transition> StateMachineModel::createUniqueTransition(const EntityID_t source, const EntityID_t target) {
     auto from = mModelRoot->findChild(source);
     auto to = mModelRoot->findChild(target);
     // TODO: check for errors
-    return ModelElementsFactory::createUniqueTransition(from.dynamicCast<State>(), to.dynamicCast<State>());
+    return ModelElementsFactory::createUniqueTransition(from.dynamicCast<State>(), to.dynamicCast<State>(), mIdGenerator);
 }
 
 // TODO: this probably will not work with transitions. decide how transitions will be moved

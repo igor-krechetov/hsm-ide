@@ -6,7 +6,8 @@
 #include <QSharedPointer>
 #include <QString>
 
-#include "State.hpp"
+#include "elements/State.hpp"
+#include "private/EntityIdGenerator.hpp"
 
 namespace model {
 class ModelRootState;
@@ -33,6 +34,9 @@ public:
 
     bool reconnectElements(const EntityID_t transitionId, const EntityID_t newFromElementId, const EntityID_t newToElementId);
 
+    EntityIdGenerator& idGenerator();
+    const EntityIdGenerator& idGenerator() const;
+
     void dump() const;
 
 signals:
@@ -43,6 +47,7 @@ signals:
 
 private:
     QSharedPointer<ModelRootState> mModelRoot;
+    EntityIdGenerator mIdGenerator;
 };
 
 };  // namespace model

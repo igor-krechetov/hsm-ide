@@ -31,13 +31,15 @@ public:
     enum class Type { Invalid, State, Transition };  // namespace model
 
 public:
-    explicit StateMachineEntity(const Type type);
+    StateMachineEntity(const Type type, EntityID_t restoredId = INVALID_MODEL_ID);
     virtual ~StateMachineEntity();
     virtual StateMachineEntity& operator=(const StateMachineEntity& other);
     // Copies data of the entity (metadata and properties) but does not change the id and type or clone linked elements.
     virtual void copyEntityData(const StateMachineEntity& other);
 
     EntityID_t id() const;
+    // TODO: consider if there is a way to hide access to setId for everyone except ModelElementsFactory and Serializer
+    void setId(EntityID_t id);
     Type type() const;
 
     void setMetadata(const MetadataKey key, const QVariant& value);
@@ -83,7 +85,7 @@ signals:
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
-    EntityID_t mId = 0;
+    EntityID_t mId = INVALID_MODEL_ID;
     Type mElementType = Type::Invalid;
     QMap<MetadataKey, QVariant> mMetadata;
 };

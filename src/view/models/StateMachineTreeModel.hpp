@@ -4,7 +4,7 @@
 #include <QAbstractItemModel>
 #include <QSharedPointer>
 
-#include "model/StateMachineEntity.hpp"
+#include "model/elements/StateMachineEntity.hpp"
 
 namespace model {
 class StateMachineModel;

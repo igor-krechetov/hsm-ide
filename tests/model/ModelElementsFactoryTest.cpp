@@ -1,9 +1,10 @@
 #include <QtTest>
 
-#include "model/EntryPoint.hpp"
-#include "model/InitialState.hpp"
+#include "model/private/EntityIdGenerator.hpp"
+#include "model/elements/EntryPoint.hpp"
+#include "model/elements/InitialState.hpp"
 #include "model/ModelElementsFactory.hpp"
-#include "model/RegularState.hpp"
+#include "model/elements/RegularState.hpp"
 
 class ModelElementsFactoryTest : public QObject {
     Q_OBJECT
@@ -18,30 +19,31 @@ private slots:
  * Use-case: Editor creates new nodes and auto-attaches transitions.
  */
 void ModelElementsFactoryTest::CreatesExpectedElements() {
-    auto s1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
-    auto s2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    model::EntityIdGenerator gen;
+    auto s1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
+    auto s2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
 
     QVERIFY(s1);
     QVERIFY(s2);
     QVERIFY(s1->name() != s2->name());
 
-    auto tr = model::ModelElementsFactory::createUniqueTransition(s1, s2);
+    auto tr = model::ModelElementsFactory::createUniqueTransition(s1, s2, gen);
     QVERIFY(tr);
     QCOMPARE(QString("NEW_EVENT"), tr->event());
     QCOMPARE(s1, tr->source());
     QCOMPARE(s2, tr->target());
 
-    auto initial = model::ModelElementsFactory::createUniqueState(model::StateType::INITIAL).dynamicCast<model::InitialState>();
+    auto initial = model::ModelElementsFactory::createUniqueState(model::StateType::INITIAL, gen).dynamicCast<model::InitialState>();
     QVERIFY(initial);
 
-    auto trFromInitial = model::ModelElementsFactory::createUniqueTransition(initial, s1);
+    auto trFromInitial = model::ModelElementsFactory::createUniqueTransition(initial, s1, gen);
     QVERIFY(trFromInitial);
     QCOMPARE(QString(""), trFromInitial->event());
 
-    auto entry = model::ModelElementsFactory::createUniqueState(model::StateType::ENTRYPOINT).dynamicCast<model::EntryPoint>();
+    auto entry = model::ModelElementsFactory::createUniqueState(model::StateType::ENTRYPOINT, gen).dynamicCast<model::EntryPoint>();
     QVERIFY(entry);
 
-    auto trFromEntry = model::ModelElementsFactory::createUniqueTransition(entry, s2);
+    auto trFromEntry = model::ModelElementsFactory::createUniqueTransition(entry, s2, gen);
     QVERIFY(trFromEntry);
     QCOMPARE(QString(""), trFromEntry->event());
 }
