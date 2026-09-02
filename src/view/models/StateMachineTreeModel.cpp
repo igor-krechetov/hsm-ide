@@ -3,12 +3,12 @@
 #include <QIcon>
 #include <QVariant>
 
-#include "model/EntryPoint.hpp"
-#include "model/HistoryState.hpp"
-#include "model/InitialState.hpp"
-#include "model/ModelRootState.hpp"
 #include "model/StateMachineModel.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/EntryPoint.hpp"
+#include "model/elements/HistoryState.hpp"
+#include "model/elements/InitialState.hpp"
+#include "model/elements/ModelRootState.hpp"
+#include "model/elements/Transition.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
 
 namespace view {

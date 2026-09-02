@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include "model/ExitPoint.hpp"
+#include "model/elements/ExitPoint.hpp"
 
 class ExitPointTest : public QObject {
     Q_OBJECT

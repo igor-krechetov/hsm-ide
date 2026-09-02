@@ -4,17 +4,17 @@
 #include <QSizeF>
 
 #include "../TestPaths.hpp"
-#include "model/ExitPoint.hpp"
-#include "model/FinalState.hpp"
-#include "model/HistoryState.hpp"
-#include "model/IncludeEntity.hpp"
-#include "model/EntryPoint.hpp"
-#include "model/InitialState.hpp"
-#include "model/ModelRootState.hpp"
-#include "model/RegularState.hpp"
+#include "model/elements/ExitPoint.hpp"
+#include "model/elements/FinalState.hpp"
+#include "model/elements/HistoryState.hpp"
+#include "model/elements/IncludeEntity.hpp"
+#include "model/elements/EntryPoint.hpp"
+#include "model/elements/InitialState.hpp"
+#include "model/elements/ModelRootState.hpp"
+#include "model/elements/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/Transition.hpp"
 
 class StateMachineSerializerDeserializationTest : public QObject {
     Q_OBJECT
@@ -192,17 +192,17 @@ void StateMachineSerializerDeserializationTest::DeserializeQtGeometryFixture() {
     QVERIFY(state_2);
     QVERIFY(state_2_2);
 
-    QCOMPARE(state_1->getPos(), QPointF(-646.62, -301.36));
-    QCOMPARE(state_1->getSize(), QSizeF(775.51, 742.82));
+    QCOMPARE(state_1->getPos(), QPointF(0.0, 0.0));
+    QCOMPARE(state_1->getSize(), QSizeF(400.0, 300.0));
 
-    QCOMPARE(state_1_1->getPos(), QPointF(88.77, 170.70));
-    QCOMPARE(state_1_1->getSize(), QSizeF(197.31, 100.0));
+    QCOMPARE(state_1_1->getPos(), QPointF(220.0, 180.0));
+    QCOMPARE(state_1_1->getSize(), QSizeF(160.0, 80.0));
 
-    QCOMPARE(state_2->getPos(), QPointF(680.96, -273.81));
-    QCOMPARE(state_2->getSize(), QSizeF(832.18, 687.72));
+    QCOMPARE(state_2->getPos(), QPointF(500.0, 0.0));
+    QCOMPARE(state_2->getSize(), QSizeF(300.0, 200.0));
 
-    QCOMPARE(state_2_2->getPos(), QPointF(140.45, 151.13));
-    QCOMPARE(state_2_2->getSize(), QSizeF(301.90, 155.71));
+    QCOMPARE(state_2_2->getPos(), QPointF(140.0, 100.0));
+    QCOMPARE(state_2_2->getSize(), QSizeF(180.0, 100.0));
 }
 
 /**

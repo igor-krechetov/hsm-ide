@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include "model/ModelRootState.hpp"
+#include "model/elements/ModelRootState.hpp"
 
 class ModelRootStateTest : public QObject {
     Q_OBJECT

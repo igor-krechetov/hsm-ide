@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include "model/FinalState.hpp"
+#include "model/elements/FinalState.hpp"
 
 class FinalStateTest : public QObject {
     Q_OBJECT

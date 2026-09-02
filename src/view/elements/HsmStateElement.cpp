@@ -10,7 +10,7 @@
 #include <cmath>
 
 #include "HsmTransition.hpp"
-#include "model/RegularState.hpp"
+#include "model/elements/RegularState.hpp"
 #include "private/HsmStateBodySection.hpp"
 #include "private/HsmStateTextItem.hpp"
 #include "view/elements/ElementTypeIds.hpp"

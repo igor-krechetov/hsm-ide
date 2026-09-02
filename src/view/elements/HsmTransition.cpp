@@ -13,7 +13,7 @@
 #include <cmath>
 
 #include "HsmStateElement.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/Transition.hpp"
 #include "private/AutoGroupItem.hpp"
 #include "private/ElementGripItem.hpp"
 #include "private/HsmStateTextItem.hpp"

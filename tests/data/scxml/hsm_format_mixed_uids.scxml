@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:hsm="https://hsm-ide.dev/scxml"
+       version="1.0" name="HsmMixedUidsMachine">
+    <state id="WithUid" hsm:uid="10"/>
+    <state id="NoUid"/>
+    <state id="AlsoWithUid" hsm:uid="50">
+        <transition event="go" type="external" target="WithUid" hsm:uid="51"/>
+    </state>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="10" x="50" y="50" width="100" height="60"/>
+            <hsm:state uid="50" x="300" y="50" width="100" height="60"/>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

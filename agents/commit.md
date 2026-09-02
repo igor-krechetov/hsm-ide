@@ -1,3 +1,5 @@
+Do not add unstaged files.
+
 Version Rules
 - Format X.Y.Z
 - X - major. never change it

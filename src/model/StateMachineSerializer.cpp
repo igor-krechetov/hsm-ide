@@ -7,73 +7,87 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
-#include "EntryPoint.hpp"
-#include "ExitPoint.hpp"
-#include "FinalState.hpp"
-#include "HistoryState.hpp"
-#include "IncludeEntity.hpp"
-#include "InitialState.hpp"
 #include "ModelElementsFactory.hpp"
-#include "ModelRootState.hpp"
 #include "ModelUtils.hpp"
-#include "RegularState.hpp"
 #include "StateHierarchyRules.hpp"
 #include "StateMachineModel.hpp"
-#include "Transition.hpp"
+#include "elements/EntryPoint.hpp"
+#include "elements/ExitPoint.hpp"
+#include "elements/FinalState.hpp"
+#include "elements/HistoryState.hpp"
+#include "elements/IncludeEntity.hpp"
+#include "elements/InitialState.hpp"
+#include "elements/ModelRootState.hpp"
+#include "elements/RegularState.hpp"
+#include "elements/Transition.hpp"
 
 namespace model {
 
-StateMachineSerializer::StateMachineSerializer() {}
+StateMachineSerializer::StateMachineSerializer()
+    : mActiveStrategy(&mHsmStrategy) {}
 
-/**
- * @brief Helper function to serialize a state and its children
- * @param mXmlWriter The XML writer to use
- * @param state The state to serialize
- */
-static void serializeState(QXmlStreamWriter& mXmlWriter, const QSharedPointer<model::State>& state, const bool rootElement) {}
+IMetadataSerializer* StateMachineSerializer::selectStrategy(SerializationFormat format) {
+    IMetadataSerializer* result = &mHsmStrategy;
 
-/**
- * @brief Serializes a state machine model to SCXML format
- * @param model The state machine model to serialize
- * @return SCXML representation as a QString
- */
+    if (format == SerializationFormat::QtCreator) {
+        result = &mQtStrategy;
+    }
+
+    return result;
+}
+
+IMetadataSerializer* StateMachineSerializer::selectStrategyForDetectedFormat(DetectedFormat detected) {
+    IMetadataSerializer* result = &mQtStrategy;  // default for PlainSCXML and QtCreator
+
+    if (detected == DetectedFormat::HSM) {
+        result = &mHsmStrategy;
+    }
+
+    return result;
+}
+
+// ============================================================================
+// Serialization
+// ============================================================================
+
 QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
+                                                 const SerializationFormat format,
                                                  const bool addScxmlTag) {
     QString scxml;
 
+    mActiveStrategy = selectStrategy(format);
     mXmlWriter = QSharedPointer<QXmlStreamWriter>::create(&scxml);
 
     mXmlWriter->setAutoFormatting(true);
+
     if (addScxmlTag) {
         mXmlWriter->writeStartDocument();
     }
 
     if (addScxmlTag) {
-        // Write SCXML root element
         mXmlWriter->writeStartElement("scxml");
         mXmlWriter->writeAttribute("encoding", "UTF-8");
         mXmlWriter->writeAttribute("version", "1.0");
         mXmlWriter->writeAttribute("xmlns", "http://www.w3.org/2005/07/scxml");
         mXmlWriter->writeAttribute("xmlns:xi", "http://www.w3.org/2001/XInclude");
-        mXmlWriter->writeAttribute("xmlns:qt", "http://www.qt.io/2015/02/scxml-ext");
+
+        mActiveStrategy->beginSerialization(*mXmlWriter, modelPtr);
 
         if (!modelPtr->name().isEmpty()) {
             mXmlWriter->writeAttribute("name", modelPtr->name());
         }
     }
 
-    // Get the root state
     QSharedPointer<model::ModelRootState> rootState = modelPtr->root();
 
     if (rootState) {
-        // TODO: find initial state among children
-
         for (const auto& child : rootState->childrenEntities()) {
             child->accept(this);
         }
     }
 
     if (addScxmlTag) {
+        mActiveStrategy->endSerialization(*mXmlWriter, modelPtr);
         mXmlWriter->writeEndElement();  // scxml
     }
 
@@ -86,11 +100,10 @@ QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::Sta
     return scxml;
 }
 
-/**
- * @brief Deserializes SCXML format to a state machine model
- * @param scxml The SCXML string to deserialize
- * @return The deserialized StateMachineModel
- */
+// ============================================================================
+// Deserialization
+// ============================================================================
+
 QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFromScxml(const QString& scxml) {
     QSharedPointer<model::StateMachineModel> resModel =
         QSharedPointer<model::StateMachineModel>(new model::StateMachineModel("DeserializedModel"));
@@ -127,8 +140,7 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
     mModel = outModel;
     mModel->clearModel();
     mTransitionTargets.clear();
-    mQtGeometryStrings.clear();
-    mQtSceneGeometryStrings.clear();
+    mActiveStrategy = &mQtStrategy;  // default until format detected
     mXmlReader = QSharedPointer<QXmlStreamReader>::create(scxml);
 
     while (!mXmlReader->atEnd() && !mXmlReader->hasError()) {
@@ -141,20 +153,35 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
 
         if (token == QXmlStreamReader::StartElement) {
             qDebug() << __LINE__ << "StartElement:" << mXmlReader->name();
+
             if (mXmlReader->name() == QStringView(u"scxml")) {
-                // TODO: check if "name" attribute exists
                 QString name = mXmlReader->attributes().value("name").toString();
+                QString initialTarget = mXmlReader->attributes().value("initial").toString();
                 qDebug() << __LINE__ << "SCXML name:" << name;
+
+                // Detect format from namespace declarations and select strategy
+                DetectedFormat detected = mHsmStrategy.detectFormat(*mXmlReader);
+
+                if (detected == DetectedFormat::PlainSCXML) {
+                    detected = mQtStrategy.detectFormat(*mXmlReader);
+                }
+
+                mActiveStrategy = selectStrategyForDetectedFormat(detected);
 
                 if (!name.isEmpty()) {
                     mModel->setName(name);
                 }
+
+                if (!initialTarget.isEmpty()) {
+                    mInitialTargetFromAttribute = initialTarget;
+                }
+            } else if (mActiveStrategy->parseTopLevelElement(*mXmlReader, mModel)) {
+                // Strategy consumed the element (e.g., <hsm:editor>)
             } else {
                 QSharedPointer<StateMachineEntity> entity = parseChildEntity(mModel->root());
 
                 if (!entity) {
                     qWarning() << "Failed to parse entity at line" << mXmlReader->lineNumber();
-                    // mXmlReader->skipCurrentElement();  // DO we need this?
                 }
             }
         }
@@ -164,9 +191,46 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
         handleParseError(mXmlReader->errorString());
     }
 
-    postprocessQtStateGeometry();
+    // Create InitialState from scxml initial="" attribute if no explicit <initial> was parsed at root level
+    if (!mInitialTargetFromAttribute.isEmpty()) {
+        bool hasRootInitial = false;
 
-    // Set targets for parsed transitions. We do this after all states are created.
+        mModel->root()->forEachChildElement(
+            [&hasRootInitial](QSharedPointer<StateMachineEntity> /*parent*/, QSharedPointer<StateMachineEntity> child) {
+                bool continueTraversal = true;
+
+                if (child->type() == StateMachineEntity::Type::State) {
+                    auto state = child.dynamicCast<State>();
+
+                    if (state && state->stateType() == StateType::INITIAL) {
+                        hasRootInitial = true;
+                        continueTraversal = false;
+                    }
+                }
+
+                return continueTraversal;
+            },
+            1,
+            false);
+
+        if (!hasRootInitial) {
+            QSharedPointer<State> targetState = mModel->root()->findChildStateByName(mInitialTargetFromAttribute);
+
+            if (targetState) {
+                auto initialState = ModelElementsFactory::createUniqueState(StateType::INITIAL, mModel->idGenerator());
+                auto transition =
+                    ModelElementsFactory::createUniqueTransition(initialState, targetState, mModel->idGenerator());
+
+                if (initialState && transition) {
+                    mModel->root()->addChild(initialState);
+                }
+            }
+        }
+    }
+
+    mActiveStrategy->endDeserialization(mModel);
+
+    // Set targets for parsed transitions. We do this after all states are created
     // because transitions can reference states that are defined later in the SCXML.
     for (const EntityID_t transitionId : mTransitionTargets.keys()) {
         QString targetStateId = mTransitionTargets.value(transitionId);
@@ -181,61 +245,16 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
         }
     }
 
-    // Resolve Qt transition localGeometry after parsing the full state tree.
-    for (const EntityID_t transitionId : mTransitionTargets.keys()) {
-        QSharedPointer<model::Transition> transition = mModel->root()->findTransition(transitionId);
-
-        if (!transition) {
-            continue;
-        }
-
-        QSharedPointer<model::State> sourceState = transition->source();
-        if (!sourceState) {
-            continue;
-        }
-
-        QVariant geometryData = transition->getMetadata(StateMachineEntity::MetadataKey::GEOMETRY);
-        if (!geometryData.isValid()) {
-            continue;
-        }
-
-        if (!sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).isValid() ||
-            !sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).isValid() ||
-            !sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X).isValid() ||
-            !sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y).isValid()) {
-            continue;
-        }
-
-        const double sourceX = sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble();
-        const double sourceY = sourceState->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble();
-        const double deltaX = sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X).toDouble();
-        const double deltaY = sourceState->getMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y).toDouble();
-
-        const QPointF sourceDelta(deltaX, deltaY);
-
-        QPolygonF linePath = geometryData.value<QPolygonF>();
-
-        // Only update if line has intermediate points. Skip first and last points
-        if (linePath.size() > 2) {
-            for (auto i = 1; i < (linePath.size() - 1); ++i) {
-                linePath[i] += sourceDelta;
-            }
-        }
-
-        transition->setMetadata(StateMachineEntity::MetadataKey::GEOMETRY, linePath);
-    }
-
+    mInitialTargetFromAttribute.clear();
     mModel.clear();
-    mQtGeometryStrings.clear();
     // TODO: handle parsing errors
     return true;
 }
 
-/**
- * @brief Validates the structure of SCXML content
- * @param scxml The SCXML string to validate
- * @return True if the SCXML is valid, false otherwise
- */
+// ============================================================================
+// Validation
+// ============================================================================
+
 bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     QXmlStreamReader xmlReader(scxml);
     bool isValid = true;
@@ -277,6 +296,10 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     return isValid;
 }
 
+// ============================================================================
+// Visitor methods (format-agnostic SCXML structure)
+// ============================================================================
+
 #define SCXML_SERIALIZE_ACTION(_object, _hasAction, _actionGetter, _element, _attr) \
   if ((_object)->_hasAction()) {                                                    \
     mXmlWriter->writeStartElement(_element);                                        \
@@ -284,10 +307,17 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
     mXmlWriter->writeEndElement();                                                  \
   }
 
+#define SCXML_SERIALIZE_ACTION_ATTR(_object, _hasAction, _actionGetter, _element, _attr) \
+  if ((_object)->_hasAction()) {                                                         \
+    mXmlWriter->writeStartElement(_element);                                             \
+    mXmlWriter->writeAttribute((_attr), (_object)->_actionGetter()->serialize());        \
+    mXmlWriter->writeEndElement();                                                       \
+  }
+
 #define SCXML_SERIALIZE_STATE_ACTIONS(_object)                                                \
   SCXML_SERIALIZE_ACTION(_object, hasOnEnteringAction, onEnteringAction, "onentry", "script") \
   SCXML_SERIALIZE_ACTION(_object, hasOnExitingAction, onExitingAction, "onexit", "script")    \
-  SCXML_SERIALIZE_ACTION(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
+  SCXML_SERIALIZE_ACTION_ATTR(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
 
 void StateMachineSerializer::visitRegularState(const RegularState* state) {
     qDebug() << Q_FUNC_INFO;
@@ -295,13 +325,18 @@ void StateMachineSerializer::visitRegularState(const RegularState* state) {
         mXmlWriter->writeStartElement("state");
         mXmlWriter->writeAttribute("id", state->name());
 
-        serializeEntryMetadata(state);
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, state);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, state);
         SCXML_SERIALIZE_STATE_ACTIONS(state);
+
+        mActiveStrategy->notifyEnterState(state);
 
         for (const auto& child : state->childrenEntities()) {
             child->accept(this);
         }
 
+        mActiveStrategy->notifyExitState(state);
         mXmlWriter->writeEndElement();  // state
     }
 }
@@ -316,7 +351,10 @@ void StateMachineSerializer::visitEntryPoint(const EntryPoint* entryPoint) {
         </initial>
         */
         mXmlWriter->writeStartElement("initial");
-        serializeEntryMetadata(entryPoint);
+
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, entryPoint);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, entryPoint);
 
         for (const auto& transition : entryPoint->transitions()) {
             transition->accept(this);
@@ -331,12 +369,15 @@ void StateMachineSerializer::visitExitPoint(const ExitPoint* exitPoint) {
     if (nullptr != exitPoint) {
         mXmlWriter->writeStartElement("final");
         mXmlWriter->writeAttribute("id", exitPoint->name());
-        serializeEntryMetadata(exitPoint);
+
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, exitPoint);
 
         if (exitPoint->event().isEmpty() == false) {
             mXmlWriter->writeAttribute("event", exitPoint->event());
         }
 
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, exitPoint);
         SCXML_SERIALIZE_STATE_ACTIONS(exitPoint);
 
         mXmlWriter->writeEndElement();  // final
@@ -349,12 +390,14 @@ void StateMachineSerializer::visitFinalState(const FinalState* finalState) {
         mXmlWriter->writeStartElement("final");
         mXmlWriter->writeAttribute("id", finalState->name());
 
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, finalState);
+
         if (finalState->event().isEmpty() == false) {
             mXmlWriter->writeAttribute("event", finalState->event());
         }
 
-        serializeEntryMetadata(finalState);
-
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, finalState);
         SCXML_SERIALIZE_ACTION(finalState, hasOnStateChangedAction, onStateChangedAction, "onentry", "script");
 
         mXmlWriter->writeEndElement();  // final
@@ -380,7 +423,9 @@ void StateMachineSerializer::visitHistoryState(const HistoryState* historyState)
                 break;
         }
 
-        serializeEntryMetadata(historyState);
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, historyState);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, historyState);
 
         if (defaultTransition) {
             defaultTransition->accept(this);
@@ -396,7 +441,10 @@ void StateMachineSerializer::visitInitialState(const InitialState* initialState)
         auto transition = initialState->transition();
 
         mXmlWriter->writeStartElement("initial");
-        serializeEntryMetadata(initialState);
+
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, initialState);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, initialState);
 
         if (nullptr != transition) {
             transition->accept(this);
@@ -413,6 +461,9 @@ void StateMachineSerializer::visitIncludeEntity(const IncludeEntity* include) {
         mXmlWriter->writeStartElement("state");
         mXmlWriter->writeAttribute("id", include->name());
 
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, include);
+
         SCXML_SERIALIZE_STATE_ACTIONS(include);
 
         for (const auto& child : include->childrenEntities()) {
@@ -422,7 +473,7 @@ void StateMachineSerializer::visitIncludeEntity(const IncludeEntity* include) {
         mXmlWriter->writeStartElement("xi:include");
         mXmlWriter->writeAttribute("href", include->path());
         mXmlWriter->writeAttribute("parse", "xml");
-        serializeEntryMetadata(include);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, include);
         mXmlWriter->writeEndElement();  // xi:include
 
         mXmlWriter->writeEndElement();  // state
@@ -460,11 +511,12 @@ void StateMachineSerializer::visitTransition(const Transition* transition) {
 
         if (transition->conditionCallback().isEmpty() == false) {
             const QString conditionValue = transition->expectedConditionValue() ? " is true" : " is false";
-
             mXmlWriter->writeAttribute("cond", transition->conditionCallback() + conditionValue);
         }
 
-        serializeEntryMetadata(transition);
+        AttributeWriter attrWriter(*mXmlWriter);
+        mActiveStrategy->writeEntityAttributes(attrWriter, transition);
+        mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, transition);
 
         if (transition->hasTransitionAction()) {
             mXmlWriter->writeTextElement("script", transition->transitionAction()->serialize());
@@ -474,188 +526,12 @@ void StateMachineSerializer::visitTransition(const Transition* transition) {
     }
 }
 
-void StateMachineSerializer::serializeEntryMetadata(const StateMachineEntity* entity) {
-    qDebug() << "serializeEntryMetadata" << entity->id() << entity->getPos();
+// ============================================================================
+// Deserialization helpers
+// ============================================================================
 
-    if (entity->type() == StateMachineEntity::Type::Transition) {
-        // for transitions
-        // <qt:editorinfo localGeometry="0;117.63;238.86;117.63"/>
-        QVariant geometryData = entity->getMetadata(StateMachineEntity::MetadataKey::GEOMETRY);
-
-        if (geometryData.isValid()) {
-            QPolygonF linePath = geometryData.value<QPolygonF>();
-            QStringList pointStrings;
-
-            // remove first and last points
-            if (linePath.size() >= 2) {
-                linePath.removeFirst();
-                linePath.removeLast();
-            }
-
-            for (const QPointF& point : linePath) {
-                pointStrings.append(
-                    QString("%1;%2").arg(QString::number(point.x(), 'f', 2)).arg(QString::number(point.y(), 'f', 2)));
-            }
-
-            if (pointStrings.isEmpty() == false) {
-                mXmlWriter->writeStartElement("qt:editorinfo");
-                mXmlWriter->writeAttribute("localGeometry", pointStrings.join(';'));
-                mXmlWriter->writeEndElement();
-            }
-        }
-    } else {
-        // for states
-        // Store as string with 2 decimal places
-        QString geometryValue =
-            QString("%1;%2;0;0;%3;%4")
-                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_X).toDouble(), 'f', 2))
-                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y).toDouble(), 'f', 2))
-                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::WIDTH).toDouble(), 'f', 2))
-                .arg(QString::number(entity->getMetadata(StateMachineEntity::MetadataKey::HEIGHT).toDouble(), 'f', 2));
-        mXmlWriter->writeStartElement("qt:editorinfo");
-        mXmlWriter->writeAttribute("geometry", geometryValue);
-        mXmlWriter->writeEndElement();
-    }
-}
-
-void StateMachineSerializer::deserializeEntryMetadata(StateMachineEntity* entity) {
-    qDebug() << "deserializeEntryMetadata: " << mXmlReader->name() << ", id=" << entity->id();
-    if (nullptr != entity) {
-        if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"editorinfo"))) {
-            QString localGeometryValue = tryGetElementAttribute("localGeometry");
-
-            if (localGeometryValue.isEmpty() == false) {
-                const QStringList pointParts = localGeometryValue.split(';');
-                QPolygonF linePath;
-
-                // start and end points are recalculated by the HsmTransition element so we set them to 0
-                linePath.append(QPointF(0, 0));  // start point
-
-                for (int i = 0; i + 1 < pointParts.size(); i += 2) {
-                    bool okX = false;
-                    bool okY = false;
-                    const double x = pointParts[i].toDouble(&okX);
-                    const double y = pointParts[i + 1].toDouble(&okY);
-
-                    if (okX && okY) {
-                        linePath.append(QPointF(x, y));
-                    } else {
-                        handleParseError("Invalid point format in qt:editorinfo localGeometry");
-                    }
-                }
-
-                linePath.append(QPointF(0, 0));  // end point
-                entity->setMetadata(StateMachineEntity::MetadataKey::GEOMETRY, linePath);
-            } else {
-                QString sceneGeometryValue = tryGetElementAttribute("scenegeometry");
-                QString geometryValue = tryGetElementAttribute("geometry");
-
-                if (!sceneGeometryValue.isEmpty()) {
-                    const QStringList sceneGeometryParts = sceneGeometryValue.split(';');
-                    if (sceneGeometryParts.size() == 6) {
-                        mQtSceneGeometryStrings.insert(entity->id(), sceneGeometryValue);
-                    } else {
-                        handleParseError(QString("Invalid scenegeometry format in qt:editorinfo: ") + sceneGeometryValue +
-                                         ", entity=" + QString::number(entity->id()));
-                    }
-                } else if (!geometryValue.isEmpty()) {
-                    const QStringList geometryParts = geometryValue.split(';');
-                    if (geometryParts.size() == 6) {
-                        mQtGeometryStrings.insert(entity->id(), geometryValue);
-                    } else {
-                        handleParseError(QString("Invalid geometry format in qt:editorinfo: ") + geometryValue +
-                                         ", entity=" + QString::number(entity->id()));
-                    }
-                }
-            }
-            mXmlReader->readNext();
-        }
-    } else {
-        qCritical() << "entity is null";
-    }
-}
-
-/**
- * @brief Helper function to handle parse errors
- * @param errorMessage The error message to log
- */
 void StateMachineSerializer::handleParseError(const QString& errorMessage) {
     qWarning() << "Parse error:" << errorMessage;
-}
-
-void StateMachineSerializer::postprocessQtStateGeometry() {
-    if (!mModel) {
-        return;
-    }
-
-    const QSharedPointer<model::ModelRootState> rootState = mModel->root();
-    if (!rootState) {
-        return;
-    }
-
-    auto applyToChild = [this](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> child) {
-        Q_UNUSED(parent);
-        applyQtGeometryToState(child, parent);
-        return true;
-    };
-
-    rootState->forEachChildElement(applyToChild, StateMachineEntity::DEPTH_INFINITE, false);
-}
-
-void StateMachineSerializer::applyQtGeometryToState(const QSharedPointer<StateMachineEntity>& entity,
-                                                    const QSharedPointer<StateMachineEntity>& parent) {
-    if (!entity) {
-        return;
-    }
-
-    const QString geometryValue = mQtSceneGeometryStrings.contains(entity->id()) ? mQtSceneGeometryStrings.value(entity->id())
-                                                                                 : mQtGeometryStrings.value(entity->id());
-
-    if (geometryValue.isEmpty()) {
-        return;
-    }
-
-    const QStringList geometryParts = geometryValue.split(';');
-
-    if (geometryParts.size() != 6) {
-        handleParseError(QString("Invalid geometry format in qt:editorinfo: ") + geometryValue +
-                         ", entity=" + QString::number(entity->id()));
-        return;
-    }
-
-    double topX = 0.0;
-    double topY = 0.0;
-    const double w = geometryParts[4].toDouble();
-    const double h = geometryParts[5].toDouble();
-
-    if (mQtSceneGeometryStrings.contains(entity->id())) {
-        topX = geometryParts[2].toDouble();
-        topY = geometryParts[3].toDouble();
-    } else {
-        const double centerX = geometryParts[0].toDouble();
-        const double centerY = geometryParts[1].toDouble();
-        const double offsetX = geometryParts[2].toDouble();
-        const double offsetY = geometryParts[3].toDouble();
-        topX = centerX + offsetX;
-        topY = centerY + offsetY;
-    }
-
-    if (parent) {
-        const QVariant parentX = parent->getMetadata(StateMachineEntity::MetadataKey::POSITION_X);
-        const QVariant parentY = parent->getMetadata(StateMachineEntity::MetadataKey::POSITION_Y);
-
-        if (parentX.isValid() && parentY.isValid()) {
-            topX -= parentX.toDouble();
-            topY -= parentY.toDouble();
-        }
-    }
-
-    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_X, topX);
-    entity->setMetadata(StateMachineEntity::MetadataKey::POSITION_Y, topY);
-    entity->setMetadata(StateMachineEntity::MetadataKey::WIDTH, w);
-    entity->setMetadata(StateMachineEntity::MetadataKey::HEIGHT, h);
-    entity->setMetadata(StateMachineEntity::MetadataKey::QT_DELTA_X, topX + w / 2.0);
-    entity->setMetadata(StateMachineEntity::MetadataKey::QT_DELTA_Y, topY + h / 2.0);
 }
 
 bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent) {
@@ -665,12 +541,8 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
 
     while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
         if (QXmlStreamReader::StartElement == token) {
-            // if (mXmlReader->name() == QStringView(u"editorinfo")) {
-            //     deserializeEntryMetadata(parent.get());
-            // } else {
             // TODO: handle errors if can't parse child entities
             parseChildEntity(parent);
-            // }
         }
 
         token = mXmlReader->readNext();
@@ -686,8 +558,6 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
 
     if (mXmlReader->name() == QStringView(u"state")) {
         entity = parseRegularState();
-
-        QSharedPointer<State> state = entity.dynamicCast<State>();
     } else if (mXmlReader->name() == QStringView(u"initial")) {
         if (parent == mModel->root()) {
             // Root final state
@@ -730,8 +600,11 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
                 qWarning() << "script elements outside of transition nodes are not supported. skipping";
             }
         }
-    } else if (mXmlReader->name() == QStringView(u"editorinfo")) {
-        deserializeEntryMetadata(parent.get());
+    } else if (mActiveStrategy->parseMetadataElement(*mXmlReader, parent.get(), mModel)) {
+        // Strategy consumed the element (e.g., qt:editorinfo)
+    } else {
+        // Unknown element — skip it to keep the parser advancing
+        mXmlReader->skipCurrentElement();
     }
     // TODO: parallel
 
@@ -764,7 +637,9 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
     qDebug() << __LINE__ << "Found state with id:" << stateId;
 
     if (stateId.isEmpty() == false) {
-        entity = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity =
+            model::ModelElementsFactory::createStateWithId(model::StateType::REGULAR, uid).dynamicCast<model::RegularState>();
         entity->setName(stateId);
 
         QXmlStreamReader::TokenType token = mXmlReader->readNext();
@@ -806,6 +681,9 @@ QSharedPointer<EntryPoint> StateMachineSerializer::parseEntryPoint() {
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"initial"))) {
         entity = QSharedPointer<EntryPoint>::create();
 
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
+
         // TODO: handle errors
         parseAllChildEntities(entity);
     }
@@ -823,6 +701,9 @@ QSharedPointer<ExitPoint> StateMachineSerializer::parseExitPoint() {
 
         entity = QSharedPointer<ExitPoint>::create(stateId);
         entity->setEvent(eventAttr);
+
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
 
         QXmlStreamReader::TokenType token = mXmlReader->readNext();
 
@@ -858,6 +739,9 @@ QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
         entity = QSharedPointer<FinalState>::create(stateId);
         entity->setEvent(eventAttr);
 
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
+
         // TODO: handle errors
         parseAllChildEntities(entity);
     }
@@ -885,6 +769,9 @@ QSharedPointer<HistoryState> StateMachineSerializer::parseHistoryState() {
         if (historyType != HistoryType::INVALID) {
             entity = QSharedPointer<HistoryState>::create(stateId, historyType);
 
+            EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+            entity->setId(uid);
+
             // TODO: handle errors
             parseAllChildEntities(entity);
         }
@@ -900,6 +787,9 @@ QSharedPointer<InitialState> StateMachineSerializer::parseInitialState() {
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"initial"))) {
         entity = QSharedPointer<InitialState>::create();
 
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
+
         // TODO: handle errors
         parseAllChildEntities(entity);
     }
@@ -911,9 +801,12 @@ QSharedPointer<IncludeEntity> StateMachineSerializer::parseIncludeEntity() {
     QSharedPointer<IncludeEntity> entity;
 
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"include"))) {
-        entity = QSharedPointer<IncludeEntity>::create("");  // name will be overwritten in parseRegularState
+        entity = QSharedPointer<IncludeEntity>::create("");
 
         entity->setPath(tryGetElementAttribute("href"));
+
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
 
         // TODO: handle errors
         parseAllChildEntities(entity);
@@ -927,7 +820,6 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
     QSharedPointer<Transition> entity;
 
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"transition"))) {
-        // Process transitions
         QString event = tryGetElementAttribute("event");
         QString target = tryGetElementAttribute("target");
 
@@ -939,34 +831,12 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
             return nullptr;
         }
 
-        // TODO: transition can reference a state that is not yet created
-        // Need to parse all staes first before parsing transitions
-
-        // // Find the parent state (the one containing the transition)
-        // QSharedPointer<model::State> parentState = parentStack.top();
-
-        // // Find target state
-        // QSharedPointer<model::State> targetState = stateMap.value(target);
-        // if (!targetState) {
-        //     // If target state is not found, create it
-        //     targetState = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR)
-        //                     .dynamicCast<model::State>();
-        //     targetState->setName(target);
-        //     stateMap[target] = targetState;
-        // }
-
-        // entity = model::ModelElementsFactory::createUniqueTransition(parentState, targetState);
-        // TODO: fixme
-        // entity = model::ModelElementsFactory::createUniqueTransition(nullptr, nullptr);
         entity = QSharedPointer<Transition>::create(nullptr, nullptr, event);
 
-        mTransitionTargets.insert(entity->id(), target);
+        EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
+        entity->setId(uid);
 
-        // Add the transition to the parent state
-        // QSharedPointer<model::RegularState> parentRegState = parentState.dynamicCast<model::RegularState>();
-        // if (parentRegState) {
-        //     parentRegState->addTransition(transition);
-        // }
+        mTransitionTargets.insert(entity->id(), target);
 
         // condition is defined as "callback is true|false"
         QString condition = tryGetElementAttribute("cond");

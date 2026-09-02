@@ -3,24 +3,59 @@
 #include <QDebug>
 #include <QString>
 
-#include "EntryPoint.hpp"
-#include "ExitPoint.hpp"
-#include "FinalState.hpp"
-#include "HistoryState.hpp"
-#include "IncludeEntity.hpp"
-#include "InitialState.hpp"
-#include "ModelRootState.hpp"
-#include "RegularState.hpp"
-#include "Transition.hpp"
+#include "elements/EntryPoint.hpp"
+#include "elements/ExitPoint.hpp"
+#include "elements/FinalState.hpp"
+#include "elements/HistoryState.hpp"
+#include "elements/IncludeEntity.hpp"
+#include "elements/InitialState.hpp"
+#include "elements/ModelRootState.hpp"
+#include "elements/RegularState.hpp"
+#include "elements/Transition.hpp"
 
 namespace model {
 
 // Static member definition
 quint32 ModelElementsFactory::s_stateCounter = 0;
 
-QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType type) {
-    qDebug() << "------ createUniqueState" << (int)type;
+QSharedPointer<State> ModelElementsFactory::createStateInstance(const StateType type, const QString& name) {
     QSharedPointer<State> res;
+
+    switch (type) {
+        case StateType::MODEL_ROOT:
+            res = QSharedPointer<State>(new ModelRootState(name));
+            break;
+        case StateType::INITIAL:
+            res = QSharedPointer<State>(new InitialState());
+            break;
+        case StateType::REGULAR:
+            res = QSharedPointer<State>(new RegularState(name));
+            break;
+        case StateType::ENTRYPOINT:
+            res = QSharedPointer<State>(new EntryPoint());
+            break;
+        case StateType::EXITPOINT:
+            res = QSharedPointer<State>(new ExitPoint(name));
+            break;
+        case StateType::FINAL:
+            res = QSharedPointer<State>(new FinalState(name));
+            break;
+        case StateType::HISTORY:
+            res = QSharedPointer<State>(new HistoryState(name, HistoryType::SHALLOW));
+            break;
+        case StateType::INCLUDE:
+            res = QSharedPointer<State>(new IncludeEntity(name));
+            break;
+        default:
+            qFatal("ModelElementsFactory::createStateInstance: Unexpected element type: %d", static_cast<int>(type));
+            break;
+    }
+
+    return res;
+}
+
+QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType type, EntityIdGenerator& generator) {
+    qDebug() << "------ createUniqueState" << (int)type;
     QString uniqueName;
 
     if ((StateType::INITIAL != type) && (StateType::ENTRYPOINT != type)) {
@@ -28,82 +63,50 @@ QSharedPointer<State> ModelElementsFactory::createUniqueState(const StateType ty
         uniqueName = QString("State_%1").arg(s_stateCounter);
     }
 
-    switch (type) {
-        case StateType::MODEL_ROOT:
-            res = QSharedPointer<State>(new ModelRootState(uniqueName));
-            break;
-        case StateType::INITIAL:
-            res = QSharedPointer<State>(new InitialState());
-            break;
-        case StateType::REGULAR:
-            res = QSharedPointer<State>(new RegularState(uniqueName));
-            break;
-        case StateType::ENTRYPOINT:
-            res = QSharedPointer<State>(new EntryPoint());
-            break;
-        case StateType::EXITPOINT:
-            res = QSharedPointer<State>(new ExitPoint(uniqueName));
-            break;
-        case StateType::FINAL:
-            res = QSharedPointer<State>(new FinalState(uniqueName));
-            break;
-        case StateType::HISTORY:
-            res = QSharedPointer<State>(new HistoryState(uniqueName, HistoryType::SHALLOW));
-            break;
-        case StateType::INCLUDE:
-            res = QSharedPointer<State>(new IncludeEntity(uniqueName));
-            break;
-        default:
-            qFatal("ModelElementsFactory::createUniqueState: Unexpected element type: %d", static_cast<int>(type));
-            break;
+    QSharedPointer<State> res = createStateInstance(type, uniqueName);
+
+    if (res) {
+        res->setId(generator.generateNextId());
     }
 
     return res;
 }
 
-QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointer<State>& source) {
+QSharedPointer<State> ModelElementsFactory::createStateWithId(const StateType type, EntityID_t id) {
+    QString uniqueName;
+
+    if ((StateType::INITIAL != type) && (StateType::ENTRYPOINT != type)) {
+        s_stateCounter++;
+        uniqueName = QString("State_%1").arg(s_stateCounter);
+    }
+
+    QSharedPointer<State> res = createStateInstance(type, uniqueName);
+
+    if (res) {
+        res->setId(id);
+    }
+
+    return res;
+}
+
+QSharedPointer<State> ModelElementsFactory::cloneStateEntity(const QSharedPointer<State>& source,
+                                                             EntityIdGenerator& generator) {
     if (!source) {
         return nullptr;
     }
 
-    QSharedPointer<State> res;
+    QSharedPointer<State> res = createStateInstance(source->stateType(), source->name());
 
-    switch (source->stateType()) {
-        case StateType::MODEL_ROOT:
-            res = QSharedPointer<State>(new ModelRootState(source->name()));
-            break;
-        case StateType::INITIAL:
-            res = QSharedPointer<State>(new InitialState());
-            break;
-        case StateType::REGULAR:
-            res = QSharedPointer<State>(new RegularState(source->name()));
-            break;
-        case StateType::ENTRYPOINT:
-            res = QSharedPointer<State>(new EntryPoint());
-            break;
-        case StateType::EXITPOINT:
-            res = QSharedPointer<State>(new ExitPoint(source->name()));
-            break;
-        case StateType::FINAL:
-            res = QSharedPointer<State>(new FinalState(source->name()));
-            break;
-        case StateType::HISTORY:
-            res = QSharedPointer<State>(new HistoryState(source->name(), HistoryType::SHALLOW));
-            break;
-        case StateType::INCLUDE:
-            res = QSharedPointer<State>(new IncludeEntity(source->name()));
-            break;
-        default:
-            qFatal("ModelElementsFactory::cloneStateEntity: Unexpected element type: %d",
-                   static_cast<int>(source->stateType()));
-            break;
+    if (res) {
+        res->setId(generator.generateNextId());
     }
 
     return res;
 }
 
 QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QSharedPointer<State>& source,
-                                                                        const QSharedPointer<State>& target) {
+                                                                        const QSharedPointer<State>& target,
+                                                                        EntityIdGenerator& generator) {
     QString defaultEventName = "NEW_EVENT";
     QSharedPointer<Transition> newTransition;
 
@@ -112,6 +115,7 @@ QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QS
     }
 
     newTransition = QSharedPointer<Transition>(new Transition(source, target, defaultEventName));
+    newTransition->setId(generator.generateNextId());
 
     if (false == source->addChild(newTransition)) {
         qCritical() << "trying to add transition to unsupported state type=" << static_cast<int>(source->stateType());
@@ -121,11 +125,24 @@ QSharedPointer<Transition> ModelElementsFactory::createUniqueTransition(const QS
     return newTransition;
 }
 
-QSharedPointer<State> ModelElementsFactory::createInitialFrom(const QSharedPointer<EntryPoint>& entryPoint) {
+QSharedPointer<Transition> ModelElementsFactory::createTransitionWithId(const QSharedPointer<State>& source,
+                                                                        const QSharedPointer<State>& target,
+                                                                        const QString& event,
+                                                                        EntityID_t id) {
+    QSharedPointer<Transition> res(new Transition(source, target, event));
+
+    res->setId(id);
+
+    return res;
+}
+
+QSharedPointer<State> ModelElementsFactory::createInitialFrom(const QSharedPointer<EntryPoint>& entryPoint,
+                                                              EntityIdGenerator& generator) {
     QSharedPointer<InitialState> initial;
 
     if (entryPoint) {
         initial = QSharedPointer<InitialState>::create();
+        initial->setId(generator.generateNextId());
 
         // Copy the first transition if exists
         if (!entryPoint->transitions().isEmpty()) {
@@ -141,11 +158,13 @@ QSharedPointer<State> ModelElementsFactory::createInitialFrom(const QSharedPoint
     return initial;
 }
 
-QSharedPointer<State> ModelElementsFactory::createFinalFrom(const QSharedPointer<ExitPoint>& exitPoint) {
+QSharedPointer<State> ModelElementsFactory::createFinalFrom(const QSharedPointer<ExitPoint>& exitPoint,
+                                                            EntityIdGenerator& generator) {
     QSharedPointer<FinalState> state;
 
     if (exitPoint) {
         state = QSharedPointer<FinalState>::create(exitPoint->name());
+        state->setId(generator.generateNextId());
         state->setOnStateChangedAction(exitPoint->onStateChangedAction()->serialize());
     }
 

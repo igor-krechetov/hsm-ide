@@ -2,13 +2,9 @@
 
 namespace model {
 
-StateMachineEntity::StateMachineEntity(Type type)
-    : mElementType(type) {
-    // TODO: reset state index per model
-    static EntityID_t sNextId = 1;
-    mId = sNextId;
-    ++sNextId;
-}
+StateMachineEntity::StateMachineEntity(Type type, EntityID_t restoredId)
+    : mElementType(type)
+    , mId(restoredId) {}
 
 StateMachineEntity::~StateMachineEntity() {
     qDebug() << "StateMachineEntity::DELETE id:" << mId << " type:" << (int)mElementType;
@@ -32,6 +28,10 @@ void StateMachineEntity::copyEntityData(const StateMachineEntity& other) {
 
 EntityID_t StateMachineEntity::id() const {
     return mId;
+}
+
+void StateMachineEntity::setId(EntityID_t id) {
+    mId = id;
 }
 
 void StateMachineEntity::setMetadata(const MetadataKey key, const QVariant& value) {

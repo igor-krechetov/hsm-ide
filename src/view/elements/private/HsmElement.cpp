@@ -8,9 +8,9 @@
 #include <QMimeData>
 
 #include "HsmResizableElement.hpp"
-#include "model/State.hpp"
 #include "model/StateHierarchyRules.hpp"
-#include "model/StateMachineEntity.hpp"
+#include "model/elements/State.hpp"
+#include "model/elements/StateMachineEntity.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"

@@ -30,6 +30,7 @@ package "Model" {
     + createUniqueTransition(source, target): Transition
     + moveElement(elementId, newParentId): bool
     + reconnectElements(transitionId, newFromElementId, newToElementId): bool
+    + idGenerator(): EntityIdGenerator
     + dump()
 
     --signals--
@@ -39,6 +40,7 @@ package "Model" {
     + modelDataChanged(entity)
   }
 
+  package "Elements" as ModelElements {
   class StateMachineEntity <<QObject>> {
     + id(): EntityID_t
     + type(): Type
@@ -192,6 +194,7 @@ package "Model" {
     + setPath(path)
     + addChild(child): bool
   }
+  }
 
   package "Actions" {
     interface IModelAction {
@@ -239,11 +242,22 @@ package "Model" {
   }
 
   class ModelElementsFactory {
-    + {static} createUniqueState(type): State
-    + {static} cloneStateEntity(source): State
-    + {static} createUniqueTransition(source, target): Transition
-    + {static} createInitialFrom(entryPoint): State
-    + {static} createFinalFrom(exitPoint): State
+    + {static} createUniqueState(type, generator): State
+    + {static} createStateWithId(type, id): State
+    + {static} cloneStateEntity(source, generator): State
+    + {static} createUniqueTransition(source, target, generator): Transition
+    + {static} createTransitionWithId(source, target, event, id): Transition
+    + {static} createInitialFrom(entryPoint, generator): State
+    + {static} createFinalFrom(exitPoint, generator): State
+  }
+
+  class EntityIdGenerator {
+    + generateNextId(): EntityID_t
+    + registerRestoredId(id): bool
+    + synchronizeCounter()
+    + reset()
+    + isAssigned(id): bool
+    + currentCounter(): EntityID_t
   }
 
   class StateHierarchyRules {
@@ -254,11 +268,40 @@ package "Model" {
   }
 
   class StateMachineSerializer {
-    + serializeToScxml(model, addScxmlTag): QString
+    + serializeToScxml(model, format, addScxmlTag): QString
     + deserializeFromScxml(scxml): StateMachineModel
     + deserializeFromScxml(scxml, outModel): bool
     + deserializeFromUnwrapperScxml(unwrapped, wrapper, outModel): bool
     + validateScxmlStructure(scxml): bool
+  }
+
+  package "Serializer" {
+    interface IMetadataSerializer {
+      + beginSerialization(writer, model)
+      + notifyEnterState(entity)
+      + notifyExitState(entity)
+      + writeEntityAttributes(writer, entity)
+      + writeEntityChildMetadata(writer, entity)
+      + endSerialization(writer, model)
+      + detectFormat(reader): DetectedFormat
+      + resolveEntityId(reader, model): EntityID_t
+      + parseMetadataElement(reader, entity, model): bool
+      + parseTopLevelElement(reader, model): bool
+      + endDeserialization(model)
+      + format(): SerializationFormat
+    }
+
+    class HsmMetadataSerializer
+    class QtCreatorMetadataSerializer
+
+    class HsmLayoutSerializer {
+      + writeEditorSection(model, writer)
+      + parseEditorSection(reader, model)
+    }
+
+    IMetadataSerializer <|.. HsmMetadataSerializer
+    IMetadataSerializer <|.. QtCreatorMetadataSerializer
+    HsmMetadataSerializer *-- HsmLayoutSerializer
   }
 
   StateMachineEntity <|-- State
@@ -285,10 +328,16 @@ package "Model" {
   ExitPoint "1" *-- "0..*" IModelAction: actions
   FinalState "1" *-- "0..1" IModelAction: action
 
+  StateMachineEntity ..> IModelVisitor : accept()
   StateMachineSerializer ..|> IModelVisitor
   StateMachineSerializer ..> StateMachineModel : serializes
+  StateMachineSerializer ..> StateHierarchyRules : validates
+  StateMachineSerializer "1" *-- "1" HsmMetadataSerializer : owns
+  StateMachineSerializer "1" *-- "1" QtCreatorMetadataSerializer : owns
   ModelElementsFactory ..> State : creates
   ModelElementsFactory ..> Transition : creates
+  ModelElementsFactory ..> EntityIdGenerator : uses
+  StateMachineModel "1" *-- "1" EntityIdGenerator : owns
 }
 
 package "View" {
@@ -745,18 +794,13 @@ HsmTransition "1" --> "1" HsmElement : from
 HsmTransition "1" --> "1" HsmElement : to
 
 ' View-Model Mapping
-note "View elements represent\nmodel entities" as N1
 HsmElement "1" o-- "1" StateMachineEntity: references
-HsmTransition ..> Transition : represents
-HsmEntryPointElement ..> EntryPoint : represents
-HsmExitPointElement ..> ExitPoint : represents
-HsmFinalElement ..> FinalState : represents
-HsmHistoryElement ..> HistoryState : represents
-HsmStateElement ..> RegularState : represents
-HsmInitialElement ..> InitialState : represents
-HsmIncludeElement ..> IncludeEntity : represents
 
 ' View-Controller Mapping
 HsmGraphicsView ..> IProjectController: reference
+
+' State hierarchy rule usage
+HsmElement ..> StateHierarchyRules : validates
+ProjectController ..> StateHierarchyRules : validates
 
 @enduml

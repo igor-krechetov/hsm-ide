@@ -33,21 +33,29 @@ set(RESOURCE_FILES view/res/resources.qrc)
 set(MODEL_SOURCES
     model/ModelTypes.cpp
     model/ModelUtils.cpp
-    model/EntryPoint.cpp
-    model/ExitPoint.cpp
-    model/FinalState.cpp
-    model/HistoryState.cpp
-    model/IncludeEntity.cpp
-    model/InitialState.cpp
-    model/ModelRootState.cpp
-    model/RegularState.cpp
-    model/State.cpp
     model/StateMachineModel.cpp
-    model/Transition.cpp
     model/ModelElementsFactory.cpp
-    model/StateMachineEntity.cpp
     model/StateMachineSerializer.cpp
     model/StateHierarchyRules.cpp
+
+    model/elements/EntryPoint.cpp
+    model/elements/ExitPoint.cpp
+    model/elements/FinalState.cpp
+    model/elements/HistoryState.cpp
+    model/elements/IncludeEntity.cpp
+    model/elements/InitialState.cpp
+    model/elements/ModelRootState.cpp
+    model/elements/RegularState.cpp
+    model/elements/State.cpp
+    model/elements/StateMachineEntity.cpp
+    model/elements/Transition.cpp
+
+    model/private/EntityIdGenerator.cpp
+
+    model/private/serializer/HsmLayoutSerializer.cpp
+    model/private/serializer/HsmMetadataSerializer.cpp
+    model/private/serializer/QtCreatorMetadataSerializer.cpp
+
     model/actions/CallbackAction.cpp
     model/actions/NoneAction.cpp
     model/actions/TimerStartAction.cpp
@@ -162,10 +170,12 @@ endif()
 
 target_include_directories(model PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/model
     ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
 )
 target_include_directories(view PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/model
     ${Qt${QT_VERSION_MAJOR}Core_DIR}/../../../../../.
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>
     ${CMAKE_SOURCE_DIR}/include
@@ -181,6 +191,10 @@ target_link_libraries(view PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJ
 target_link_libraries(common PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 
 target_include_directories(hsm_ide PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/model
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/model/elements
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/model/private
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/model/private/serializer
                                            ${CMAKE_SOURCE_DIR}/include
                                            $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/gen>)
 target_link_libraries(hsm_ide PRIVATE model view common)

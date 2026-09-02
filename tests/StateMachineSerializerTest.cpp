@@ -5,9 +5,9 @@
 #include "model/StateMachineSerializer.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/ModelElementsFactory.hpp"
-#include "model/RegularState.hpp"
-#include "model/Transition.hpp"
-#include "model/ModelRootState.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
+#include "model/elements/ModelRootState.hpp"
 
 class StateMachineSerializerTest : public QObject
 {
@@ -58,16 +58,16 @@ void StateMachineSerializerTest::testSerialization()
     QSharedPointer<model::RegularState> rootState = model->root();
 
     // Create a child state
-    QSharedPointer<model::RegularState> childState1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    QSharedPointer<model::RegularState> childState1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
     childState1->setName("ChildState1");
     rootState->addChildState(childState1);
 
-    QSharedPointer<model::RegularState> childState2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    QSharedPointer<model::RegularState> childState2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
     childState2->setName("ChildState2");
     rootState->addChildState(childState2);
 
     // Create a transition
-    QSharedPointer<model::Transition> transition = model::ModelElementsFactory::createUniqueTransition(childState1, childState2);
+    QSharedPointer<model::Transition> transition = model::ModelElementsFactory::createUniqueTransition(childState1, childState2, model->idGenerator());
     transition->setEvent("event1");
     // childState1->addTransition(transition);
 

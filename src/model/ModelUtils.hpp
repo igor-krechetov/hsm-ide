@@ -4,8 +4,8 @@
 #include <QSharedPointer>
 
 #include "ModelTypes.hpp"
-#include "State.hpp"
-#include "StateMachineEntity.hpp"
+#include "elements/State.hpp"
+#include "elements/StateMachineEntity.hpp"
 
 namespace model {
 

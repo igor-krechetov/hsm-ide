@@ -1,8 +1,9 @@
 #include <QtTest>
 
+#include "model/private/EntityIdGenerator.hpp"
 #include "model/ModelElementsFactory.hpp"
-#include "model/RegularState.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
 
 class RegularStateTest : public QObject {
     Q_OBJECT
@@ -14,7 +15,10 @@ private slots:
 };
 
 void RegularStateTest::CallbackPropertiesRoundTrip() {
-    auto state = QSharedPointer<model::RegularState>::create("S");
+    model::EntityIdGenerator gen;
+    auto state = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                     .dynamicCast<model::RegularState>();
+    state->setName("S");
 
     QVERIFY(state->setProperty("onEnteringAction", "enterCb"));
     QVERIFY(state->setProperty("onExitingAction", "exitCb"));
@@ -26,11 +30,16 @@ void RegularStateTest::CallbackPropertiesRoundTrip() {
 }
 
 void RegularStateTest::ChildAndTransitionSearch() {
-    auto parent = QSharedPointer<model::RegularState>::create("Parent");
-    auto child = QSharedPointer<model::RegularState>::create("Child");
+    model::EntityIdGenerator gen;
+    auto parent = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    parent->setName("Parent");
+    auto child = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                     .dynamicCast<model::RegularState>();
+    child->setName("Child");
     parent->addChildState(child);
 
-    auto tr = QSharedPointer<model::Transition>::create(parent, child, "ev");
+    auto tr = model::ModelElementsFactory::createTransitionWithId(parent, child, "ev", gen.generateNextId());
     parent->addTransition(tr);
 
     QCOMPARE(child, parent->findChildStateByName("Child"));
@@ -55,19 +64,30 @@ B -> H
 @enduml
 */
 void RegularStateTest::DeleteStateRemovesIncomingAndOutgoingTransitions() {
-    auto root = QSharedPointer<model::RegularState>::create("Root");
-    auto stateA = QSharedPointer<model::RegularState>::create("A");
-    auto stateB = QSharedPointer<model::RegularState>::create("B");
-    auto stateC = QSharedPointer<model::RegularState>::create("C");
-    auto stateH = QSharedPointer<model::RegularState>::create("H");
+    model::EntityIdGenerator gen;
+    auto root = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                    .dynamicCast<model::RegularState>();
+    root->setName("Root");
+    auto stateA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    stateA->setName("A");
+    auto stateB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    stateB->setName("B");
+    auto stateC = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    stateC->setName("C");
+    auto stateH = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    stateH->setName("H");
 
     root->addChildState(stateA);
     root->addChildState(stateB);
     root->addChildState(stateC);
     stateC->addChildState(stateH);
 
-    auto transitionTop = QSharedPointer<model::Transition>::create(stateA, stateC, "A_to_C");
-    auto transitionSubstate = QSharedPointer<model::Transition>::create(stateB, stateH, "B_to_H");
+    auto transitionTop = model::ModelElementsFactory::createTransitionWithId(stateA, stateC, "A_to_C", gen.generateNextId());
+    auto transitionSubstate = model::ModelElementsFactory::createTransitionWithId(stateB, stateH, "B_to_H", gen.generateNextId());
     stateA->addTransition(transitionTop);
     stateB->addTransition(transitionSubstate);
 

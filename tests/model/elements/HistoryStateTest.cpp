@@ -1,8 +1,10 @@
 #include <QtTest>
 
-#include "model/HistoryState.hpp"
-#include "model/RegularState.hpp"
-#include "model/Transition.hpp"
+#include "model/private/EntityIdGenerator.hpp"
+#include "model/elements/HistoryState.hpp"
+#include "model/ModelElementsFactory.hpp"
+#include "model/elements/RegularState.hpp"
+#include "model/elements/Transition.hpp"
 
 class HistoryStateTest : public QObject {
     Q_OBJECT
@@ -17,10 +19,16 @@ private slots:
  * Use-case: SCXML history node has default fallback transition and configurable depth.
  */
 void HistoryStateTest::DefaultTransitionAndProperties() {
-    auto source = QSharedPointer<model::RegularState>::create("S");
-    auto target = QSharedPointer<model::RegularState>::create("T");
-    auto history = QSharedPointer<model::HistoryState>::create("H", model::HistoryType::SHALLOW);
-    auto tr = QSharedPointer<model::Transition>::create(source, target, "resume");
+    model::EntityIdGenerator gen;
+    auto source = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    source->setName("S");
+    auto target = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    target->setName("T");
+    auto history = model::ModelElementsFactory::createUniqueState(model::StateType::HISTORY, gen)
+                       .dynamicCast<model::HistoryState>();
+    auto tr = model::ModelElementsFactory::createTransitionWithId(source, target, "resume", gen.generateNextId());
 
     QVERIFY(history->addChild(tr));
     QCOMPARE(tr, history->defaultTransition());

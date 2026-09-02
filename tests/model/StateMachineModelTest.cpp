@@ -2,10 +2,10 @@
 #include <QtTest>
 
 #include "model/ModelElementsFactory.hpp"
-#include "model/ModelRootState.hpp"
-#include "model/RegularState.hpp"
+#include "model/elements/ModelRootState.hpp"
+#include "model/elements/RegularState.hpp"
 #include "model/StateMachineModel.hpp"
-#include "model/Transition.hpp"
+#include "model/elements/Transition.hpp"
 
 class StateMachineModelTest : public QObject {
     Q_OBJECT
@@ -25,15 +25,15 @@ void StateMachineModelTest::MoveAndReconnectElements() {
     auto model = QSharedPointer<model::StateMachineModel>::create("Machine");
     auto root = model->root();
 
-    auto a = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
-    auto b = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
-    auto parent = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto a = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
+    auto b = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
+    auto parent = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
 
     root->addChildState(a);
     root->addChildState(b);
     root->addChildState(parent);
 
-    auto tr = model::ModelElementsFactory::createUniqueTransition(a, b);
+    auto tr = model::ModelElementsFactory::createUniqueTransition(a, b, model->idGenerator());
     QVERIFY(tr);
 
     QVERIFY(model->moveElement(b->id(), parent->id()));
@@ -48,13 +48,13 @@ void StateMachineModelTest::CloneTransitionsUsesNewStateReferences() {
     auto sourceModel = QSharedPointer<model::StateMachineModel>::create("Source");
     auto sourceRoot = sourceModel->root();
 
-    auto sourceA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
-    auto sourceB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+    auto sourceA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, sourceModel->idGenerator()).dynamicCast<model::RegularState>();
+    auto sourceB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, sourceModel->idGenerator()).dynamicCast<model::RegularState>();
 
     sourceRoot->addChildState(sourceA);
     sourceRoot->addChildState(sourceB);
 
-    auto sourceTransition = model::ModelElementsFactory::createUniqueTransition(sourceA, sourceB);
+    auto sourceTransition = model::ModelElementsFactory::createUniqueTransition(sourceA, sourceB, sourceModel->idGenerator());
     QVERIFY(sourceTransition);
 
     model::StateMachineModel destinationModel("Destination");
@@ -97,9 +97,9 @@ void StateMachineModelTest::ReparentedStateChildAddedIsEmittedOnce() {
     auto root = model->root();
 
     auto topLevelParent =
-        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
     auto childState =
-        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR).dynamicCast<model::RegularState>();
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, model->idGenerator()).dynamicCast<model::RegularState>();
 
     root->addChildState(topLevelParent);
     root->addChildState(childState);
@@ -107,7 +107,7 @@ void StateMachineModelTest::ReparentedStateChildAddedIsEmittedOnce() {
     QVERIFY(model->moveElement(childState->id(), topLevelParent->id()));
 
     QSignalSpy addedSpy(model.get(), &model::StateMachineModel::modelEntityAdded);
-    auto selfTransition = model::ModelElementsFactory::createUniqueTransition(childState, childState);
+    auto selfTransition = model::ModelElementsFactory::createUniqueTransition(childState, childState, model->idGenerator());
 
     QVERIFY(selfTransition);
     QCOMPARE(addedSpy.count(), 1);

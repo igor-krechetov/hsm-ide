@@ -1,4 +1,3 @@
-
 #ifndef STATEMACHINESERIALIZER_HPP
 #define STATEMACHINESERIALIZER_HPP
 
@@ -8,6 +7,9 @@
 
 #include "ModelTypes.hpp"
 #include "private/IModelVisitor.hpp"
+#include "private/serializer/HsmMetadataSerializer.hpp"
+#include "private/serializer/IMetadataSerializer.hpp"
+#include "private/serializer/QtCreatorMetadataSerializer.hpp"
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
@@ -31,9 +33,13 @@ public:
     /**
      * @brief Serializes a state machine model to SCXML format
      * @param model The state machine model to serialize
+     * @param format The serialization format to use (HSM or QtCreator)
+     * @param addScxmlTag Whether to wrap output in root <scxml> element
      * @return SCXML representation as a QString
      */
-    QString serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr, const bool addScxmlTag = true);
+    QString serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
+                             const SerializationFormat format = SerializationFormat::HSM,
+                             const bool addScxmlTag = true);
 
     /**
      * @brief Deserializes SCXML format to a state machine model
@@ -65,15 +71,7 @@ protected:
     void visitIncludeEntity(const IncludeEntity* include) override;
     void visitTransition(const Transition* transition) override;
 
-protected:
-    void serializeEntryMetadata(const StateMachineEntity* entity);
-    void deserializeEntryMetadata(StateMachineEntity* entity);
-
 private:
-    /**
-     * @brief Helper function to handle parse errors
-     * @param errorMessage The error message to log
-     */
     void handleParseError(const QString& errorMessage);
 
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
@@ -96,17 +94,19 @@ private:
 
     QString tryGetElementAttribute(const QString& name);
 
-    void postprocessQtStateGeometry();
-    void applyQtGeometryToState(const QSharedPointer<StateMachineEntity>& entity,
-                                const QSharedPointer<StateMachineEntity>& parent);
+    IMetadataSerializer* selectStrategy(SerializationFormat format);
+    IMetadataSerializer* selectStrategyForDetectedFormat(DetectedFormat detected);
 
 private:
     QSharedPointer<QXmlStreamWriter> mXmlWriter;
     QSharedPointer<QXmlStreamReader> mXmlReader;
 
+    HsmMetadataSerializer mHsmStrategy;
+    QtCreatorMetadataSerializer mQtStrategy;
+    IMetadataSerializer* mActiveStrategy = nullptr;
+
     QMap<EntityID_t, QString> mTransitionTargets;
-    QMap<EntityID_t, QString> mQtGeometryStrings;
-    QMap<EntityID_t, QString> mQtSceneGeometryStrings;
+    QString mInitialTargetFromAttribute;
     QSharedPointer<model::StateMachineModel> mModel;
 };
 

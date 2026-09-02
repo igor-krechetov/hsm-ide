@@ -6,10 +6,10 @@
 #include <QVariant>
 #include <utility>
 
-#include "model/HistoryState.hpp"
-#include "model/ModelRootState.hpp"
-#include "model/Transition.hpp"
 #include "model/actions/ModelActionFactory.hpp"
+#include "model/elements/HistoryState.hpp"
+#include "model/elements/ModelRootState.hpp"
+#include "model/elements/Transition.hpp"
 
 namespace view {
 StateMachineEntityViewModel::StateMachineEntityViewModel(const QSharedPointer<model::StateMachineModel>& model, QObject* parent)
