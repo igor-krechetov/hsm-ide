@@ -43,7 +43,7 @@
 **** REQ-102d: Internal/External transitions <<done>>
 **** REQ-102e: Self-transitions <<done>>
 **** REQ-102f: Transition actions <<done>>
-*** REQ-103: Element manipulation <<done>>
+*** REQ-103: Element manipulation <<partial>>
 **** REQ-103a: Drag-and-drop placement <<done>>
 **** REQ-103b: Resize/reposition elements <<done>>
 ***** REQ-103b1: Resizable and non-resizable elements <<done>>
@@ -66,18 +66,21 @@
 ****** REQ-103e3b: Move substate to top level (hold Ctrl) <<done>>
 ****** REQ-103e3c: Move substate to another parent (hold Ctrl) <<done>>
 ****** REQ-103e3b: Move multiple elements <<done>>
-**** REQ-103f: Hierarchy Restrictions <<done>>
+**** REQ-103f: Hierarchy Restrictions <<partial>>
 ***** REQ-103f1: History state must have a parent state <<done>>
 ***** REQ-103f2: Entry point must have a parent state <<done>>
 ***** REQ-103f3: Exit point must have a parent state <<done>>
 ***** REQ-103f4: Initial and final states shall be top level only <<done>>
 ***** REQ-103f5: Visual indication of restricted action <<done>>
+***** REQ-103f6: Only one initial state allowed in the model <<todo>>
+***** REQ-103f7: State names must be unique across the model <<todo>>
 
-*** REQ-104: State Behavior Configuration <<done>>
+*** REQ-104: State Behavior Configuration <<partial>>
 **** REQ-104a: Entry actions (onentry) <<done>>
 **** REQ-104b: Exit actions (onexit) <<done>>
 **** REQ-104c: State change callbacks <<done>>
 **** REQ-104d: Editing state name <<done>>
+**** REQ-104e: Multiple actions per event <<todo>>
 *** REQ-105: Timing Features <<prio_low>>
 **** REQ-105a: Timer event configuration <<prio_low>>
 **** REQ-105b: Timeout transitions <<prio_low>>
@@ -162,18 +165,20 @@
 ***** REQ-204a4: Duplicate <<done>>
 ***** REQ-204a5: Find <<prio_low>>
 ***** REQ-204a6: Select All <<done>>
-**** REQ-204d: File menu <<done>>
+**** REQ-204d: File menu <<partial>>
 ***** REQ-204d1: Open <<done>>
 ***** REQ-204d2: Save <<done>>
 ***** REQ-204d3: Save As <<done>>
 ***** REQ-204d4: List of recent files <<done>>
 ***** REQ-204d5: List of recent workspaces <<done>>
+***** REQ-204d6: Warn about unsaved changes on close <<todo>>
 **** REQ-204e: View menu <<done>>
 ***** REQ-204e1: Zoom in <<done>>
 ***** REQ-204e2: Zoom out <<done>>
 ***** REQ-204e3: Reset zoom <<done>>
 ***** REQ-204e4: Fit to view <<done>>
 ***** REQ-204e5: Side bar shortcuts <<done>>
+**** REQ-204f: Keyboard shortcuts documentation <<todo>>
 *** REQ-205: Custom Widgets
 **** REQ-205a: HSM Elements list <<done>>
 **** REQ-205b: HSM Tree View <<done>>
@@ -213,11 +218,12 @@
 **** REQ-208b: Default theme <<done>>
 
 ** REQ-300: Import/Export <<partial>>
-*** REQ-301: SCXML file handling <<done>>
-**** REQ-301a: Import SCXML 1.0 files <<done>>
-***** REQ-301a1: Model structure import <<done>>
+*** REQ-301: SCXML file handling <<partial>>
+**** REQ-301a: Import SCXML 1.0 files <<partial>>
+***** REQ-301a1: Model structure import <<partial>>
 ****** REQ-301a1.1: Basic structure import <<done>>
 ****** REQ-301a1.2: Support for parsing import element <<done>>
+****** REQ-301a1.3: Report parse errors to user with line numbers <<todo>>
 ***** REQ-301a2: Model layout import <<done>>
 **** REQ-301b: Export SCXML 1.0 files <<done>>
 ***** REQ-301b1: Model structure export <<done>>

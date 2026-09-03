@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.13.1] - 2026-09-03
+### Fix
+- New application icon
+### Documentation
+- Add MVP backlog requirements (REQ-103f6, REQ-103f7, REQ-204d6, REQ-204f, REQ-301a1.3) and implementation plan (req/plans/mvp.md)
 
 ## [0.13.0] - 2026-09-02
 ### New
@@ -12,6 +17,7 @@ All notable changes to project will be documented in this file.
 ### Refactoring
 - Extract EntityIdGenerator for deterministic entity ID assignment
 - Reorganize model element sources under src/model/elements and serializers under src/model/private/serializer
+
 ## [0.12.0] - 2025-01-27
 ### New
 - Change cursor to indicate when transition label can be moved
