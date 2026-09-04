@@ -5,6 +5,8 @@
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLineEdit>
+#include <QMouseEvent>
+#include <QPainter>
 #include <QPushButton>
 #include <QTimer>
 #include <QVariant>
@@ -17,9 +19,14 @@
 namespace view {
 
 namespace {
-constexpr int cPropertyKeyRole = Qt::UserRole;
-constexpr int cPropertyPathRole = Qt::UserRole + 1;
-constexpr int cActionSubtypeRole = Qt::UserRole + 2;
+constexpr int cPropertyKeyRole = StateMachineEntityViewModel::PropertyKeyRole;
+constexpr int cPropertyPathRole = StateMachineEntityViewModel::PropertyPathRole;
+constexpr int cActionSubtypeRole = StateMachineEntityViewModel::ActionSubtypeRole;
+constexpr int cActionAddRole = StateMachineEntityViewModel::ActionAddRole;
+constexpr int cActionRemovableRole = StateMachineEntityViewModel::ActionRemovableRole;
+constexpr int cActionMoveUpRole = StateMachineEntityViewModel::ActionMoveUpRole;
+constexpr int cActionMoveDownRole = StateMachineEntityViewModel::ActionMoveDownRole;
+constexpr int cRemoveButtonSize = 16;
 }  // namespace
 
 HsmEntityPropertyDelegate::HsmEntityPropertyDelegate(QObject* parent)
@@ -185,6 +192,137 @@ void HsmEntityPropertyDelegate::updateEditorGeometry(QWidget* editor,
 void HsmEntityPropertyDelegate::onEditingFinished(QWidget* editor) {
     emit commitData(editor);   // write to model
     emit closeEditor(editor);  // close editor
+}
+
+QRect HsmEntityPropertyDelegate::removeButtonRect(const QStyleOptionViewItem& option) {
+    const int y = option.rect.top() + (option.rect.height() - cRemoveButtonSize) / 2;
+
+    return QRect(option.rect.right() - cRemoveButtonSize - 2, y, cRemoveButtonSize, cRemoveButtonSize);
+}
+
+QRect HsmEntityPropertyDelegate::moveDownButtonRect(const QStyleOptionViewItem& option) {
+    const int y = option.rect.top() + (option.rect.height() - cRemoveButtonSize) / 2;
+
+    return QRect(option.rect.right() - 2 * (cRemoveButtonSize + 2), y, cRemoveButtonSize, cRemoveButtonSize);
+}
+
+QRect HsmEntityPropertyDelegate::moveUpButtonRect(const QStyleOptionViewItem& option) {
+    const int y = option.rect.top() + (option.rect.height() - cRemoveButtonSize) / 2;
+
+    return QRect(option.rect.right() - 3 * (cRemoveButtonSize + 2), y, cRemoveButtonSize, cRemoveButtonSize);
+}
+
+QRect HsmEntityPropertyDelegate::addButtonRect(const QStyleOptionViewItem& option) {
+    const int y = option.rect.top() + (option.rect.height() - cRemoveButtonSize) / 2;
+
+    return QRect(option.rect.right() - cRemoveButtonSize - 2, y, cRemoveButtonSize, cRemoveButtonSize);
+}
+
+void HsmEntityPropertyDelegate::drawButton(QPainter* painter,
+                                           const QStyleOptionViewItem& option,
+                                           const QRect& rect,
+                                           const QString& glyph,
+                                           const bool hovered) const {
+    painter->save();
+
+    if (hovered) {
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(option.palette.color(QPalette::Highlight));
+        painter->drawRoundedRect(rect, 3, 3);
+        painter->setPen(option.palette.color(QPalette::HighlightedText));
+    } else {
+        painter->setPen(option.palette.color(QPalette::ButtonText));
+    }
+
+    painter->drawText(rect, Qt::AlignCenter, glyph);
+    painter->restore();
+}
+
+void HsmEntityPropertyDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const {
+    QStyledItemDelegate::paint(painter, option, index);
+
+    if (index.column() != 1) {
+        return;
+    }
+
+    const bool rowHovered = (mHoverIndex == index);
+
+    if (index.data(cActionAddRole).toBool()) {
+        // "+" affordance on the action-list slot row itself
+        const QRect addRect = addButtonRect(option);
+        drawButton(painter, option, addRect, QStringLiteral("+"), rowHovered && (mHoverButtonRect == addRect));
+    } else if (index.data(cActionRemovableRole).toBool()) {
+        const QRect rmRect = removeButtonRect(option);
+        drawButton(painter, option, rmRect, QStringLiteral("\u2715"), rowHovered && (mHoverButtonRect == rmRect));
+
+        if (index.data(cActionMoveUpRole).toBool()) {
+            const QRect upRect = moveUpButtonRect(option);
+            drawButton(painter, option, upRect, QStringLiteral("\u25B2"), rowHovered && (mHoverButtonRect == upRect));
+        }
+        if (index.data(cActionMoveDownRole).toBool()) {
+            const QRect downRect = moveDownButtonRect(option);
+            drawButton(painter, option, downRect, QStringLiteral("\u25BC"), rowHovered && (mHoverButtonRect == downRect));
+        }
+    }
+}
+
+bool HsmEntityPropertyDelegate::editorEvent(QEvent* event,
+                                            QAbstractItemModel* model,
+                                            const QStyleOptionViewItem& option,
+                                            const QModelIndex& index) {
+    bool handled = false;
+
+    if ((nullptr != event) && (index.column() == 1) &&
+        ((event->type() == QEvent::MouseButtonRelease) || (event->type() == QEvent::MouseMove))) {
+        auto* mouseEvent = static_cast<QMouseEvent*>(event);
+        const QPoint pos = mouseEvent->pos();
+
+        // Determine which sub-button (if any) the pointer is over on this row.
+        QRect hoveredRect;
+
+        if (index.data(cActionAddRole).toBool()) {
+            if (addButtonRect(option).contains(pos)) {
+                hoveredRect = addButtonRect(option);
+            }
+        } else if (index.data(cActionRemovableRole).toBool()) {
+            if (removeButtonRect(option).contains(pos)) {
+                hoveredRect = removeButtonRect(option);
+            } else if (index.data(cActionMoveUpRole).toBool() && moveUpButtonRect(option).contains(pos)) {
+                hoveredRect = moveUpButtonRect(option);
+            } else if (index.data(cActionMoveDownRole).toBool() && moveDownButtonRect(option).contains(pos)) {
+                hoveredRect = moveDownButtonRect(option);
+            }
+        }
+
+        // Update hover state; the view repaints its viewport on mouse move (mouse
+        // tracking enabled in HsmPropertiesTableView), so the highlight follows.
+        mHoverIndex = index;
+        mHoverButtonRect = hoveredRect;
+
+        if (event->type() == QEvent::MouseButtonRelease) {
+            if (index.data(cActionAddRole).toBool() && addButtonRect(option).contains(pos)) {
+                model->setData(index, true, cActionAddRole);
+                handled = true;
+            } else if (index.data(cActionRemovableRole).toBool()) {
+                if (removeButtonRect(option).contains(pos)) {
+                    model->setData(index, true, cActionRemovableRole);
+                    handled = true;
+                } else if (index.data(cActionMoveUpRole).toBool() && moveUpButtonRect(option).contains(pos)) {
+                    model->setData(index, true, cActionMoveUpRole);
+                    handled = true;
+                } else if (index.data(cActionMoveDownRole).toBool() && moveDownButtonRect(option).contains(pos)) {
+                    model->setData(index, true, cActionMoveDownRole);
+                    handled = true;
+                }
+            }
+        }
+    }
+
+    if (handled == false) {
+        handled = QStyledItemDelegate::editorEvent(event, model, option, index);
+    }
+
+    return handled;
 }
 
 };  // namespace view

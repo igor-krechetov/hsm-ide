@@ -14,26 +14,36 @@ namespace view {
 
 class StateMachineEntityViewModel : public QAbstractItemModel {
     Q_OBJECT
-private:
+public:
+    // Custom item-data roles shared with HsmEntityPropertyDelegate
     enum CustomRoles {
         PropertyKeyRole = Qt::UserRole,
         PropertyPathRole,
         ActionSubtypeRole,
+        ActionAddRole,
+        ActionRemovableRole,
+        ActionMoveUpRole,
+        ActionMoveDownRole,
     };
 
+private:
     enum class NodeType {
         Property,
+        ActionItem,
         ActionAttribute,
+        ActionAdd,
     };
 
     enum class ComplexPropertyType {
         None,
         Action,
+        ActionList,
     };
 
     struct PropertyNode {
         int row = -1;
         int propertyRow = -1;
+        int actionIndex = -1;
         NodeType type = NodeType::Property;
         QString key;
         QString label;
@@ -72,7 +82,14 @@ private:
     QVariant formatPropertyValueForRole(const PropertyNode& node, int role) const;
     QVariant formatActionAttributeValue(const PropertyNode& node, int role) const;
 
+    void buildActionItemChildren(PropertyNode* actionNode, const QSharedPointer<model::IModelAction>& action);
+    model::ModelActionList actionListForKey(const QString& key) const;
+    QSharedPointer<model::IModelAction> actionAtIndex(const QString& key, const int index) const;
+
     bool updatePropertyByNode(const PropertyNode& node, const QVariant& value, int role);
+    bool addActionToSlot(const QString& key);
+    bool removeActionFromSlot(const QString& key, const int index);
+    bool moveActionInSlot(const QString& key, const int from, const int to);
 
     QSharedPointer<model::IModelAction> actionFromVariant(const QVariant& value) const;
 

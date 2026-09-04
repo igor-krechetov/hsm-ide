@@ -1,5 +1,7 @@
 #include "HsmPropertiesTableView.hpp"
 
+#include <QMouseEvent>
+
 #include "private/HsmEntityPropertyDelegate.hpp"
 
 HsmPropertiesTableView::HsmPropertiesTableView(QWidget* parent)
@@ -9,6 +11,7 @@ HsmPropertiesTableView::HsmPropertiesTableView(QWidget* parent)
     setRootIsDecorated(true);
     setItemsExpandable(true);
     setUniformRowHeights(true);
+    setMouseTracking(true);
 
     setItemDelegateForColumn(1, new view::HsmEntityPropertyDelegate(this));
 }
@@ -54,4 +57,13 @@ bool HsmPropertiesTableView::edit(const QModelIndex& index, QAbstractItemView::E
     }
 
     return QTreeView::edit(editableIndex, trigger, event);
+}
+
+void HsmPropertiesTableView::mouseMoveEvent(QMouseEvent* event) {
+    QTreeView::mouseMoveEvent(event);
+
+    // Repaint so the delegate's hover highlight on the action buttons follows the cursor.
+    // The delegate only receives editorEvent(MouseMove) for the item under the pointer, so a
+    // full viewport update keeps the previously-hovered row's highlight cleared as well.
+    viewport()->update();
 }

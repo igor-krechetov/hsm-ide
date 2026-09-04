@@ -35,7 +35,9 @@ bool StateMachineEntityViewModel::hasSelectedEntity() const {
 StateMachineEntityViewModel::ComplexPropertyType StateMachineEntityViewModel::complexTypeForProperty(const QString& key) const {
     ComplexPropertyType res = ComplexPropertyType::None;
 
-    if (key.endsWith("Action") || key == "action") {
+    if (key == "onEnteringAction" || key == "onExitingAction" || key == "transitionAction") {
+        res = ComplexPropertyType::ActionList;
+    } else if (key.endsWith("Action") || key == "action") {
         res = ComplexPropertyType::Action;
     }
 
@@ -58,25 +60,76 @@ void StateMachineEntityViewModel::rebuildNodes() {
 
             if (node->complexType == ComplexPropertyType::Action) {
                 auto ptrAction = actionFromVariant(mSelectedEntity->getProperty(node->key));
-                const QStringList attrs = ptrAction->properties();
+                buildActionItemChildren(node.get(), ptrAction);
+            } else if (node->complexType == ComplexPropertyType::ActionList) {
+                const model::ModelActionList actions = actionListForKey(node->key);
 
-                for (int childRow = 0; childRow < attrs.size(); ++childRow) {
-                    auto child = std::make_unique<PropertyNode>();
+                for (int actionIdx = 0; actionIdx < actions.size(); ++actionIdx) {
+                    auto itemNode = std::make_unique<PropertyNode>();
+                    itemNode->row = actionIdx;
+                    itemNode->propertyRow = i;
+                    itemNode->actionIndex = actionIdx;
+                    itemNode->type = NodeType::ActionItem;
+                    itemNode->key = node->key;
+                    itemNode->label = QString("action %1").arg(actionIdx + 1);
+                    itemNode->parent = node.get();
 
-                    child->row = childRow;
-                    child->propertyRow = i;
-                    child->type = NodeType::ActionAttribute;
-                    child->key = node->key;
-                    child->label = attrs.at(childRow);
-                    child->actionAttribute = attrs.at(childRow);
-                    child->parent = node.get();
-                    node->children.push_back(std::move(child));
+                    buildActionItemChildren(itemNode.get(), actions.at(actionIdx));
+                    node->children.push_back(std::move(itemNode));
                 }
+                // The "+" add affordance is painted on this slot row itself (see delegate),
+                // so no dedicated ActionAdd child row is created.
             }
 
             mTopNodes.push_back(std::move(node));
         }
     }
+}
+
+void StateMachineEntityViewModel::buildActionItemChildren(PropertyNode* actionNode,
+                                                          const QSharedPointer<model::IModelAction>& action) {
+    if ((nullptr != actionNode) && action) {
+        const QStringList attrs = action->properties();
+
+        for (int childRow = 0; childRow < attrs.size(); ++childRow) {
+            auto child = std::make_unique<PropertyNode>();
+
+            child->row = childRow;
+            child->propertyRow = actionNode->propertyRow;
+            child->actionIndex = actionNode->actionIndex;
+            child->type = NodeType::ActionAttribute;
+            child->key = actionNode->key;
+            child->label = attrs.at(childRow);
+            child->actionAttribute = attrs.at(childRow);
+            child->parent = actionNode;
+            actionNode->children.push_back(std::move(child));
+        }
+    }
+}
+
+model::ModelActionList StateMachineEntityViewModel::actionListForKey(const QString& key) const {
+    model::ModelActionList res;
+
+    if (hasSelectedEntity()) {
+        const QVariant value = mSelectedEntity->getProperty(key);
+
+        if (value.canConvert<model::ModelActionList>()) {
+            res = value.value<model::ModelActionList>();
+        }
+    }
+
+    return res;
+}
+
+QSharedPointer<model::IModelAction> StateMachineEntityViewModel::actionAtIndex(const QString& key, const int index) const {
+    QSharedPointer<model::IModelAction> res;
+    const model::ModelActionList actions = actionListForKey(key);
+
+    if ((index >= 0) && (index < actions.size())) {
+        res = actions.at(index);
+    }
+
+    return res;
 }
 
 StateMachineEntityViewModel::PropertyNode* StateMachineEntityViewModel::nodeFromIndex(const QModelIndex& index) const {
@@ -145,14 +198,30 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
     QVariant res;
 
     if (hasSelectedEntity()) {
-        const QVariant propertyValue = mSelectedEntity->getProperty(node.key);
+        if (node.complexType == ComplexPropertyType::ActionList) {
+            // Slot summary row: "N actions" / "1 action" / "none"
+            const int count = actionListForKey(node.key).size();
 
-        if (role == Qt::DisplayRole || role == Qt::EditRole) {
-            if (node.complexType == ComplexPropertyType::Action) {
+            if (role == Qt::DisplayRole) {
+                if (count == 0) {
+                    res = QObject::tr("none");
+                } else if (count == 1) {
+                    res = QObject::tr("1 action");
+                } else {
+                    res = QObject::tr("%1 actions").arg(count);
+                }
+            }
+        } else if (node.complexType == ComplexPropertyType::Action) {
+            const QVariant propertyValue = mSelectedEntity->getProperty(node.key);
+
+            if (role == Qt::DisplayRole || role == Qt::EditRole || role == ActionSubtypeRole) {
                 auto ptrAction = actionFromVariant(propertyValue);
-
                 res = model::ModelActionFactory::actionName(ptrAction->type());
-            } else {
+            }
+        } else {
+            const QVariant propertyValue = mSelectedEntity->getProperty(node.key);
+
+            if (role == Qt::DisplayRole || role == Qt::EditRole) {
                 res = propertyValue;
 
                 if ((role == Qt::DisplayRole) && (node.key == model::Transition::cKeyTransitionType)) {
@@ -161,10 +230,6 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
                     res = model::historyTypeToString(model::historyTypeFromInt(res.toInt()));
                 }
             }
-        } else if (role == ActionSubtypeRole && node.complexType == ComplexPropertyType::Action) {
-            auto ptrAction = actionFromVariant(propertyValue);
-
-            res = model::ModelActionFactory::actionName(ptrAction->type());
         }
     }
 
@@ -174,9 +239,16 @@ QVariant StateMachineEntityViewModel::formatPropertyValueForRole(const PropertyN
 QVariant StateMachineEntityViewModel::formatActionAttributeValue(const PropertyNode& node, int role) const {
     QVariant res;
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        if (hasSelectedEntity()) {
-            auto ptrAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+    if ((role == Qt::DisplayRole || role == Qt::EditRole) && hasSelectedEntity()) {
+        QSharedPointer<model::IModelAction> ptrAction;
+
+        if (node.actionIndex >= 0) {
+            ptrAction = actionAtIndex(node.key, node.actionIndex);
+        } else {
+            ptrAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+        }
+
+        if (ptrAction) {
             res = ptrAction->getProperty(node.actionAttribute).toString();
         }
     }
@@ -196,6 +268,14 @@ QVariant StateMachineEntityViewModel::data(const QModelIndex& index, int role) c
         } else if (index.column() == 1) {
             if (node->type == NodeType::Property) {
                 res = formatPropertyValueForRole(*node, role);
+            } else if (node->type == NodeType::ActionItem) {
+                if ((role == Qt::DisplayRole) || (role == Qt::EditRole) || (role == ActionSubtypeRole)) {
+                    auto ptrAction = actionAtIndex(node->key, node->actionIndex);
+
+                    if (ptrAction) {
+                        res = model::ModelActionFactory::actionName(ptrAction->type());
+                    }
+                }
             } else if (node->type == NodeType::ActionAttribute) {
                 res = formatActionAttributeValue(*node, role);
             }
@@ -204,11 +284,27 @@ QVariant StateMachineEntityViewModel::data(const QModelIndex& index, int role) c
         if (!res.isValid()) {
             if (role == PropertyKeyRole) {
                 res = node->key;
+            } else if (role == ActionAddRole && node->type == NodeType::Property &&
+                       node->complexType == ComplexPropertyType::ActionList) {
+                res = true;
+            } else if (role == ActionRemovableRole && node->type == NodeType::ActionItem) {
+                res = true;
+            } else if (role == ActionMoveUpRole && node->type == NodeType::ActionItem) {
+                res = (node->actionIndex > 0);
+            } else if (role == ActionMoveDownRole && node->type == NodeType::ActionItem) {
+                const int count = actionListForKey(node->key).size();
+                res = (node->actionIndex >= 0) && (node->actionIndex < (count - 1));
             } else if (role == PropertyPathRole) {
                 res = node->key;
 
-                if (node->type == NodeType::ActionAttribute) {
-                    res = QString("%1.%2").arg(node->key, node->actionAttribute);
+                if (node->type == NodeType::ActionItem) {
+                    res = QString("%1[%2]").arg(node->key).arg(node->actionIndex);
+                } else if (node->type == NodeType::ActionAttribute) {
+                    if (node->actionIndex >= 0) {
+                        res = QString("%1[%2].%3").arg(node->key).arg(node->actionIndex).arg(node->actionAttribute);
+                    } else {
+                        res = QString("%1.%2").arg(node->key, node->actionAttribute);
+                    }
                 }
             }
         }
@@ -270,7 +366,14 @@ Qt::ItemFlags StateMachineEntityViewModel::flags(const QModelIndex& index) const
     if (index.isValid()) {
         res = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
-        if (index.column() == 1) {
+        const PropertyNode* node = nodeFromIndex(index);
+
+        // The ActionList slot summary row (e.g. "3 actions") is not directly editable;
+        // its children (ActionItem / ActionAttribute) and the ActionAdd row carry the interaction.
+        const bool isListSummary =
+            (node && (node->type == NodeType::Property) && (node->complexType == ComplexPropertyType::ActionList));
+
+        if ((index.column() == 1) && (isListSummary == false)) {
             res |= Qt::ItemIsEditable;
         }
     }
@@ -299,14 +402,37 @@ bool StateMachineEntityViewModel::updatePropertyByNode(const PropertyNode& node,
             }
 
             res = mSelectedEntity->setProperty(node.key, newValue);
+        } else if (node.type == NodeType::ActionItem) {
+            // Change the type of one action within the list
+            model::ModelActionList actions = actionListForKey(node.key);
+
+            if ((node.actionIndex >= 0) && (node.actionIndex < actions.size())) {
+                const auto newActionType = model::ModelActionFactory::actionTypeByName(value.toString());
+
+                if (newActionType != actions.at(node.actionIndex)->type()) {
+                    actions[node.actionIndex] = model::ModelActionFactory::createModelAction(newActionType);
+                    res = mSelectedEntity->setProperty(node.key, QVariant::fromValue(actions));
+                }
+            }
         } else if (node.type == NodeType::ActionAttribute) {
             Q_ASSERT(node.parent);
 
             if (nullptr != node.parent) {
-                auto ptrCurrentAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+                if (node.actionIndex >= 0) {
+                    // Attribute of one action within a list slot
+                    model::ModelActionList actions = actionListForKey(node.key);
 
-                ptrCurrentAction->setProperty(node.actionAttribute, value);
-                res = mSelectedEntity->setProperty(node.parent->key, QVariant::fromValue(ptrCurrentAction));
+                    if ((node.actionIndex >= 0) && (node.actionIndex < actions.size())) {
+                        actions.at(node.actionIndex)->setProperty(node.actionAttribute, value);
+                        res = mSelectedEntity->setProperty(node.key, QVariant::fromValue(actions));
+                    }
+                } else {
+                    // Attribute of a single-action slot (e.g. onStateChangedAction)
+                    auto ptrCurrentAction = actionFromVariant(mSelectedEntity->getProperty(node.key));
+
+                    ptrCurrentAction->setProperty(node.actionAttribute, value);
+                    res = mSelectedEntity->setProperty(node.parent->key, QVariant::fromValue(ptrCurrentAction));
+                }
             }
         }
 
@@ -318,12 +444,89 @@ bool StateMachineEntityViewModel::updatePropertyByNode(const PropertyNode& node,
     return res;
 }
 
+bool StateMachineEntityViewModel::addActionToSlot(const QString& key) {
+    bool res = false;
+
+    if (hasSelectedEntity()) {
+        if (mBeginHistoryTransaction) {
+            mBeginHistoryTransaction(QString("Add action: %1").arg(key));
+        }
+
+        model::ModelActionList actions = actionListForKey(key);
+        actions.append(model::ModelActionFactory::createModelAction(model::ModelAction::CALLBACK));
+        res = mSelectedEntity->setProperty(key, QVariant::fromValue(actions));
+
+        if (mCommitHistoryTransaction) {
+            mCommitHistoryTransaction();
+        }
+    }
+
+    return res;
+}
+
+bool StateMachineEntityViewModel::removeActionFromSlot(const QString& key, const int index) {
+    bool res = false;
+
+    if (hasSelectedEntity()) {
+        model::ModelActionList actions = actionListForKey(key);
+
+        if ((index >= 0) && (index < actions.size())) {
+            if (mBeginHistoryTransaction) {
+                mBeginHistoryTransaction(QString("Remove action: %1").arg(key));
+            }
+
+            actions.removeAt(index);
+            res = mSelectedEntity->setProperty(key, QVariant::fromValue(actions));
+
+            if (mCommitHistoryTransaction) {
+                mCommitHistoryTransaction();
+            }
+        }
+    }
+
+    return res;
+}
+
+bool StateMachineEntityViewModel::moveActionInSlot(const QString& key, const int from, const int to) {
+    bool res = false;
+
+    if (hasSelectedEntity()) {
+        model::ModelActionList actions = actionListForKey(key);
+
+        if ((from >= 0) && (from < actions.size()) && (to >= 0) && (to < actions.size()) && (from != to)) {
+            if (mBeginHistoryTransaction) {
+                mBeginHistoryTransaction(QString("Reorder action: %1").arg(key));
+            }
+
+            actions.move(from, to);
+            res = mSelectedEntity->setProperty(key, QVariant::fromValue(actions));
+
+            if (mCommitHistoryTransaction) {
+                mCommitHistoryTransaction();
+            }
+        }
+    }
+
+    return res;
+}
+
 bool StateMachineEntityViewModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     bool res = false;
     const PropertyNode* node = nodeFromIndex(index);
 
     if (node && index.column() == 1) {
-        res = updatePropertyByNode(*node, value, role);
+        if ((node->type == NodeType::Property) && (node->complexType == ComplexPropertyType::ActionList) &&
+            (role == ActionAddRole)) {
+            res = addActionToSlot(node->key);
+        } else if ((node->type == NodeType::ActionItem) && (role == ActionRemovableRole)) {
+            res = removeActionFromSlot(node->key, node->actionIndex);
+        } else if ((node->type == NodeType::ActionItem) && (role == ActionMoveUpRole)) {
+            res = moveActionInSlot(node->key, node->actionIndex, node->actionIndex - 1);
+        } else if ((node->type == NodeType::ActionItem) && (role == ActionMoveDownRole)) {
+            res = moveActionInSlot(node->key, node->actionIndex, node->actionIndex + 1);
+        } else {
+            res = updatePropertyByNode(*node, value, role);
+        }
 
         if (res) {
             beginResetModel();

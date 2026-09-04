@@ -448,8 +448,12 @@ void HsmTransition::onModelDataChanged() {
         QSignalBlocker block(mLabelEvent);
         QSignalBlocker block2(mLabelCondition);
 
-        if (entityPtr->hasTransitionAction()) {
-            mLabelEvent->setPlainText(entityPtr->event() + " / " + entityPtr->transitionAction()->serialize());
+        const model::ModelActionList& transitionActions = entityPtr->transitionActions();
+
+        if (transitionActions.size() == 1) {
+            mLabelEvent->setPlainText(entityPtr->event() + " / " + transitionActions.first()->serialize());
+        } else if (transitionActions.size() > 1) {
+            mLabelEvent->setPlainText(entityPtr->event() + " / " + tr("<multiple actions>"));
         } else {
             mLabelEvent->setPlainText(entityPtr->event());
         }

@@ -1,5 +1,7 @@
 #include "StateMachineEntity.hpp"
 
+#include "model/actions/ModelActionUtils.hpp"
+
 namespace model {
 
 StateMachineEntity::StateMachineEntity(Type type, EntityID_t restoredId)
@@ -145,6 +147,36 @@ bool StateMachineEntity::forEachChildElement(
     const bool postOrderTraversal) {
     // do nothing
     return true;
+}
+
+void StateMachineEntity::setActions(ModelActionList& target, const ModelActionList& source) {
+    if (ModelActionUtils::setActions(target, source)) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
+}
+
+void StateMachineEntity::addAction(ModelActionList& target, const QSharedPointer<IModelAction>& action) {
+    if (ModelActionUtils::addAction(target, action)) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
+}
+
+void StateMachineEntity::insertAction(ModelActionList& target, const int index, const QSharedPointer<IModelAction>& action) {
+    if (ModelActionUtils::insertAction(target, index, action)) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
+}
+
+void StateMachineEntity::removeAction(ModelActionList& target, const int index) {
+    if (ModelActionUtils::removeAction(target, index)) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
+}
+
+void StateMachineEntity::moveAction(ModelActionList& target, const int from, const int to) {
+    if (ModelActionUtils::moveAction(target, from, to)) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
 }
 
 };  // namespace model

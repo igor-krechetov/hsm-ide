@@ -6,6 +6,7 @@
 #include <QString>
 
 #include "ModelTypes.hpp"
+#include "actions/IModelAction.hpp"
 #include "private/IModelVisitor.hpp"
 #include "private/serializer/HsmMetadataSerializer.hpp"
 #include "private/serializer/IMetadataSerializer.hpp"
@@ -74,6 +75,8 @@ protected:
 private:
     void handleParseError(const QString& errorMessage);
 
+    void serializeActionListElement(const ModelActionList& actions, const QString& wrapper, const QString& childTag);
+
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
 
     QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent,
@@ -87,8 +90,8 @@ private:
     QSharedPointer<IncludeEntity> parseIncludeEntity();
     QSharedPointer<Transition> parseTransition();
 
-    QString parseOnEntry();
-    QString parseOnExit();
+    ModelActionList parseOnEntry();
+    ModelActionList parseOnExit();
     QString parseScript();
     QString parseInvoke();
 

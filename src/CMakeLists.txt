@@ -63,6 +63,7 @@ set(MODEL_SOURCES
     model/actions/TimerRestartAction.cpp
     model/actions/SendEventAction.cpp
     model/actions/ModelActionFactory.cpp
+    model/actions/ModelActionUtils.cpp
 )
 
 set(VIEW_SOURCES
