@@ -270,15 +270,22 @@ void HsmStateElement::onModelDataChanged() {
             // Update properties section text
             QStringList actions;
 
-            if (entityPtr->hasOnEnteringAction()) {
-                actions << "onEntry: " + entityPtr->onEnteringAction()->serialize();
-            }
+            auto appendSlot = [&actions](const QString& label, const model::ModelActionList& slotActions) {
+                if (slotActions.size() == 1) {
+                    actions << label + ": " + slotActions.first()->serialize();
+                } else if (slotActions.size() > 1) {
+                    actions << label + ":";
+                    for (const auto& action : slotActions) {
+                        actions << "- " + action->serialize();
+                    }
+                }
+            };
+
+            appendSlot("onEntry", entityPtr->onEnteringActions());
             if (entityPtr->hasOnStateChangedAction()) {
                 actions << "do: " + entityPtr->onStateChangedAction()->serialize();
             }
-            if (entityPtr->hasOnExitingAction()) {
-                actions << "onExit: " + entityPtr->onExitingAction()->serialize();
-            }
+            appendSlot("onExit", entityPtr->onExitingActions());
 
             mPropertiesSection->setPlainText(actions.join("\n"));
         }

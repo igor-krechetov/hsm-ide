@@ -3,6 +3,7 @@
 #include "ModelUtils.hpp"
 #include "State.hpp"
 #include "actions/ModelActionFactory.hpp"
+#include "actions/ModelActionUtils.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
@@ -11,8 +12,7 @@ Transition::Transition(QSharedPointer<State> source, QSharedPointer<State> targe
     : StateMachineEntity(StateMachineEntity::Type::Transition)
     , mSource(source)
     , mTarget(target)
-    , mEvent(event)
-    , mTransitionAction(ModelActionFactory::createModelAction(ModelAction::NONE)) {}
+    , mEvent(event) {}
 
 Transition::~Transition() {
     qDebug() << "Transition::DELETE id:" << id() << " event:" << mEvent.get();
@@ -38,8 +38,7 @@ void Transition::copyEntityData(const StateMachineEntity& other) {
     if (const Transition* tOther = dynamic_cast<const Transition*>(&other)) {
         mTransitionType = tOther->mTransitionType;
         mEvent = tOther->mEvent;
-        mTransitionAction =
-            ModelActionFactory::createModelActionFromData(tOther->transitionAction()->serialize(), ModelAction::NONE);
+        mTransitionActions = ModelActionUtils::cloneActionList(tOther->transitionActions());
         mConditionCallback = tOther->mConditionCallback;
         mExpectedConditionValue = tOther->mExpectedConditionValue;
 
@@ -90,7 +89,12 @@ TransitionType Transition::transitionType() const {
 }
 
 QSharedPointer<IModelAction> Transition::transitionAction() const {
-    return mTransitionAction;
+    return (mTransitionActions.isEmpty() ? ModelActionFactory::createModelAction(ModelAction::NONE)
+                                         : mTransitionActions.first());
+}
+
+const ModelActionList& Transition::transitionActions() const {
+    return mTransitionActions;
 }
 
 const QString& Transition::conditionCallback() const {
@@ -112,13 +116,32 @@ void Transition::setTransitionType(TransitionType type) {
     emit modelDataChanged(sharedFromThis().toWeakRef());
 }
 
-void Transition::setTransitionAction(const QSharedPointer<IModelAction>& action) {
-    mTransitionAction = (action ? action : ModelActionFactory::createModelAction(ModelAction::NONE));
-    emit modelDataChanged(sharedFromThis().toWeakRef());
+void Transition::setTransitionActions(const ModelActionList& actions) {
+    setActions(mTransitionActions, actions);
+}
+
+void Transition::addTransitionAction(const QSharedPointer<IModelAction>& action) {
+    addAction(mTransitionActions, action);
+}
+
+void Transition::insertTransitionAction(const int index, const QSharedPointer<IModelAction>& action) {
+    insertAction(mTransitionActions, index, action);
+}
+
+void Transition::removeTransitionAction(const int index) {
+    removeAction(mTransitionActions, index);
+}
+
+void Transition::moveTransitionAction(const int from, const int to) {
+    moveAction(mTransitionActions, from, to);
 }
 
 bool Transition::hasTransitionAction() const {
-    return (mTransitionAction && mTransitionAction->type() != ModelAction::NONE);
+    return (mTransitionActions.isEmpty() == false);
+}
+
+void Transition::setTransitionAction(const QSharedPointer<IModelAction>& action) {
+    setActions(mTransitionActions, ModelActionUtils::singleActionList(action));
 }
 
 void Transition::setTransitionAction(const QString& actionData) {
@@ -145,7 +168,9 @@ bool Transition::setProperty(const QString& key, const QVariant& value) {
     if (key == "event") {
         setEvent(value.toString());
     } else if (key == "transitionAction") {
-        if (value.canConvert<QSharedPointer<IModelAction>>()) {
+        if (value.canConvert<ModelActionList>()) {
+            setTransitionActions(value.value<ModelActionList>());
+        } else if (value.canConvert<QSharedPointer<IModelAction>>()) {
             setTransitionAction(value.value<QSharedPointer<IModelAction>>());
         } else {
             setTransitionAction(value.toString());
@@ -167,7 +192,7 @@ QVariant Transition::getProperty(const QString& key) const {
     if (key == "event") {
         return mEvent.get();
     } else if (key == "transitionAction") {
-        return QVariant::fromValue(mTransitionAction);
+        return QVariant::fromValue(mTransitionActions);
     } else if (key == "conditionCallback") {
         return mConditionCallback.get();
     } else if (key == cKeyExpectedConditionValue) {

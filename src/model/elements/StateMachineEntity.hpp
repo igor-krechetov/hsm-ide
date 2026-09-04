@@ -11,6 +11,7 @@
 #include <QVariant>
 
 #include "model/ModelTypes.hpp"
+#include "model/actions/IModelAction.hpp"
 
 // TODO: move StateMachineElement::ID_t to a common header
 
@@ -77,6 +78,15 @@ public:
 protected:
     void registerNewChild(const QSharedPointer<StateMachineEntity>& child);
     void unregisterChild(const QSharedPointer<StateMachineEntity>& child);
+
+    // Shared action-list mutators for subclasses that expose multi-action slots.
+    // Each delegates the list operation to ModelActionUtils, then emits modelDataChanged
+    // when the list actually changed (so subclasses don't repeat the emit boilerplate).
+    void setActions(ModelActionList& target, const ModelActionList& source);
+    void addAction(ModelActionList& target, const QSharedPointer<IModelAction>& action);
+    void insertAction(ModelActionList& target, const int index, const QSharedPointer<IModelAction>& action);
+    void removeAction(ModelActionList& target, const int index);
+    void moveAction(ModelActionList& target, const int from, const int to);
 
 signals:
     // TODO: use id instead?

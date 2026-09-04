@@ -26,6 +26,11 @@ void ModelActionsTest::CreateAndSerializeActions() {
     QVERIFY(transitionAction->setProperty("event_id", "E1"));
     QVERIFY(transitionAction->setProperty("arguments", "arg1"));
     QCOMPARE(transitionAction->serialize(), QString("transition(E1, arg1)"));
+
+    // Empty arguments must not emit a trailing ", "
+    auto noArgAction = ModelActionFactory::createModelAction(ModelAction::SEND_EVENT);
+    QVERIFY(noArgAction->setProperty("event_id", "NEW_EVENT"));
+    QCOMPARE(noArgAction->serialize(), QString("transition(NEW_EVENT)"));
 }
 
 void ModelActionsTest::ParseActionStrings() {
@@ -40,9 +45,9 @@ void ModelActionsTest::ParseActionStrings() {
     QCOMPARE(callbackAction->getProperty("function").toString(), QString("myCallback"));
 }
 
-
 void ModelActionsTest::ParseInvalidActionStrings() {
-    const QStringList invalidInputs = {"   ", "\t", "start_timer", " start_timer( ", "transition", "callback(", "restart_timer", "::", "a b c"};
+    const QStringList invalidInputs =
+        {"   ", "\t", "start_timer", " start_timer( ", "transition", "callback(", "restart_timer", "::", "a b c"};
 
     for (const auto& input : invalidInputs) {
         auto action = ModelActionFactory::createModelActionFromData(input, ModelAction::NONE);

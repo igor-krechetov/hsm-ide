@@ -39,7 +39,15 @@ QVariant SendEventAction::getProperty(const QString& key) const {
 }
 
 QString SendEventAction::serialize() const {
-    return QString("transition(%1, %2)").arg(mEventId, mArguments);
+    QString res;
+
+    if (mArguments.trimmed().isEmpty()) {
+        res = QString("transition(%1)").arg(mEventId);
+    } else {
+        res = QString("transition(%1, %2)").arg(mEventId, mArguments);
+    }
+
+    return res;
 }
 
 bool SendEventAction::deserialize(const QString& data) {

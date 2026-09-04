@@ -14,6 +14,7 @@ public:
 protected:
     void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;
     bool edit(const QModelIndex& index, QAbstractItemView::EditTrigger trigger, QEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
 };
 
 #endif  // HSMPROPERTIESTABLEVIEW_HPP

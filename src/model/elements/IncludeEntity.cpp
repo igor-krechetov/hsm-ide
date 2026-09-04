@@ -20,10 +20,8 @@ void IncludeEntity::promoteFrom(const QSharedPointer<RegularState>& state) {
 
         mOnStateChangedAction =
             ModelActionFactory::createModelActionFromData(state->onStateChangedAction()->serialize(), ModelAction::NONE);
-        mOnEnteringAction =
-            ModelActionFactory::createModelActionFromData(state->onEnteringAction()->serialize(), ModelAction::NONE);
-        mOnExitingAction =
-            ModelActionFactory::createModelActionFromData(state->onExitingAction()->serialize(), ModelAction::NONE);
+        setOnEnteringActions(state->onEnteringActions());
+        setOnExitingActions(state->onExitingActions());
         mChildren = state->childrenEntities();
 
         for (auto& child : mChildren) {

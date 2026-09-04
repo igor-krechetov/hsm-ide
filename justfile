@@ -1,4 +1,4 @@
-BUILD_DIR := "./build"
+BUILD_DIR := env_var_or_default("HSM_IDE_BUILD_DIR", "./build")
 CMAKE_TOOL := "qt-cmake"
 
 clean:
@@ -22,7 +22,9 @@ build: configure
     #!/usr/bin/env bash
     set -euxo pipefail
     mkdir -p {{BUILD_DIR}}
-    clear
+    # Only clear the screen on an interactive terminal that supports it;
+    # skip in non-interactive/CI shells where `clear` errors on an unset TERM.
+    if [ -t 1 ] && [ -n "${TERM:-}" ] && command -v clear >/dev/null 2>&1; then clear; fi
     ./scripts/build/posix/build.sh {{BUILD_DIR}} Debug
 
 run:

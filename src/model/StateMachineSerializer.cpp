@@ -11,6 +11,7 @@
 #include "ModelUtils.hpp"
 #include "StateHierarchyRules.hpp"
 #include "StateMachineModel.hpp"
+#include "actions/ModelActionFactory.hpp"
 #include "elements/EntryPoint.hpp"
 #include "elements/ExitPoint.hpp"
 #include "elements/FinalState.hpp"
@@ -300,24 +301,40 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
 // Visitor methods (format-agnostic SCXML structure)
 // ============================================================================
 
-#define SCXML_SERIALIZE_ACTION(_object, _hasAction, _actionGetter, _element, _attr) \
-  if ((_object)->_hasAction()) {                                                    \
-    mXmlWriter->writeStartElement(_element);                                        \
-    mXmlWriter->writeTextElement((_attr), (_object)->_actionGetter()->serialize()); \
-    mXmlWriter->writeEndElement();                                                  \
-  }
+#define SCXML_SERIALIZE_ACTION(_object, _hasAction, _actionGetter, _element, _attr)     \
+    if ((_object)->_hasAction()) {                                                      \
+        mXmlWriter->writeStartElement(_element);                                        \
+        mXmlWriter->writeTextElement((_attr), (_object)->_actionGetter()->serialize()); \
+        mXmlWriter->writeEndElement();                                                  \
+    }
 
 #define SCXML_SERIALIZE_ACTION_ATTR(_object, _hasAction, _actionGetter, _element, _attr) \
-  if ((_object)->_hasAction()) {                                                         \
-    mXmlWriter->writeStartElement(_element);                                             \
-    mXmlWriter->writeAttribute((_attr), (_object)->_actionGetter()->serialize());        \
-    mXmlWriter->writeEndElement();                                                       \
-  }
+    if ((_object)->_hasAction()) {                                                       \
+        mXmlWriter->writeStartElement(_element);                                         \
+        mXmlWriter->writeAttribute((_attr), (_object)->_actionGetter()->serialize());    \
+        mXmlWriter->writeEndElement();                                                   \
+    }
 
-#define SCXML_SERIALIZE_STATE_ACTIONS(_object)                                                \
-  SCXML_SERIALIZE_ACTION(_object, hasOnEnteringAction, onEnteringAction, "onentry", "script") \
-  SCXML_SERIALIZE_ACTION(_object, hasOnExitingAction, onExitingAction, "onexit", "script")    \
-  SCXML_SERIALIZE_ACTION_ATTR(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
+#define SCXML_SERIALIZE_STATE_ACTIONS(_object)                                                                       \
+    serializeActionListElement((_object)->onEnteringActions(), QStringLiteral("onentry"), QStringLiteral("script")); \
+    serializeActionListElement((_object)->onExitingActions(), QStringLiteral("onexit"), QStringLiteral("script"));   \
+    SCXML_SERIALIZE_ACTION_ATTR(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
+
+void StateMachineSerializer::serializeActionListElement(const ModelActionList& actions,
+                                                        const QString& wrapper,
+                                                        const QString& childTag) {
+    if (actions.isEmpty() == false) {
+        mXmlWriter->writeStartElement(wrapper);
+
+        for (const auto& action : actions) {
+            if (action && (action->type() != ModelAction::NONE)) {
+                mXmlWriter->writeTextElement(childTag, action->serialize());
+            }
+        }
+
+        mXmlWriter->writeEndElement();
+    }
+}
 
 void StateMachineSerializer::visitRegularState(const RegularState* state) {
     qDebug() << Q_FUNC_INFO;
@@ -519,7 +536,11 @@ void StateMachineSerializer::visitTransition(const Transition* transition) {
         mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, transition);
 
         if (transition->hasTransitionAction()) {
-            mXmlWriter->writeTextElement("script", transition->transitionAction()->serialize());
+            for (const auto& action : transition->transitionActions()) {
+                if (action && (action->type() != ModelAction::NONE)) {
+                    mXmlWriter->writeTextElement("script", action->serialize());
+                }
+            }
         }
 
         mXmlWriter->writeEndElement();  // transition
@@ -595,7 +616,8 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
             QSharedPointer<Transition> ptrParent = parent.dynamicCast<Transition>();
 
             if (ptrParent) {
-                ptrParent->setTransitionAction(parseScript());
+                ptrParent->addTransitionAction(
+                    ModelActionFactory::createModelActionFromData(parseScript(), ModelAction::CALLBACK));
             } else {
                 qWarning() << "script elements outside of transition nodes are not supported. skipping";
             }
@@ -648,9 +670,9 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
             if (QXmlStreamReader::StartElement == token) {
                 qDebug() << __LINE__ << "Found" << mXmlReader->name();
                 if (mXmlReader->name() == QStringView(u"onentry")) {
-                    entity->setOnEnteringAction(parseOnEntry());
+                    entity->setOnEnteringActions(parseOnEntry());
                 } else if (mXmlReader->name() == QStringView(u"onexit")) {
-                    entity->setOnExitingAction(parseOnExit());
+                    entity->setOnExitingActions(parseOnExit());
                 } else if (mXmlReader->name() == QStringView(u"invoke")) {
                     entity->setOnStateChangedAction(parseInvoke());
                 } else {
@@ -710,9 +732,9 @@ QSharedPointer<ExitPoint> StateMachineSerializer::parseExitPoint() {
         while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
             if (QXmlStreamReader::StartElement == token) {
                 if (mXmlReader->name() == QStringView(u"onentry")) {
-                    entity->setOnEnteringAction(parseOnEntry());
+                    entity->setOnEnteringActions(parseOnEntry());
                 } else if (mXmlReader->name() == QStringView(u"onexit")) {
-                    entity->setOnExitingAction(parseOnExit());
+                    entity->setOnExitingActions(parseOnExit());
                 } else if (mXmlReader->name() == QStringView(u"invoke")) {
                     entity->setOnStateChangedAction(parseInvoke());
                 } else {
@@ -877,19 +899,23 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
     return entity;
 }
 
-QString StateMachineSerializer::parseOnEntry() {
+ModelActionList StateMachineSerializer::parseOnEntry() {
     qDebug() << Q_FUNC_INFO;
-    QString content;
+    ModelActionList actions;
 
-    // Keep reading until we reach the closing </onentry> tag
+    // Keep reading until we reach the closing </onentry> tag, collecting every <script>
     while (!(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"onentry"))) {
         mXmlReader->readNext();
 
         if (mXmlReader->tokenType() == QXmlStreamReader::StartElement) {
             if (mXmlReader->name() == QStringView(u"script")) {
-                content = mXmlReader->readElementText();
+                const QString content = mXmlReader->readElementText();
+
+                if (content.isEmpty() == false) {
+                    actions.append(ModelActionFactory::createModelActionFromData(content, ModelAction::CALLBACK));
+                }
             } else {
-                // Skip entire element (and its children) that isn’t <script>
+                // Skip entire element (and its children) that isn't <script>
                 mXmlReader->skipCurrentElement();
             }
         }
@@ -899,27 +925,31 @@ QString StateMachineSerializer::parseOnEntry() {
         }
     }
 
-    if (content.isEmpty()) {
+    if (actions.isEmpty()) {
         handleParseError("onentry element without script or with invalid content");
     }
 
-    return content;
+    return actions;
 }
 
 // TODO: unify with parseOnEntry
-QString StateMachineSerializer::parseOnExit() {
+ModelActionList StateMachineSerializer::parseOnExit() {
     qDebug() << Q_FUNC_INFO;
-    QString content;
+    ModelActionList actions;
 
-    // Keep reading until we reach the closing </onexit> tag
+    // Keep reading until we reach the closing </onexit> tag, collecting every <script>
     while (!(mXmlReader->tokenType() == QXmlStreamReader::EndElement && mXmlReader->name() == QStringView(u"onexit"))) {
         mXmlReader->readNext();
 
         if (mXmlReader->tokenType() == QXmlStreamReader::StartElement) {
             if (mXmlReader->name() == QStringView(u"script")) {
-                content = mXmlReader->readElementText();
+                const QString content = mXmlReader->readElementText();
+
+                if (content.isEmpty() == false) {
+                    actions.append(ModelActionFactory::createModelActionFromData(content, ModelAction::CALLBACK));
+                }
             } else {
-                // Skip entire element (and its children) that isn’t <script>
+                // Skip entire element (and its children) that isn't <script>
                 mXmlReader->skipCurrentElement();
             }
         }
@@ -929,11 +959,11 @@ QString StateMachineSerializer::parseOnExit() {
         }
     }
 
-    if (content.isEmpty()) {
+    if (actions.isEmpty()) {
         handleParseError("onexit element without script or with invalid content");
     }
 
-    return content;
+    return actions;
 }
 
 QString StateMachineSerializer::parseScript() {

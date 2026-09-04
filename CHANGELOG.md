@@ -1,11 +1,19 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.14.0] - 2026-09-04
+### New
+- [REQ-104e] Support multiple ordered actions per state onEntry and onExit slot and per transition
+### Fix
+- Omit trailing separator when serializing a send-event action without arguments (`transition(EVENT)` instead of `transition(EVENT, )`)
+- Preserve action type when deep-copying or deserializing action lists (bare-callback actions were previously dropped)
+
 ## [0.13.1] - 2026-09-03
 ### Fix
 - New application icon
 ### Documentation
 - Add MVP backlog requirements (REQ-103f6, REQ-103f7, REQ-204d6, REQ-204f, REQ-301a1.3) and implementation plan (req/plans/mvp.md)
+
 
 ## [0.13.0] - 2026-09-02
 ### New

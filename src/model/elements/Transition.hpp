@@ -32,6 +32,8 @@ public:
     // Getters
     const QString& event() const;
     TransitionType transitionType() const;
+    const ModelActionList& transitionActions() const;
+    // Backward-compatible single-action getter (first action, or a NONE action if empty)
     QSharedPointer<IModelAction> transitionAction() const;
     const QString& conditionCallback() const;
     bool expectedConditionValue() const;
@@ -39,8 +41,17 @@ public:
     // Setters
     void setEvent(const QString& event);
     void setTransitionType(TransitionType type);
-    void setTransitionAction(const QSharedPointer<IModelAction>& action);
+
+    // Multi-action list mutators
+    void setTransitionActions(const ModelActionList& actions);
+    void addTransitionAction(const QSharedPointer<IModelAction>& action);
+    void insertTransitionAction(const int index, const QSharedPointer<IModelAction>& action);
+    void removeTransitionAction(const int index);
+    void moveTransitionAction(const int from, const int to);
+
     bool hasTransitionAction() const;
+    // Backward-compatible single-action setters (reset the list to one action)
+    void setTransitionAction(const QSharedPointer<IModelAction>& action);
     void setTransitionAction(const QString& actionData);
     void setConditionCallback(const QString& callback);
     void setExpectedConditionValue(bool value);
@@ -60,7 +71,7 @@ private:
     QWeakPointer<State> mSource;
     QWeakPointer<State> mTarget;
     priv::IdentifierString mEvent;
-    QSharedPointer<IModelAction> mTransitionAction;
+    ModelActionList mTransitionActions;
     priv::IdentifierString mConditionCallback;
     bool mExpectedConditionValue = false;
 };

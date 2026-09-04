@@ -16,6 +16,7 @@ int runEntryPointTest(int argc, char** argv) __attribute__((weak));
 int runExitPointTest(int argc, char** argv) __attribute__((weak));
 int runTransitionTest(int argc, char** argv) __attribute__((weak));
 int runModelActionsTest(int argc, char** argv) __attribute__((weak));
+int runMultipleActionsTest(int argc, char** argv) __attribute__((weak));
 int runIncludeEntityTest(int argc, char** argv) __attribute__((weak));
 int runModelRootStateTest(int argc, char** argv) __attribute__((weak));
 int runModelElementsFactoryTest(int argc, char** argv) __attribute__((weak));
@@ -61,6 +62,7 @@ int main(int argc, char** argv) {
         runExitPointTest,
         runTransitionTest,
         runModelActionsTest,
+        runMultipleActionsTest,
         runIncludeEntityTest,
         runModelRootStateTest,
         runModelElementsFactoryTest,

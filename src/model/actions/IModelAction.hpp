@@ -24,9 +24,12 @@ public:
     virtual bool deserialize(const QString& data) = 0;
 };
 
+using ModelActionList = QList<QSharedPointer<IModelAction>>;
+
 }  // namespace model
 
 Q_DECLARE_METATYPE(QSharedPointer<model::IModelAction>)
 Q_DECLARE_METATYPE(model::ModelAction)
+Q_DECLARE_METATYPE(model::ModelActionList)
 
 #endif  // IMODELACTION_HPP

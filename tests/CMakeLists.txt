@@ -30,6 +30,7 @@ set(TEST_OBJECTS
     model/elements/TransitionTest.cpp
     model/elements/IncludeEntityTest.cpp
     model/elements/ModelRootStateTest.cpp
+    model/elements/MultipleActionsTest.cpp
 
     view/HsmGraphicsViewTest.cpp
     view/HsmElementDragTest.cpp
