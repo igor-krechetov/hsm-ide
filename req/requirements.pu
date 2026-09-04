@@ -80,7 +80,7 @@
 **** REQ-104b: Exit actions (onexit) <<done>>
 **** REQ-104c: State change callbacks <<done>>
 **** REQ-104d: Editing state name <<done>>
-**** REQ-104e: Multiple actions per event <<todo>>
+**** REQ-104e: Multiple actions per event <<done>>
 *** REQ-105: Timing Features <<prio_low>>
 **** REQ-105a: Timer event configuration <<prio_low>>
 **** REQ-105b: Timeout transitions <<prio_low>>
