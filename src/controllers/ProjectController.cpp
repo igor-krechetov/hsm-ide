@@ -820,8 +820,12 @@ void ProjectController::createElement(const QString& elementTypeId,
             parentState = mModel->root();
         }
 
-        newModelElement->setPos(posParent);
-        parentState->addChildState(newModelElement);
+        if (model::StateHierarchyRules::canAddEntityToParent(parentState, newModelElement)) {
+            newModelElement->setPos(posParent);
+            parentState->addChildState(newModelElement);
+        } else {
+            qDebug() << Q_FUNC_INFO << "rejected by hierarchy rules:" << elementTypeId << "under parent" << parentState->id();
+        }
     } else {
         qCritical() << Q_FUNC_INFO << "Unsupported element type:" << elementTypeId;
     }

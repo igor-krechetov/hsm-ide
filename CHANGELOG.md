@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.15.0] - 2026-09-06
+### New
+- [REQ-103f6] Restrict the model root to a single initial state; adding, dropping, or pasting a second one is rejected
+
 ## [0.14.0] - 2026-09-04
 ### New
 - [REQ-104e] Support multiple ordered actions per state onEntry and onExit slot and per transition

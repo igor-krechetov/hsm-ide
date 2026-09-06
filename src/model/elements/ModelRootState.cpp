@@ -34,4 +34,21 @@ QVariant ModelRootState::getProperty(const QString& key) const {
     return QVariant();
 }
 
+bool ModelRootState::hasInitialState() const {
+    bool found = false;
+
+    for (const QSharedPointer<StateMachineEntity>& child : childrenEntities()) {
+        if (child && (child->type() == StateMachineEntity::Type::State)) {
+            const QSharedPointer<State> childState = child.dynamicCast<State>();
+
+            if (childState && (childState->stateType() == StateType::INITIAL)) {
+                found = true;
+                break;
+            }
+        }
+    }
+
+    return found;
+}
+
 };  // namespace model

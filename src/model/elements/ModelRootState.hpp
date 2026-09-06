@@ -13,6 +13,10 @@ public:
     QStringList properties() const override;
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
+
+    // Returns true if the model root already contains an initial state.
+    // Only one initial state is allowed at the top level (see REQ-103f6).
+    bool hasInitialState() const;
 };
 
 };  // namespace model
