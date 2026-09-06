@@ -14,11 +14,12 @@ If incrementing version
 
 Commit description
 - Prepare description according to template below. Skip sections if empty or not applicable.
-- Title format: Either [<version>] <description> or [test] <description>, [build] <description>, [refactoring] <description>. Example: [0.3.1] Recent files and workspaces features
+- Title format: Either [<version>] <description> or [test] <description>, [build] <description>, [refactoring] <description>, [doc] <description>. Example: [0.3.1] Recent files and workspaces features
+- Documentation-only changes use the [doc] tag and do NOT require a version bump or CHANGELOG entry.
 - Requirements for commit description can be found in 'req/requirements.pu'
 
 ===== BEGIN EXAMPLE =====
-Title: [x.y.z | test | build | refactoring] <title>
+Title: [x.y.z | test | build | refactoring | doc] <title>
 
 New
 - [<requirement ID>] <description>
