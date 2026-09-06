@@ -13,6 +13,7 @@
 #include <cmath>
 
 #include "controllers/IProjectController.hpp"
+#include "model/StateHierarchyRules.hpp"
 #include "view/common/ViewUtils.hpp"
 #include "view/elements/ElementTypeIds.hpp"
 #include "view/elements/HsmElementsFactory.hpp"
@@ -439,26 +440,26 @@ bool HsmGraphicsView::handleElementDragEvent(const QPointF& scenePos, view::HsmE
         // TODO: check if element is allowed to be top level
     }
 
-    if (nullptr == mDragTargetElement) {
-        // if we don't have a valid target element, check if element is allowed to be on a top level
-        switch (sourceElementType) {
-            case view::HsmElementType::INITIAL:
-            case view::HsmElementType::FINAL:
-            case view::HsmElementType::STATE:
-            case view::HsmElementType::INCLUDE:
-                // Allow dropping these elements on top level
-                // qDebug() << "--- Allow dropping these elements on top level";
-                break;
-            case view::HsmElementType::ENTRY_POINT:
-            case view::HsmElementType::EXIT_POINT:
-            case view::HsmElementType::TRANSITION:
-            case view::HsmElementType::HISTORY:
-            default:
-                // Other element types cannot be dropped on top level
-                // qDebug() << "--- Other element types cannot be dropped on top level";
-                elementAllowed = false;
-                break;
+    const model::StateType sourceStateType = view::elementTypeToStateType(sourceElementType);
+
+    if (nullptr != mDragTargetElement) {
+        // A container is under the cursor: validate against its model entity so both the
+        // stateless type rules and any stateful rules (e.g. single initial state) apply.
+        const auto parentEntity = mDragTargetElement->modelElementPtr().lock();
+        const auto sourceEntity =
+            (nullptr != element) ? element->modelElementPtr().lock() : QSharedPointer<model::StateMachineEntity>();
+
+        if (parentEntity && sourceEntity) {
+            elementAllowed = model::StateHierarchyRules::canAddEntityToParent(parentEntity, sourceEntity);
+        } else if (parentEntity) {
+            // Palette drag: no source entity yet, fall back to the type-only child rule.
+            const auto parentState = parentEntity.dynamicCast<model::State>();
+            elementAllowed =
+                parentState && model::StateHierarchyRules::canStateBeChildOf(parentState->stateType(), sourceStateType);
         }
+    } else {
+        // No target element: the drop would land on the model root, so apply the top-level rule.
+        elementAllowed = model::StateHierarchyRules::canBeTopLevel(sourceStateType);
     }
 
     return elementAllowed;

@@ -3,9 +3,46 @@
 
 #include <QGraphicsItem>
 
+#include "model/ModelTypes.hpp"
 #include "private/HsmElement.hpp"
 
 namespace view {
+// Maps a view element type to its corresponding model state type.
+inline model::StateType elementTypeToStateType(const view::HsmElementType type) {
+    model::StateType stateType = model::StateType::INVALID;
+
+    switch (type) {
+        case view::HsmElementType::INITIAL:
+            stateType = model::StateType::INITIAL;
+            break;
+        case view::HsmElementType::FINAL:
+            stateType = model::StateType::FINAL;
+            break;
+        case view::HsmElementType::ENTRY_POINT:
+            stateType = model::StateType::ENTRYPOINT;
+            break;
+        case view::HsmElementType::EXIT_POINT:
+            stateType = model::StateType::EXITPOINT;
+            break;
+        case view::HsmElementType::STATE:
+            stateType = model::StateType::REGULAR;
+            break;
+        case view::HsmElementType::HISTORY:
+            stateType = model::StateType::HISTORY;
+            break;
+        case view::HsmElementType::INCLUDE:
+            stateType = model::StateType::INCLUDE;
+            break;
+        case view::HsmElementType::TRANSITION:
+        case view::HsmElementType::UNKNOWN:
+        default:
+            stateType = model::StateType::INVALID;
+            break;
+    }
+
+    return stateType;
+}
+
 // For HsmElement-based items: UserType + HsmElementType
 constexpr int HSM_ELEMENT_TYPE_BASE = QGraphicsItem::UserType;
 constexpr int HSM_ELEMENT_TYPE_INITIAL = HSM_ELEMENT_TYPE_BASE + static_cast<int>(HsmElementType::INITIAL);

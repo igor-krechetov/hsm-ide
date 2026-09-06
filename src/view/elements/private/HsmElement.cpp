@@ -17,43 +17,6 @@
 
 namespace view {
 
-namespace {
-model::StateType elementTypeToStateType(const view::HsmElementType type) {
-    model::StateType stateType = model::StateType::INVALID;
-
-    switch (type) {
-        case view::HsmElementType::INITIAL:
-            stateType = model::StateType::INITIAL;
-            break;
-        case view::HsmElementType::FINAL:
-            stateType = model::StateType::FINAL;
-            break;
-        case view::HsmElementType::ENTRY_POINT:
-            stateType = model::StateType::ENTRYPOINT;
-            break;
-        case view::HsmElementType::EXIT_POINT:
-            stateType = model::StateType::EXITPOINT;
-            break;
-        case view::HsmElementType::STATE:
-            stateType = model::StateType::REGULAR;
-            break;
-        case view::HsmElementType::HISTORY:
-            stateType = model::StateType::HISTORY;
-            break;
-        case view::HsmElementType::INCLUDE:
-            stateType = model::StateType::INCLUDE;
-            break;
-        case view::HsmElementType::TRANSITION:
-        case view::HsmElementType::UNKNOWN:
-        default:
-            stateType = model::StateType::INVALID;
-            break;
-    }
-
-    return stateType;
-}
-}  // namespace
-
 HsmElement::HsmElement(const HsmElementType elementType, const QSizeF& size)
     : HsmElement(elementType, nullptr, size) {}
 

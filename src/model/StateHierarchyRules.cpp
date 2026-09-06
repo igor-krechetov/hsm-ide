@@ -1,5 +1,7 @@
 #include "StateHierarchyRules.hpp"
 
+#include "elements/ModelRootState.hpp"
+
 namespace model {
 
 bool StateHierarchyRules::canBeTopLevel(const StateType elementType) {
@@ -80,6 +82,16 @@ bool StateHierarchyRules::canAddEntityToParent(const QSharedPointer<StateMachine
 
             if (parentState && childState) {
                 allowed = canStateBeChildOf(parentState->stateType(), childState->stateType());
+
+                // REQ-103f6: only one initial state is allowed at the model root.
+                if (allowed && (parentState->stateType() == StateType::MODEL_ROOT) &&
+                    (childState->stateType() == StateType::INITIAL)) {
+                    const QSharedPointer<ModelRootState> rootState = parentState.dynamicCast<ModelRootState>();
+
+                    if (rootState && rootState->hasInitialState()) {
+                        allowed = false;
+                    }
+                }
             }
         } else if (child->type() == StateMachineEntity::Type::Transition) {
             if (parentState) {
