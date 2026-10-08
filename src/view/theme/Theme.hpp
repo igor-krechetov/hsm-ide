@@ -19,6 +19,8 @@ struct NodeStyle {
     QBrush includeBackgroundBrush;
     QBrush mainBrush;
     QColor textColor;
+    QColor duplicateWarningColor;        // name label color when a state name is duplicated (REQ-103f7)
+    QBrush invalidStateBackgroundBrush;  // element background when the state is invalid, e.g. duplicate name (REQ-103f7)
     QBrush editingBackgroundBrush;
     QFont labelFont;
     QFont historyFont;

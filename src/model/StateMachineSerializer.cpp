@@ -53,10 +53,12 @@ IMetadataSerializer* StateMachineSerializer::selectStrategyForDetectedFormat(Det
 
 QString StateMachineSerializer::serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
                                                  const SerializationFormat format,
-                                                 const bool addScxmlTag) {
+                                                 const bool addScxmlTag,
+                                                 const bool ignoreUid) {
     QString scxml;
 
     mActiveStrategy = selectStrategy(format);
+    mHsmStrategy.setIgnoreUid(ignoreUid);
     mXmlWriter = QSharedPointer<QXmlStreamWriter>::create(&scxml);
 
     mXmlWriter->setAutoFormatting(true);
@@ -118,20 +120,30 @@ QSharedPointer<model::StateMachineModel> StateMachineSerializer::deserializeFrom
 
 bool StateMachineSerializer::deserializeFromUnwrapperScxml(const QString& unwrappedScxml,
                                                            const QString& stateWrapper,
-                                                           QSharedPointer<model::StateMachineModel>& outModel) {
+                                                           QSharedPointer<model::StateMachineModel>& outModel,
+                                                           const bool ignoreUid) {
     QString wrappedScxml = unwrappedScxml.trimmed();
 
     if ((wrappedScxml.isEmpty() == false) && (wrappedScxml.contains("<scxml") == false)) {
+        const QString hsmNamespaceDecl =
+            QStringLiteral("xmlns:%1=\"%2\"").arg(scxml::HSM_NAMESPACE_PREFIX).arg(scxml::HSM_NAMESPACE_URI);
+
         wrappedScxml = QString(
                            "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" "
-                           "xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:qt = \"http://www.qt.io/2015/02/scxml-ext\">"
-                           "<state id=\"%1\">%2</state>"
+                           "xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:qt = \"http://www.qt.io/2015/02/scxml-ext\" %1>"
+                           "<state id=\"%2\">%3</state>"
                            "</scxml>")
+                           .arg(hsmNamespaceDecl)
                            .arg(stateWrapper)
                            .arg(wrappedScxml);
     }
 
-    return deserializeFromScxml(wrappedScxml, outModel);
+    // Clipboard paste: ignore any hsm:uid so pasted elements never collide with existing ids.
+    mHsmStrategy.setIgnoreUid(ignoreUid);
+    const bool result = deserializeFromScxml(wrappedScxml, outModel);
+    mHsmStrategy.setIgnoreUid(false);
+
+    return result;
 }
 
 bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel) {
@@ -301,24 +313,24 @@ bool StateMachineSerializer::validateScxmlStructure(const QString& scxml) {
 // Visitor methods (format-agnostic SCXML structure)
 // ============================================================================
 
-#define SCXML_SERIALIZE_ACTION(_object, _hasAction, _actionGetter, _element, _attr)     \
-    if ((_object)->_hasAction()) {                                                      \
-        mXmlWriter->writeStartElement(_element);                                        \
-        mXmlWriter->writeTextElement((_attr), (_object)->_actionGetter()->serialize()); \
-        mXmlWriter->writeEndElement();                                                  \
-    }
+#define SCXML_SERIALIZE_ACTION(_object, _hasAction, _actionGetter, _element, _attr) \
+  if ((_object)->_hasAction()) {                                                    \
+    mXmlWriter->writeStartElement(_element);                                        \
+    mXmlWriter->writeTextElement((_attr), (_object)->_actionGetter()->serialize()); \
+    mXmlWriter->writeEndElement();                                                  \
+  }
 
 #define SCXML_SERIALIZE_ACTION_ATTR(_object, _hasAction, _actionGetter, _element, _attr) \
-    if ((_object)->_hasAction()) {                                                       \
-        mXmlWriter->writeStartElement(_element);                                         \
-        mXmlWriter->writeAttribute((_attr), (_object)->_actionGetter()->serialize());    \
-        mXmlWriter->writeEndElement();                                                   \
-    }
+  if ((_object)->_hasAction()) {                                                         \
+    mXmlWriter->writeStartElement(_element);                                             \
+    mXmlWriter->writeAttribute((_attr), (_object)->_actionGetter()->serialize());        \
+    mXmlWriter->writeEndElement();                                                       \
+  }
 
-#define SCXML_SERIALIZE_STATE_ACTIONS(_object)                                                                       \
-    serializeActionListElement((_object)->onEnteringActions(), QStringLiteral("onentry"), QStringLiteral("script")); \
-    serializeActionListElement((_object)->onExitingActions(), QStringLiteral("onexit"), QStringLiteral("script"));   \
-    SCXML_SERIALIZE_ACTION_ATTR(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
+#define SCXML_SERIALIZE_STATE_ACTIONS(_object)                                                                     \
+  serializeActionListElement((_object)->onEnteringActions(), QStringLiteral("onentry"), QStringLiteral("script")); \
+  serializeActionListElement((_object)->onExitingActions(), QStringLiteral("onexit"), QStringLiteral("script"));   \
+  SCXML_SERIALIZE_ACTION_ATTR(_object, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr")
 
 void StateMachineSerializer::serializeActionListElement(const ModelActionList& actions,
                                                         const QString& wrapper,

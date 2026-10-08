@@ -138,6 +138,20 @@ void StateMachineModel::setName(const QString& name) {
     }
 }
 
+bool StateMachineModel::hasStateWithName(const QString& name, const EntityID_t excludeId) const {
+    return (mModelRoot ? (mModelRoot->findChildStateByName(name, excludeId) != nullptr) : false);
+}
+
+QString StateMachineModel::generateUniqueName(const QString& base) const {
+    QString uniqueName = base;
+
+    while (hasStateWithName(uniqueName)) {
+        uniqueName += "_copy";
+    }
+
+    return uniqueName;
+}
+
 QSharedPointer<ModelRootState>& StateMachineModel::root() {
     return mModelRoot;
 }

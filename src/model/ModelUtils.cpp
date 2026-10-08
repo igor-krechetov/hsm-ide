@@ -28,4 +28,23 @@ QString sanitiseIdentifier(const QString& input) {
     return out;
 }
 
+void reassignImportedIds(const QSharedPointer<State>& root, EntityIdGenerator& idGenerator) {
+    if (root) {
+        root->setId(idGenerator.generateNextId());
+
+        root->forEachChildElement(
+            [&idGenerator](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> entity) {
+                Q_UNUSED(parent);
+
+                if (entity) {
+                    entity->setId(idGenerator.generateNextId());
+                }
+
+                return true;
+            },
+            StateMachineEntity::DEPTH_INFINITE,
+            false);
+    }
+}
+
 };  // namespace model

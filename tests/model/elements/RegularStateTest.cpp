@@ -47,6 +47,21 @@ void RegularStateTest::ChildAndTransitionSearch() {
     QCOMPARE(tr, parent->findTransition(tr->id()));
     QCOMPARE(parent, parent->findParentState(child->id()));
 
+    // excludeId: excluding the sole match by name returns null.
+    QCOMPARE(QSharedPointer<model::State>(), parent->findChildStateByName("Child", child->id()));
+
+    // excludeId: with two states sharing a name, excluding one returns the other.
+    auto dupA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                    .dynamicCast<model::RegularState>();
+    dupA->setName("Dup");
+    auto dupB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                    .dynamicCast<model::RegularState>();
+    dupB->setName("Dup");
+    parent->addChildState(dupA);
+    parent->addChildState(dupB);
+
+    QCOMPARE(dupB, parent->findChildStateByName("Dup", dupA->id()));
+
     parent->deleteChild(child->id());
     QCOMPARE(QSharedPointer<model::State>(), parent->findState(child->id()));
 }

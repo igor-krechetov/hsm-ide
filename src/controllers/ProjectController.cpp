@@ -13,6 +13,7 @@
 #include "ObjectUtils.hpp"
 #include "controllers/ModificationHistoryController.hpp"
 #include "model/ModelElementsFactory.hpp"
+#include "model/ModelUtils.hpp"
 #include "model/StateHierarchyRules.hpp"
 #include "model/StateMachineModel.hpp"
 #include "model/StateMachineSerializer.hpp"
@@ -302,7 +303,7 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
         }
 
         model::StateMachineSerializer serializer;
-        serializedData = serializer.serializeToScxml(tempModel, model::SerializationFormat::HSM, false).trimmed();
+        serializedData = serializer.serializeToScxml(tempModel, model::SerializationFormat::HSM, false, true).trimmed();
     }
 
     return serializedData;
@@ -320,7 +321,7 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
         model::StateMachineSerializer serializer;
         const QString wrapperId = "__hsmide_clipboard_wrapper__";
 
-        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, wrapperId, importModel)) {
+        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, wrapperId, importModel, true)) {
             importModel->dump();  // TODO: debug
 
             const auto targetParent = resolvePasteTargetParent(selectedElementIDs);
@@ -336,35 +337,19 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
             }
 
             if (mModel && mModel->root()) {
+                // Model-side uniqueness is delegated to generateUniqueName(). The batch set only
+                // prevents two pasted siblings sharing the same source name from colliding with
+                // each other, since the pasted states are not in mModel yet when they are renamed.
                 QSet<QString> usedStateNames;
 
-                mModel->root()->forEachChildElement(
-                    [&usedStateNames](QSharedPointer<model::StateMachineEntity> parent,
-                                      QSharedPointer<model::StateMachineEntity> entity) {
-                        Q_UNUSED(parent);
+                auto generateUniqueStateName = [this, &usedStateNames](const QString& sourceName) {
+                    QString uniqueName = mModel->generateUniqueName(sourceName);
 
-                        if (entity && (entity->type() == model::StateMachineEntity::Type::State)) {
-                            const auto state = entity.dynamicCast<model::State>();
-
-                            if (state) {
-                                usedStateNames.insert(state->name());
-                            }
-                        }
-
-                        return true;
-                    },
-                    model::StateMachineEntity::DEPTH_INFINITE,
-                    false);
-
-                auto generateUniqueStateName = [&usedStateNames](const QString& sourceName) {
-                    QString uniqueName = sourceName;
-
-                    if (usedStateNames.contains(uniqueName)) {
-                        uniqueName = sourceName + "_copy";
-
-                        while (usedStateNames.contains(uniqueName)) {
-                            uniqueName += "_copy";
-                        }
+                    // generateUniqueName() only guarantees uniqueness against mModel, so re-run the
+                    // candidate through it after each "_copy" append to make sure the batch guard
+                    // never emits a name that already exists in the destination model.
+                    while (usedStateNames.contains(uniqueName)) {
+                        uniqueName = mModel->generateUniqueName(uniqueName + "_copy");
                     }
 
                     usedStateNames.insert(uniqueName);
@@ -494,6 +479,10 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
                 } else {
                     newState = state;
                 }
+
+                // Re-mint ids for the whole imported subtree from the destination model's
+                // generator so repeated pastes never reuse the clipboard generator's ids.
+                model::reassignImportedIds(newState, mModel->idGenerator());
 
                 if (newState && model::StateHierarchyRules::canAddEntityToParent(targetParent, newState)) {
                     // NOTE: transition geometry stores grip points in parent coordinate system.
@@ -744,6 +733,10 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
         }
         handleModelEntityAdded(ptrParent, ptrChild, true);
         projectModified();
+
+        if (mView && (false == mIgnoreAddedModelEntities)) {
+            mView->refreshDuplicateNameWarnings();
+        }
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";
     }
@@ -760,6 +753,10 @@ void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntit
         }
         mView->deleteHsmElement(ptrEntity->id());
         projectModified();
+
+        if (mView) {
+            mView->refreshDuplicateNameWarnings();
+        }
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";
     }
@@ -789,6 +786,13 @@ void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity>
         }
 
         // TODO: do we need a case when source or target changes directly in the model? maybe through the tree?
+    }
+
+    // REQ-103f7: a state's name may have changed - recompute duplicate-name warnings.
+    // Skipped during a batch (e.g. paste); refreshViewFromModel refreshes once at the end.
+    if (mView && (false == mIgnoreAddedModelEntities) && ptrEntity &&
+        (ptrEntity->type() == model::StateMachineEntity::Type::State)) {
+        mView->refreshDuplicateNameWarnings();
     }
 
     projectModified();
@@ -821,6 +825,11 @@ void ProjectController::createElement(const QString& elementTypeId,
         }
 
         if (model::StateHierarchyRules::canAddEntityToParent(parentState, newModelElement)) {
+            // REQ-103f7: ensure the generated name is unique across the whole model.
+            if (newModelElement->name().isEmpty() == false) {
+                newModelElement->setName(mModel->generateUniqueName(newModelElement->name()));
+            }
+
             newModelElement->setPos(posParent);
             parentState->addChildState(newModelElement);
         } else {
@@ -936,5 +945,8 @@ void ProjectController::refreshViewFromModel() {
 
         // trigger rebuild of the view model
         mHsmStructureViewModel->onModelChanged();
+
+        // REQ-103f7: recompute duplicate-name warnings after a full rebuild (e.g. load).
+        mView->refreshDuplicateNameWarnings();
     }
 }

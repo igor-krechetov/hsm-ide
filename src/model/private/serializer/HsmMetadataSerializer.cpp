@@ -24,7 +24,9 @@ void HsmMetadataSerializer::notifyExitState(const StateMachineEntity* /*entity*/
 }
 
 void HsmMetadataSerializer::writeEntityAttributes(AttributeWriter& writer, const StateMachineEntity* entity) {
-    writer.writeAttribute(scxml::HSM_UID_ATTR, QString::number(entity->id()));
+    if (mIgnoreUid == false) {
+        writer.writeAttribute(scxml::HSM_UID_ATTR, QString::number(entity->id()));
+    }
 }
 
 void HsmMetadataSerializer::writeEntityChildMetadata(QXmlStreamWriter& /*writer*/, const StateMachineEntity* /*entity*/) {
@@ -52,26 +54,30 @@ DetectedFormat HsmMetadataSerializer::detectFormat(const QXmlStreamReader& reade
 
 EntityID_t HsmMetadataSerializer::resolveEntityId(QXmlStreamReader& reader, const QSharedPointer<StateMachineModel>& model) {
     EntityID_t result = INVALID_MODEL_ID;
-    QString uidStr = reader.attributes().value(scxml::HSM_UID_ATTR).toString();
 
-    if (!uidStr.isEmpty()) {
-        bool ok = false;
-        quint64 rawValue = uidStr.toULongLong(&ok);
+    // Clipboard mode: ignore any persisted hsm:uid and always mint a fresh id.
+    if (mIgnoreUid == false) {
+        QString uidStr = reader.attributes().value(scxml::HSM_UID_ATTR).toString();
 
-        if (ok && rawValue >= 1 && rawValue <= 0xFFFFFFFE) {
-            EntityID_t uid = static_cast<EntityID_t>(rawValue);
+        if (!uidStr.isEmpty()) {
+            bool ok = false;
+            quint64 rawValue = uidStr.toULongLong(&ok);
 
-            // registerRestoredId is the single source of truth for id ownership. It fails when
-            // the value is already taken - either by a UID seen earlier in the file or by a
-            // replacement previously issued via generateNextId(). In every such case we must
-            // fall back to a freshly generated id, otherwise two entities could share an id.
-            if (model->idGenerator().registerRestoredId(uid)) {
-                result = uid;
+            if (ok && rawValue >= 1 && rawValue <= 0xFFFFFFFE) {
+                EntityID_t uid = static_cast<EntityID_t>(rawValue);
+
+                // registerRestoredId is the single source of truth for id ownership. It fails when
+                // the value is already taken - either by a UID seen earlier in the file or by a
+                // replacement previously issued via generateNextId(). In every such case we must
+                // fall back to a freshly generated id, otherwise two entities could share an id.
+                if (model->idGenerator().registerRestoredId(uid)) {
+                    result = uid;
+                } else {
+                    qWarning() << "Duplicate hsm:uid" << uid << "- generating replacement";
+                }
             } else {
-                qWarning() << "Duplicate hsm:uid" << uid << "- generating replacement";
+                qWarning() << "Invalid hsm:uid value:" << uidStr << "- generating replacement";
             }
-        } else {
-            qWarning() << "Invalid hsm:uid value:" << uidStr << "- generating replacement";
         }
     }
 
@@ -108,6 +114,10 @@ void HsmMetadataSerializer::endDeserialization(const QSharedPointer<StateMachine
 
 SerializationFormat HsmMetadataSerializer::format() const {
     return SerializationFormat::HSM;
+}
+
+void HsmMetadataSerializer::setIgnoreUid(const bool ignore) {
+    mIgnoreUid = ignore;
 }
 
 }  // namespace model

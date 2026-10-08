@@ -65,7 +65,9 @@ QStringList State::properties() const {
     return {"name"};
 }
 
-QSharedPointer<State> State::findChildStateByName(const QString& name) {
+QSharedPointer<State> State::findChildStateByName(const QString& name, const EntityID_t excludeId) {
+    Q_UNUSED(name);
+    Q_UNUSED(excludeId);
     return nullptr;
 }
 

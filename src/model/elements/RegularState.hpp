@@ -66,7 +66,7 @@ public:
         const EntityID_t id,
         const StateMachineEntity::Type type = StateMachineEntity::Type::Invalid) const override;
     QSharedPointer<State> findState(const EntityID_t id) const;
-    QSharedPointer<State> findChildStateByName(const QString& name) override;
+    QSharedPointer<State> findChildStateByName(const QString& name, const EntityID_t excludeId = INVALID_MODEL_ID) override;
     QSharedPointer<RegularState> findRegularState(const EntityID_t id) const;
     QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 

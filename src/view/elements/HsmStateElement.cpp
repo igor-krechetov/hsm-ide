@@ -50,7 +50,7 @@ void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& mode
     const auto applyTheme = [this]() {
         const auto& theme = ThemeManager::instance().theme();
 
-        mStateNameLabel->setDefaultTextColor(theme.node.textColor);
+        mStateNameLabel->setDefaultTextColor(mHasDuplicateName ? theme.node.duplicateWarningColor : theme.node.textColor);
         mPropertiesSection->setDefaultTextColor(theme.node.textColor);
         mHeaderSeparator->setPen(theme.node.borderPen);
         mSelfTransitionsSeparator->setPen(theme.node.borderPen);
@@ -77,6 +77,25 @@ void HsmStateElement::onStateNameEditFinished() {
 
     if (mStateNameLabel && entityPtr) {
         entityPtr->setName(mStateNameLabel->toPlainText());
+    }
+}
+
+void HsmStateElement::setDuplicateNameWarning(const bool duplicated) {
+    if (mHasDuplicateName != duplicated) {
+        mHasDuplicateName = duplicated;
+
+        if (mStateNameLabel) {
+            const auto& theme = ThemeManager::instance().theme();
+            mStateNameLabel->setDefaultTextColor(duplicated ? theme.node.duplicateWarningColor : theme.node.textColor);
+        }
+
+        if (duplicated) {
+            setToolTip(tr("Duplicate state name. State names must be unique across the model."));
+        } else {
+            setToolTip(QString());
+        }
+
+        update();
     }
 }
 
@@ -416,7 +435,9 @@ void HsmStateElement::updateBoundingRect(const QRectF& newRect) {
 void HsmStateElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     const auto& theme = ThemeManager::instance().theme();
 
-    if (hasSubstates() == true) {
+    if (mHasDuplicateName == true) {
+        paintRectangularBody(painter, theme.node.invalidStateBackgroundBrush);
+    } else if (hasSubstates() == true) {
         paintRectangularBody(painter, theme.node.substateBackgroundBrush);
     } else {
         paintRectangularBody(painter, theme.node.backgroundBrush);
