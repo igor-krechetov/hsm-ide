@@ -1,9 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.17.0] - 2026-10-09
+### New
+- Add a Keyboard Shortcuts dialog, available from the Help menu, listing the application's keyboard shortcuts
+
 ## [0.16.0] - 2026-10-05
 ### New
 - [REQ-103f7] Enforce unique state names across the whole model: generated and dropped states are auto-uniquified, and duplicate names are highlighted with a visual warning
+
+## [0.15.1] - 2026-02-10
 ### Fix
 - Fix copy/paste of elements carrying an `hsm:uid` attribute: the pasted SCXML wrapper now declares the `hsm` namespace, so pasting no longer aborts on an undeclared prefix; pasted elements always receive fresh, non-colliding ids
 ### Refactoring

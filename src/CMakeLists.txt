@@ -126,10 +126,12 @@ set(PROJECT_SOURCES
 
     view/MainWindow.cpp
     view/AboutDialog.cpp
+    view/ShortcutsDialog.cpp
 
     view/ui/main.ui
     view/ui/settings.ui
     view/ui/about.ui
+    view/ui/shortcuts.ui
     ${TS_FILES}
 )
 
