@@ -36,11 +36,14 @@ public:
      * @param model The state machine model to serialize
      * @param format The serialization format to use (HSM or QtCreator)
      * @param addScxmlTag Whether to wrap output in root <scxml> element
+     * @param ignoreUid When true, hsm:uid attributes are not written during serialization. Used for copy/paste so pasted
+     *                  elements do not carry source ids that would collide with existing elements in the destination model.
      * @return SCXML representation as a QString
      */
     QString serializeToScxml(const QSharedPointer<model::StateMachineModel>& modelPtr,
                              const SerializationFormat format = SerializationFormat::HSM,
-                             const bool addScxmlTag = true);
+                             const bool addScxmlTag = true,
+                             const bool ignoreUid = false);
 
     /**
      * @brief Deserializes SCXML format to a state machine model
@@ -52,7 +55,8 @@ public:
     bool deserializeFromScxml(const QString& scxml, QSharedPointer<model::StateMachineModel>& outModel);
     bool deserializeFromUnwrapperScxml(const QString& unwrappedScxml,
                                        const QString& stateWrapper,
-                                       QSharedPointer<model::StateMachineModel>& outModel);
+                                       QSharedPointer<model::StateMachineModel>& outModel,
+                                       const bool ignoreUid = false);
 
     /**
      * @brief Validates the structure of SCXML content

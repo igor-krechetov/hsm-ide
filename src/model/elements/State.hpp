@@ -39,7 +39,7 @@ public:
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
 
-    virtual QSharedPointer<State> findChildStateByName(const QString& name);
+    virtual QSharedPointer<State> findChildStateByName(const QString& name, const EntityID_t excludeId = INVALID_MODEL_ID);
 
 protected:
     void setStateType(const StateType newType);

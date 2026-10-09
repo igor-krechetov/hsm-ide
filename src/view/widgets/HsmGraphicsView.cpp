@@ -257,6 +257,35 @@ void HsmGraphicsView::clearAllHsmElements() {
     mElements.clear();
 }
 
+void HsmGraphicsView::refreshDuplicateNameWarnings() {
+    // Full scan: count state names across all elements, then flag any element whose
+    // name is shared. Cheap for realistic HSM sizes; can be cached later if needed.
+    QHash<QString, int> nameCounts;
+
+    for (auto it = mElements.begin(); it != mElements.end(); ++it) {
+        const QPointer<view::HsmElement>& element = it.value();
+
+        if (element) {
+            const auto state = element->modelElement<model::State>();
+
+            if (state && (state->name().isEmpty() == false)) {
+                nameCounts[state->name()]++;
+            }
+        }
+    }
+
+    for (auto it = mElements.begin(); it != mElements.end(); ++it) {
+        const QPointer<view::HsmElement>& element = it.value();
+
+        if (auto* stateElement = qobject_cast<view::HsmStateElement*>(element.data())) {
+            const auto state = stateElement->modelElement<model::State>();
+            const bool duplicated = state && (state->name().isEmpty() == false) && (nameCounts.value(state->name()) > 1);
+
+            stateElement->setDuplicateNameWarning(duplicated);
+        }
+    }
+}
+
 void HsmGraphicsView::moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId) {
     // qDebug() << "--- HsmGraphicsView::moveHsmElement: elementId" << elementId << " -> " << newParentId;
 

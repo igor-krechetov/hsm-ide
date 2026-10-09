@@ -55,6 +55,9 @@ public:
                                              const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
     void clearAllHsmElements();
+    // REQ-103f7: recompute duplicate-name warnings across all state elements (full scan).
+    // Called on coarse model changes (add / delete / rename / load).
+    void refreshDuplicateNameWarnings();
     void moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId);
 
     void reconnectHsmTransition(const model::EntityID_t transitionId,

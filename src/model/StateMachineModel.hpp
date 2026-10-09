@@ -26,6 +26,11 @@ public:
     QSharedPointer<ModelRootState>& root();
     const QSharedPointer<ModelRootState>& root() const;
 
+    // REQ-103f7: returns base unchanged if the name is free, otherwise appends "_copy"
+    // until unique across the whole model. Used to auto-uniquify generated names on
+    // create/drop (duplicate-name detection for display is handled in the view layer).
+    QString generateUniqueName(const QString& base) const;
+
     void clearModel();
 
     QSharedPointer<Transition> createUniqueTransition(const EntityID_t source, const EntityID_t target);
@@ -46,6 +51,10 @@ signals:
     void modelDataChanged(QWeakPointer<StateMachineEntity> entity);
 
 private:
+    // Internal helper for generateUniqueName: true if any state (other than excludeId)
+    // in the whole model already has the given name.
+    bool hasStateWithName(const QString& name, const EntityID_t excludeId = INVALID_MODEL_ID) const;
+
     QSharedPointer<ModelRootState> mModelRoot;
     EntityIdGenerator mIdGenerator;
 };

@@ -276,7 +276,7 @@ QSharedPointer<State> RegularState::findState(const EntityID_t id) const {
     return res;
 }
 
-QSharedPointer<State> RegularState::findChildStateByName(const QString& name) {
+QSharedPointer<State> RegularState::findChildStateByName(const QString& name, const EntityID_t excludeId) {
     QSharedPointer<State> res;
 
     forEachChildElement([&](QSharedPointer<StateMachineEntity> parent, QSharedPointer<StateMachineEntity> element) {
@@ -284,7 +284,7 @@ QSharedPointer<State> RegularState::findChildStateByName(const QString& name) {
 
         if (element->type() == StateMachineEntity::Type::State) {
             QSharedPointer<State> statePtr = element.dynamicCast<State>();
-            if (statePtr && statePtr->name() == name) {
+            if (statePtr && (statePtr->name() == name) && (element->id() != excludeId)) {
                 res = statePtr;
                 continueSearch = false;
             }

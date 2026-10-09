@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.16.0] - 2026-10-05
+### New
+- [REQ-103f7] Enforce unique state names across the whole model: generated and dropped states are auto-uniquified, and duplicate names are highlighted with a visual warning
+### Fix
+- Fix copy/paste of elements carrying an `hsm:uid` attribute: the pasted SCXML wrapper now declares the `hsm` namespace, so pasting no longer aborts on an undeclared prefix; pasted elements always receive fresh, non-colliding ids
+### Refactoring
+- Reimplement `StateMachineModel::hasStateWithName` on top of `findChildStateByName` with an optional `excludeId` argument
+- Move `reassignImportedIds` from `StateMachineModel` to `ModelUtils` as a free function
+
 ## [0.15.0] - 2026-09-06
 ### New
 - [REQ-103f6] Restrict the model root to a single initial state; adding, dropping, or pasting a second one is rejected

@@ -40,6 +40,10 @@ public:
     QRectF bodyBoundingRect() const;
     QRectF sceneBodyBoundingRect() const;
 
+    // REQ-103f7: show/clear a visual warning (name label color + tooltip) when this
+    // state's name is duplicated elsewhere in the model. Computed by HsmGraphicsView.
+    void setDuplicateNameWarning(const bool duplicated);
+
 protected:
     bool isInitialized() const;
     void updateBoundingRect(const QRectF& newRect = QRectF()) override;
@@ -78,6 +82,8 @@ private:
     bool mSuppressChildCompensation = false;
     // When true, layoutSections skips bodySection pos update and child compensation (during resizeToFitChildItem)
     bool mSuppressBodySectionMovement = false;
+    // REQ-103f7: true when this state's name is duplicated elsewhere (drives label color + tooltip)
+    bool mHasDuplicateName = false;
 };
 
 };  // namespace view

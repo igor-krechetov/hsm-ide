@@ -20,6 +20,7 @@ set(TEST_OBJECTS
     model/StateMachineSerializer/HsmLayoutSerializerTest.cpp
     model/StateMachineSerializer/FormatRoundTripIntegrationTest.cpp
     model/StateMachineSerializer/QtGeometryDeserializationTest.cpp
+    model/StateMachineSerializer/PasteUnwrappedScxmlTest.cpp
 
     model/elements/RegularStateTest.cpp
     model/elements/HistoryStateTest.cpp

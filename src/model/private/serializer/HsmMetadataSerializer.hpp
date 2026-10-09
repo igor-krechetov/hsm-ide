@@ -31,8 +31,15 @@ public:
     // --- Query ---
     SerializationFormat format() const override;
 
+    // Clipboard mode (REQ-103f7 / copy-paste): when enabled, hsm:uid is neither written on
+    // serialize nor honored on deserialize (fresh ids are always generated). Used for
+    // copy/paste so pasted elements never collide with the originals' UIDs, and so plain
+    // user-authored XML pastes cleanly.
+    void setIgnoreUid(const bool ignore);
+
 private:
     HsmLayoutSerializer mLayoutSerializer;
+    bool mIgnoreUid = false;
 };
 
 }  // namespace model
