@@ -3,6 +3,8 @@ temp
 *.code-workspace
 tools
 .kiro
+.agents
+.worktrees
 
 # Qt
 build-*

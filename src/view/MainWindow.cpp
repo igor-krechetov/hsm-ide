@@ -13,6 +13,7 @@
 
 #include "./ui/ui_main.h"
 #include "AboutDialog.hpp"
+#include "ShortcutsDialog.hpp"
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
@@ -356,6 +357,12 @@ void MainWindow::handleAbout() {
     AboutDialog aboutDlg(this);
 
     aboutDlg.exec();
+}
+
+void MainWindow::handleKeyboardShortcuts() {
+    ShortcutsDialog shortcutsDlg(this);
+
+    shortcutsDlg.exec();
 }
 
 void MainWindow::projectTabSelected(int index) {

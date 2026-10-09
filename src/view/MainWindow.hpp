@@ -65,6 +65,7 @@ public slots:
     void handleToggleSnapToGrid(const bool enabled);
 
     void handleAbout();
+    void handleKeyboardShortcuts();
 
     void projectTabSelected(int index);
     void projectTabCloseRequested(int index);
