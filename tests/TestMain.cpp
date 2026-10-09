@@ -26,6 +26,7 @@ int runStateMachineSerializerSerializationTest(int argc, char** argv) __attribut
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) __attribute__((weak));
 int runFormatDetectionTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewTest(int argc, char** argv) __attribute__((weak));
+int runHsmGraphicsViewPropertyTest(int argc, char** argv) __attribute__((weak));
 int runHsmElementDragTest(int argc, char** argv) __attribute__((weak));
 int runAutoGroupItemCursorTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionGripVisibilityTest(int argc, char** argv) __attribute__((weak));
@@ -73,6 +74,7 @@ int main(int argc, char** argv) {
         runStateMachineSerializerDeserializationTest,
         runFormatDetectionTest,
         runHsmGraphicsViewTest,
+        runHsmGraphicsViewPropertyTest,
         runHsmElementDragTest,
         runAutoGroupItemCursorTest,
         runHsmTransitionGripVisibilityTest,

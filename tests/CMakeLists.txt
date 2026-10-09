@@ -34,6 +34,7 @@ set(TEST_OBJECTS
     model/elements/MultipleActionsTest.cpp
 
     view/HsmGraphicsViewTest.cpp
+    view/HsmGraphicsViewPropertyTest.cpp
     view/HsmElementDragTest.cpp
     view/AutoGroupItemCursorTest.cpp
     view/HsmTransitionGripVisibilityTest.cpp

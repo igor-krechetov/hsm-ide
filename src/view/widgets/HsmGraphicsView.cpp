@@ -23,13 +23,30 @@
 #include "view/elements/private/HsmResizableElement.hpp"
 #include "view/theme/ThemeManager.hpp"
 
+namespace {
+// Half-width/half-height of the fixed, origin-centered scene rect installed on the view
+// (see the HsmGraphicsView constructor). The resulting 20000x20000 rect centered on the
+// origin is far larger than any realistic diagram, so normal element placement always
+// stays inside it and never forces Qt to recompute the scene rect.
+constexpr qreal kSceneRectHalfExtent = 10000.0;
+}  // namespace
+
 HsmGraphicsView::HsmGraphicsView(QWidget* parent)
     : QGraphicsView(parent) {
     setAcceptDrops(true);
     // setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setRubberBandSelectionMode(Qt::ContainsItemBoundingRect);
     setDragMode(QGraphicsView::RubberBandDrag);
-    // setSceneRect(-500, -500, 1000, 1000);
+
+    // Establish an explicit, origin-centered scene rect up front. Without it Qt derives
+    // the scene rect from QGraphicsScene::itemsBoundingRect(), which is degenerate on an
+    // empty document; adding the first element would then force Qt to recompute the scene
+    // rect and remap scene-to-view coordinates, producing a viewport "jump". A fixed,
+    // large symmetric rect keeps the scene-to-view mapping (and scrollbar ranges) stable
+    // across the first add while comfortably containing any realistic diagram. The view
+    // is the single owner of the scene rect so any scene attached to it inherits a stable
+    // mapping (MainWindow::projectOpened intentionally does not set one).
+    setSceneRect(-kSceneRectHalfExtent, -kSceneRectHalfExtent, 2 * kSceneRectHalfExtent, 2 * kSceneRectHalfExtent);
     // scale(0.3, 0.3);
     // translate(100, 0);
 
