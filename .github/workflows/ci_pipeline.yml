@@ -92,6 +92,9 @@ jobs:
   # --------------------------------------------------------
   # RELEASE — only on push to main (after docs)
   # --------------------------------------------------------
+  # The reusable release workflow now generates the changelog-based notes
+  # itself (header + changelog block); release_description below only carries
+  # the repo-specific footer appended beneath the generated changelog.
   release:
     needs: [verify, autotag]
     if: >
@@ -104,10 +107,7 @@ jobs:
       commit_sha: ${{ github.sha }}
       tag_version: ${{ needs.autotag.outputs.tag_name }}
       builds: "build-artifacts-ubuntu,build-artifacts-windows"
-      # TODO: make proper release notes
       release_description: |
-        Release ${{ needs.autotag.outputs.tag_name }}
-
         - Built on Ubuntu and Windows
         - Includes binaries for both platforms
     permissions:
