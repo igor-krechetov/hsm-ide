@@ -12,6 +12,7 @@
 #include <functional>
 
 #include "controllers/UnsavedChangesChoice.hpp"
+#include "model/ParseErrorCollector.hpp"
 #include "view/MainWindow.hpp"
 
 class ProjectController;
@@ -65,6 +66,7 @@ signals:
     void projectSelected(ProjectControllerPtr project);
     void projectClosed(ProjectControllerPtr project);
     void hsmProjectOpened(const QString& path);
+    void projectImportFinished(const QString& path, const model::ParseErrorCollector& report);
 
 private:
     MainWindow mMainWindow;

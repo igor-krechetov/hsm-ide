@@ -6,6 +6,7 @@
 #include <QPointer>
 #include <QWeakPointer>
 
+#include "model/ParseErrorCollector.hpp"
 #include "model/StateMachineModel.hpp"
 
 class IProjectController : public QObject, public QEnableSharedFromThis<IProjectController> {
@@ -15,6 +16,7 @@ public:
     virtual ~IProjectController() = default;
 
     virtual bool importModel(const QString& path) = 0;
+    virtual const model::ParseErrorCollector& lastImportReport() const = 0;
     virtual bool exportModel() = 0;
     virtual bool exportModel(const QString& path) = 0;
     virtual void updateModelPath(const QString& newPath) = 0;

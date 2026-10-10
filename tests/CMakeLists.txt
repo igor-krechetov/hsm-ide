@@ -11,6 +11,7 @@ set(TEST_OBJECTS
     model/ModelActionsTest.cpp
     model/ModelElementsFactoryTest.cpp
     model/StateMachineModelTest.cpp
+    model/ParseErrorCollectorTest.cpp
     model/StateHierarchyRulesTest.cpp
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp

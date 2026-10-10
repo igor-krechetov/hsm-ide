@@ -6,6 +6,7 @@
 #include <QString>
 
 #include "ModelTypes.hpp"
+#include "ParseErrorCollector.hpp"
 #include "actions/IModelAction.hpp"
 #include "private/IModelVisitor.hpp"
 #include "private/serializer/HsmMetadataSerializer.hpp"
@@ -65,6 +66,11 @@ public:
      */
     bool validateScxmlStructure(const QString& scxml);
 
+    /**
+     * @brief Returns the parse report accumulated during the most recent deserialization.
+     */
+    const ParseErrorCollector& parseReport() const;
+
     // from IModelVisitor
 protected:
     void visitRegularState(const RegularState* state) override;
@@ -78,6 +84,7 @@ protected:
 
 private:
     void handleParseError(const QString& errorMessage);
+    void handleParseError(const QString& errorMessage, const ParseErrorCollector::Severity severity);
 
     void serializeActionListElement(const ModelActionList& actions, const QString& wrapper, const QString& childTag);
 
@@ -115,6 +122,7 @@ private:
     QMap<EntityID_t, QString> mTransitionTargets;
     QString mInitialTargetFromAttribute;
     QSharedPointer<model::StateMachineModel> mModel;
+    ParseErrorCollector mParseReport;
 };
 
 };  // namespace model

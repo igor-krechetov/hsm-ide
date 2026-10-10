@@ -4,15 +4,14 @@
 #include <cmath>
 #include <random>
 
-#include "model/private/EntityIdGenerator.hpp"
+#include "DragTestHelper.hpp"
+#include "controllers/IProjectController.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/elements/RegularState.hpp"
+#include "model/private/EntityIdGenerator.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
-
-#include "controllers/IProjectController.hpp"
-#include "DragTestHelper.hpp"
 
 using namespace view;
 
@@ -43,11 +42,21 @@ class StubProjectController : public IProjectController {
     Q_OBJECT
 public:
     explicit StubProjectController(HsmGraphicsView* view = nullptr, QObject* parent = nullptr)
-        : IProjectController(parent), mView(view) {}
+        : IProjectController(parent)
+        , mView(view) {}
 
-    bool importModel(const QString&) override { return false; }
-    bool exportModel() override { return false; }
-    bool exportModel(const QString&) override { return false; }
+    bool importModel(const QString&) override {
+        return false;
+    }
+    const model::ParseErrorCollector& lastImportReport() const override {
+        return mLastImportReport;
+    }
+    bool exportModel() override {
+        return false;
+    }
+    bool exportModel(const QString&) override {
+        return false;
+    }
     void updateModelPath(const QString&) override {}
     void handleViewDropEvent(const QString&, const QPointF&, const model::EntityID_t) override {}
     void handleViewMoveEvent(const model::EntityID_t entity, const model::EntityID_t parent) override {
@@ -56,7 +65,9 @@ public:
         }
     }
     void handleDeleteElements(const QList<model::EntityID_t>&) override {}
-    QString serializeElementsToScxml(const QList<model::EntityID_t>&) const override { return {}; }
+    QString serializeElementsToScxml(const QList<model::EntityID_t>&) const override {
+        return {};
+    }
     bool pasteScxmlElements(const QString&, const QList<model::EntityID_t>&, const QPointF&, const bool) override {
         return false;
     }
@@ -65,13 +76,22 @@ public:
     void cancelHistoryTransaction() override {}
     void markHistoryElement(const model::EntityID_t) override {}
     void unmarkHistoryElement(const model::EntityID_t) override {}
-    bool undo() override { return false; }
-    bool redo() override { return false; }
-    bool canUndo() const override { return false; }
-    bool canRedo() const override { return false; }
+    bool undo() override {
+        return false;
+    }
+    bool redo() override {
+        return false;
+    }
+    bool canUndo() const override {
+        return false;
+    }
+    bool canRedo() const override {
+        return false;
+    }
 
 private:
     HsmGraphicsView* mView = nullptr;
+    model::ParseErrorCollector mLastImportReport;
 };
 
 // ---------------------------------------------------------------------------
@@ -103,7 +123,8 @@ struct DragTestFixture {
         childModel = QSharedPointer<model::RegularState>::create("child");
 
         // Create view elements using the view's factory method
-        grandparent = view.createHsmElement(grandparentModel, "state", QPointF(0, 0), QSizeF(400, 300), model::INVALID_MODEL_ID);
+        grandparent =
+            view.createHsmElement(grandparentModel, "state", QPointF(0, 0), QSizeF(400, 300), model::INVALID_MODEL_ID);
         parent = view.createHsmElement(parentModel, "state", QPointF(20, 60), QSizeF(260, 200), grandparentModel->id());
         child = view.createHsmElement(childModel, "state", QPointF(10, 20), QSizeF(200, 100), parentModel->id());
     }
@@ -256,7 +277,8 @@ void HsmElementDragTest::handleLayoutPreservesScenePos() {
     auto parentModel = QSharedPointer<model::RegularState>::create("parent");
     auto childModel = QSharedPointer<model::RegularState>::create("child");
 
-    view::HsmElement* parent = view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
+    view::HsmElement* parent =
+        view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
     view::HsmElement* child = view.createHsmElement(childModel, "state", QPointF(40, 20), QSizeF(100, 60), parentModel->id());
 
     // --- Part 1: Move child to a position well inside parent boundary ---
@@ -274,13 +296,13 @@ void HsmElementDragTest::handleLayoutPreservesScenePos() {
     const QPointF expectedScenePos1 = HsmGraphicsView::alignPointToGrid(initialScenePos + QPointF(gridStep, 0));
     const QPointF actualScenePos1 = child->scenePos();
 
-    QVERIFY2(qFuzzyCompare(actualScenePos1.x(), expectedScenePos1.x()) &&
-                 qFuzzyCompare(actualScenePos1.y(), expectedScenePos1.y()),
-             qPrintable(QString("Inside-parent move: expected scene pos (%1, %2), got (%3, %4)")
-                            .arg(expectedScenePos1.x())
-                            .arg(expectedScenePos1.y())
-                            .arg(actualScenePos1.x())
-                            .arg(actualScenePos1.y())));
+    QVERIFY2(
+        qFuzzyCompare(actualScenePos1.x(), expectedScenePos1.x()) && qFuzzyCompare(actualScenePos1.y(), expectedScenePos1.y()),
+        qPrintable(QString("Inside-parent move: expected scene pos (%1, %2), got (%3, %4)")
+                       .arg(expectedScenePos1.x())
+                       .arg(expectedScenePos1.y())
+                       .arg(actualScenePos1.x())
+                       .arg(actualScenePos1.y())));
 
     DragTestHelper::endDrag(child);
 
@@ -300,18 +322,18 @@ void HsmElementDragTest::handleLayoutPreservesScenePos() {
     const QPointF expectedScenePos2 = HsmGraphicsView::alignPointToGrid(beforeSecondDragScenePos + QPointF(-200, 0));
     const QPointF actualScenePos2 = child->scenePos();
 
-    QVERIFY2(qFuzzyCompare(actualScenePos2.x(), expectedScenePos2.x()) &&
-                 qFuzzyCompare(actualScenePos2.y(), expectedScenePos2.y()),
-             qPrintable(QString("Leftward-expand move: expected scene pos (%1, %2), got (%3, %4)")
-                            .arg(expectedScenePos2.x())
-                            .arg(expectedScenePos2.y())
-                            .arg(actualScenePos2.x())
-                            .arg(actualScenePos2.y())));
+    QVERIFY2(
+        qFuzzyCompare(actualScenePos2.x(), expectedScenePos2.x()) && qFuzzyCompare(actualScenePos2.y(), expectedScenePos2.y()),
+        qPrintable(QString("Leftward-expand move: expected scene pos (%1, %2), got (%3, %4)")
+                       .arg(expectedScenePos2.x())
+                       .arg(expectedScenePos2.y())
+                       .arg(actualScenePos2.x())
+                       .arg(actualScenePos2.y())));
 
     // Verify parent actually expanded (outerRect left should be negative)
     QVERIFY2(parent->elementRect().left() < 0,
-             qPrintable(QString("Parent should have expanded leftward, but outerRect.left() = %1")
-                            .arg(parent->elementRect().left())));
+             qPrintable(
+                 QString("Parent should have expanded leftward, but outerRect.left() = %1").arg(parent->elementRect().left())));
 
     DragTestHelper::endDrag(child);
 }
@@ -331,7 +353,8 @@ void HsmElementDragTest::normalizeElementRectPreservesScenePos() {
     auto parentModel = QSharedPointer<model::RegularState>::create("parent");
     auto childModel = QSharedPointer<model::RegularState>::create("child");
 
-    view::HsmElement* parent = view.createHsmElement(parentModel, "state", QPointF(100, 50), QSizeF(280, 200), model::INVALID_MODEL_ID);
+    view::HsmElement* parent =
+        view.createHsmElement(parentModel, "state", QPointF(100, 50), QSizeF(280, 200), model::INVALID_MODEL_ID);
     view::HsmElement* child = view.createHsmElement(childModel, "state", QPointF(20, 20), QSizeF(100, 60), parentModel->id());
 
     auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(parent);
@@ -390,7 +413,8 @@ void HsmElementDragTest::topLevelDragNoDrift() {
 
     // Create a single top-level element at pos (100, 100) — on grid
     auto model = QSharedPointer<model::RegularState>::create("topLevel");
-    view::HsmElement* element = view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+    view::HsmElement* element =
+        view.createHsmElement(model, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
 
     // Begin drag — puts element in PREPARE state with SINGLE mode
     DragTestHelper::beginDrag(element);
@@ -449,8 +473,11 @@ void HsmElementDragTest::twoLevelChildDragNoDrift() {
     // Bug: the compensation shifts bodySection between mouse events, which corrupts
     // Qt's internal delta-based position tracking (event->pos() - event->lastPos()),
     // causing immediate re-snapping on the very next mouse event (acceleration bug).
-    view::HsmStateElement* parent = (view::HsmStateElement*)view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
-    view::HsmStateElement* child = (view::HsmStateElement*)view.createHsmElement(childModel, "state", QPointF(0, 20), QSizeF(60, 40), parentModel->id());
+    view::HsmStateElement* parent =
+        (view::HsmStateElement*)
+            view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
+    view::HsmStateElement* child =
+        (view::HsmStateElement*)view.createHsmElement(childModel, "state", QPointF(0, 20), QSizeF(60, 40), parentModel->id());
 
     // Enable snap AFTER positioning to preserve setup
     view.setSnapToGridEnabled(true);
@@ -494,11 +521,10 @@ void HsmElementDragTest::twoLevelChildDragNoDrift() {
         const QPointF newScenePos = child->scenePos();
 
         // Monotonicity: X should never increase (we're moving left)
-        QVERIFY2(newScenePos.x() <= prevScenePos.x() + 1e-9,
-                 qPrintable(QString("Non-monotonic at step %1: prev X=%2, new X=%3")
-                                .arg(i)
-                                .arg(prevScenePos.x())
-                                .arg(newScenePos.x())));
+        QVERIFY2(
+            newScenePos.x() <= prevScenePos.x() + 1e-9,
+            qPrintable(
+                QString("Non-monotonic at step %1: prev X=%2, new X=%3").arg(i).arg(prevScenePos.x()).arg(newScenePos.x())));
 
         const QRectF newChildSceneRect = child->sceneBoundingRect();
         const QRectF newParentSceneRect = parent->sceneBoundingRect();
@@ -506,16 +532,18 @@ void HsmElementDragTest::twoLevelChildDragNoDrift() {
 
         qDebug() << "--- PARENT. rect=" << newParentSceneRect << ", body=" << newParentBodySceneRect;
 
-         // parent and child should always be aligned (left edge)
-        QVERIFY2(qFuzzyCompare(newChildSceneRect.left(), newParentSceneRect.left()),
-                 qPrintable(QString("Parent and child were expected to have the same left edge at step %1: child.left=%2, parent.left=%3")
-                                .arg(i)
-                                .arg(newChildSceneRect.left())
-                                .arg(newParentSceneRect.left())));
+        // parent and child should always be aligned (left edge)
+        QVERIFY2(
+            qFuzzyCompare(newChildSceneRect.left(), newParentSceneRect.left()),
+            qPrintable(
+                QString("Parent and child were expected to have the same left edge at step %1: child.left=%2, parent.left=%3")
+                    .arg(i)
+                    .arg(newChildSceneRect.left())
+                    .arg(newParentSceneRect.left())));
 
         // parent's rect and it's body section must be always aligned
         QVERIFY2(qFuzzyCompare(newParentBodySceneRect.left(), newParentSceneRect.left()) &&
-                 qFuzzyCompare(newParentBodySceneRect.right(), newParentSceneRect.right()),
+                     qFuzzyCompare(newParentBodySceneRect.right(), newParentSceneRect.right()),
                  qPrintable(QString("Parent's body section (left/right) is not aligned at step %1: body=%2/%3, parent=%4/%5")
                                 .arg(i)
                                 .arg(newParentBodySceneRect.left())
@@ -525,11 +553,7 @@ void HsmElementDragTest::twoLevelChildDragNoDrift() {
 
         // No large jumps: movement per step must not exceed gridStep.
         qreal jump = std::abs(newScenePos.x() - prevScenePos.x());
-        QVERIFY2(jump <= gridStep,
-                 qPrintable(QString("Jump %1 > gridStep %2 at step %3")
-                                .arg(jump)
-                                .arg(gridStep)
-                                .arg(i)));
+        QVERIFY2(jump <= gridStep, qPrintable(QString("Jump %1 > gridStep %2 at step %3").arg(jump).arg(gridStep).arg(i)));
 
         // Double-snap detection: consecutive snaps must be spaced at least gridStep/2
         // cursor pixels apart.
@@ -579,8 +603,10 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridInternal() {
     // Place parent at a non-grid-aligned position. This makes the body section
     // (and thus the child) have a non-grid-aligned scene position, which is the
     // condition that triggers the double-snap bug.
-    view::HsmElement* parent = view.createHsmElement(parentModel, "state", QPointF(3, 5), QSizeF(400, 200), model::INVALID_MODEL_ID);
-    view::HsmElement* child = view.createHsmElement(childModel, "state", QPointF(2 * gridStep, gridStep), QSizeF(60, 40), parentModel->id());
+    view::HsmElement* parent =
+        view.createHsmElement(parentModel, "state", QPointF(3, 5), QSizeF(400, 200), model::INVALID_MODEL_ID);
+    view::HsmElement* child =
+        view.createHsmElement(childModel, "state", QPointF(2 * gridStep, gridStep), QSizeF(60, 40), parentModel->id());
 
     // Enable snap AFTER positioning — simulates the real app scenario where
     // elements may have been placed without grid alignment and the user later
@@ -621,10 +647,7 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridInternal() {
         if (jump > 0) {
             // When a snap occurs, it must be exactly one gridStep
             QVERIFY2(qFuzzyCompare(jump, static_cast<qreal>(gridStep)),
-                     qPrintable(QString("Snap jump %1 != gridStep %2 at step %3")
-                                    .arg(jump)
-                                    .arg(gridStep)
-                                    .arg(i)));
+                     qPrintable(QString("Snap jump %1 != gridStep %2 at step %3").arg(jump).arg(gridStep).arg(i)));
 
             // Consecutive snaps must be separated by at least gridStep/2 steps of
             // cursor movement. A double-snap (two snaps within a few pixels of
@@ -648,9 +671,7 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridInternal() {
     // After moving 4*gridStep pixels, we expect approximately 4 snaps.
     // Allow ±1 tolerance for boundary effects from initial non-grid position.
     QVERIFY2(std::abs(snapCount - 4) <= 1,
-             qPrintable(QString("Expected ~4 snaps after %1px of cursor movement, got %2")
-                            .arg(4 * gridStep)
-                            .arg(snapCount)));
+             qPrintable(QString("Expected ~4 snaps after %1px of cursor movement, got %2").arg(4 * gridStep).arg(snapCount)));
 
     DragTestHelper::endDrag(child);
 }
@@ -672,7 +693,8 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridResizing() {
     // Place parent at a non-grid-aligned position. This makes the body section
     // (and thus the child) have a non-grid-aligned scene position, which is the
     // condition that triggers the double-snap bug.
-    view::HsmElement* parent = view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(400, 200), model::INVALID_MODEL_ID);
+    view::HsmElement* parent =
+        view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(400, 200), model::INVALID_MODEL_ID);
     // set element on the left edge of the parent
     view::HsmElement* child = view.createHsmElement(childModel, "state", QPointF(0, 50), QSizeF(60, 40), parentModel->id());
 
@@ -690,21 +712,17 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridResizing() {
     // dragElementBegin signal. Since child has a parent and reparent modifier is not
     // pressed, the view automatically calls setDragMode(false).
     // Move enough to trigger grid snapping
-    QPointF newScenePos = DragTestHelper::simulateDragMove(child, QPointF(-gridStep/2, 0));
+    QPointF newScenePos = DragTestHelper::simulateDragMove(child, QPointF(-gridStep / 2, 0));
     qreal jump = prevScenePos.x() - newScenePos.x();
     QVERIFY2(qFuzzyCompare(jump, static_cast<qreal>(gridStep)),
-            qPrintable(QString("Snap jump %1 != gridStep %2 at step 1")
-                        .arg(jump)
-                        .arg(gridStep)));
+             qPrintable(QString("Snap jump %1 != gridStep %2 at step 1").arg(jump).arg(gridStep)));
 
     // make one more move to the left
     prevScenePos = newScenePos;
     newScenePos = DragTestHelper::simulateDragMove(child, QPointF(-2, 0));
     jump = newScenePos.x() - prevScenePos.x();
 
-    QVERIFY2(qFuzzyCompare(jump, 0.0),
-            qPrintable(QString("Snap jump %1 != 0.0 at step 2")
-                        .arg(jump)));
+    QVERIFY2(qFuzzyCompare(jump, 0.0), qPrintable(QString("Snap jump %1 != 0.0 at step 2").arg(jump)));
 
     DragTestHelper::endDrag(child);
 }
@@ -733,11 +751,10 @@ void HsmElementDragTest::threeLevelChildDragNoDrift() {
         const QPointF newScenePos = fixture.child->scenePos();
 
         // Monotonicity: X should never increase
-        QVERIFY2(newScenePos.x() <= prevScenePos.x(),
-                 qPrintable(QString("Non-monotonic at step %1: prev X=%2, new X=%3")
-                                .arg(i)
-                                .arg(prevScenePos.x())
-                                .arg(newScenePos.x())));
+        QVERIFY2(
+            newScenePos.x() <= prevScenePos.x(),
+            qPrintable(
+                QString("Non-monotonic at step %1: prev X=%2, new X=%3").arg(i).arg(prevScenePos.x()).arg(newScenePos.x())));
 
         // Containment: child within parent
         childSceneRect = fixture.child->mapRectToScene(fixture.child->elementRect());
@@ -924,19 +941,20 @@ void HsmElementDragTest::reparentChildFromOneParentToAnother() {
 
     // Create model entities
     model::EntityIdGenerator gen;
-    auto modelA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                      .dynamicCast<model::RegularState>();
+    auto modelA =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelA->setName("stateA");
-    auto modelB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                      .dynamicCast<model::RegularState>();
+    auto modelB =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelB->setName("stateB");
-    auto modelC = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                      .dynamicCast<model::RegularState>();
+    auto modelC =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelC->setName("stateC");
 
     // Create two top-level states (A on the left, B on the right) and child C inside A
     view::HsmElement* stateA = view.createHsmElement(modelA, "state", QPointF(0, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
-    view::HsmElement* stateB = view.createHsmElement(modelB, "state", QPointF(400, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
+    view::HsmElement* stateB =
+        view.createHsmElement(modelB, "state", QPointF(400, 0), QSizeF(300, 200), model::INVALID_MODEL_ID);
     view::HsmElement* stateC = view.createHsmElement(modelC, "state", QPointF(20, 20), QSizeF(100, 60), modelA->id());
 
     // Verify initial state: C is a child of A
@@ -994,12 +1012,9 @@ void HsmElementDragTest::reparentChildFromOneParentToAnother() {
 
     // --- Verify reparenting results ---
     // C is now a child of B
-    QVERIFY2(stateC->hsmParentItem() == stateB,
-             "stateC should be reparented to stateB");
-    QVERIFY2(stateB->containsChild(stateC),
-             "stateB should contain stateC as a child");
-    QVERIFY2(!stateA->containsChild(stateC),
-             "stateA should no longer contain stateC");
+    QVERIFY2(stateC->hsmParentItem() == stateB, "stateC should be reparented to stateB");
+    QVERIFY2(stateB->containsChild(stateC), "stateB should contain stateC as a child");
+    QVERIFY2(!stateA->containsChild(stateC), "stateA should no longer contain stateC");
 
     // A should NOT have changed size during reparent drag
     const QSizeF stateASizeAfterReparent = stateA->elementRect().size();
@@ -1060,14 +1075,14 @@ void HsmElementDragTest::reparentChildToSiblingWithinSameParent() {
 
     // Create model entities
     model::EntityIdGenerator gen;
-    auto modelP = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                      .dynamicCast<model::RegularState>();
+    auto modelP =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelP->setName("parent");
-    auto modelC1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                       .dynamicCast<model::RegularState>();
+    auto modelC1 =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelC1->setName("childOne");
-    auto modelC2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                       .dynamicCast<model::RegularState>();
+    auto modelC2 =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     modelC2->setName("childTwo");
 
     // Create parent P and two children: C1 (left side) and C2 (right side, larger)
@@ -1179,8 +1194,7 @@ void HsmElementDragTest::reparentChildToSiblingWithinSameParent() {
                             .arg(lastScenePos.x())
                             .arg(lastScenePos.y())
                             .arg(stateP->isHighligted())));
-    QVERIFY2(!stateP->isHighligted(),
-             "stateP should NOT be highlighted when cursor is over C2 (a child of P)");
+    QVERIFY2(!stateP->isHighligted(), "stateP should NOT be highlighted when cursor is over C2 (a child of P)");
 
     // End drag with release event
     {
@@ -1202,10 +1216,8 @@ void HsmElementDragTest::reparentChildToSiblingWithinSameParent() {
                             .arg(stateC1->hsmParentItem() == stateP ? "P (unchanged - BUG)" : "other")
                             .arg(reinterpret_cast<quintptr>(stateC2), 0, 16)
                             .arg(reinterpret_cast<quintptr>(stateP), 0, 16)));
-    QVERIFY2(stateC2->containsChild(stateC1),
-             "stateC2 should contain stateC1 as a child after drop");
-    QVERIFY2(!stateP->isDirectChild(stateC1),
-             "stateP should no longer have stateC1 as a direct child");
+    QVERIFY2(stateC2->containsChild(stateC1), "stateC2 should contain stateC1 as a child after drop");
+    QVERIFY2(!stateP->isDirectChild(stateC1), "stateP should no longer have stateC1 as a direct child");
 }
 
 // ---------------------------------------------------------------------------
@@ -1267,16 +1279,13 @@ void HsmElementDragTest::dragZValueRestoredAfterDrop() {
 
     // During drag, z-value should be 100 (bug condition — will fail on unfixed code)
     QVERIFY2(element->zValue() == 100.0,
-             qPrintable(QString("Bug condition confirmed: z-value during drag is %1 (expected 100).")
-                            .arg(element->zValue())));
+             qPrintable(QString("Bug condition confirmed: z-value during drag is %1 (expected 100).").arg(element->zValue())));
 
     DragTestHelper::endDrag(element);
 
     // After drop, z-value should be restored to original
     QVERIFY2(element->zValue() == originalZValue,
-             qPrintable(QString("Z-value after drop is %1 (expected %2).")
-                            .arg(element->zValue())
-                            .arg(originalZValue)));
+             qPrintable(QString("Z-value after drop is %1 (expected %2).").arg(element->zValue()).arg(originalZValue)));
 }
 
 // ---------------------------------------------------------------------------
@@ -1512,9 +1521,12 @@ void HsmElementDragTest::preservationZValueRandomInteractions() {
     }
 }
 
-void HsmElementDragTest::compareNormalized(const QString& elementName, const QRectF& oldElementRect, const QRectF& newElementRect) {
+void HsmElementDragTest::compareNormalized(const QString& elementName,
+                                           const QRectF& oldElementRect,
+                                           const QRectF& newElementRect) {
     QVERIFY2(oldElementRect.size() == newElementRect.size(), qPrintable(QString("Element <%1> changed size").arg(elementName)));
-    QVERIFY2(newElementRect.topLeft() == QPointF(0, 0), qPrintable(QString("Element <%1> X,Y not normalized to 0,0 position").arg(elementName)));
+    QVERIFY2(newElementRect.topLeft() == QPointF(0, 0),
+             qPrintable(QString("Element <%1> X,Y not normalized to 0,0 position").arg(elementName)));
 }
 
 int runHsmElementDragTest(int argc, char** argv) {

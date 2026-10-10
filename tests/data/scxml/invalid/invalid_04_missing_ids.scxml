@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:hsm="https://hsm-ide.dev/scxml" name="MissingIds">
+    <state hsm:uid="1"/>
+    <state id="S2" hsm:uid="2"/>
+    <state hsm:uid="3"/>
+</scxml>

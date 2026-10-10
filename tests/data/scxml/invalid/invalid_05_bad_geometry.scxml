@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:hsm="https://hsm-ide.dev/scxml" name="BadGeometry">
+    <state id="S1" hsm:uid="1"/>
+    <state id="S2" hsm:uid="2"/>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="1" x="abc" y="10" width="100" height="60"/>
+            <hsm:state uid="2" x="10" y="20"/>
+            <hsm:state uid="999" x="0" y="0" width="10" height="10"/>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

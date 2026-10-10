@@ -3,6 +3,8 @@
 
 #include <QSharedPointer>
 
+#include "model/ParseErrorCollector.hpp"
+
 class QXmlStreamWriter;
 class QXmlStreamReader;
 
@@ -20,6 +22,8 @@ public:
 
     void parseEditorSection(QXmlStreamReader& reader, const QSharedPointer<StateMachineModel>& model);
 
+    void setParseReport(ParseErrorCollector* report);
+
 private:
     void writeLayoutSection(const QSharedPointer<StateMachineModel>& model, QXmlStreamWriter& writer);
     void writeStateLayout(const StateMachineEntity* entity, QXmlStreamWriter& writer);
@@ -29,6 +33,8 @@ private:
     void parseStateLayout(QXmlStreamReader& reader, const QSharedPointer<StateMachineModel>& model);
     void parseTransitionLayout(QXmlStreamReader& reader, const QSharedPointer<StateMachineModel>& model);
     void parseCommentLayout(QXmlStreamReader& reader, const QSharedPointer<StateMachineModel>& model);
+
+    ParseErrorCollector* mParseReport = nullptr;
 };
 
 }  // namespace model

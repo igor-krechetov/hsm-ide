@@ -50,6 +50,7 @@ package "Model" {
   class ModelElementsFactory
   class StateHierarchyRules
   class StateMachineSerializer
+  class ParseErrorCollector
 
   StateMachineEntity <|-- State
   StateMachineEntity <|-- Transition
@@ -77,6 +78,7 @@ package "Model" {
 
   StateMachineSerializer ..|> IModelVisitor
   StateMachineSerializer ..> StateMachineModel : serializes
+  StateMachineSerializer "1" *-- "1" ParseErrorCollector : parse report
   ModelElementsFactory ..> State : creates
   ModelElementsFactory ..> Transition : creates
 }
@@ -90,6 +92,7 @@ package "View" {
 
   class MainWindow <<QMainWindow>>
   class AboutDialog <<QDialog>>
+  class ParseReportDialog <<QDialog>>
   class HsmGraphicsView <<QGraphicsView>>
   class HsmTreeView <<QTreeView>>
   class HsmPropertiesTableView <<QTreeView>>
@@ -181,6 +184,8 @@ package "Controller" {
 MainEditorController --> StateMachineModel : manipulates
 StateMachineModel ..> MainEditorController : notifies
 MainWindow ..> MainEditorController : sends events
+MainWindow ..> ParseReportDialog : shows import report
+ParseReportDialog ..> ParseErrorCollector : displays
 
 StateMachineEntityViewModel "1" o-- "1" StateMachineEntity: references
 StateMachineTreeModel "1" o-- "1" StateMachineModel: references

@@ -31,6 +31,9 @@ public:
     // --- Query ---
     SerializationFormat format() const override;
 
+    // --- Diagnostics ---
+    void setParseReport(ParseErrorCollector* report) override;
+
     // Clipboard mode (REQ-103f7 / copy-paste): when enabled, hsm:uid is neither written on
     // serialize nor honored on deserialize (fresh ids are always generated). Used for
     // copy/paste so pasted elements never collide with the originals' UIDs, and so plain

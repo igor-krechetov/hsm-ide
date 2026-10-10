@@ -273,6 +273,17 @@ package "Model" {
     + deserializeFromScxml(scxml, outModel): bool
     + deserializeFromUnwrapperScxml(unwrapped, wrapper, outModel): bool
     + validateScxmlStructure(scxml): bool
+    + parseReport(): ParseErrorCollector
+  }
+
+  class ParseErrorCollector {
+    + addError(message, line, column)
+    + addWarning(message, line, column)
+    + clear()
+    + isEmpty(): bool
+    + hasErrors(): bool
+    + count(): int
+    + problems(): list<Problem>
   }
 
   package "Serializer" {
@@ -289,14 +300,20 @@ package "Model" {
       + parseTopLevelElement(reader, model): bool
       + endDeserialization(model)
       + format(): SerializationFormat
+      + setParseReport(report)
+      # reportParseError(message, line, column)
+      # reportParseWarning(message, line, column)
     }
 
-    class HsmMetadataSerializer
+    class HsmMetadataSerializer {
+      + setParseReport(report)
+    }
     class QtCreatorMetadataSerializer
 
     class HsmLayoutSerializer {
       + writeEditorSection(model, writer)
       + parseEditorSection(reader, model)
+      + setParseReport(report)
     }
 
     IMetadataSerializer <|.. HsmMetadataSerializer
@@ -334,6 +351,8 @@ package "Model" {
   StateMachineSerializer ..> StateHierarchyRules : validates
   StateMachineSerializer "1" *-- "1" HsmMetadataSerializer : owns
   StateMachineSerializer "1" *-- "1" QtCreatorMetadataSerializer : owns
+  StateMachineSerializer "1" *-- "1" ParseErrorCollector : parse report
+  IMetadataSerializer ..> ParseErrorCollector : reports to
   ModelElementsFactory ..> State : creates
   ModelElementsFactory ..> Transition : creates
   ModelElementsFactory ..> EntityIdGenerator : uses
@@ -410,6 +429,10 @@ package "View" {
   }
 
   class AboutDialog <<QDialog>>
+
+  class ParseReportDialog <<QDialog>> {
+    + {static} showReport(parent, fileName, report)
+  }
 
   class HsmGraphicsView <<QGraphicsView>> {
     + setProjectController(controller)
@@ -680,10 +703,12 @@ package "Controller" {
     + projectSelected(project)
     + projectClosed(project)
     + hsmProjectOpened(path)
+    + projectImportFinished(path, report)
   }
 
   interface IProjectController <<QObject>> {
     + importModel(path): bool
+    + lastImportReport(): ParseErrorCollector
     + exportModel(): bool
     + exportModel(path): bool
     + updateModelPath(newPath)
@@ -713,6 +738,7 @@ package "Controller" {
     + modelPath(): QString
     + isModified(): bool
     + importModel(path): bool
+    + lastImportReport(): ParseErrorCollector
     + exportModel(): bool
     + exportModel(path): bool
     + updateModelPath(newPath)
@@ -798,6 +824,8 @@ package "Controller" {
 MainEditorController --> StateMachineModel : manipulates
 StateMachineModel ..> MainEditorController : notifies
 MainWindow ..> MainEditorController : sends events
+MainWindow ..> ParseReportDialog : shows import report
+ParseReportDialog ..> ParseErrorCollector : displays
 
 StateMachineEntityViewModel "1" o-- "1" StateMachineEntity: references
 StateMachineTreeModel "1" o-- "1" StateMachineModel: references

@@ -153,6 +153,9 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
     mModel = outModel;
     mModel->clearModel();
     mTransitionTargets.clear();
+    mParseReport.clear();
+    mHsmStrategy.setParseReport(&mParseReport);
+    mQtStrategy.setParseReport(&mParseReport);
     mActiveStrategy = &mQtStrategy;  // default until format detected
     mXmlReader = QSharedPointer<QXmlStreamReader>::create(scxml);
 
@@ -191,10 +194,13 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
             } else if (mActiveStrategy->parseTopLevelElement(*mXmlReader, mModel)) {
                 // Strategy consumed the element (e.g., <hsm:editor>)
             } else {
+                const QString elementName = mXmlReader->name().toString();
                 QSharedPointer<StateMachineEntity> entity = parseChildEntity(mModel->root());
 
                 if (!entity) {
                     qWarning() << "Failed to parse entity at line" << mXmlReader->lineNumber();
+                    handleParseError(QStringLiteral("Unrecognized or invalid top-level element: <%1>").arg(elementName),
+                                     ParseErrorCollector::Severity::Warning);
                 }
             }
         }
@@ -254,13 +260,13 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
             transition->setTarget(targetState);
         } else {
             qWarning() << "Failed to find target (" << targetStateId << ") for transition" << transitionId;
-            // TODO: handleParseError
+            handleParseError(QStringLiteral("Transition target not found: %1").arg(targetStateId));
         }
     }
 
     mInitialTargetFromAttribute.clear();
     mModel.clear();
-    // TODO: handle parsing errors
+
     return true;
 }
 
@@ -563,8 +569,30 @@ void StateMachineSerializer::visitTransition(const Transition* transition) {
 // Deserialization helpers
 // ============================================================================
 
+const ParseErrorCollector& StateMachineSerializer::parseReport() const {
+    return mParseReport;
+}
+
 void StateMachineSerializer::handleParseError(const QString& errorMessage) {
+    handleParseError(errorMessage, ParseErrorCollector::Severity::Error);
+}
+
+void StateMachineSerializer::handleParseError(const QString& errorMessage, const ParseErrorCollector::Severity severity) {
     qWarning() << "Parse error:" << errorMessage;
+
+    qint64 line = -1;
+    qint64 column = -1;
+
+    if (mXmlReader) {
+        line = mXmlReader->lineNumber();
+        column = mXmlReader->columnNumber();
+    }
+
+    if (ParseErrorCollector::Severity::Warning == severity) {
+        mParseReport.addWarning(errorMessage, line, column);
+    } else {
+        mParseReport.addError(errorMessage, line, column);
+    }
 }
 
 bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent) {
@@ -574,8 +602,13 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
 
     while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
         if (QXmlStreamReader::StartElement == token) {
-            // TODO: handle errors if can't parse child entities
-            parseChildEntity(parent);
+            const QString childName = mXmlReader->name().toString();
+            QSharedPointer<StateMachineEntity> child = parseChildEntity(parent);
+
+            if (!child) {
+                handleParseError(QStringLiteral("Skipped unparseable child element: %1").arg(childName),
+                                 ParseErrorCollector::Severity::Warning);
+            }
         }
 
         token = mXmlReader->readNext();
@@ -718,7 +751,7 @@ QSharedPointer<EntryPoint> StateMachineSerializer::parseEntryPoint() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        // TODO: handle errors
+        // Child parse problems are recorded into the parse report by parseAllChildEntities.
         parseAllChildEntities(entity);
     }
 
@@ -776,7 +809,7 @@ QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        // TODO: handle errors
+        // Child parse problems are recorded into the parse report by parseAllChildEntities.
         parseAllChildEntities(entity);
     }
 
@@ -806,7 +839,7 @@ QSharedPointer<HistoryState> StateMachineSerializer::parseHistoryState() {
             EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
             entity->setId(uid);
 
-            // TODO: handle errors
+            // Child parse problems are recorded into the parse report by parseAllChildEntities.
             parseAllChildEntities(entity);
         }
     }
@@ -824,7 +857,7 @@ QSharedPointer<InitialState> StateMachineSerializer::parseInitialState() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        // TODO: handle errors
+        // Child parse problems are recorded into the parse report by parseAllChildEntities.
         parseAllChildEntities(entity);
     }
 
@@ -842,7 +875,7 @@ QSharedPointer<IncludeEntity> StateMachineSerializer::parseIncludeEntity() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        // TODO: handle errors
+        // Child parse problems are recorded into the parse report by parseAllChildEntities.
         parseAllChildEntities(entity);
     }
 
@@ -895,7 +928,7 @@ QSharedPointer<Transition> StateMachineSerializer::parseTransition() {
             entity->setConditionCallback(condition);
         }
 
-        // TODO: handle errors
+        // Child parse problems are recorded into the parse report by parseAllChildEntities.
         parseAllChildEntities(entity);
     }
 

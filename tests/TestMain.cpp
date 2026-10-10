@@ -21,6 +21,7 @@ int runIncludeEntityTest(int argc, char** argv) __attribute__((weak));
 int runModelRootStateTest(int argc, char** argv) __attribute__((weak));
 int runModelElementsFactoryTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineModelTest(int argc, char** argv) __attribute__((weak));
+int runParseErrorCollectorTest(int argc, char** argv) __attribute__((weak));
 int runStateHierarchyRulesTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerSerializationTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) __attribute__((weak));
@@ -70,6 +71,7 @@ int main(int argc, char** argv) {
         runModelRootStateTest,
         runModelElementsFactoryTest,
         runStateMachineModelTest,
+        runParseErrorCollectorTest,
         runStateHierarchyRulesTest,
         runStateMachineSerializerSerializationTest,
         runStateMachineSerializerDeserializationTest,

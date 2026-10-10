@@ -6,6 +6,7 @@
 #include <QXmlStreamWriter>
 
 #include "model/ModelTypes.hpp"
+#include "model/ParseErrorCollector.hpp"
 
 class QXmlStreamReader;
 
@@ -119,6 +120,28 @@ public:
 
     // --- Query ---
     virtual SerializationFormat format() const = 0;
+
+    // --- Diagnostics ---
+    /// Inject the collector that accumulates parse problems. May be nullptr.
+    virtual void setParseReport(ParseErrorCollector* report) {
+        mParseReport = report;
+    }
+
+protected:
+    void reportParseError(const QString& message, const qint64 line, const qint64 column) {
+        if (nullptr != mParseReport) {
+            mParseReport->addError(message, line, column);
+        }
+    }
+
+    void reportParseWarning(const QString& message, const qint64 line, const qint64 column) {
+        if (nullptr != mParseReport) {
+            mParseReport->addWarning(message, line, column);
+        }
+    }
+
+private:
+    ParseErrorCollector* mParseReport = nullptr;
 };
 
 }  // namespace model

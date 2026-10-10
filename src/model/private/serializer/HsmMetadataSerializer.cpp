@@ -5,9 +5,15 @@
 #include <QXmlStreamWriter>
 
 #include "StateMachineModel.hpp"
+#include "elements/ModelRootState.hpp"
 #include "elements/StateMachineEntity.hpp"
 
 namespace model {
+
+void HsmMetadataSerializer::setParseReport(ParseErrorCollector* report) {
+    IMetadataSerializer::setParseReport(report);
+    mLayoutSerializer.setParseReport(report);
+}
 
 // --- Serialization ---
 
@@ -70,13 +76,29 @@ EntityID_t HsmMetadataSerializer::resolveEntityId(QXmlStreamReader& reader, cons
                 // the value is already taken - either by a UID seen earlier in the file or by a
                 // replacement previously issued via generateNextId(). In every such case we must
                 // fall back to a freshly generated id, otherwise two entities could share an id.
+                const EntityID_t rootUid = (model->root() ? model->root()->id() : INVALID_MODEL_ID);
+
                 if (model->idGenerator().registerRestoredId(uid)) {
                     result = uid;
+                } else if (uid == rootUid) {
+                    // uid=1 (the first generated id) is reserved for the implicit model root and
+                    // can never be assigned to a user-authored element.
+                    qWarning() << "hsm:uid" << uid << "is reserved for the model root - generating replacement";
+                    reportParseWarning(
+                        QStringLiteral("hsm:uid %1 is reserved for the model root - a replacement id was generated").arg(uid),
+                        reader.lineNumber(),
+                        reader.columnNumber());
                 } else {
                     qWarning() << "Duplicate hsm:uid" << uid << "- generating replacement";
+                    reportParseWarning(QStringLiteral("Duplicate hsm:uid %1 - a replacement id was generated").arg(uid),
+                                       reader.lineNumber(),
+                                       reader.columnNumber());
                 }
             } else {
                 qWarning() << "Invalid hsm:uid value:" << uidStr << "- generating replacement";
+                reportParseWarning(QStringLiteral("Invalid hsm:uid value \"%1\" - a replacement id was generated").arg(uidStr),
+                                   reader.lineNumber(),
+                                   reader.columnNumber());
             }
         }
     }
