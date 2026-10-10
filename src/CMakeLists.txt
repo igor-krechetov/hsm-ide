@@ -37,6 +37,7 @@ set(MODEL_SOURCES
     model/ModelElementsFactory.cpp
     model/StateMachineSerializer.cpp
     model/StateHierarchyRules.cpp
+    model/ParseErrorCollector.cpp
 
     model/elements/EntryPoint.cpp
     model/elements/ExitPoint.cpp
@@ -130,6 +131,7 @@ set(PROJECT_SOURCES
     view/MainWindow.cpp
     view/AboutDialog.cpp
     view/ShortcutsDialog.cpp
+    view/ParseReportDialog.cpp
 
     view/ui/main.ui
     view/ui/settings.ui

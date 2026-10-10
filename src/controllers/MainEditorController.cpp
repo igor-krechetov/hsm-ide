@@ -85,7 +85,13 @@ ProjectControllerPtr MainEditorController::openProject(const QString& projectPat
             project = createProject();
 
             if (project) {
-                if (false == project->importModel(projectPath)) {
+                const bool imported = project->importModel(projectPath);
+
+                // Deliver the parse report before any reset so a dropped (fatal) import
+                // can still be surfaced to the user.
+                emit projectImportFinished(projectPath, project->lastImportReport());
+
+                if (false == imported) {
                     // do not open project if we failed to load the model
                     project.reset();
                 } else {

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:hsm="https://hsm-ide.dev/scxml" name="Untitled">
+    <initial hsm:uid="1"/>
+    <state2 id="State_1" hsm:uid="2"/>
+    <state hsm:uid="2"/>
+    <state id="State_2" hsm:uid="1"/>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="1" x="abc" y="-316.00" width="246.00" height="146.00"/>
+            <hsm:state uid="2" x="-136.00" />
+            <hsm:state uid="3" x="-136.00" y="-401.00" width="46.00" height="46.00"/>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

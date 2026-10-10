@@ -29,6 +29,9 @@ public:
     bool importModel(const QString&) override {
         return false;
     }
+    const model::ParseErrorCollector& lastImportReport() const override {
+        return mLastImportReport;
+    }
     bool exportModel() override {
         return false;
     }
@@ -69,6 +72,7 @@ public:
 
 private:
     HsmGraphicsView* mView = nullptr;
+    model::ParseErrorCollector mLastImportReport;
 };
 
 // ---------------------------------------------------------------------------

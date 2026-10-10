@@ -13,6 +13,10 @@
 
 namespace model {
 
+void HsmLayoutSerializer::setParseReport(ParseErrorCollector* report) {
+    mParseReport = report;
+}
+
 void HsmLayoutSerializer::writeEditorSection(const QSharedPointer<StateMachineModel>& model, QXmlStreamWriter& writer) {
     writer.writeStartElement(scxml::HSM_EDITOR_ELEMENT);
     writeLayoutSection(model, writer);
@@ -124,6 +128,11 @@ void HsmLayoutSerializer::parseStateLayout(QXmlStreamReader& reader, const QShar
 
     if (uidStr.isEmpty()) {
         qWarning() << "HsmLayoutSerializer: <hsm:state> missing uid attribute at line" << reader.lineNumber();
+        if (nullptr != mParseReport) {
+            mParseReport->addWarning(QStringLiteral("<hsm:state> layout entry missing uid attribute"),
+                                     reader.lineNumber(),
+                                     reader.columnNumber());
+        }
         reader.skipCurrentElement();
         return;
     }
@@ -133,6 +142,11 @@ void HsmLayoutSerializer::parseStateLayout(QXmlStreamReader& reader, const QShar
 
     if (!uidOk || uid == 0 || uid == INVALID_MODEL_ID) {
         qWarning() << "HsmLayoutSerializer: <hsm:state> invalid uid value" << uidStr << "at line" << reader.lineNumber();
+        if (nullptr != mParseReport) {
+            mParseReport->addWarning(QStringLiteral("<hsm:state> layout entry has invalid uid value: %1").arg(uidStr),
+                                     reader.lineNumber(),
+                                     reader.columnNumber());
+        }
         reader.skipCurrentElement();
         return;
     }
@@ -142,6 +156,11 @@ void HsmLayoutSerializer::parseStateLayout(QXmlStreamReader& reader, const QShar
     if (!entity) {
         qWarning() << "HsmLayoutSerializer: <hsm:state> uid" << uid << "does not match any entity at line"
                    << reader.lineNumber();
+        if (nullptr != mParseReport) {
+            mParseReport->addWarning(QStringLiteral("<hsm:state> layout references unknown uid: %1").arg(uid),
+                                     reader.lineNumber(),
+                                     reader.columnNumber());
+        }
         reader.skipCurrentElement();
         return;
     }
@@ -158,6 +177,12 @@ void HsmLayoutSerializer::parseStateLayout(QXmlStreamReader& reader, const QShar
     if (!xOk || !yOk || !wOk || !hOk) {
         qWarning() << "HsmLayoutSerializer: <hsm:state> uid" << uid << "has non-numeric coordinate/dimension attributes at line"
                    << reader.lineNumber();
+        if (nullptr != mParseReport) {
+            mParseReport->addWarning(
+                QStringLiteral("<hsm:state> layout for uid %1 has non-numeric coordinate/dimension attributes").arg(uid),
+                reader.lineNumber(),
+                reader.columnNumber());
+        }
         reader.skipCurrentElement();
         return;
     }

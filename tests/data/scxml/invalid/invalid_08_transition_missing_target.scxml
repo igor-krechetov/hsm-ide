@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:hsm="https://hsm-ide.dev/scxml" name="MissingTarget">
+    <state id="S1" hsm:uid="1">
+        <transition event="go" hsm:uid="2"/>
+    </state>
+    <state id="S2" hsm:uid="3">
+        <transition event="away" target="DoesNotExist" hsm:uid="4"/>
+    </state>
+</scxml>

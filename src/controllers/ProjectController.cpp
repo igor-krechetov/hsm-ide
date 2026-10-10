@@ -129,7 +129,10 @@ bool ProjectController::importModel(const QString& path) {
         {
             model::StateMachineSerializer serializer;
 
-            if (true == serializer.deserializeFromScxml(scxmlContent, mModel)) {
+            const bool deserialized = serializer.deserializeFromScxml(scxmlContent, mModel);
+            mLastImportReport = serializer.parseReport();
+
+            if (true == deserialized) {
                 mModelPath = path;
                 mModified = false;
                 res = true;
@@ -143,6 +146,10 @@ bool ProjectController::importModel(const QString& path) {
     }
 
     return res;
+}
+
+const model::ParseErrorCollector& ProjectController::lastImportReport() const {
+    return mLastImportReport;
 }
 
 bool ProjectController::exportModel() {

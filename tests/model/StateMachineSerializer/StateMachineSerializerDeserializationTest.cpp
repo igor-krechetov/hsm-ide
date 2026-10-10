@@ -1,19 +1,20 @@
-#include <QtTest>
 #include <QPointF>
 #include <QPolygonF>
 #include <QSizeF>
+#include <QtTest>
 
 #include "../TestPaths.hpp"
+#include "model/ParseErrorCollector.hpp"
+#include "model/StateMachineModel.hpp"
+#include "model/StateMachineSerializer.hpp"
+#include "model/elements/EntryPoint.hpp"
 #include "model/elements/ExitPoint.hpp"
 #include "model/elements/FinalState.hpp"
 #include "model/elements/HistoryState.hpp"
 #include "model/elements/IncludeEntity.hpp"
-#include "model/elements/EntryPoint.hpp"
 #include "model/elements/InitialState.hpp"
 #include "model/elements/ModelRootState.hpp"
 #include "model/elements/RegularState.hpp"
-#include "model/StateMachineModel.hpp"
-#include "model/StateMachineSerializer.hpp"
 #include "model/elements/Transition.hpp"
 
 class StateMachineSerializerDeserializationTest : public QObject {
@@ -36,6 +37,19 @@ private slots:
     void DeserializeStateWithoutId();
     void ValidateStructure();
     void DeserializeInvalidHierarchyIgnored();
+    void MalformedXmlReportsErrorWithLocation();
+    void MissingStateIdRecordsProblem();
+    void WellFormedYieldsEmptyReport();
+    void ReportResetsBetweenImports();
+    void UnknownElementsReportedAsWarnings();
+    void DuplicateUidsReported();
+    void ReservedRootUidReported();
+    void InvalidUidValuesReported();
+    void BadGeometryReported();
+    void MissingIdsReportedPerState();
+    void MalformedXmlInInvalidFolderReportsError();
+    void TransitionTargetProblemsReported();
+    void MixedInvalidFileReportsAllCategories();
 };
 
 static int countDirectTransitions(const QSharedPointer<model::RegularState>& state) {
@@ -344,7 +358,7 @@ void StateMachineSerializerDeserializationTest::DeserializeTransitionScript() {
 
     bool foundScriptTransition = false;
     state_1_1->forEachChildElement([&foundScriptTransition](QSharedPointer<model::StateMachineEntity> parent,
-                                                             QSharedPointer<model::StateMachineEntity> child) {
+                                                            QSharedPointer<model::StateMachineEntity> child) {
         Q_UNUSED(parent);
         bool keepWalking = true;
 
@@ -352,8 +366,8 @@ void StateMachineSerializerDeserializationTest::DeserializeTransitionScript() {
             auto transition = child.dynamicCast<model::Transition>();
             if (transition && transition->event() == "EVENT_1") {
                 foundScriptTransition = transition->hasTransitionAction() &&
-                                       transition->transitionAction()->serialize() == "callback_name" &&
-                                       transition->target() && transition->target()->name() == "state_1_2";
+                                        transition->transitionAction()->serialize() == "callback_name" &&
+                                        transition->target() && transition->target()->name() == "state_1_2";
             }
         }
 
@@ -570,6 +584,228 @@ void StateMachineSerializerDeserializationTest::DeserializeInvalidHierarchyIgnor
     QVERIFY(model->root()->findChildStateByName("Parent") != nullptr);
     QVERIFY(model->root()->findChildStateByName("Child") != nullptr);
     QVERIFY(model->root()->findChildStateByName("Hroot") == nullptr);
+}
+
+/**
+ * @brief Malformed XML yields a non-empty report containing a located error.
+ *
+ * Use-case: User opens a file with an XML well-formedness error and must see the location.
+ */
+void StateMachineSerializerDeserializationTest::MalformedXmlReportsErrorWithLocation() {
+    const QString scxml = test::loadScxmlFixture("malformed_not_xml.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    QSharedPointer<model::StateMachineModel> model = QSharedPointer<model::StateMachineModel>::create("ReportTarget");
+    serializer.deserializeFromScxml(scxml, model);
+
+    const model::ParseErrorCollector& report = serializer.parseReport();
+    QVERIFY(!report.isEmpty());
+    QVERIFY(report.hasErrors());
+
+    bool foundLocatedError = false;
+
+    for (const model::ParseErrorCollector::Problem& problem : report.problems()) {
+        if ((model::ParseErrorCollector::Severity::Error == problem.severity) && (problem.line > 0)) {
+            foundLocatedError = true;
+            break;
+        }
+    }
+
+    QVERIFY(foundLocatedError);
+}
+
+/**
+ * @brief A state missing its id attribute is recorded as a parse problem.
+ *
+ * Use-case: Semantic problems are surfaced even when the XML itself is well-formed.
+ */
+void StateMachineSerializerDeserializationTest::MissingStateIdRecordsProblem() {
+    const QString scxml = test::loadScxmlFixture("malformed_missing_state_id.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    QSharedPointer<model::StateMachineModel> model = QSharedPointer<model::StateMachineModel>::create("ReportTarget");
+    serializer.deserializeFromScxml(scxml, model);
+
+    const model::ParseErrorCollector& report = serializer.parseReport();
+    QVERIFY(!report.isEmpty());
+
+    bool foundIdProblem = false;
+
+    for (const model::ParseErrorCollector::Problem& problem : report.problems()) {
+        if (problem.message.contains("id")) {
+            foundIdProblem = true;
+            break;
+        }
+    }
+
+    QVERIFY(foundIdProblem);
+}
+
+/**
+ * @brief A well-formed SCXML input produces an empty parse report.
+ *
+ * Use-case: Normal opens must not raise spurious problems.
+ */
+void StateMachineSerializerDeserializationTest::WellFormedYieldsEmptyReport() {
+    const QString scxml = test::loadScxmlFixture("substates.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    QSharedPointer<model::StateMachineModel> model = QSharedPointer<model::StateMachineModel>::create("ReportTarget");
+    serializer.deserializeFromScxml(scxml, model);
+
+    QVERIFY(serializer.parseReport().isEmpty());
+}
+
+/**
+ * @brief The parse report resets between successive imports on one serializer instance.
+ *
+ * Use-case: Problems from a previous import must not leak into a later clean import.
+ */
+void StateMachineSerializerDeserializationTest::ReportResetsBetweenImports() {
+    model::StateMachineSerializer serializer;
+
+    const QString malformed = test::loadScxmlFixture("malformed_not_xml.scxml");
+    QVERIFY(!malformed.isEmpty());
+    QSharedPointer<model::StateMachineModel> firstModel = QSharedPointer<model::StateMachineModel>::create("First");
+    serializer.deserializeFromScxml(malformed, firstModel);
+    QVERIFY(!serializer.parseReport().isEmpty());
+
+    const QString wellFormed = test::loadScxmlFixture("substates.scxml");
+    QVERIFY(!wellFormed.isEmpty());
+    QSharedPointer<model::StateMachineModel> secondModel = QSharedPointer<model::StateMachineModel>::create("Second");
+    serializer.deserializeFromScxml(wellFormed, secondModel);
+
+    QVERIFY(serializer.parseReport().isEmpty());
+}
+
+namespace {
+
+// Count problems whose message contains the given needle (case-sensitive).
+int countMatching(const model::ParseErrorCollector& report, const QString& needle) {
+    int count = 0;
+
+    for (const model::ParseErrorCollector::Problem& problem : report.problems()) {
+        if (problem.message.contains(needle)) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+model::ParseErrorCollector reportFor(const QString& fixture) {
+    const QString scxml = test::loadScxmlFixture(fixture);
+    model::StateMachineSerializer serializer;
+    QSharedPointer<model::StateMachineModel> model = QSharedPointer<model::StateMachineModel>::create("ReportTarget");
+    serializer.deserializeFromScxml(scxml, model);
+    return serializer.parseReport();
+}
+
+}  // namespace
+
+/**
+ * @brief Unrecognized top-level elements are reported as warnings, not silently skipped.
+ */
+void StateMachineSerializerDeserializationTest::UnknownElementsReportedAsWarnings() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_02_unknown_elements.scxml");
+
+    QCOMPARE(countMatching(report, "<widget>"), 1);
+    QCOMPARE(countMatching(report, "<superstate>"), 1);
+}
+
+/**
+ * @brief Repeated hsm:uid values are reported as duplicate-uid warnings.
+ */
+void StateMachineSerializerDeserializationTest::DuplicateUidsReported() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_03_duplicate_uids.scxml");
+
+    // Three elements share uid=5; the first registers, the other two are duplicates.
+    QCOMPARE(countMatching(report, "Duplicate hsm:uid 5"), 2);
+}
+
+/**
+ * @brief uid=1 collides with the reserved model root and gets an explicit message.
+ */
+void StateMachineSerializerDeserializationTest::ReservedRootUidReported() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_02_unknown_elements.scxml");
+
+    QCOMPARE(countMatching(report, "reserved for the model root"), 1);
+}
+
+/**
+ * @brief Non-numeric and out-of-range hsm:uid values are reported.
+ */
+void StateMachineSerializerDeserializationTest::InvalidUidValuesReported() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_07_invalid_uid_value.scxml");
+
+    QCOMPARE(countMatching(report, "Invalid hsm:uid value \"not-a-number\""), 1);
+    QCOMPARE(countMatching(report, "Invalid hsm:uid value \"0\""), 1);
+}
+
+/**
+ * @brief Layout entries with bad coordinates or unknown uids are reported.
+ */
+void StateMachineSerializerDeserializationTest::BadGeometryReported() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_05_bad_geometry.scxml");
+
+    QVERIFY(countMatching(report, "non-numeric coordinate/dimension") >= 1);
+    QVERIFY(countMatching(report, "references unknown uid") >= 1);
+}
+
+/**
+ * @brief Each state missing an id is reported individually.
+ */
+void StateMachineSerializerDeserializationTest::MissingIdsReportedPerState() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_04_missing_ids.scxml");
+
+    QCOMPARE(countMatching(report, "State element without id attribute"), 2);
+    QVERIFY(report.hasErrors());
+}
+
+/**
+ * @brief A well-formedness error in the invalid folder is reported as an error with a location.
+ */
+void StateMachineSerializerDeserializationTest::MalformedXmlInInvalidFolderReportsError() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_06_malformed_xml.scxml");
+
+    QVERIFY(report.hasErrors());
+
+    bool locatedError = false;
+
+    for (const model::ParseErrorCollector::Problem& problem : report.problems()) {
+        if ((model::ParseErrorCollector::Severity::Error == problem.severity) && (problem.line > 0)) {
+            locatedError = true;
+            break;
+        }
+    }
+
+    QVERIFY(locatedError);
+}
+
+/**
+ * @brief Transitions without a target, and targets that do not resolve, are reported as errors.
+ */
+void StateMachineSerializerDeserializationTest::TransitionTargetProblemsReported() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_08_transition_missing_target.scxml");
+
+    QCOMPARE(countMatching(report, "Transition without target attribute"), 1);
+    QCOMPARE(countMatching(report, "Transition target not found: DoesNotExist"), 1);
+}
+
+/**
+ * @brief The original mixed invalid file surfaces problems from every category.
+ */
+void StateMachineSerializerDeserializationTest::MixedInvalidFileReportsAllCategories() {
+    const model::ParseErrorCollector report = reportFor("invalid/invalid_01.scxml");
+
+    QVERIFY(report.hasErrors());
+    QVERIFY(countMatching(report, "reserved for the model root") >= 1);
+    QVERIFY(countMatching(report, "Unrecognized or invalid top-level element") >= 1);
+    QCOMPARE(countMatching(report, "State element without id attribute"), 1);
+    QVERIFY(countMatching(report, "non-numeric coordinate/dimension") >= 1);
 }
 
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) {

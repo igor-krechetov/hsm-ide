@@ -40,6 +40,7 @@ public:
     inline bool isModified() const;
 
     bool importModel(const QString& path);
+    const model::ParseErrorCollector& lastImportReport() const override;
     bool exportModel();
     bool exportModel(const QString& path);
     void updateModelPath(const QString& newPath);
@@ -98,6 +99,7 @@ private:
     QString mModelPath;
     QPointer<HsmGraphicsView> mView;
     QSharedPointer<model::StateMachineModel> mModel;
+    model::ParseErrorCollector mLastImportReport;
     QSharedPointer<ModificationHistoryController> mHistoryController;
 
     view::StateMachineTreeModel* mHsmStructureViewModel = nullptr;

@@ -15,6 +15,7 @@
 
 #include "./ui/ui_main.h"
 #include "AboutDialog.hpp"
+#include "ParseReportDialog.hpp"
 #include "ShortcutsDialog.hpp"
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
@@ -70,6 +71,13 @@ MainWindow::MainWindow(MainEditorController* parent)
     mSettingsController = std::make_unique<SettingsController>();
     updateRecentHsmMenu();
     updateRecentWorkspacesMenu();
+
+    connect(mController,
+            &MainEditorController::projectImportFinished,
+            this,
+            [this](const QString& path, const model::ParseErrorCollector& report) {
+                ParseReportDialog::showReport(this, QFileInfo(path).fileName(), report);
+            });
 
     connect(mController, &MainEditorController::hsmProjectOpened, this, [this](const QString& path) {
         if (mSettingsController) {

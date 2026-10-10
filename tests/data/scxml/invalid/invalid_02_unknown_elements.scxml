@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:hsm="https://hsm-ide.dev/scxml" name="UnknownElements">
+    <state id="S1" hsm:uid="1"/>
+    <widget id="W1" hsm:uid="2"/>
+    <superstate id="S2" hsm:uid="3"/>
+    <state id="S3" hsm:uid="4"/>
+</scxml>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:hsm="https://hsm-ide.dev/scxml" name="DuplicateUids">
+    <state id="S1" hsm:uid="5"/>
+    <state id="S2" hsm:uid="5"/>
+    <state id="S3" hsm:uid="5"/>
+</scxml>

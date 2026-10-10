@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.19.0] - 2026-10-09
+### New
+- [REQ-301a1.3] Report SCXML parse errors to the user: a dialog lists every problem found while importing a file, with its severity, line/column location, and message. The report is shown even when the import fails fatally, and reserved-uid conflicts (uid=1 is reserved for the initial state) are reported with an explicit message
+
 ## [0.18.0] - 2026-10-09
 ### New
 - [REQ-204d6] Warn about unsaved changes when closing the application: a prompt lists the affected projects and lets you save them, discard the changes, or cancel the close
