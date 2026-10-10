@@ -36,6 +36,7 @@ int runHsmLayoutSerializerTest(int argc, char** argv) __attribute__((weak));
 int runFormatRoundTripIntegrationTest(int argc, char** argv) __attribute__((weak));
 int runQtGeometryDeserializationTest(int argc, char** argv) __attribute__((weak));
 int runPasteUnwrappedScxmlTest(int argc, char** argv) __attribute__((weak));
+int runUnsavedChangesGuardTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
     qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
@@ -84,6 +85,7 @@ int main(int argc, char** argv) {
         runFormatRoundTripIntegrationTest,
         runQtGeometryDeserializationTest,
         runPasteUnwrappedScxmlTest,
+        runUnsavedChangesGuardTest,
     };
 
     for (const auto test : tests) {

@@ -670,6 +670,7 @@ package "Controller" {
     + switchToProject(project)
     + closeAllProjects()
     + openedProjects(): list<ProjectController>
+    + confirmDiscardUnsaved(projects, singleProjectContext, promptCallback, saveCallback): bool
     + getProjectByPath(projectPath): ProjectController
     + handleWorkspacePathRenamed(oldPath, newPath)
     + handleHsmElementDoubleClick(entity)
@@ -770,6 +771,15 @@ package "Controller" {
     + addPathToRecentLogsList(path)
   }
 
+  package "private" as ControllerPrivate {
+    class UnsavedChangesGuard {
+      + {static} modifiedProjects(projects): list<GuardedProject>
+      + {static} promptRequired(projects): bool
+      + {static} affectedProjectNames(projects): QStringList
+      + {static} resolve(projects, choice): Decision
+    }
+  }
+
   IProjectController <|-- ProjectController
   MainEditorController "1" *-- "0..*" ProjectController
   MainEditorController "1" *-- "1" MainWindow
@@ -779,6 +789,9 @@ package "Controller" {
   ProjectController "1" *-- "1" StateMachineEntityViewModel : owns
 
   MainWindow "1" *-- "1" SettingsController
+
+  MainEditorController ..> UnsavedChangesGuard : unsaved-changes guard
+  MainWindow ..> UnsavedChangesGuard : prompt choice
 }
 
 ' Model-View-Controller Relationships

@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include <QList>
 #include <QMainWindow>
 #include <QMenu>
 #include <QPointer>
@@ -9,6 +10,7 @@
 #include <functional>
 #include <memory>
 
+#include "controllers/UnsavedChangesChoice.hpp"
 #include "model/ModelTypes.hpp"
 
 QT_BEGIN_NAMESPACE
@@ -33,6 +35,9 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(MainEditorController* parent);
     virtual ~MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
 
     QPointer<HsmGraphicsView> currentView();
     QPointer<HsmGraphicsView> getViewByIndex(const int index);
@@ -101,6 +106,23 @@ private:
     void selectModelEntityById(const model::EntityID_t id);
 
     bool copySelectedItems();
+
+    // Runs the controller's unsaved-changes guard, supplying this window's prompt and save
+    // callbacks. Returns true if the close may proceed.
+    bool confirmDiscardUnsaved(const QList<ProjectControllerPtr>& projects, const bool singleProjectContext);
+
+    // Presents the unsaved-changes prompt and returns the user's choice. Passed to the
+    // controller as its prompt callback; `singleProjectContext` tweaks the Save vs Save
+    // All wording.
+    UnsavedChangesChoice promptForUnsavedChanges(const QStringList& affectedProjectNames, const bool singleProjectContext);
+
+    // Saves a project, falling back to a "Save As" dialog when it has no backing file.
+    // Returns false if writing failed or the user cancelled the path dialog.
+    bool saveProject(const ProjectControllerPtr& project);
+
+    // Prompts for a destination path and writes the project there, updating the recent
+    // files list on success. Returns false if writing failed or the dialog was cancelled.
+    bool saveProjectAs(const ProjectControllerPtr& project);
 
 private:
     Ui_hsm_ide* ui = nullptr;

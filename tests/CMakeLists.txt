@@ -38,6 +38,7 @@ set(TEST_OBJECTS
     view/HsmElementDragTest.cpp
     view/AutoGroupItemCursorTest.cpp
     view/HsmTransitionGripVisibilityTest.cpp
+    view/UnsavedChangesGuardTest.cpp
 )
 
 foreach(testObject ${TEST_OBJECTS})
