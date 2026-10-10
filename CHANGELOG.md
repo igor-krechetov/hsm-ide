@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.18.0] - 2026-10-09
+### New
+- [REQ-204d6] Warn about unsaved changes when closing the application: a prompt lists the affected projects and lets you save them, discard the changes, or cancel the close
+
 ## [0.17.1] - 2026-10-09
 ### Fix
 - Fix the viewport "jumping" when adding the first element to a newly created (empty) document: the graphics view now installs a fixed, origin-centered scene rect so the scene-to-view mapping stays stable across the first element placement

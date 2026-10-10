@@ -2,12 +2,14 @@
 
 #include <QAction>
 #include <QClipboard>
+#include <QCloseEvent>
 #include <QCursor>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QPushButton>
 #include <QScopedPointer>
 #include <QSignalBlocker>
 
@@ -49,6 +51,8 @@ MainWindow::MainWindow(MainEditorController* parent)
     ui->setupUi(this);
     connect(ui->actionShowGrid, &QAction::toggled, this, &MainWindow::handleToggleGrid);
     connect(ui->actionSnapToGrid, &QAction::toggled, this, &MainWindow::handleToggleSnapToGrid);
+    // Note: actionQuit's triggered() -> close() is wired in main.ui, so File -> Exit also
+    // goes through closeEvent and the unsaved-changes guard. No extra connect needed here.
 
     // Conect events for HsmTreeView
     connect(ui->modelTree, &HsmTreeView::elementDoubleClickEvent, this, &MainWindow::onHsmElementDoubleClickEvent);
@@ -161,32 +165,55 @@ void MainWindow::handleOpenFile() {
 }
 
 void MainWindow::handleSave() {
-    if (nullptr != mActiveProject) {
-        if (mActiveProject->modelPath().isEmpty()) {
-            handleSaveAs();
-        } else {
-            mActiveProject->exportModel();
-        }
-    }
+    saveProject(mActiveProject);
 }
 
 void MainWindow::handleSaveAs() {
-    const QString initialDir = ((nullptr == mActiveProject || mActiveProject->modelPath().isEmpty())
-                                    ? QString("~")
-                                    : QFileInfo(mActiveProject->modelPath()).absolutePath());
-    QString fileName =
-        QFileDialog::getSaveFileName(this, tr("Save SCXML File As"), initialDir, tr("SCXML Files (*.scxml);;All Files (*)"));
+    saveProjectAs(mActiveProject);
+}
 
-    if (!fileName.isEmpty() && mActiveProject) {
-        if (!fileName.endsWith(".scxml", Qt::CaseInsensitive)) {
-            fileName += ".scxml";
-        }
+bool MainWindow::saveProject(const ProjectControllerPtr& project) {
+    bool saved = false;
 
-        if (mActiveProject->exportModel(fileName) && mSettingsController) {
-            mSettingsController->addRecentHsm(fileName);
-            updateRecentHsmMenu();
+    if (project) {
+        if (project->modelPath().isEmpty()) {
+            saved = saveProjectAs(project);
+        } else {
+            saved = project->exportModel();
         }
     }
+
+    return saved;
+}
+
+bool MainWindow::saveProjectAs(const ProjectControllerPtr& project) {
+    bool saved = false;
+
+    if (project) {
+        const QString initialDir =
+            (project->modelPath().isEmpty() ? QString("~") : QFileInfo(project->modelPath()).absolutePath());
+        QString fileName = QFileDialog::getSaveFileName(this,
+                                                        tr("Save SCXML File As"),
+                                                        initialDir,
+                                                        tr("SCXML Files (*.scxml);;All Files (*)"));
+
+        if (!fileName.isEmpty()) {
+            if (!fileName.endsWith(".scxml", Qt::CaseInsensitive)) {
+                fileName += ".scxml";
+            }
+
+            if (project->exportModel(fileName)) {
+                if (mSettingsController) {
+                    mSettingsController->addRecentHsm(fileName);
+                    updateRecentHsmMenu();
+                }
+
+                saved = true;
+            }
+        }
+    }
+
+    return saved;
 }
 
 void MainWindow::handleUndo() {
@@ -207,16 +234,68 @@ void MainWindow::handleRedo() {
 
 void MainWindow::handleCloseCurrentProject() {
     if (mActiveProject) {
-        mController->closeProject(mActiveProject);
+        if (confirmDiscardUnsaved({mActiveProject}, true)) {
+            mController->closeProject(mActiveProject);
+        }
     }
 }
 
 void MainWindow::handleCloseAllProjects() {
-    // block signals from projectTabs to avoid processing tab selection events
-    QSignalBlocker block(ui->projectTabs);
+    if (confirmDiscardUnsaved(mController->openedProjects(), false)) {
+        // block signals from projectTabs to avoid processing tab selection events
+        QSignalBlocker block(ui->projectTabs);
 
-    mActiveProject.clear();
-    mController->closeAllProjects();
+        mActiveProject.clear();
+        mController->closeAllProjects();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent* event) {
+    if (confirmDiscardUnsaved(mController->openedProjects(), false)) {
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
+
+bool MainWindow::confirmDiscardUnsaved(const QList<ProjectControllerPtr>& projects, const bool singleProjectContext) {
+    return mController->confirmDiscardUnsaved(
+        projects,
+        singleProjectContext,
+        [this](const QStringList& affectedProjectNames, bool single) {
+            return promptForUnsavedChanges(affectedProjectNames, single);
+        },
+        [this](const ProjectControllerPtr& project) { return saveProject(project); });
+}
+
+UnsavedChangesChoice MainWindow::promptForUnsavedChanges(const QStringList& affectedProjectNames,
+                                                         const bool singleProjectContext) {
+    const QString saveLabel = singleProjectContext ? tr("Save") : tr("Save All");
+
+    QMessageBox dialog(this);
+    dialog.setIcon(QMessageBox::Warning);
+    dialog.setWindowTitle(tr("Unsaved Changes"));
+    dialog.setText(tr("The following project(s) have unsaved changes:\n\n%1").arg(affectedProjectNames.join("\n")));
+    dialog.setInformativeText(tr("Do you want to save your changes before closing?"));
+
+    QPushButton* saveButton = dialog.addButton(saveLabel, QMessageBox::AcceptRole);
+    QPushButton* discardButton = dialog.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+    QPushButton* cancelButton = dialog.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    dialog.setDefaultButton(saveButton);
+
+    dialog.exec();
+
+    UnsavedChangesChoice choice = UnsavedChangesChoice::Cancel;
+
+    if (dialog.clickedButton() == saveButton) {
+        choice = UnsavedChangesChoice::SaveAll;
+    } else if (dialog.clickedButton() == discardButton) {
+        choice = UnsavedChangesChoice::Discard;
+    } else if (dialog.clickedButton() == cancelButton) {
+        choice = UnsavedChangesChoice::Cancel;
+    }
+
+    return choice;
 }
 
 // =================================================================================================================
@@ -380,7 +459,11 @@ void MainWindow::projectTabCloseRequested(int index) {
         QPointer<HsmGraphicsView> view = getViewByIndex(index);
 
         if (nullptr != view) {
-            mController->closeProject(view->projectController<ProjectController>());
+            ProjectControllerPtr project = view->projectController<ProjectController>();
+
+            if (project && confirmDiscardUnsaved({project}, true)) {
+                mController->closeProject(project);
+            }
         }
     }
 }

@@ -68,6 +68,9 @@ set(MODEL_SOURCES
 
 set(VIEW_SOURCES
     view/common/ViewUtils.cpp
+    # GUI-free guard logic; built into the view library so the unit tests (which link
+    # `view`) can reach it, even though it lives under controllers/private.
+    controllers/private/UnsavedChangesGuard.cpp
 
     view/theme/ThemeManager.cpp
 

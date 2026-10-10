@@ -159,6 +159,10 @@ package "Controller" {
   class SettingsController
   class RecentFilesManager
 
+  package "private" as ControllerPrivate {
+    class UnsavedChangesGuard
+  }
+
   IProjectController <|-- ProjectController
   MainEditorController "1" *-- "0..*" ProjectController
   MainEditorController "1" *-- "1" MainWindow
@@ -168,6 +172,9 @@ package "Controller" {
   ProjectController "1" *-- "1" StateMachineEntityViewModel : owns
 
   MainWindow "1" *-- "1" SettingsController
+
+  MainEditorController ..> UnsavedChangesGuard : unsaved-changes guard
+  MainWindow ..> UnsavedChangesGuard : prompt choice
 }
 
 ' Model-View-Controller Relationships
