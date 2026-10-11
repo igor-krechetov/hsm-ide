@@ -1,0 +1,1905 @@
+// =============================================================================
+// hsm-ide Software Requirements
+// =============================================================================
+// Converted from requirements/requirements.pu (the PlantUML WBS that is the
+// source of truth). Every WBS node becomes one Software_Requirement record and
+// NO requirement id or title has been dropped.
+//
+// Hierarchy: the .pu tree is preserved via nested TRLC `section "UID: Title"`
+// blocks. A node that has children both (a) emits its own record and (b) opens
+// a section that nests its children, so parent ids/titles are never lost and
+// document (reading) order is preserved.
+//
+// status maps the .pu <<class>> style to implementation state:
+//   <<done>> -> Done, <<in_progress>> -> InProgress, <<todo>> -> Todo,
+//   <<partial>> -> Partial, <<prio_low>> -> PrioLow.
+// Unclassified nodes (REQ-000 root, REQ-205 Custom Widgets) default to
+// Status.Partial: both are container nodes whose children are a mix of done
+// and not-done, so Partial is the honest roll-up.
+//
+// uid holds the ORIGINAL id verbatim (keeps '-' and '.'); the record name is a
+// normalized TRLC identifier (replace '-' and '.' with '_').
+//
+// The source .pu has four DUPLICATE ids. TRLC record names must be unique, so
+// the second occurrence of each gets a `_dup2` record name (uid field kept
+// verbatim). The duplicates are:
+//   REQ-103b2   (Minimum size for resizable elements / Moving elements)
+//   REQ-103e3b  (Move substate to top level / Move multiple elements)
+//   REQ-202c3   (fit to view shortcut / reset zoom shortcut)
+//   REQ-205b2   (delete tree elements / select tree elements and focus update)
+// =============================================================================
+
+package HSM_IDE
+
+Software_Requirement REQ_000 {
+  uid = "REQ-000"
+  title = "SCXML State Machine Editor"
+  description = "Root product: a graphical editor for designing, editing and exporting SCXML hierarchical state machines."
+  status = Status.Partial
+}
+
+section "REQ-100: Core Editor Functionality" {
+
+  Software_Requirement REQ_100 {
+    uid = "REQ-100"
+    title = "Core Editor Functionality"
+    description = "The core modelling features for building and manipulating state machine diagrams."
+    status = Status.Partial
+  }
+
+  section "REQ-101: SCXML domain model" {
+
+    Software_Requirement REQ_101 {
+      uid = "REQ-101"
+      title = "SCXML domain model"
+      description = "An in-memory domain model representing the SCXML state machine elements edited by the application."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101a {
+      uid = "REQ-101a"
+      title = "Atomic states"
+      description = "The model supports atomic (regular leaf) states as the basic building block of a state machine."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101b {
+      uid = "REQ-101b"
+      title = "Parallel states"
+      description = "The model supports parallel states that run multiple regions concurrently."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101c {
+      uid = "REQ-101c"
+      title = "Compound states"
+      description = "The model supports compound states that contain nested child states."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101d {
+      uid = "REQ-101d"
+      title = "History states (shallow/deep)"
+      description = "The model supports shallow and deep history pseudo-states for restoring a previous active configuration."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101e {
+      uid = "REQ-101e"
+      title = "Entry points"
+      description = "The model supports entry point pseudo-states used as named entry connectors into a compound state."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101f {
+      uid = "REQ-101f"
+      title = "Exit points"
+      description = "The model supports exit point pseudo-states used as named exit connectors out of a compound state."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101g {
+      uid = "REQ-101g"
+      title = "Final states"
+      description = "The model supports final states marking completion of a state machine or region."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101h {
+      uid = "REQ-101h"
+      title = "Initial states"
+      description = "The model supports initial pseudo-states designating the default active substate."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101i {
+      uid = "REQ-101i"
+      title = "model infrastructure"
+      description = "Shared model infrastructure (state and action base classes, factory and utilities) underpinning all element types."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_101l {
+      uid = "REQ-101l"
+      title = "include nodes"
+      description = "The model supports include nodes that reference external state machine files for modular composition."
+      status = Status.Done
+    }
+  }
+
+  section "REQ-102: Transition management" {
+
+    Software_Requirement REQ_102 {
+      uid = "REQ-102"
+      title = "Transition management"
+      description = "Creating, editing and configuring transitions between state machine elements."
+      status = Status.Done
+    }
+
+    section "REQ-102a: Visual transition creation" {
+
+      Software_Requirement REQ_102a {
+        uid = "REQ-102a"
+        title = "Visual transition creation"
+        description = "Transitions can be created visually by connecting source and target elements on the canvas."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_102a1 {
+        uid = "REQ-102a1"
+        title = "Arrows for connectable elements"
+        description = "The canvas shows connection arrows/handles on elements that can be used as a transition source or target."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_102a2 {
+        uid = "REQ-102a2"
+        title = "Highlight for connectable elements"
+        description = "Elements that can accept a transition connection are highlighted while the user is drawing one."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_102a3 {
+        uid = "REQ-102a3"
+        title = "Transition rendering"
+        description = "Transitions are rendered as arrows routed between their source and target elements on the canvas."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_102a4 {
+        uid = "REQ-102a4"
+        title = "Change transition source/target"
+        description = "An existing transition can be re-pointed by dragging its endpoints to a different source or target element."
+        status = Status.Done
+      }
+    }
+
+    Software_Requirement REQ_102b {
+      uid = "REQ-102b"
+      title = "Event labeling"
+      description = "A transition can be labeled with the event that triggers it."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_102c {
+      uid = "REQ-102c"
+      title = "Guard condition specification"
+      description = "A transition can carry a guard condition that must hold for the transition to fire."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_102d {
+      uid = "REQ-102d"
+      title = "Internal/External transitions"
+      description = "A transition can be configured as internal or external, controlling whether entry/exit actions run."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_102e {
+      uid = "REQ-102e"
+      title = "Self-transitions"
+      description = "A state can have a self-transition whose source and target are the same state."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_102f {
+      uid = "REQ-102f"
+      title = "Transition actions"
+      description = "A transition can define actions that execute when the transition is taken."
+      status = Status.Done
+    }
+  }
+
+  section "REQ-103: Element manipulation" {
+
+    Software_Requirement REQ_103 {
+      uid = "REQ-103"
+      title = "Element manipulation"
+      description = "Placing, moving, resizing, selecting and deleting diagram elements on the canvas."
+      status = Status.Partial
+    }
+
+    Software_Requirement REQ_103a {
+      uid = "REQ-103a"
+      title = "Drag-and-drop placement"
+      description = "Elements can be placed on the canvas by dragging them from the element palette."
+      status = Status.Done
+    }
+
+    section "REQ-103b: Resize/reposition elements" {
+
+      Software_Requirement REQ_103b {
+        uid = "REQ-103b"
+        title = "Resize/reposition elements"
+        description = "Placed elements can be resized and repositioned on the canvas."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103b1 {
+        uid = "REQ-103b1"
+        title = "Resizable and non-resizable elements"
+        description = "The editor distinguishes resizable elements (states) from fixed-size ones (pseudo-states) when handling resize."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103b2 {
+        uid = "REQ-103b2"
+        title = "Minimum size for resizable elements"
+        description = "Resizable elements enforce a minimum size so they cannot be shrunk below a usable extent."
+        status = Status.Done
+      }
+
+      // NOTE: the source .pu reuses id REQ-103b2 for a second node ("Moving
+      // elements"); record name disambiguated with _dup2, uid kept verbatim.
+      Software_Requirement REQ_103b2_dup2 {
+        uid = "REQ-103b2"
+        title = "Moving elements"
+        description = "Elements can be moved to a new position on the canvas by dragging them."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-103c: Multi-select operations" {
+
+      Software_Requirement REQ_103c {
+        uid = "REQ-103c"
+        title = "Multi-select operations"
+        description = "Multiple elements can be selected together to apply clipboard operations to them at once."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103c1 {
+        uid = "REQ-103c1"
+        title = "Copy"
+        description = "Selected elements can be copied to the clipboard."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103c2 {
+        uid = "REQ-103c2"
+        title = "Cut"
+        description = "Selected elements can be cut to the clipboard, removing them from the model."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103c3 {
+        uid = "REQ-103c3"
+        title = "Paste"
+        description = "Clipboard contents can be pasted back into the model."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103c4 {
+        uid = "REQ-103c4"
+        title = "Delete"
+        description = "Selected elements can be deleted from the model."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-103d: Delete selected elements" {
+
+      Software_Requirement REQ_103d {
+        uid = "REQ-103d"
+        title = "Delete selected elements"
+        description = "The currently selected elements can be removed from the state machine model."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103d1 {
+        uid = "REQ-103d1"
+        title = "Delete states"
+        description = "States can be deleted, cleaning up their contained elements and connected transitions."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103d2 {
+        uid = "REQ-103d2"
+        title = "Delete transition"
+        description = "A transition can be deleted without affecting its endpoint states."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103d3 {
+        uid = "REQ-103d3"
+        title = "Delete multiple elements"
+        description = "A multi-selection of elements can be deleted in a single operation."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-103e: Substates" {
+
+      Software_Requirement REQ_103e {
+        uid = "REQ-103e"
+        title = "Substates"
+        description = "Managing nested substates inside compound states, including moving states in and out of parents."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103e1 {
+        uid = "REQ-103e1"
+        title = "Adding/deleting substate elements"
+        description = "Child elements can be added to or removed from a compound state."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103e2 {
+        uid = "REQ-103e2"
+        title = "Adding/deleting transitions inside a state"
+        description = "Transitions can be created and deleted between elements contained within a compound state."
+        status = Status.Done
+      }
+
+      section "REQ-103e3: Moving states in and out" {
+
+        Software_Requirement REQ_103e3 {
+          uid = "REQ-103e3"
+          title = "Moving states in and out"
+          description = "States can be moved into or out of a parent compound state by dragging."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_103e3a {
+          uid = "REQ-103e3a"
+          title = "Move top level state into a substate"
+          description = "A top-level state can be dragged into a compound state to become its substate."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_103e3b {
+          uid = "REQ-103e3b"
+          title = "Move substate to top level (hold Ctrl)"
+          description = "A substate can be promoted to the top level by dragging it out while holding Ctrl."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_103e3c {
+          uid = "REQ-103e3c"
+          title = "Move substate to another parent (hold Ctrl)"
+          description = "A substate can be moved into a different parent state by dragging while holding Ctrl."
+          status = Status.Done
+        }
+
+        // NOTE: the source .pu reuses id REQ-103e3b for a second node ("Move
+        // multiple elements"); record name disambiguated with _dup2.
+        Software_Requirement REQ_103e3b_dup2 {
+          uid = "REQ-103e3b"
+          title = "Move multiple elements"
+          description = "Several selected elements can be moved between parents together in one drag operation."
+          status = Status.Done
+        }
+      }
+    }
+
+    section "REQ-103f: Hierarchy Restrictions" {
+
+      Software_Requirement REQ_103f {
+        uid = "REQ-103f"
+        title = "Hierarchy Restrictions"
+        description = "Structural rules constraining where elements may be placed within the state hierarchy."
+        status = Status.Partial
+      }
+
+      Software_Requirement REQ_103f1 {
+        uid = "REQ-103f1"
+        title = "History state must have a parent state"
+        description = "A history pseudo-state is only valid inside a parent state and cannot exist at the top level."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103f2 {
+        uid = "REQ-103f2"
+        title = "Entry point must have a parent state"
+        description = "An entry point is only valid inside a parent state and cannot exist at the top level."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103f3 {
+        uid = "REQ-103f3"
+        title = "Exit point must have a parent state"
+        description = "An exit point is only valid inside a parent state and cannot exist at the top level."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103f4 {
+        uid = "REQ-103f4"
+        title = "Initial and final states shall be top level only"
+        description = "Initial and final states are restricted so they may only appear at the top level of the hierarchy."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103f5 {
+        uid = "REQ-103f5"
+        title = "Visual indication of restricted action"
+        description = "The editor gives visual feedback when a user attempts an action that the hierarchy rules forbid."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_103f6 {
+        uid = "REQ-103f6"
+        title = "Only one initial state allowed in the model"
+        description = "The model should enforce that at most one initial state exists per state machine."
+        status = Status.Done
+        details = '''
+- Only one initial state is allowed at the model root level
+- Attempting to add a second initial state shows visual indication (forbidden cursor), consistent with existing REQ-103f restrictions
+- Drag, drop, and paste operations respect this constraint
+'''
+      }
+
+      Software_Requirement REQ_103f7 {
+        uid = "REQ-103f7"
+        title = "State names must be unique across the model"
+        description = "The model should enforce that every state name is unique across the whole state machine."
+        status = Status.Done
+        details = '''
+- Creating a state with a name that already exists is prevented
+- Renaming a state to an existing name is prevented
+- Visual indication shown (forbidden cursor or inline error)
+- Check is global across the entire model (not just siblings)
+- Error message explains the constraint
+'''
+      }
+    }
+  }
+
+  section "REQ-104: State Behavior Configuration" {
+
+    Software_Requirement REQ_104 {
+      uid = "REQ-104"
+      title = "State Behavior Configuration"
+      description = "Configuring the behavior of a state such as entry/exit actions, callbacks and naming."
+      status = Status.Partial
+    }
+
+    Software_Requirement REQ_104a {
+      uid = "REQ-104a"
+      title = "Entry actions (onentry)"
+      description = "A state can define onentry actions that run when the state is entered."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_104b {
+      uid = "REQ-104b"
+      title = "Exit actions (onexit)"
+      description = "A state can define onexit actions that run when the state is exited."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_104c {
+      uid = "REQ-104c"
+      title = "State change callbacks"
+      description = "A state can be associated with callbacks invoked on state changes."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_104d {
+      uid = "REQ-104d"
+      title = "Editing state name"
+      description = "A state's name can be edited through the properties editor."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_104e {
+      uid = "REQ-104e"
+      title = "Multiple actions per event"
+      description = "Several actions can be attached to the same event on a state."
+      status = Status.Done
+      details = '''
+- States can have multiple onentry and onexit actions
+- Transitions can have multiple actions
+- Properties editor allows adding, removing, and reordering actions
+- SCXML serialization handles multiple `<script>` elements within `<onentry>`/`<onexit>`
+- Existing single-action HSMs continue to work (backward compatible)
+'''
+    }
+  }
+
+  section "REQ-105: Timing Features" {
+
+    Software_Requirement REQ_105 {
+      uid = "REQ-105"
+      title = "Timing Features"
+      description = "Support for timer-driven behavior in the state machine (deferred, low priority)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_105a {
+      uid = "REQ-105a"
+      title = "Timer event configuration"
+      description = "Timers (start/stop/restart actions) can be configured on states to drive timed behavior."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_105b {
+      uid = "REQ-105b"
+      title = "Timeout transitions"
+      description = "A transition can be triggered by a timer timeout event."
+      status = Status.PrioLow
+    }
+  }
+
+  section "REQ-106: Modular Design" {
+
+    Software_Requirement REQ_106 {
+      uid = "REQ-106"
+      title = "Modular Design"
+      description = "Composing a state machine from multiple included files with dependency awareness (deferred)."
+      status = Status.PrioLow
+    }
+
+    section "REQ-106a: Dependency Visualization" {
+
+      Software_Requirement REQ_106a {
+        uid = "REQ-106a"
+        title = "Dependency Visualization"
+        description = "Visualizing the dependencies between included state machine files."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106a1 {
+        uid = "REQ-106a1"
+        title = "Display included files in current state machine"
+        description = "Files included by the current state machine are displayed to the user."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_106a2 {
+        uid = "REQ-106a2"
+        title = "Visualize external state references"
+        description = "References to states defined in external files are visualized in the diagram."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106a3 {
+        uid = "REQ-106a3"
+        title = "Render dependency graphs for interconnected files"
+        description = "A dependency graph is rendered for the network of interconnected state machine files."
+        status = Status.PrioLow
+      }
+    }
+
+    section "REQ-106b: Change Management" {
+
+      Software_Requirement REQ_106b {
+        uid = "REQ-106b"
+        title = "Change Management"
+        description = "Tracking and reacting to changes in included files."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106b1 {
+        uid = "REQ-106b1"
+        title = "Detect modifications in included files"
+        description = "The editor detects when an included file has been modified."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106b2 {
+        uid = "REQ-106b2"
+        title = "Notify when referenced content changes"
+        description = "The user is notified when content referenced from another file changes."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106b3 {
+        uid = "REQ-106b3"
+        title = "Provide update/refresh mechanisms"
+        description = "Mechanisms are provided to refresh or update the model after referenced content changes."
+        status = Status.PrioLow
+      }
+    }
+
+    section "REQ-106c: Navigation" {
+
+      Software_Requirement REQ_106c {
+        uid = "REQ-106c"
+        title = "Navigation"
+        description = "Navigating between interconnected state machine files."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106c1 {
+        uid = "REQ-106c1"
+        title = "Click-to-open for included files"
+        description = "An included file can be opened directly by clicking its include node."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_106c2 {
+        uid = "REQ-106c2"
+        title = "Breadcrumb trails showing inclusion hierarchy"
+        description = "Breadcrumb trails show the chain of inclusions leading to the current file."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106c3 {
+        uid = "REQ-106c3"
+        title = "Cross-file reference finder"
+        description = "A finder locates references to an element across multiple files."
+        status = Status.PrioLow
+      }
+    }
+
+    section "REQ-106d: Validation" {
+
+      Software_Requirement REQ_106d {
+        uid = "REQ-106d"
+        title = "Validation"
+        description = "Validating the integrity of inter-file dependencies."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106d1 {
+        uid = "REQ-106d1"
+        title = "Circular dependency checking"
+        description = "Inclusion chains are checked for circular dependencies."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106d2 {
+        uid = "REQ-106d2"
+        title = "Included file existence verification"
+        description = "The editor verifies that every included file actually exists."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_106d3 {
+        uid = "REQ-106d3"
+        title = "Interface compatibility validation (entry/exit points)"
+        description = "Entry and exit point interfaces are validated for compatibility between including and included files."
+        status = Status.PrioLow
+      }
+    }
+  }
+
+  section "REQ-107: Elements Rendering" {
+
+    Software_Requirement REQ_107 {
+      uid = "REQ-107"
+      title = "Elements Rendering"
+      description = "Graphical rendering of every state machine element type on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107a {
+      uid = "REQ-107a"
+      title = "Atomic states"
+      description = "Atomic states are rendered as graphical items on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107b {
+      uid = "REQ-107b"
+      title = "Parallel states"
+      description = "Parallel states are rendered with their concurrent regions on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107c {
+      uid = "REQ-107c"
+      title = "Compound states"
+      description = "Compound states are rendered as containers holding their child elements."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107d {
+      uid = "REQ-107d"
+      title = "History states"
+      description = "History pseudo-states are rendered with their distinctive history marker."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107e {
+      uid = "REQ-107e"
+      title = "Entry points"
+      description = "Entry point pseudo-states are rendered on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107f {
+      uid = "REQ-107f"
+      title = "Exit points"
+      description = "Exit point pseudo-states are rendered on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107g {
+      uid = "REQ-107g"
+      title = "Final states"
+      description = "Final states are rendered with their distinctive final-state marker."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107h {
+      uid = "REQ-107h"
+      title = "Initial states"
+      description = "Initial pseudo-states are rendered on the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_107i {
+      uid = "REQ-107i"
+      title = "model view widget"
+      description = "A graphics view widget renders the current state machine model and keeps it synchronized."
+      status = Status.Done
+    }
+
+    section "REQ-107l: generic element" {
+
+      Software_Requirement REQ_107l {
+        uid = "REQ-107l"
+        title = "generic element"
+        description = "A generic graphics element base provides functionality shared by all rendered elements."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107l1 {
+        uid = "REQ-107l1"
+        title = "common element functionality"
+        description = "Common behavior such as selection, movement and painting is shared across all rendered elements."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107l2 {
+        uid = "REQ-107l2"
+        title = "redraw on model data change"
+        description = "Rendered elements redraw themselves when the underlying model data changes."
+        status = Status.Done
+      }
+    }
+
+    Software_Requirement REQ_107m {
+      uid = "REQ-107m"
+      title = "include nodes"
+      description = "Include nodes are rendered on the canvas to represent referenced external files."
+      status = Status.Done
+    }
+
+    section "REQ-107n: Elements Selection" {
+
+      Software_Requirement REQ_107n {
+        uid = "REQ-107n"
+        title = "Elements Selection"
+        description = "Visual selection feedback is rendered for each selectable element type."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n1 {
+        uid = "REQ-107n1"
+        title = "State"
+        description = "Selection of a state is rendered with a selection highlight."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n2 {
+        uid = "REQ-107n2"
+        title = "History states"
+        description = "Selection of a history state is rendered with a selection highlight."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n3 {
+        uid = "REQ-107n3"
+        title = "Entry points"
+        description = "Selection of an entry point is rendered with a selection highlight."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n4 {
+        uid = "REQ-107n4"
+        title = "Exit points"
+        description = "Selection of an exit point is rendered with a selection highlight."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n5 {
+        uid = "REQ-107n5"
+        title = "Final states"
+        description = "Selection of a final state is rendered with a selection highlight."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_107n6 {
+        uid = "REQ-107n6"
+        title = "Initial states"
+        description = "Selection of an initial state is rendered with a selection highlight."
+        status = Status.Done
+      }
+    }
+  }
+
+  section "REQ-108: Callbacks management" {
+
+    Software_Requirement REQ_108 {
+      uid = "REQ-108"
+      title = "Callbacks management"
+      description = "Managing callback names used by states and transitions across the model (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_108a {
+      uid = "REQ-108a"
+      title = "Callbacks auto-suggestion"
+      description = "The editor suggests existing callback names while the user edits actions."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_108b {
+      uid = "REQ-108b"
+      title = "Callbacks renaming across existing elements"
+      description = "Renaming a callback propagates the new name to every element that references it."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_108c {
+      uid = "REQ-108c"
+      title = "Callbacks name validation"
+      description = "Callback names are validated against naming rules before being accepted."
+      status = Status.PrioLow
+    }
+  }
+}
+
+section "REQ-200: UI/UX Requirements" {
+
+  Software_Requirement REQ_200 {
+    uid = "REQ-200"
+    title = "UI/UX Requirements"
+    description = "The application's user interface layout, widgets and interaction behavior."
+    status = Status.Partial
+  }
+
+  section "REQ-201: Main Layout" {
+
+    Software_Requirement REQ_201 {
+      uid = "REQ-201"
+      title = "Main Layout"
+      description = "The overall main window layout with its palette, editor and property panels."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201a {
+      uid = "REQ-201a"
+      title = "Element palette (toolbox)"
+      description = "A palette (toolbox) lists the element types that can be dragged onto the canvas."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201b {
+      uid = "REQ-201b"
+      title = "Properties editor panel"
+      description = "A properties panel shows and edits the attributes of the currently selected element."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201c {
+      uid = "REQ-201c"
+      title = "Primary Side Bar management"
+      description = "The primary side bar hosting the auxiliary panels can be managed by the user."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201c1 {
+      uid = "REQ-201c1"
+      title = "Show/Hide primary side bar"
+      description = "The primary side bar can be shown or hidden."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201c2 {
+      uid = "REQ-201c2"
+      title = "Switch primary side bar panels"
+      description = "The user can switch between the panels docked in the primary side bar."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_201c3 {
+      uid = "REQ-201c3"
+      title = "Retain custom panel sizes in primary side bar"
+      description = "Custom panel sizes in the primary side bar are retained across sessions."
+      status = Status.Done
+    }
+  }
+
+  section "REQ-202: Model view widget" {
+
+    Software_Requirement REQ_202 {
+      uid = "REQ-202"
+      title = "Model view widget"
+      description = "The central graphics view widget presenting and interacting with the state machine diagram."
+      status = Status.Partial
+    }
+
+    section "REQ-202a: Layouts" {
+
+      Software_Requirement REQ_202a {
+        uid = "REQ-202a"
+        title = "Layouts"
+        description = "Canvas layout aids such as a background grid."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_202a1 {
+        uid = "REQ-202a1"
+        title = "Grid rendering (on/off)"
+        description = "The background grid can be turned on or off."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_202a2 {
+        uid = "REQ-202a2"
+        title = "Grid snapping"
+        description = "Elements can snap to the grid while being placed or moved."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-202b: Custom cursors" {
+
+      Software_Requirement REQ_202b {
+        uid = "REQ-202b"
+        title = "Custom cursors"
+        description = "Custom mouse cursors indicate the current canvas interaction mode (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_202b1 {
+        uid = "REQ-202b1"
+        title = "zoom in/out cursors"
+        description = "Dedicated cursors indicate zoom-in and zoom-out interaction modes."
+        status = Status.PrioLow
+      }
+    }
+
+    section "REQ-202c: Floating menu" {
+
+      Software_Requirement REQ_202c {
+        uid = "REQ-202c"
+        title = "Floating menu"
+        description = "A floating on-canvas menu offering quick view controls (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_202c1 {
+        uid = "REQ-202c1"
+        title = "show/hide menu on mouse hover"
+        description = "The floating menu appears on mouse hover and hides when the pointer leaves it."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_202c2 {
+        uid = "REQ-202c2"
+        title = "zoom in/out controls"
+        description = "The floating menu provides zoom-in and zoom-out controls."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_202c3 {
+        uid = "REQ-202c3"
+        title = "fit to view shortcut"
+        description = "The floating menu offers a shortcut to fit the whole diagram to the view."
+        status = Status.PrioLow
+      }
+
+      // NOTE: the source .pu reuses id REQ-202c3 for a second node ("reset zoom
+      // shortcut"); record name disambiguated with _dup2.
+      Software_Requirement REQ_202c3_dup2 {
+        uid = "REQ-202c3"
+        title = "reset zoom shortcut"
+        description = "The floating menu offers a shortcut to reset the zoom level to its default."
+        status = Status.PrioLow
+      }
+    }
+
+    section "REQ-202d: View interaction" {
+
+      Software_Requirement REQ_202d {
+        uid = "REQ-202d"
+        title = "View interaction"
+        description = "Interacting with the canvas view through panning and zooming."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_202d1 {
+        uid = "REQ-202d1"
+        title = "View pan"
+        description = "The user can pan the canvas view."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_202d2 {
+        uid = "REQ-202d2"
+        title = "View zoom in"
+        description = "The user can zoom the canvas view in."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_202d3 {
+        uid = "REQ-202d3"
+        title = "View zoom out"
+        description = "The user can zoom the canvas view out."
+        status = Status.Done
+      }
+    }
+  }
+
+  section "REQ-203: Workspace management" {
+
+    Software_Requirement REQ_203 {
+      uid = "REQ-203"
+      title = "Workspace management"
+      description = "Opening and managing a workspace directory of state machine files."
+      status = Status.Partial
+    }
+
+    Software_Requirement REQ_203a {
+      uid = "REQ-203a"
+      title = "Open/Close Workspace directory"
+      description = "A workspace directory can be opened and closed in the editor."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_203b {
+      uid = "REQ-203b"
+      title = "Dependency graph visualization"
+      description = "The workspace shows a visualization of dependencies between its files (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_203c {
+      uid = "REQ-203c"
+      title = "File inclusion hierarchy"
+      description = "The workspace shows the inclusion hierarchy among its files (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_203d {
+      uid = "REQ-203d"
+      title = "Cross-file reference highlighting"
+      description = "References spanning multiple workspace files are highlighted (deferred)."
+      status = Status.PrioLow
+    }
+  }
+
+  section "REQ-204: Menu Features" {
+
+    Software_Requirement REQ_204 {
+      uid = "REQ-204"
+      title = "Menu Features"
+      description = "The application's menu bar actions covering edit, file and view operations."
+      status = Status.Partial
+    }
+
+    section "REQ-204a: Edit menu" {
+
+      Software_Requirement REQ_204a {
+        uid = "REQ-204a"
+        title = "Edit menu"
+        description = "The Edit menu grouping clipboard, undo/redo and selection actions."
+        status = Status.Partial
+      }
+
+      Software_Requirement REQ_204a1 {
+        uid = "REQ-204a1"
+        title = "Copy/Paste/Cut"
+        description = "The Edit menu provides copy, paste and cut actions."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204a2 {
+        uid = "REQ-204a2"
+        title = "Delete"
+        description = "The Edit menu provides a delete action for the current selection."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204a3 {
+        uid = "REQ-204a3"
+        title = "Undo/Redo"
+        description = "The Edit menu provides undo and redo backed by the modification history."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204a4 {
+        uid = "REQ-204a4"
+        title = "Duplicate"
+        description = "The Edit menu provides a duplicate action for the current selection."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204a5 {
+        uid = "REQ-204a5"
+        title = "Find"
+        description = "The Edit menu provides a find action to locate elements (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_204a6 {
+        uid = "REQ-204a6"
+        title = "Select All"
+        description = "The Edit menu provides a select-all action."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-204d: File menu" {
+
+      Software_Requirement REQ_204d {
+        uid = "REQ-204d"
+        title = "File menu"
+        description = "The File menu grouping open, save and recent-file actions."
+        status = Status.Partial
+      }
+
+      Software_Requirement REQ_204d1 {
+        uid = "REQ-204d1"
+        title = "Open"
+        description = "The File menu provides an open action for a state machine file."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204d2 {
+        uid = "REQ-204d2"
+        title = "Save"
+        description = "The File menu provides a save action for the current project."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204d3 {
+        uid = "REQ-204d3"
+        title = "Save As"
+        description = "The File menu provides a save-as action to write the project to a new file."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204d4 {
+        uid = "REQ-204d4"
+        title = "List of recent files"
+        description = "The File menu lists recently opened files for quick reopening."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204d5 {
+        uid = "REQ-204d5"
+        title = "List of recent workspaces"
+        description = "The File menu lists recently opened workspaces for quick reopening."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204d6 {
+        uid = "REQ-204d6"
+        title = "Warn about unsaved changes on close"
+        description = "The editor should warn the user about unsaved changes before closing."
+        status = Status.Done
+        details = '''
+- Closing the application with unsaved changes prompts the user
+- Dialog shows list of unsaved projects
+- User can choose: Save All / Discard / Cancel
+- Closing individual project tab also prompts if modified
+- Works for both "X" button close and File -> Exit
+'''
+      }
+    }
+
+    section "REQ-204e: View menu" {
+
+      Software_Requirement REQ_204e {
+        uid = "REQ-204e"
+        title = "View menu"
+        description = "The View menu grouping zoom and side bar actions."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204e1 {
+        uid = "REQ-204e1"
+        title = "Zoom in"
+        description = "The View menu provides a zoom-in action."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204e2 {
+        uid = "REQ-204e2"
+        title = "Zoom out"
+        description = "The View menu provides a zoom-out action."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204e3 {
+        uid = "REQ-204e3"
+        title = "Reset zoom"
+        description = "The View menu provides a reset-zoom action."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204e4 {
+        uid = "REQ-204e4"
+        title = "Fit to view"
+        description = "The View menu provides a fit-to-view action."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_204e5 {
+        uid = "REQ-204e5"
+        title = "Side bar shortcuts"
+        description = "The View menu provides shortcuts to toggle the side bar panels."
+        status = Status.Done
+      }
+    }
+
+    Software_Requirement REQ_204f {
+      uid = "REQ-204f"
+      title = "Keyboard shortcuts documentation"
+      description = "A dialog documenting the available keyboard shortcuts should be provided."
+      status = Status.Done
+      details = '''
+- All functional shortcuts are documented in menus or tooltips
+- F2 (rename), Delete, Ctrl+D (duplicate) visible somewhere
+- Arrow key navigation documented if supported
+- Consider adding Help -> Keyboard Shortcuts menu item (optional)'''
+    }
+  }
+
+  section "REQ-205: Custom Widgets" {
+
+    Software_Requirement REQ_205 {
+      uid = "REQ-205"
+      title = "Custom Widgets"
+      description = "The custom Qt widgets that make up the editor's side panels and tools."
+      status = Status.Partial
+    }
+
+    Software_Requirement REQ_205a {
+      uid = "REQ-205a"
+      title = "HSM Elements list"
+      description = "A widget listing the HSM element types available to add to the diagram."
+      status = Status.Done
+    }
+
+    section "REQ-205b: HSM Tree View" {
+
+      Software_Requirement REQ_205b {
+        uid = "REQ-205b"
+        title = "HSM Tree View"
+        description = "A tree view presenting the state machine's elements in a hierarchical outline."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205b1 {
+        uid = "REQ-205b1"
+        title = "model and elements update"
+        description = "The tree view updates as the model and its elements change."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205b2 {
+        uid = "REQ-205b2"
+        title = "delete tree elements"
+        description = "Elements can be deleted directly from the tree view."
+        status = Status.Done
+      }
+
+      // NOTE: the source .pu reuses id REQ-205b2 for a second node ("select tree
+      // elements and focus update"); record name disambiguated with _dup2.
+      Software_Requirement REQ_205b2_dup2 {
+        uid = "REQ-205b2"
+        title = "select tree elements and focus update"
+        description = "Selecting an element in the tree view updates the selection and focus on the canvas."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205b3 {
+        uid = "REQ-205b3"
+        title = "icons and styling"
+        description = "The tree view shows per-element-type icons and styling."
+        status = Status.Done
+      }
+
+      section "REQ-205b4: context menu" {
+
+        Software_Requirement REQ_205b4 {
+          uid = "REQ-205b4"
+          title = "context menu"
+          description = "The tree view offers a context menu of actions on its items."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_205b4_1 {
+          uid = "REQ-205b4.1"
+          title = "expand all action"
+          description = "The tree view context menu provides an expand-all action."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_205b4_2 {
+          uid = "REQ-205b4.2"
+          title = "colapse all action"
+          description = "The tree view context menu provides a collapse-all action."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_205b4_3 {
+          uid = "REQ-205b4.3"
+          title = "remove item action"
+          description = "The tree view context menu provides a remove-item action."
+          status = Status.Done
+        }
+      }
+    }
+
+    section "REQ-205c: Attributes editor" {
+
+      Software_Requirement REQ_205c {
+        uid = "REQ-205c"
+        title = "Attributes editor"
+        description = "A custom editor for viewing and changing the attributes of the selected element."
+        status = Status.Partial
+      }
+
+      Software_Requirement REQ_205c1 {
+        uid = "REQ-205c1"
+        title = "custom view model"
+        description = "The attributes editor is backed by a custom view model mapping element data to rows."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205c2 {
+        uid = "REQ-205c2"
+        title = "show a list of attributes per element type"
+        description = "The attributes editor shows the attribute set appropriate to the selected element type."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205c3 {
+        uid = "REQ-205c3"
+        title = "edit element values"
+        description = "Element attribute values can be edited through the attributes editor."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205c4 {
+        uid = "REQ-205c4"
+        title = "events suggestion"
+        description = "The attributes editor suggests known event names while editing (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_205c5 {
+        uid = "REQ-205c5"
+        title = "callbacks suggestion"
+        description = "The attributes editor suggests known callback names while editing (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_205c6 {
+        uid = "REQ-205c6"
+        title = "actions and properties editing"
+        description = "The attributes editor supports editing element actions and properties."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-205d: Support for viewing multiple state machines" {
+
+      Software_Requirement REQ_205d {
+        uid = "REQ-205d"
+        title = "Support for viewing multiple state machines"
+        description = "The editor supports working with several open state machine projects at once."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205d1 {
+        uid = "REQ-205d1"
+        title = "opening multiple projects simultaniously"
+        description = "Several projects can be opened simultaneously."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205d2 {
+        uid = "REQ-205d2"
+        title = "switching between open projects"
+        description = "The user can switch between the open projects."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205d3 {
+        uid = "REQ-205d3"
+        title = "closing individual open project"
+        description = "An individual open project can be closed."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_205d4 {
+        uid = "REQ-205d4"
+        title = "closing all open projects"
+        description = "All open projects can be closed at once."
+        status = Status.Done
+      }
+    }
+  }
+
+  section "REQ-206: Primary Side Bar" {
+
+    Software_Requirement REQ_206 {
+      uid = "REQ-206"
+      title = "Primary Side Bar"
+      description = "The primary side bar hosting the workspace view, element list and debugging tools."
+      status = Status.Partial
+    }
+
+    section "REQ-206a: Workspace view" {
+
+      Software_Requirement REQ_206a {
+        uid = "REQ-206a"
+        title = "Workspace view"
+        description = "A side bar view presenting the workspace's files and folders."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a1 {
+        uid = "REQ-206a1"
+        title = "create file"
+        description = "A new file can be created from the workspace view."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a2 {
+        uid = "REQ-206a2"
+        title = "create folder"
+        description = "A new folder can be created from the workspace view."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a3 {
+        uid = "REQ-206a3"
+        title = "delete file"
+        description = "A file can be deleted from the workspace view."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a4 {
+        uid = "REQ-206a4"
+        title = "collapse folders"
+        description = "Folders in the workspace view can be collapsed."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a5 {
+        uid = "REQ-206a5"
+        title = "show/hide empty folders"
+        description = "Empty folders in the workspace view can be shown or hidden."
+        status = Status.Done
+      }
+
+      Software_Requirement REQ_206a6 {
+        uid = "REQ-206a6"
+        title = "move files"
+        description = "Files can be moved within the workspace view."
+        status = Status.Done
+      }
+    }
+
+    Software_Requirement REQ_206b {
+      uid = "REQ-206b"
+      title = "Editor elements list"
+      description = "A side bar panel listing the elements present in the current editor document."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_206c {
+      uid = "REQ-206c"
+      title = "Debugging toolbar"
+      description = "A side bar debugging toolbar for state machine simulation (deferred)."
+      status = Status.PrioLow
+    }
+  }
+
+  Software_Requirement REQ_207 {
+    uid = "REQ-207"
+    title = "About Dialog"
+    description = "An About dialog presenting application version and attribution information."
+    status = Status.Done
+  }
+
+  section "REQ-208: Themes" {
+
+    Software_Requirement REQ_208 {
+      uid = "REQ-208"
+      title = "Themes"
+      description = "Visual theming of the application UI."
+      status = Status.Partial
+    }
+
+    Software_Requirement REQ_208a {
+      uid = "REQ-208a"
+      title = "Themes management"
+      description = "The user can manage and switch between available UI themes (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_208b {
+      uid = "REQ-208b"
+      title = "Default theme"
+      description = "The application ships with a default theme applied on startup."
+      status = Status.Done
+    }
+  }
+}
+
+section "REQ-300: Import/Export" {
+
+  Software_Requirement REQ_300 {
+    uid = "REQ-300"
+    title = "Import/Export"
+    description = "Reading and writing state machines in external file formats."
+    status = Status.Partial
+  }
+
+  section "REQ-301: SCXML file handling" {
+
+    Software_Requirement REQ_301 {
+      uid = "REQ-301"
+      title = "SCXML file handling"
+      description = "Importing and exporting SCXML 1.0 state machine files."
+      status = Status.Partial
+    }
+
+    section "REQ-301a: Import SCXML 1.0 files" {
+
+      Software_Requirement REQ_301a {
+        uid = "REQ-301a"
+        title = "Import SCXML 1.0 files"
+        description = "The serializer imports SCXML 1.0 files into the editor model."
+        status = Status.Partial
+      }
+
+      section "REQ-301a1: Model structure import" {
+
+        Software_Requirement REQ_301a1 {
+          uid = "REQ-301a1"
+          title = "Model structure import"
+          description = "The structural content of an SCXML file (states, transitions) is imported into the model."
+          status = Status.Partial
+        }
+
+        Software_Requirement REQ_301a1_1 {
+          uid = "REQ-301a1.1"
+          title = "Basic structure import"
+          description = "Basic SCXML structure such as states and transitions is imported."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_301a1_2 {
+          uid = "REQ-301a1.2"
+          title = "Support for parsing import element"
+          description = "The importer parses SCXML import elements that reference external files."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_301a1_3 {
+          uid = "REQ-301a1.3"
+          title = "Report parse errors to user with line numbers"
+          description = "Parse errors encountered during import should be reported to the user with line numbers."
+          status = Status.Done
+          details = '''
+- Parse errors are displayed in a dialog after import attempt
+- Errors include line and column numbers where available
+- Multiple errors are listed (not just first one)
+- Non-fatal warnings are distinguished from fatal errors
+- Dialog is shown even for partial success with warnings
+'''
+        }
+      }
+
+      Software_Requirement REQ_301a2 {
+        uid = "REQ-301a2"
+        title = "Model layout import"
+        description = "Diagram layout information stored alongside the SCXML is imported so the diagram looks as saved."
+        status = Status.Done
+      }
+    }
+
+    section "REQ-301b: Export SCXML 1.0 files" {
+
+      Software_Requirement REQ_301b {
+        uid = "REQ-301b"
+        title = "Export SCXML 1.0 files"
+        description = "The serializer exports the editor model to SCXML 1.0 files."
+        status = Status.Done
+      }
+
+      section "REQ-301b1: Model structure export" {
+
+        Software_Requirement REQ_301b1 {
+          uid = "REQ-301b1"
+          title = "Model structure export"
+          description = "The structural content of the model (states, transitions) is written out as SCXML."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_301b1_1 {
+          uid = "REQ-301b1.1"
+          title = "Basic structure import"
+          description = "Basic SCXML structure such as states and transitions is exported."
+          status = Status.Done
+        }
+
+        Software_Requirement REQ_301b1_2 {
+          uid = "REQ-301b1.2"
+          title = "Support for exporting import element"
+          description = "The exporter writes SCXML import elements for referenced external files."
+          status = Status.Done
+        }
+      }
+
+      Software_Requirement REQ_301b2 {
+        uid = "REQ-301b2"
+        title = "Model layout export"
+        description = "Diagram layout information is written alongside the SCXML so it can be restored on import."
+        status = Status.Done
+      }
+    }
+  }
+
+  section "REQ-302: Image export" {
+
+    Software_Requirement REQ_302 {
+      uid = "REQ-302"
+      title = "Image export"
+      description = "Exporting the diagram as an image (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_302a {
+      uid = "REQ-302a"
+      title = "PNG export"
+      description = "The diagram can be exported as a PNG raster image."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_302b {
+      uid = "REQ-302b"
+      title = "SVG export"
+      description = "The diagram can be exported as an SVG vector image."
+      status = Status.PrioLow
+    }
+  }
+}
+
+section "REQ-400: hsmcpp Integration" {
+
+  Software_Requirement REQ_400 {
+    uid = "REQ-400"
+    title = "hsmcpp Integration"
+    description = "Integration with the hsmcpp library and its code generation workflow (deferred)."
+    status = Status.PrioLow
+  }
+
+  section "REQ-401: hsmcpp compatibility" {
+
+    Software_Requirement REQ_401 {
+      uid = "REQ-401"
+      title = "hsmcpp compatibility"
+      description = "Interoperating with hsmcpp state machine definitions (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_401a {
+      uid = "REQ-401a"
+      title = "Generate valid hsmcpp state machine code"
+      description = "The editor can generate state machine code consumable by the hsmcpp library."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_401b {
+      uid = "REQ-401b"
+      title = "Parse existing hsmcpp state machines"
+      description = "The editor can parse state machines authored for the hsmcpp library."
+      status = Status.PrioLow
+    }
+  }
+
+  section "REQ-402: Embedded development features" {
+
+    Software_Requirement REQ_402 {
+      uid = "REQ-402"
+      title = "Embedded development features"
+      description = "Features supporting embedded-targeted development with hsmcpp (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_402a {
+      uid = "REQ-402a"
+      title = "Resource-optimized visualization"
+      description = "A visualization mode optimized for resource-constrained embedded targets."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_402b {
+      uid = "REQ-402b"
+      title = "Cross-compilation support flags"
+      description = "Configuration flags supporting cross-compilation of generated code."
+      status = Status.PrioLow
+    }
+  }
+}
+
+section "REQ-500: Validation & Testing" {
+
+  Software_Requirement REQ_500 {
+    uid = "REQ-500"
+    title = "Validation & Testing"
+    description = "Validating state machine correctness and simulating its behavior (deferred)."
+    status = Status.PrioLow
+  }
+
+  section "REQ-501: Static validation" {
+
+    Software_Requirement REQ_501 {
+      uid = "REQ-501"
+      title = "Static validation"
+      description = "Static checks on the state machine structure and configuration (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_501a {
+      uid = "REQ-501a"
+      title = "State machine structural checks"
+      description = "Static checks validate the structural integrity of the state machine."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_501b {
+      uid = "REQ-501b"
+      title = "Transition path validation"
+      description = "Static checks validate that transition paths are well-formed and reachable."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_501c {
+      uid = "REQ-501c"
+      title = "Action syntax validation"
+      description = "Static checks validate the syntax of configured actions."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_501d {
+      uid = "REQ-501d"
+      title = "Timer configuration checks"
+      description = "Static checks validate timer configuration consistency."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_501e {
+      uid = "REQ-501e"
+      title = "Dependency validation"
+      description = "Static checks validate inter-file dependencies."
+      status = Status.PrioLow
+    }
+  }
+
+  section "REQ-502: Simulation" {
+
+    Software_Requirement REQ_502 {
+      uid = "REQ-502"
+      title = "Simulation"
+      description = "Simulating and visualizing state machine execution (deferred)."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_502a {
+      uid = "REQ-502a"
+      title = "State transition visualization"
+      description = "State transitions are visualized during simulation."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_502b {
+      uid = "REQ-502b"
+      title = "Event triggering simulation"
+      description = "Events can be triggered to drive the simulated state machine."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_502c {
+      uid = "REQ-502c"
+      title = "Action execution visualization"
+      description = "Action execution is visualized during simulation."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_502d {
+      uid = "REQ-502d"
+      title = "Timer event simulation"
+      description = "Timer events are simulated to drive timed transitions."
+      status = Status.PrioLow
+    }
+
+    Software_Requirement REQ_502e {
+      uid = "REQ-502e"
+      title = "Async transition visualization"
+      description = "Asynchronous transitions are visualized during simulation."
+      status = Status.PrioLow
+    }
+
+    section "REQ-502f: Transition Recording Visualization" {
+
+      Software_Requirement REQ_502f {
+        uid = "REQ-502f"
+        title = "Transition Recording Visualization"
+        description = "Visualizing recorded transition traces imported from hsmcpp (deferred)."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f1 {
+        uid = "REQ-502f1"
+        title = "Import hsmcpp transition recordings"
+        description = "Transition recordings produced by hsmcpp can be imported for playback."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f2 {
+        uid = "REQ-502f2"
+        title = "Timeline visualization of state transitions"
+        description = "Recorded state transitions are shown on a timeline."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f3 {
+        uid = "REQ-502f3"
+        title = "Step-by-step playback control"
+        description = "A recording can be played back step by step."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f4 {
+        uid = "REQ-502f4"
+        title = "Step navigation (forward/backward through recording)"
+        description = "Playback can be navigated forward and backward through the recorded steps."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f5 {
+        uid = "REQ-502f5"
+        title = "Error visualization (highlight skipped transitions)"
+        description = "Skipped or failed transitions are highlighted during recording playback."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f6 {
+        uid = "REQ-502f6"
+        title = "Filtering by state/transition type"
+        description = "Recorded steps can be filtered by state or transition type."
+        status = Status.PrioLow
+      }
+
+      Software_Requirement REQ_502f7 {
+        uid = "REQ-502f7"
+        title = "Transition statistics and metrics"
+        description = "Statistics and metrics are computed from a transition recording."
+        status = Status.PrioLow
+      }
+    }
+  }
+}

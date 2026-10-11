@@ -1,0 +1,83 @@
+// =============================================================================
+// hsm-ide Requirements Type Model (TRLC / BMW format)
+// =============================================================================
+// Typed schema for the hsm-ide software requirements.
+//
+// Adapted from hsmcpp's requirements/model/hsmcpp.rsl, reduced to a SINGLE
+// requirement type. The hsmcpp model splits System vs Software requirements and
+// carries criticality / verification / parent-trace fields for full code+test
+// traceability. hsm-ide intentionally drops all of that: the goal here is only
+// to track requirement DESCRIPTIONS and whether each one is IMPLEMENTED.
+//
+// The one addition over hsmcpp is the mandatory `status` enum, which tracks the
+// implementation state of each requirement (Status.Done = implemented; every
+// other value means not-yet / partial). The values mirror the <<class>> styles
+// used in requirements/requirements.pu (done, in_progress, todo, partial,
+// prio_low).
+//
+// Requirement instances live in:
+//   - requirements/software_requirements.trlc
+//
+// Validated with TRLC 3.0.1 (`trlc --brief requirements/`).
+// =============================================================================
+
+package HSM_IDE
+
+// -----------------------------------------------------------------------------
+// Enumerations
+// -----------------------------------------------------------------------------
+
+// Implementation status. Maps 1:1 to the .pu <<class>> styles:
+//   Done       <- <<done>>         implemented
+//   InProgress <- <<in_progress>>  being implemented
+//   Todo       <- <<todo>>         not implemented
+//   Partial    <- <<partial>>      partially implemented (also the default for
+//                                  unclassified container nodes)
+//   PrioLow    <- <<prio_low>>     deferred / low priority
+enum Status {
+  Done
+  InProgress
+  Todo
+  Partial
+  PrioLow
+}
+
+// -----------------------------------------------------------------------------
+// Software Requirement
+// -----------------------------------------------------------------------------
+// Fields:
+//   uid         - the ORIGINAL requirement id verbatim (e.g. "REQ-205b4.1").
+//                 The record name is a normalized TRLC identifier; this keeps
+//                 the real id, including the '-' and '.' characters.
+//   title       - the short requirement title (from the .pu node text).
+//   description - one meaningful sentence describing the requirement.
+//   status      - implementation state (see Status above).
+//   details     - OPTIONAL long-form, multi-line specification for a
+//                 requirement (Problem / Acceptance Criteria / High-Level Plan
+//                 / Files). Kept SEPARATE from the short `description`: the
+//                 description stays a one-sentence summary, details holds the
+//                 structured markup. Typed Markup_String so multi-line,
+//                 markdown-ish content (bullet lists, code-ish snippets) is
+//                 allowed. Most requirements leave this unset.
+// -----------------------------------------------------------------------------
+
+type Software_Requirement {
+  uid          String
+  title        String
+  description  String
+  status       Status
+  details      optional Markup_String
+}
+
+checks Software_Requirement {
+  len(uid) >= 3,
+    error "uid must be the original requirement id", uid
+  len(title) >= 2,
+    error "title is too short", title
+  len(description) >= 10,
+    error "requirement description is too short (min 10 chars)", description
+  len(description) <= 2000,
+    warning "requirement description is excessively long (>2000 chars)", description
+  details != null implies len(details) >= 10,
+    warning "optional details, when present, should carry meaningful content (min 10 chars)", details
+}
