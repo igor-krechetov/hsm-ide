@@ -49,3 +49,21 @@ one_test testname: build
 
 test_usecase testname usecase:
     {{BUILD_DIR}}/tests/{{testname}} {{usecase}} -maxwarnings 100000
+
+# REQUIREMENTS
+
+# Validate the TRLC requirements only (fast, CI-friendly).
+req_validate:
+    trlc --brief requirements/
+
+# Build the requirements documentation: validate the TRLC model + requirements,
+# then render the collapsible HTML view (descriptions + implementation status).
+req_build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    OUT={{BUILD_DIR}}/requirements
+    mkdir -p "$OUT"
+    # Validate the TRLC model + requirements.
+    trlc requirements/
+    # Render the single-page requirements document.
+    python3 scripts/requirements/render_html.py "$OUT/hsm_ide_requirements.html"

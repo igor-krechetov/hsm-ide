@@ -1,0 +1,10 @@
+# Python dependencies for authoring and validating the hsm-ide requirements.
+#
+# TRLC (BMW format) is used to type-check the requirement model
+# (requirements/model/hsm_ide.rsl) and the requirement instances
+# (requirements/software_requirements.trlc), and to feed the HTML renderer.
+#
+# NOTE: hsm-ide tracks requirement DESCRIPTIONS and implementation STATUS only.
+# There is intentionally NO code/test traceability here, so no lobster/bmw-lobster
+# packages are required.
+trlc==3.0.1
