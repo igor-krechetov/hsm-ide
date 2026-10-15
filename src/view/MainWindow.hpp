@@ -29,6 +29,10 @@ class StateMachineModel;
 class StateMachineEntity;
 }  // namespace model
 
+namespace view {
+class DropOverlayWidget;
+}  // namespace view
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -38,6 +42,7 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
     QPointer<HsmGraphicsView> currentView();
     QPointer<HsmGraphicsView> getViewByIndex(const int index);
@@ -124,6 +129,28 @@ private:
     // files list on success. Returns false if writing failed or the dialog was cancelled.
     bool saveProjectAs(const ProjectControllerPtr& project);
 
+    // Installs the single central-area drop filter on every drop target in the
+    // central subtree that could sit under the cursor during a file drag, and
+    // ensures each accepts drops. Idempotent; safe to call again when a new view
+    // is added so its viewport joins the filtered set.
+    void installCentralAreaDropFilter();
+
+    // Shared handler for the central-area file drop-to-open. Returns true iff it
+    // consumed the event (uri-list drags only); false for everything else so
+    // hsm/element drags continue to reach HsmGraphicsView unchanged.
+    bool handleCentralAreaDragDrop(QEvent* event);
+
+    // True iff watched is a central-subtree drop target: the central widget, the
+    // tab widget, its tab bar, or one of the current HsmGraphicsView viewports.
+    bool isCentralAreaDropTarget(QObject* watched) const;
+
+    // Lazily creates the single overlay, sizes it to the central widget, raises
+    // it above the tabs/editor, and shows it.
+    void showDropOverlay();
+
+    // Hides the overlay if it exists.
+    void hideDropOverlay();
+
 private:
     Ui_hsm_ide* ui = nullptr;
     MainEditorController* mController = nullptr;
@@ -132,6 +159,7 @@ private:
     QString mLastDirectory;
     QString mAppTitle;
     QString mConfigPath;
+    QPointer<view::DropOverlayWidget> mDropOverlay;
 
 private slots:
     void onSidebarActionTriggered(bool checked);

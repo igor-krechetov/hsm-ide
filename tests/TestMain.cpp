@@ -38,6 +38,11 @@ int runFormatRoundTripIntegrationTest(int argc, char** argv) __attribute__((weak
 int runQtGeometryDeserializationTest(int argc, char** argv) __attribute__((weak));
 int runPasteUnwrappedScxmlTest(int argc, char** argv) __attribute__((weak));
 int runUnsavedChangesGuardTest(int argc, char** argv) __attribute__((weak));
+int runWorkspaceViewCollisionPropertyTest(int argc, char** argv) __attribute__((weak));
+int runWorkspaceViewDropPropertyTest(int argc, char** argv) __attribute__((weak));
+int runWorkspaceViewCopyDecisionTest(int argc, char** argv) __attribute__((weak));
+int runMainEditorControllerOpenProjectPropertyTest(int argc, char** argv) __attribute__((weak));
+int runDragDropUtilsPropertyTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
     qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
@@ -88,6 +93,11 @@ int main(int argc, char** argv) {
         runQtGeometryDeserializationTest,
         runPasteUnwrappedScxmlTest,
         runUnsavedChangesGuardTest,
+        runWorkspaceViewCollisionPropertyTest,
+        runWorkspaceViewDropPropertyTest,
+        runWorkspaceViewCopyDecisionTest,
+        runMainEditorControllerOpenProjectPropertyTest,
+        runDragDropUtilsPropertyTest,
     };
 
     for (const auto test : tests) {

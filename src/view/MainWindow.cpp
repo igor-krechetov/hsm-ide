@@ -4,6 +4,9 @@
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QCursor>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGuiApplication>
@@ -12,6 +15,8 @@
 #include <QPushButton>
 #include <QScopedPointer>
 #include <QSignalBlocker>
+#include <QTabBar>
+#include <QUrl>
 
 #include "./ui/ui_main.h"
 #include "AboutDialog.hpp"
@@ -20,9 +25,12 @@
 #include "controllers/MainEditorController.hpp"
 #include "controllers/ProjectController.hpp"
 #include "controllers/SettingsController.hpp"
+#include "view/common/DragDropUtils.hpp"
 #include "view/elements/private/HsmElement.hpp"
 #include "view/models/StateMachineEntityViewModel.hpp"
 #include "view/models/StateMachineTreeModel.hpp"
+#include "view/widgets/DropOverlayWidget.hpp"
+#include "view/widgets/HsmGraphicsView.hpp"
 #include "view/widgets/WorkspaceView.hpp"
 
 namespace {
@@ -67,6 +75,9 @@ MainWindow::MainWindow(MainEditorController* parent)
 
     // Delete dummy tab
     ui->projectTabs->removeTab(0);
+
+    // Enable drop-to-open across the whole central area; drops are handled in eventFilter()
+    installCentralAreaDropFilter();
 
     mSettingsController = std::make_unique<SettingsController>();
     updateRecentHsmMenu();
@@ -263,6 +274,124 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->accept();
     } else {
         event->ignore();
+    }
+}
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    bool handled = false;
+    const QEvent::Type eventType = event->type();
+    const bool isDragDropEvent = (QEvent::DragEnter == eventType) || (QEvent::DragMove == eventType) ||
+                                 (QEvent::DragLeave == eventType) || (QEvent::Drop == eventType);
+
+    if (isDragDropEvent && isCentralAreaDropTarget(watched)) {
+        handled = handleCentralAreaDragDrop(event);
+    } else if ((QEvent::Resize == eventType) && (watched == ui->centralwidget) && (nullptr != mDropOverlay) &&
+               mDropOverlay->isVisible()) {
+        mDropOverlay->setGeometry(ui->centralwidget->rect());
+    }
+
+    return handled ? true : QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::installCentralAreaDropFilter() {
+    ui->centralwidget->setAcceptDrops(true);
+    ui->centralwidget->installEventFilter(this);
+
+    ui->projectTabs->setAcceptDrops(true);
+    ui->projectTabs->installEventFilter(this);
+
+    ui->projectTabs->tabBar()->setAcceptDrops(true);
+    ui->projectTabs->tabBar()->installEventFilter(this);
+}
+
+bool MainWindow::isCentralAreaDropTarget(QObject* watched) const {
+    bool isTarget = (watched == ui->centralwidget) || (watched == ui->projectTabs) || (watched == ui->projectTabs->tabBar());
+
+    if (false == isTarget) {
+        const int tabCount = ui->projectTabs->count();
+
+        for (int index = 0; index < tabCount; ++index) {
+            HsmGraphicsView* view = qobject_cast<HsmGraphicsView*>(ui->projectTabs->widget(index));
+
+            if ((nullptr != view) && (watched == view->viewport())) {
+                isTarget = true;
+                break;
+            }
+        }
+    }
+
+    return isTarget;
+}
+
+bool MainWindow::handleCentralAreaDragDrop(QEvent* event) {
+    bool handled = false;
+
+    switch (event->type()) {
+        case QEvent::DragEnter:
+        case QEvent::DragMove: {
+            QDragMoveEvent* dragMoveEvent = static_cast<QDragMoveEvent*>(event);
+
+            if (dragMoveEvent->mimeData()->hasUrls()) {
+                const bool openable =
+                    view::DragDropUtils::hasScxml(view::DragDropUtils::localPathsFromUrls(dragMoveEvent->mimeData()->urls()));
+
+                if (openable) {
+                    showDropOverlay();
+                    dragMoveEvent->acceptProposedAction();
+                } else {
+                    hideDropOverlay();
+                    dragMoveEvent->ignore();
+                }
+
+                handled = true;
+            }
+            // non-uri-list (hsm/element): leave handled=false so the view handles it
+            break;
+        }
+        case QEvent::DragLeave: {
+            hideDropOverlay();
+            // do not consume: lets watched widgets reset their own state
+            break;
+        }
+        case QEvent::Drop: {
+            QDropEvent* dropEvent = static_cast<QDropEvent*>(event);
+
+            if (dropEvent->mimeData()->hasUrls()) {
+                hideDropOverlay();
+                const QStringList scxmlPaths = view::DragDropUtils::filterScxmlPaths(
+                    view::DragDropUtils::localPathsFromUrls(dropEvent->mimeData()->urls()));
+
+                for (const QString& path : scxmlPaths) {
+                    if (path.isEmpty() == false) {
+                        mController->openProject(path);
+                    }
+                }
+
+                dropEvent->acceptProposedAction();
+                handled = true;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    return handled;
+}
+
+void MainWindow::showDropOverlay() {
+    if (nullptr == mDropOverlay) {
+        mDropOverlay = new view::DropOverlayWidget(ui->centralwidget);
+    }
+
+    mDropOverlay->setGeometry(ui->centralwidget->rect());
+    mDropOverlay->raise();
+    mDropOverlay->show();
+}
+
+void MainWindow::hideDropOverlay() {
+    if (nullptr != mDropOverlay) {
+        mDropOverlay->hide();
     }
 }
 
@@ -642,6 +771,11 @@ void MainWindow::projectOpened(ProjectControllerPtr project) {
 #endif
 
     newView->setScene(scene);
+
+    // Add the new view's viewport to the central-area drop filter so central-area drops
+    // work over the editor (the view already enables drops in its constructor).
+    newView->viewport()->installEventFilter(this);
+    newView->viewport()->setAcceptDrops(true);
     newView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     newView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     newView->setGridVisible(ui->actionShowGrid->isChecked());

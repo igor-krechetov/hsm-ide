@@ -1081,6 +1081,33 @@ section "REQ-200: UI/UX Requirements" {
       description = "References spanning multiple workspace files are highlighted (deferred)."
       status = Status.PrioLow
     }
+
+    Software_Requirement REQ_203e {
+      uid = "REQ-203e"
+      title = "Drag-and-drop files into workspace or editor"
+      description = "Files dropped from the OS onto a Workspace View folder are copied into that folder with name-collision resolution, and files dropped onto the editor open each .scxml file as a project while skipping non-.scxml files."
+      status = Status.Done
+      details = '''
+- Dropping files onto a Workspace View folder (or a file item -> its containing folder) copies them in
+- Name collisions prompt Overwrite / Rename / Cancel
+- Dropping onto the editor opens each .scxml via openProject (reusing an already-open project)
+- Non-.scxml files dropped on the editor are skipped
+- Multi-file drops apply the per-file rule to each delivered file
+'''
+    }
+
+    Software_Requirement REQ_203f {
+      uid = "REQ-203f"
+      title = "Drag-and-drop visual feedback"
+      description = "File drop-to-open and the translucent 'Drop to open' overlay operate generically over the whole central area: a drag is accepted over the open tabs, the empty tab-bar strip, the editor area, and the empty state shown when zero tabs are open; on drop each delivered .scxml file opens through openProject, an already-open project is reused without duplication, and non-.scxml files are skipped. The Workspace View still highlights the destination folder row during a drag."
+      status = Status.Done
+      details = '''
+- Central area: a single event filter on the central widget (and its tab widget, tab bar, and each editor viewport) handles the drag-enter / drag-move / drag-leave / drag-cancel / drop for file drop-to-open across the whole central area, including the empty tab-bar strip and the zero-tab empty state
+- Overlay: one translucent, frameless, mouse-transparent "Drop to open" overlay covers the whole central area while a drag carries at least one .scxml file; it is cleared on leave, drop, and cancel, and resizes with the central area
+- Open: each delivered .scxml file opens via openProject (reusing an already-open project without duplication); non-.scxml files are skipped
+- Workspace View: the destination-folder highlight during a drag is unchanged
+'''
+    }
   }
 
   section "REQ-204: Menu Features" {

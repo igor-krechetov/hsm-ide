@@ -2,16 +2,81 @@
 
 #include <QAbstractItemDelegate>
 #include <QDir>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QFile>
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QInputDialog>
 #include <QItemSelectionModel>
+#include <QList>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMimeData>
+#include <QPushButton>
 #include <QRegularExpression>
+#include <QUrl>
 
 #include "view/models/FilteredFileSystemProxyModel.hpp"
+
+namespace {
+
+// Pure: a file name collides iff a file with that name already exists in targetDir.
+bool nameCollides(const QString& targetDir, const QString& fileName) {
+    return QFileInfo::exists(QDir(targetDir).filePath(fileName));
+}
+
+// Pure: produce a name that does not collide in targetDir, preserving the extension.
+// Mirrors the counter pattern used by createWorkspaceFile: name.ext, name (1).ext, name (2).ext, ...
+QString makeNonCollidingName(const QString& targetDir, const QString& fileName) {
+    const QFileInfo fileInfo(fileName);
+    const QString baseName = fileInfo.completeBaseName();
+    const QString suffix = fileInfo.suffix();
+
+    QString candidate = fileName;
+    int counter = 1;
+    while (nameCollides(targetDir, candidate)) {
+        if (suffix.isEmpty()) {
+            candidate = QString("%1 (%2)").arg(baseName).arg(counter);
+        } else {
+            candidate = QString("%1 (%2).%3").arg(baseName).arg(counter).arg(suffix);
+        }
+        counter += 1;
+    }
+
+    return candidate;
+}
+
+}  // namespace
+
+// Test-linkage hooks: external-linkage forwarders to the file-local pure helpers above,
+// mirroring how view tests reach pure view helpers (see tests/view). Not part of the
+// public widget API; declared only in the test translation units.
+namespace wsview_test_hooks {
+
+bool nameCollides(const QString& targetDir, const QString& fileName) {
+    return ::nameCollides(targetDir, fileName);
+}
+
+QString makeNonCollidingName(const QString& targetDir, const QString& fileName) {
+    return ::makeNonCollidingName(targetDir, fileName);
+}
+
+QString resolveDropTargetFolder(const WorkspaceView& view, const QModelIndex& dropProxyIndex) {
+    return view.resolveDropTargetFolder(dropProxyIndex);
+}
+
+QModelIndex targetFolderProxyIndex(const WorkspaceView& view, const QPoint& viewportPos) {
+    return view.targetFolderProxyIndex(viewportPos);
+}
+
+void copyDroppedFileIntoFolder(WorkspaceView& view, const QString& sourcePath, const QString& targetDir) {
+    view.copyDroppedFileIntoFolder(sourcePath, targetDir);
+}
+
+}  // namespace wsview_test_hooks
 
 WorkspaceView::WorkspaceView(QWidget* parent)
     : QTreeView(parent) {
@@ -180,6 +245,136 @@ QString WorkspaceView::selectedWorkspaceDir() const {
     }
 
     return result;
+}
+
+QString WorkspaceView::resolveDropTargetFolder(const QModelIndex& dropProxyIndex) const {
+    QString result;
+
+    if ((nullptr != mProxyModel) && (nullptr != mFsModel) && (false == mWorkspaceRootDir.isEmpty())) {
+        if (false == dropProxyIndex.isValid()) {
+            result = mWorkspaceRootDir;
+        } else {
+            const QModelIndex sourceIndex = mProxyModel->mapToSource(dropProxyIndex);
+            if (mFsModel->isDir(sourceIndex)) {
+                result = mFsModel->filePath(sourceIndex);
+            } else {
+                result = QFileInfo(mFsModel->filePath(sourceIndex)).absolutePath();
+            }
+        }
+    }
+
+    return result;
+}
+
+QModelIndex WorkspaceView::targetFolderProxyIndex(const QPoint& viewportPos) const {
+    QModelIndex result;
+
+    const QString targetDir = resolveDropTargetFolder(indexAt(viewportPos));
+    if ((nullptr != mProxyModel) && (nullptr != mFsModel) && (false == targetDir.isEmpty())) {
+        result = mProxyModel->mapFromSource(mFsModel->index(targetDir));  // Req 1.1/1.2
+    }
+
+    return result;  // Req 1.5: invalid when no workspace is loaded
+}
+
+void WorkspaceView::highlightTargetFolder(const QPoint& viewportPos) {
+    const QModelIndex targetIndex = targetFolderProxyIndex(viewportPos);
+
+    if (targetIndex.isValid()) {
+        setCurrentIndex(targetIndex);  // Req 1.1/1.2
+        mDragHighlightActive = true;
+    } else {
+        clearDragHighlight();  // Req 1.5
+    }
+}
+
+void WorkspaceView::clearDragHighlight() {
+    if (mDragHighlightActive) {
+        setCurrentIndex(QModelIndex());
+        mDragHighlightActive = false;
+    }
+}
+
+void WorkspaceView::dragEnterEvent(QDragEnterEvent* event) {
+    if ((nullptr != event->mimeData()) && event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+        highlightTargetFolder(event->position().toPoint());  // Req 1.1
+    } else {
+        QTreeView::dragEnterEvent(event);
+    }
+}
+
+void WorkspaceView::dragMoveEvent(QDragMoveEvent* event) {
+    if ((nullptr != event->mimeData()) && event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+        highlightTargetFolder(event->position().toPoint());  // Req 1.2
+    } else {
+        QTreeView::dragMoveEvent(event);
+    }
+}
+
+void WorkspaceView::dragLeaveEvent(QDragLeaveEvent* event) {
+    clearDragHighlight();  // Req 1.3
+    QTreeView::dragLeaveEvent(event);
+}
+
+void WorkspaceView::dropEvent(QDropEvent* event) {
+    if ((nullptr != event->mimeData()) && event->mimeData()->hasUrls()) {
+        const QString targetDir = resolveDropTargetFolder(indexAt(event->position().toPoint()));
+
+        if (targetDir.isEmpty()) {
+            // Req 1.3: no workspace loaded -> ignore the external drop.
+            clearDragHighlight();  // Req 1.4
+            event->ignore();
+        } else {
+            const QList<QUrl> urls = event->mimeData()->urls();
+            for (const QUrl& url : urls) {
+                const QString localPath = url.toLocalFile();
+                if ((false == localPath.isEmpty()) && QFileInfo(localPath).isFile()) {
+                    copyDroppedFileIntoFolder(localPath, targetDir);  // Req 1.1/1.2, 4.1
+                }
+            }
+            clearDragHighlight();  // Req 1.4
+            event->acceptProposedAction();
+        }
+    } else {
+        // Preserve the existing InternalMove behavior for non-URL (internal) drops.
+        QTreeView::dropEvent(event);
+    }
+}
+
+void WorkspaceView::copyDroppedFileIntoFolder(const QString& sourcePath, const QString& targetDir) {
+    const QString destName = QFileInfo(sourcePath).fileName();
+    QString destPath = QDir(targetDir).filePath(destName);
+    bool skip = false;
+
+    if (nameCollides(targetDir, destName)) {  // Req 2.1
+        QMessageBox prompt(this);
+        prompt.setIcon(QMessageBox::Question);
+        prompt.setWindowTitle(tr("File Exists"));
+        prompt.setText(tr("A file named '%1' already exists in the target folder.").arg(destName));
+        
+        QPushButton* overwriteButton = prompt.addButton(tr("Overwrite"), QMessageBox::AcceptRole);
+        QPushButton* renameButton = prompt.addButton(tr("Rename"), QMessageBox::ActionRole);
+        QPushButton* cancelButton = prompt.addButton(QMessageBox::Cancel);
+
+        prompt.setDefaultButton(cancelButton);
+        prompt.exec();
+
+        if (prompt.clickedButton() == overwriteButton) {
+            QFile::remove(destPath);  // Req 2.2: replace existing, so QFile::copy can succeed
+        } else if (prompt.clickedButton() == renameButton) {
+            destPath = QDir(targetDir).filePath(makeNonCollidingName(targetDir, destName));  // Req 2.3
+        } else {
+            skip = true;  // Req 2.4: Cancel -> leave existing untouched, skip this file
+        }
+    }
+
+    if (false == skip) {
+        if (false == QFile::copy(sourcePath, destPath)) {  // Req 1.1/1.2
+            QMessageBox::warning(this, tr("Copy Failed"), tr("Failed to copy '%1'.").arg(destName));
+        }
+    }
 }
 
 void WorkspaceView::createWorkspaceFile(const QModelIndex& parentIndex) {
