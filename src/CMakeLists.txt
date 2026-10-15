@@ -69,6 +69,7 @@ set(MODEL_SOURCES
 
 set(VIEW_SOURCES
     view/common/ViewUtils.cpp
+    view/common/DragDropUtils.cpp
     # GUI-free guard logic; built into the view library so the unit tests (which link
     # `view`) can reach it, even though it lives under controllers/private.
     controllers/private/UnsavedChangesGuard.cpp
@@ -80,6 +81,7 @@ set(VIEW_SOURCES
     view/widgets/HsmTreeView.cpp
     view/widgets/HsmPropertiesTableView.cpp
     view/widgets/WorkspaceView.cpp
+    view/widgets/DropOverlayWidget.cpp
     view/widgets/QClickableSlider.cpp
     view/widgets/QImageViewArea.cpp
     view/widgets/private/HsmEntityPropertyDelegate.cpp

@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QGraphicsScene>
 #include <QRandomGenerator>
+#include <QStringList>
 #include <QTransform>
 #include <QtTest>
 #include <cmath>
@@ -9,6 +10,7 @@
 #include "controllers/IProjectController.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/elements/RegularState.hpp"
+#include "view/common/DragDropUtils.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
@@ -91,6 +93,7 @@ private slots:
     void PropertyNonEmptyAddDoesNotShiftView();
     void PropertyDragMoveReparentPreservesPositions();
     void PropertyPanZoomFitPreserved();
+    void PropertyEditorDropPartitionsDroppedPaths();
 };
 
 /**
@@ -389,6 +392,113 @@ void HsmGraphicsViewPropertyTest::PropertyPanZoomFitPreserved() {
                                 .arg(zoomSteps)
                                 .arg(afterSymmetric.m11())
                                 .arg(afterSymmetric.m22())));
+    }
+}
+
+/**
+ * @brief Property 4: Editor drop partitions dropped paths.
+ *
+ * For any list of dropped file paths, the set of paths forwarded to the project
+ * open operation is exactly the subset of paths that end in `.scxml`
+ * (case-insensitive), and every other dropped path is skipped, regardless of how
+ * many files are dropped (design Correctness Property 4; Requirements 3.2, 4.2).
+ *
+ * A fresh random path list is generated each iteration from a mixed alphabet of
+ * path kinds so the input space is covered intelligently:
+ *  - genuine `.scxml` paths with the extension in varied letter case
+ *    (`.scxml`, `.SCXML`, `.ScXmL`, ...), which MUST be kept
+ *  - near-miss paths that merely contain `scxml` or end in a different
+ *    extension (`.xml`, `.scxm`, `foo.scxml.bak`, `scxml`), which MUST be dropped
+ *  - plain non-matching paths (`.txt`, extensionless), which MUST be dropped
+ * List length is varied from 0 up to a few dozen so the partition is checked
+ * "regardless of count". The expected `.scxml` subset is recomputed independently
+ * of the production helper and compared for exact equality including order, so
+ * the test asserts the forwarded set equals exactly the `.scxml` subset with
+ * order preserved.
+ *
+ * Feature: drag-and-drop-files, Property 4: Editor drop partitions dropped paths
+ *
+ * Validates: Requirements 3.2, 4.2
+ */
+void HsmGraphicsViewPropertyTest::PropertyEditorDropPartitionsDroppedPaths() {
+    QRandomGenerator rng(QRandomGenerator::global()->generate());
+
+    // Case variants of the ".scxml" extension so case-insensitivity is exercised.
+    const QStringList scxmlExtensionCases = {
+        ".scxml", ".SCXML", ".ScXmL", ".sCxMl", ".Scxml", ".scxmL",
+    };
+
+    // Builders for the different path kinds. Each returns {path, isScxml}.
+    auto makeScxmlPath = [&rng, &scxmlExtensionCases](int index) -> QString {
+        const QString ext = scxmlExtensionCases.at(rng.bounded(scxmlExtensionCases.size()));
+        return QStringLiteral("/tmp/dir%1/machine%2%3").arg(rng.bounded(10)).arg(index).arg(ext);
+    };
+
+    // Near-miss paths that must NOT be treated as .scxml even though they look close.
+    auto makeNearMissPath = [&rng](int index) -> QString {
+        switch (rng.bounded(5)) {
+            case 0:
+                return QStringLiteral("/tmp/notes%1.xml").arg(index);
+            case 1:
+                return QStringLiteral("/tmp/trunc%1.scxm").arg(index);
+            case 2:
+                return QStringLiteral("/tmp/backup%1.scxml.bak").arg(index);
+            case 3:
+                return QStringLiteral("/tmp/scxml%1").arg(index);  // contains the word, no extension
+            default:
+                return QStringLiteral("/tmp/scxml_folder%1/readme").arg(index);
+        }
+    };
+
+    // Plain non-matching paths.
+    auto makeOtherPath = [&rng](int index) -> QString {
+        switch (rng.bounded(3)) {
+            case 0:
+                return QStringLiteral("/tmp/doc%1.txt").arg(index);
+            case 1:
+                return QStringLiteral("/tmp/image%1.png").arg(index);
+            default:
+                return QStringLiteral("/tmp/plainfile%1").arg(index);
+        }
+    };
+
+    for (int iteration = 0; iteration < 100; ++iteration) {
+        // Vary the count across empty, singleton and multi-file drops.
+        const int pathCount = static_cast<int>(rng.bounded(0, 32));
+
+        QStringList droppedPaths;
+        QStringList expectedScxmlPaths;
+
+        for (int i = 0; i < pathCount; ++i) {
+            QString path;
+
+            switch (rng.bounded(3)) {
+                case 0:
+                    path = makeScxmlPath(i);
+                    expectedScxmlPaths.append(path);  // order preserved by appending in input order
+                    break;
+                case 1:
+                    path = makeNearMissPath(i);
+                    break;
+                default:
+                    path = makeOtherPath(i);
+                    break;
+            }
+
+            droppedPaths.append(path);
+        }
+
+        const QStringList forwardedPaths = view::DragDropUtils::filterScxmlPaths(droppedPaths);
+
+        // The forwarded set must equal exactly the .scxml subset, order preserved.
+        QVERIFY2(forwardedPaths == expectedScxmlPaths,
+                 qPrintable(QString("Iteration %1 (count %2): forwarded paths [%3] != expected .scxml subset [%4] "
+                                    "for input [%5]")
+                                .arg(iteration)
+                                .arg(pathCount)
+                                .arg(forwardedPaths.join(QStringLiteral(", ")))
+                                .arg(expectedScxmlPaths.join(QStringLiteral(", ")))
+                                .arg(droppedPaths.join(QStringLiteral(", ")))));
     }
 }
 

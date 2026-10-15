@@ -40,6 +40,12 @@ set(TEST_OBJECTS
     view/AutoGroupItemCursorTest.cpp
     view/HsmTransitionGripVisibilityTest.cpp
     view/UnsavedChangesGuardTest.cpp
+    view/WorkspaceViewCollisionPropertyTest.cpp
+    view/WorkspaceViewDropPropertyTest.cpp
+    view/WorkspaceViewCopyDecisionTest.cpp
+    view/DragDropUtilsPropertyTest.cpp
+
+    controllers/MainEditorControllerOpenProjectPropertyTest.cpp
 )
 
 foreach(testObject ${TEST_OBJECTS})

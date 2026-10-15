@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.20.0] - 2026-10-15
+### New
+- Drag-and-drop of external files into the workspace or editor
+
 ## [0.19.0] - 2026-10-09
 ### New
 - [REQ-301a1.3] Report SCXML parse errors to the user: a dialog lists every problem found while importing a file, with its severity, line/column location, and message. The report is shown even when the import fails fatally, and reserved-uid conflicts (uid=1 is reserved for the initial state) are reported with an explicit message

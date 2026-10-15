@@ -4,6 +4,7 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QRandomGenerator>
+#include <QString>
 
 #include "view/theme/ThemeManager.hpp"
 #include "view/widgets/HsmGraphicsView.hpp"
