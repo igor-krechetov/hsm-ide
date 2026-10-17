@@ -195,9 +195,12 @@ bool StateMachineSerializer::deserializeFromScxml(const QString& scxml, QSharedP
                 // Strategy consumed the element (e.g., <hsm:editor>)
             } else {
                 const QString elementName = mXmlReader->name().toString();
-                QSharedPointer<StateMachineEntity> entity = parseChildEntity(mModel->root());
+                bool handled = false;
+                QSharedPointer<StateMachineEntity> entity = parseChildEntity(mModel->root(), nullptr, &handled);
 
-                if (!entity) {
+                // Warn only when the element was not recognized; a recognized element may be
+                // handled without producing an entity.
+                if (false == handled) {
                     qWarning() << "Failed to parse entity at line" << mXmlReader->lineNumber();
                     handleParseError(QStringLiteral("Unrecognized or invalid top-level element: <%1>").arg(elementName),
                                      ParseErrorCollector::Severity::Warning);
@@ -603,9 +606,13 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
     while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
         if (QXmlStreamReader::StartElement == token) {
             const QString childName = mXmlReader->name().toString();
-            QSharedPointer<StateMachineEntity> child = parseChildEntity(parent);
+            bool handled = false;
+            QSharedPointer<StateMachineEntity> child = parseChildEntity(parent, nullptr, &handled);
 
-            if (!child) {
+            // Warn only for elements the parser did not recognize. A recognized element may be
+            // handled without producing an entity (a transition <script> -> transition action,
+            // metadata such as qt:editorinfo), so a null return is not itself an error.
+            if (false == handled) {
                 handleParseError(QStringLiteral("Skipped unparseable child element: %1").arg(childName),
                                  ParseErrorCollector::Severity::Warning);
             }
@@ -618,9 +625,15 @@ bool StateMachineSerializer::parseAllChildEntities(const QSharedPointer<StateMac
 }
 
 QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(const QSharedPointer<StateMachineEntity>& parent,
-                                                                            QSharedPointer<StateMachineEntity>* outNewParent) {
+                                                                            QSharedPointer<StateMachineEntity>* outNewParent,
+                                                                            bool* outHandled) {
     qDebug() << "parseChildEntity:" << mXmlReader->name();
     QSharedPointer<StateMachineEntity> entity;
+
+    // Recognized elements set this true; only the final else (truly unknown element) leaves it
+    // false. An element can be handled without producing an entity (e.g. a transition <script>
+    // becomes a transition action, qt:editorinfo is consumed as metadata).
+    bool handled = true;
 
     if (mXmlReader->name() == QStringView(u"state")) {
         entity = parseRegularState();
@@ -671,7 +684,12 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
         // Strategy consumed the element (e.g., qt:editorinfo)
     } else {
         // Unknown element — skip it to keep the parser advancing
+        handled = false;
         mXmlReader->skipCurrentElement();
+    }
+
+    if (nullptr != outHandled) {
+        *outHandled = handled;
     }
     // TODO: parallel
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" xmlns:xi="http://www.w3.org/2001/XInclude" encoding="UTF-8" name="qt_local_geometry" qt:editorversion="7.0.0" initial="state_a">
+    <state id="state_a">
+        <qt:editorinfo scenegeometry="100;100;0;0;200;120"/>
+        <transition type="external" event="GO" target="state_b">
+            <qt:editorinfo localGeometry="150;-30;320;-30;320;80"/>
+        </transition>
+    </state>
+    <state id="state_b">
+        <qt:editorinfo scenegeometry="650;100;500;0;200;120"/>
+    </state>
+</scxml>

@@ -36,6 +36,7 @@ int runHsmUidSerializationTest(int argc, char** argv) __attribute__((weak));
 int runHsmLayoutSerializerTest(int argc, char** argv) __attribute__((weak));
 int runFormatRoundTripIntegrationTest(int argc, char** argv) __attribute__((weak));
 int runQtGeometryDeserializationTest(int argc, char** argv) __attribute__((weak));
+int runQtGeometryPreservationTest(int argc, char** argv) __attribute__((weak));
 int runPasteUnwrappedScxmlTest(int argc, char** argv) __attribute__((weak));
 int runUnsavedChangesGuardTest(int argc, char** argv) __attribute__((weak));
 int runWorkspaceViewCollisionPropertyTest(int argc, char** argv) __attribute__((weak));
@@ -43,6 +44,13 @@ int runWorkspaceViewDropPropertyTest(int argc, char** argv) __attribute__((weak)
 int runWorkspaceViewCopyDecisionTest(int argc, char** argv) __attribute__((weak));
 int runMainEditorControllerOpenProjectPropertyTest(int argc, char** argv) __attribute__((weak));
 int runDragDropUtilsPropertyTest(int argc, char** argv) __attribute__((weak));
+int runHsmElementDefaultSizeTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionAnchorPreservationTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionAnchorTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionPerpendicularEndpointTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionBoundingRectTest(int argc, char** argv) __attribute__((weak));
+int runElementGridAlignmentPropertyTest(int argc, char** argv) __attribute__((weak));
+int runElementGridAlignmentIntegrationTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
     qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
@@ -91,6 +99,7 @@ int main(int argc, char** argv) {
         runHsmLayoutSerializerTest,
         runFormatRoundTripIntegrationTest,
         runQtGeometryDeserializationTest,
+        runQtGeometryPreservationTest,
         runPasteUnwrappedScxmlTest,
         runUnsavedChangesGuardTest,
         runWorkspaceViewCollisionPropertyTest,
@@ -98,6 +107,13 @@ int main(int argc, char** argv) {
         runWorkspaceViewCopyDecisionTest,
         runMainEditorControllerOpenProjectPropertyTest,
         runDragDropUtilsPropertyTest,
+        runHsmElementDefaultSizeTest,
+        runHsmTransitionAnchorPreservationTest,
+        runHsmTransitionAnchorTest,
+        runHsmTransitionPerpendicularEndpointTest,
+        runHsmTransitionBoundingRectTest,
+        runElementGridAlignmentPropertyTest,
+        runElementGridAlignmentIntegrationTest,
     };
 
     for (const auto test : tests) {

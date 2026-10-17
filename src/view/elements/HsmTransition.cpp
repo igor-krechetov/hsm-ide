@@ -37,7 +37,7 @@ HsmTransition::HsmTransition()
 
     setFlag(QGraphicsItem::ItemIsMovable, false);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setZValue(5);
+    setZValue(DEFAULT_Z);
     setAcceptHoverEvents(true);
 
     mSrcGrip = new ElementGripItem(this);
@@ -100,10 +100,20 @@ void HsmTransition::updateBoundingRect(const QRectF& newRect) {
     prepareGeometryChange();
     updateSelectionPolygon();
 
-    mOuterRect = mLinePath.boundingRect().normalized().adjusted(-static_cast<int>(SELECTION_DISTANCE),
-                                                                -static_cast<int>(SELECTION_DISTANCE),
-                                                                static_cast<int>(SELECTION_DISTANCE),
-                                                                static_cast<int>(SELECTION_DISTANCE));
+    // The bounding rect must cover everything paint() draws AND the selection shape, otherwise
+    // moving the transition leaves stale pixels behind (the scene only repaints the item's
+    // boundingRect(), and QGraphicsItem requires boundingRect() to contain shape()). The line
+    // fits in mLinePath.boundingRect(); the arrowhead extends up to ARROW_SIZE beyond the last
+    // point and the stroke adds half the pen width on each side, so the margin accounts for
+    // both plus the selection halo. We then union with the selection polygon's bounds so the
+    // perpendicular 5px selection offset near the endpoints is always enclosed too.
+    const qreal penWidth = ThemeManager::instance().theme().transition.selectedPen.widthF();
+    const qreal margin = ARROW_SIZE + penWidth + SELECTION_DISTANCE;
+
+    QRectF bounds = mLinePath.boundingRect().normalized().adjusted(-margin, -margin, margin, margin);
+    bounds = bounds.united(mSelectionPath.boundingRect().normalized().adjusted(-penWidth, -penWidth, penWidth, penWidth));
+
+    mOuterRect = bounds;
 }
 
 QPolygonF HsmTransition::calculateLinePolygon(int selectionOffset, const QLineF& line) {
@@ -170,7 +180,7 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
         double angle = std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
 
         // Arrow parameters
-        double arrowSize = 10.0;
+        const double arrowSize = ARROW_SIZE;
         double arrowAngle = M_PI / 6.0;  // 30 degrees
 
         // Calculate arrowhead points
@@ -386,6 +396,111 @@ QPointF HsmTransition::findStartingPointFromRect(const QRectF& rectFrom, const Q
     return pointFrom;
 }
 
+QPointF HsmTransition::findPerpendicularEdgePoint(const QRectF& rect, const QPointF& neighbourPoint) {
+    // Anchor an endpoint on an element edge by dropping a perpendicular from the neighbouring
+    // point onto the nearest edge of that element. This is used for BOTH endpoints:
+    //   - the destination, where the neighbour is the last intermediate grip (or the start
+    //     point when there are none);
+    //   - the source, where the neighbour is the first intermediate grip (or the destination
+    //     point when there are none).
+    // The segment that touches the element therefore meets its edge at a right angle (see the
+    // reference layouts) instead of pointing at the center of the edge.
+    //
+    // "Nearest edge" is chosen with the same region analysis findStartingPointFromPoint uses.
+    // The perpendicular foot is valid only when it lands within the edge's span; if it would
+    // fall outside (no perpendicular possible), we fall back to the center of that edge.
+    QPointF endPoint;
+
+    // Clamp helpers for the perpendicular foot along an edge.
+    const qreal footX = qBound(rect.left(), neighbourPoint.x(), rect.right());
+    const qreal footY = qBound(rect.top(), neighbourPoint.y(), rect.bottom());
+
+    // true when the perpendicular foot stays within the edge extent (a real perpendicular).
+    const bool xInsideSpan = (neighbourPoint.x() >= rect.left()) && (neighbourPoint.x() <= rect.right());
+    const bool yInsideSpan = (neighbourPoint.y() >= rect.top()) && (neighbourPoint.y() <= rect.bottom());
+
+    if (rect.bottom() <= neighbourPoint.y()) {
+        if (rect.right() <= neighbourPoint.x()) {
+            // target is up-left of neighbourPoint: nearest edges are right and bottom corner region
+            endPoint = QPointF(rect.right(), rect.center().y());
+        } else if (rect.left() >= neighbourPoint.x()) {
+            endPoint = QPointF(rect.left(), rect.center().y());
+        } else {
+            // directly below neighbourPoint: bottom edge, perpendicular foot at neighbourPoint.x()
+            endPoint = QPointF(xInsideSpan ? footX : rect.center().x(), rect.bottom());
+        }
+    } else if (rect.top() >= neighbourPoint.y()) {
+        if (rect.right() <= neighbourPoint.x()) {
+            endPoint = QPointF(rect.right(), rect.center().y());
+        } else if (rect.left() >= neighbourPoint.x()) {
+            endPoint = QPointF(rect.left(), rect.center().y());
+        } else {
+            // directly above neighbourPoint: top edge, perpendicular foot at neighbourPoint.x()
+            endPoint = QPointF(xInsideSpan ? footX : rect.center().x(), rect.top());
+        }
+    } else if (rect.right() <= neighbourPoint.x()) {
+        // directly to the right: right edge, perpendicular foot at neighbourPoint.y()
+        endPoint = QPointF(rect.right(), yInsideSpan ? footY : rect.center().y());
+    } else if (rect.left() >= neighbourPoint.x()) {
+        // directly to the left: left edge, perpendicular foot at neighbourPoint.y()
+        endPoint = QPointF(rect.left(), yInsideSpan ? footY : rect.center().y());
+    } else {
+        // overlapping
+        endPoint = rect.center();
+    }
+
+    return endPoint;
+}
+
+bool HsmTransition::findStraightPerpendicularConnection(const QRectF& rectFrom,
+                                                        const QRectF& rectTo,
+                                                        QPointF& outFrom,
+                                                        QPointF& outTo) {
+    // A straight perpendicular segment is possible only when the two rects face each other
+    // across a gap AND their edges overlap along the perpendicular axis:
+    //   - from is fully above/below to  AND their x-spans overlap  -> vertical segment
+    //   - from is fully left/right of to AND their y-spans overlap -> horizontal segment
+    // The endpoints are anchored at the CENTER of the overlapping edge span, so the line is
+    // perpendicular to both facing edges. Diagonal or intersecting arrangements return false.
+    bool result = false;
+
+    const qreal xOverlapLeft = qMax(rectFrom.left(), rectTo.left());
+    const qreal xOverlapRight = qMin(rectFrom.right(), rectTo.right());
+    const qreal yOverlapTop = qMax(rectFrom.top(), rectTo.top());
+    const qreal yOverlapBottom = qMin(rectFrom.bottom(), rectTo.bottom());
+
+    const bool xOverlap = (xOverlapLeft < xOverlapRight);
+    const bool yOverlap = (yOverlapTop < yOverlapBottom);
+
+    if (xOverlap && (rectFrom.bottom() <= rectTo.top())) {
+        // from is above to: vertical line down the center of the horizontal overlap.
+        const qreal cx = (xOverlapLeft + xOverlapRight) / 2.0;
+        outFrom = QPointF(cx, rectFrom.bottom());
+        outTo = QPointF(cx, rectTo.top());
+        result = true;
+    } else if (xOverlap && (rectFrom.top() >= rectTo.bottom())) {
+        // from is below to: vertical line up the center of the horizontal overlap.
+        const qreal cx = (xOverlapLeft + xOverlapRight) / 2.0;
+        outFrom = QPointF(cx, rectFrom.top());
+        outTo = QPointF(cx, rectTo.bottom());
+        result = true;
+    } else if (yOverlap && (rectFrom.right() <= rectTo.left())) {
+        // from is left of to: horizontal line across the center of the vertical overlap.
+        const qreal cy = (yOverlapTop + yOverlapBottom) / 2.0;
+        outFrom = QPointF(rectFrom.right(), cy);
+        outTo = QPointF(rectTo.left(), cy);
+        result = true;
+    } else if (yOverlap && (rectFrom.left() >= rectTo.right())) {
+        // from is right of to: horizontal line across the center of the vertical overlap.
+        const qreal cy = (yOverlapTop + yOverlapBottom) / 2.0;
+        outFrom = QPointF(rectFrom.left(), cy);
+        outTo = QPointF(rectTo.right(), cy);
+        result = true;
+    }
+
+    return result;
+}
+
 void HsmTransition::onEventEditFinished() {
     auto entityPtr = modelElement<model::Transition>();
 
@@ -506,11 +621,20 @@ void HsmTransition::recalculateLine() {
             QPointF pointTo;
 
             if (false == mLinePath.isEmpty()) {
-                pointFrom = findStartingPointFromPoint(rectFrom, mLinePath.first());
-                pointTo = findStartingPointFromPoint(rectTo, mLinePath.last());
+                // With intermediate grips both ends use the perpendicular-foot rule from the
+                // neighbouring grip (source from the first grip, destination from the last),
+                // falling back to the edge centre when no perpendicular is possible.
+                pointFrom = findPerpendicularEdgePoint(rectFrom, mLinePath.first());
+                pointTo = findPerpendicularEdgePoint(rectTo, mLinePath.last());
+            } else if (findStraightPerpendicularConnection(rectFrom, rectTo, pointFrom, pointTo)) {
+                // No intermediate grips and the two elements face each other with overlapping
+                // edges: connect them with a straight perpendicular segment anchored at the
+                // centers of the overlapping edge spans.
             } else {
+                // No intermediate grips: the source anchor is computed from the rect-to-rect
+                // relationship, the destination is the perpendicular foot dropped from it.
                 pointFrom = findStartingPointFromRect(rectFrom, rectTo);
-                pointTo = findStartingPointFromRect(rectTo, rectFrom);
+                pointTo = findPerpendicularEdgePoint(rectTo, pointFrom);
             }
 
             mLinePath.prepend(pointFrom);
@@ -543,10 +667,12 @@ void HsmTransition::recalculateLine() {
         QRectF rectFrom = mapRectFromItem(mFromElement, mFromElement->elementRect());
         QPointF pointFrom;
 
+        // Source endpoint uses the perpendicular-foot rule: the neighbour is the first
+        // intermediate grip, or the dragged destination position when there are none.
         if (false == mLinePath.isEmpty()) {
-            pointFrom = findStartingPointFromPoint(rectFrom, mLinePath.first());
+            pointFrom = findPerpendicularEdgePoint(rectFrom, mLinePath.first());
         } else {
-            pointFrom = findStartingPointFromPoint(rectFrom, currentMovePos);
+            pointFrom = findPerpendicularEdgePoint(rectFrom, currentMovePos);
         }
 
         mLinePath.prepend(pointFrom);
@@ -558,10 +684,12 @@ void HsmTransition::recalculateLine() {
         QRectF rectTo = mapRectFromItem(mToElement, mToElement->elementRect());
         QPointF pointTo;
 
+        // Destination endpoint uses the perpendicular-foot rule: the previous point is the
+        // last intermediate grip, or the dragged source position when there are none.
         if (false == mLinePath.isEmpty()) {
-            pointTo = findStartingPointFromPoint(rectTo, mLinePath.last());
+            pointTo = findPerpendicularEdgePoint(rectTo, mLinePath.last());
         } else {
-            pointTo = findStartingPointFromPoint(rectTo, currentMovePos);
+            pointTo = findPerpendicularEdgePoint(rectTo, currentMovePos);
         }
 
         mLinePath.prepend(currentMovePos);
@@ -613,6 +741,11 @@ void HsmTransition::setAllGripsVisibility(const bool visible) {
             grip->setVisible(visible);
         }
     }
+
+    // Raise the whole transition above its neighbours while its grips are shown, so the grips
+    // (and this transition's label) are not covered by other transitions' labels when many
+    // transitions are packed closely together. Restore the default stacking once hidden.
+    setZValue(visible ? ACTIVE_Z : DEFAULT_Z);
 }
 
 bool HsmTransition::onGripMoved(ElementGripItem* grip, const QPointF& delta) {

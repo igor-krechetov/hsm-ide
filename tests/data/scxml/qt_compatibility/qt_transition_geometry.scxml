@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" name="qt_transition_geometry.scxml" qt:editorversion="7.0.0" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" initial="State_4">
+    <state id="State_1">
+        <qt:editorinfo scenegeometry="695.43;152.16;635.43;102.16;120;100" geometry="695.43;152.16;-60;-50;120;100"/>
+        <transition type="external" event="Transition_1" target="State_5">
+            <qt:editorinfo startTargetFactors="17.72;41.22" endTargetFactors="90.71;85.65" localGeometry="-323.78;158.90;256.24;262.01"/>
+        </transition>
+    </state>
+    <state id="State_4">
+        <qt:editorinfo scenegeometry="985.45;152.16;925.45;102.16;120;100" geometry="985.45;152.16;-60;-50;120;100"/>
+        <transition type="external" event="Transition_3" target="State_1">
+            <qt:editorinfo localGeometry="0;161.35;-289.16;161.35"/>
+        </transition>
+    </state>
+    <state id="State_5">
+        <qt:editorinfo scenegeometry="224.67;463.62;164.67;413.62;488.90;373.70" geometry="224.67;463.62;-60;-50;488.90;373.70"/>
+        <state id="State_2">
+            <qt:editorinfo scenegeometry="1056.95;618.85;996.95;568.85;120;100" geometry="302.28;88.85;-60;-50;120;100"/>
+            <transition type="external" event="Transition_2" target="State_3">
+                <qt:editorinfo startTargetFactors="84.53;70.21" endTargetFactors="85.30;23.55" localGeometry="-41.52;147.27;-151.82;147.27;-151.82;-12.14"/>
+            </transition>
+        </state>
+        <state id="State_3">
+            <qt:editorinfo scenegeometry="835.34;618.85;775.34;568.85;120;100" geometry="80.67;88.85;-60;-50;120;100"/>
+        </state>
+    </state>
+</scxml>

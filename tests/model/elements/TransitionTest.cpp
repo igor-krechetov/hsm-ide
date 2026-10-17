@@ -1,9 +1,10 @@
+#include <QPointF>
 #include <QtTest>
 
-#include "model/private/EntityIdGenerator.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/elements/RegularState.hpp"
 #include "model/elements/Transition.hpp"
+#include "model/private/EntityIdGenerator.hpp"
 
 class TransitionTest : public QObject {
     Q_OBJECT
@@ -19,14 +20,11 @@ private slots:
  */
 void TransitionTest::PropertiesAndSourceTargetManagement() {
     model::EntityIdGenerator gen;
-    auto s1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                  .dynamicCast<model::RegularState>();
+    auto s1 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     s1->setName("S1");
-    auto s2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                  .dynamicCast<model::RegularState>();
+    auto s2 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     s2->setName("S2");
-    auto s3 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                  .dynamicCast<model::RegularState>();
+    auto s3 = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     s3->setName("S3");
     auto tr = model::ModelElementsFactory::createTransitionWithId(s1, s2, "E", gen.generateNextId());
 

@@ -23,6 +23,9 @@ protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
 protected:
+    // Inset of the painted body within mOuterRect. mOuterRect is a grid multiple and is
+    // not inflated by the pen, so this inset must be >= ceil(selectedBorderPen.widthF() / 2)
+    // (half of the widest 3.0px pen = 1.5 -> 2) to keep the whole stroke inside the rect.
     static constexpr int cOuterBorderAdjustment = 2;
 };
 

@@ -90,8 +90,15 @@ private:
 
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
 
+    // Parses the element currently at the reader cursor as a child of @p parent. Returns the
+    // created entity, or nullptr for elements that do not map to an entity. @p outHandled (when
+    // provided) reports whether the element was recognized and consumed - some valid elements
+    // (a transition's <script>, metadata such as qt:editorinfo) are handled without producing an
+    // entity, so callers must use outHandled, not the return value, to detect truly unparseable
+    // elements.
     QSharedPointer<StateMachineEntity> parseChildEntity(const QSharedPointer<StateMachineEntity>& parent,
-                                                        QSharedPointer<StateMachineEntity>* outNewParent = nullptr);
+                                                        QSharedPointer<StateMachineEntity>* outNewParent = nullptr,
+                                                        bool* outHandled = nullptr);
     QSharedPointer<RegularState> parseRegularState();
     QSharedPointer<EntryPoint> parseEntryPoint();
     QSharedPointer<ExitPoint> parseExitPoint();

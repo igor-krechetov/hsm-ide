@@ -144,6 +144,7 @@ void QtCreatorMetadataSerializer::writeStateGeometry(QXmlStreamWriter& writer, c
 }
 
 void QtCreatorMetadataSerializer::writeTransitionGeometry(QXmlStreamWriter& writer, const StateMachineEntity* entity) {
+    QString localGeometryValue;
     QVariant geometryData = entity->getMetadata(StateMachineEntity::MetadataKey::GEOMETRY);
 
     if (geometryData.isValid()) {
@@ -162,10 +163,14 @@ void QtCreatorMetadataSerializer::writeTransitionGeometry(QXmlStreamWriter& writ
         }
 
         if (pointStrings.isEmpty() == false) {
-            writer.writeStartElement("qt:editorinfo");
-            writer.writeAttribute("localGeometry", pointStrings.join(';'));
-            writer.writeEndElement();
+            localGeometryValue = pointStrings.join(';');
         }
+    }
+
+    if (localGeometryValue.isEmpty() == false) {
+        writer.writeStartElement("qt:editorinfo");
+        writer.writeAttribute("localGeometry", localGeometryValue);
+        writer.writeEndElement();
     }
 }
 
@@ -224,6 +229,9 @@ void QtCreatorMetadataSerializer::parseEditorInfo(QXmlStreamReader& reader, Stat
             }
         }
     }
+
+    // Qt Creator startTargetFactors/endTargetFactors anchor hints are intentionally ignored:
+    // transition endpoints are always computed geometrically at render time.
 
     reader.readNext();
 }

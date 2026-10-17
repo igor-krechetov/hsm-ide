@@ -162,8 +162,16 @@ section "REQ-100: Core Editor Functionality" {
       Software_Requirement REQ_102a3 {
         uid = "REQ-102a3"
         title = "Transition rendering"
-        description = "Transitions are rendered as arrows routed between their source and target elements on the canvas."
+        description = "Transitions are rendered as arrows whose endpoints are computed geometrically and attached to the borders of their source and target elements."
         status = Status.Done
+        details = '''
+- Each endpoint is placed where a perpendicular dropped from the adjacent point meets the nearest element edge. The adjacent point is the closest intermediate grip, or the opposite endpoint when the transition has no intermediate grips.
+- When no perpendicular foot lands within the edge span, the endpoint falls back to the center of the nearest edge.
+- When a transition has no intermediate grips and its two elements face each other with overlapping edges, it is drawn as a straight perpendicular segment anchored at the centers of the overlapping edge spans.
+- Endpoints always attach to the element border, never inside it.
+- Endpoints are derived purely from current geometry; stored anchor hints (such as Qt Creator startTargetFactors/endTargetFactors) are not used.
+- A transition is raised above neighbouring transitions while its grips are shown (on hover, selection or reconnection) so its grips and label are not covered.
+'''
       }
 
       Software_Requirement REQ_102a4 {
