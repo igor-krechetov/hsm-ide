@@ -4,15 +4,16 @@
 #include <QPainter>
 
 #include "view/theme/ThemeManager.hpp"
+#include "view/theme/ThemeUtils.hpp"
 
 namespace view {
 
 HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType)
-    : HsmRectangularElement(elementType, QSizeF(240, 140)) {}
+    : HsmRectangularElement(elementType, QSizeF(theme::snapToGrid(240), theme::snapToGrid(140))) {}
 
 HsmRectangularElement::HsmRectangularElement(const HsmElementType elementType, const QSizeF& size)
     : HsmResizableElement(elementType, size) {
-    setMinSize(200, 100);
+    setMinSize(theme::snapToGrid(200), theme::snapToGrid(100));
 }
 
 void HsmRectangularElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {

@@ -27,6 +27,9 @@ private slots:
     void gripVisibilityTracksHoverStateProperty();
     void selectionOverridesHoverProperty();
     void reconnectionPreservesGripVisibilityProperty();
+    void hoverRaisesTransitionZAndLeaveRestoresIt();
+    void selectionRaisesTransitionZ();
+    void activeTransitionStacksAboveNeighbourLabel();
 };
 
 // ---------------------------------------------------------------------------
@@ -135,8 +138,7 @@ void HsmTransitionGripVisibilityTest::hoverNonSelectedTransitionShowsAllGrips() 
     TransitionTestFixture fixture;
 
     // Verify initial state: grips should be hidden
-    QVERIFY2(allGripsVisible(fixture.transition, false),
-             "Expected all grips to be hidden initially");
+    QVERIFY2(allGripsVisible(fixture.transition, false), "Expected all grips to be hidden initially");
 
     // Ensure transition is not selected
     fixture.transition->setSelected(false);
@@ -178,8 +180,7 @@ void HsmTransitionGripVisibilityTest::selectedTransitionKeepsGripsVisibleRegardl
 
     // Select the transition — this triggers itemChange which shows grips
     fixture.transition->setSelected(true);
-    QVERIFY2(allGripsVisible(fixture.transition, true),
-             "Expected all grips to be visible when transition is selected");
+    QVERIFY2(allGripsVisible(fixture.transition, true), "Expected all grips to be visible when transition is selected");
 
     // Hover leave should NOT hide grips since transition is selected
     sendHoverLeave(fixture.scene, fixture.transition);
@@ -325,6 +326,65 @@ void HsmTransitionGripVisibilityTest::reconnectionPreservesGripVisibilityPropert
         QVERIFY2(allGripsVisible(fixture.transition, true),
                  qPrintable(QString("Cycle %1: grips must remain visible during reconnection (after re-enter)").arg(i)));
     }
+}
+
+// ---------------------------------------------------------------------------
+// Z-order: showing grips raises the transition to ACTIVE_Z; hiding restores DEFAULT_Z.
+// This keeps grips (and the transition label) above neighbouring transitions and their
+// labels while the transition is being interacted with, so closely packed transitions
+// stay grabbable.
+// ---------------------------------------------------------------------------
+void HsmTransitionGripVisibilityTest::hoverRaisesTransitionZAndLeaveRestoresIt() {
+    TransitionTestFixture fixture;
+
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::DEFAULT_Z);
+
+    sendHoverEnter(fixture.scene, fixture.transition);
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::ACTIVE_Z);
+
+    sendHoverLeave(fixture.scene, fixture.transition);
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::DEFAULT_Z);
+}
+
+void HsmTransitionGripVisibilityTest::selectionRaisesTransitionZ() {
+    TransitionTestFixture fixture;
+
+    fixture.transition->setSelected(true);
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::ACTIVE_Z);
+
+    fixture.transition->setSelected(false);
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::DEFAULT_Z);
+}
+
+// ---------------------------------------------------------------------------
+// Two transitions share the scene. When one is hovered (grips shown) its effective
+// stacking must beat the other transition's label, so the grips are not covered.
+// Effective stacking is the item z combined with scene insertion order; since both
+// transitions start at DEFAULT_Z, raising the hovered one to ACTIVE_Z must make its
+// z strictly greater than the neighbour transition's z (and thus the neighbour's
+// label, which is a child stacked relative to that lower-z transition).
+// ---------------------------------------------------------------------------
+void HsmTransitionGripVisibilityTest::activeTransitionStacksAboveNeighbourLabel() {
+    TransitionTestFixture fixture;
+
+    // A second transition between the same states, added after the first.
+    auto trModel2 = QSharedPointer<model::Transition>::create(fixture.stateModelA, fixture.stateModelB, "event2");
+    HsmTransition* transition2 = new HsmTransition();
+    transition2->init(trModel2);
+    transition2->connectElements(fixture.stateA, fixture.stateB);
+    fixture.scene.addItem(transition2);
+
+    QCOMPARE(fixture.transition->zValue(), HsmTransition::DEFAULT_Z);
+    QCOMPARE(transition2->zValue(), HsmTransition::DEFAULT_Z);
+
+    // Hover the first transition: it must now stack strictly above the untouched neighbour,
+    // so its grips render above the neighbour's label.
+    sendHoverEnter(fixture.scene, fixture.transition);
+
+    QVERIFY2(fixture.transition->zValue() > transition2->zValue(),
+             qPrintable(QString("hovered transition z=%1 must exceed neighbour z=%2 so its grips are not covered")
+                            .arg(fixture.transition->zValue())
+                            .arg(transition2->zValue())));
 }
 
 int runHsmTransitionGripVisibilityTest(int argc, char** argv) {

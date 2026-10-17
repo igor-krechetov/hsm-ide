@@ -109,6 +109,11 @@ private:
     bool mModified = false;
     // flag to block new model entities from being added to the view
     bool mIgnoreAddedModelEntities = false;
+
+    // true while rebuilding the view from the model (load, paste, undo/redo). View construction
+    // writes computed geometry back into the model (setPos/setSize/GEOMETRY), which must NOT be
+    // treated as a user edit, so modelDataChanged does not mark the project modified during it.
+    bool mRefreshingView = false;
 };
 
 inline QPointer<HsmGraphicsView> ProjectController::view() const {

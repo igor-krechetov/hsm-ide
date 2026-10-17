@@ -37,7 +37,19 @@ void StateMachineEntity::setId(EntityID_t id) {
 }
 
 void StateMachineEntity::setMetadata(const MetadataKey key, const QVariant& value) {
+    // Emit modelDataChanged only when the value actually changes. Geometry edits from the view
+    // (element moves/resizes via setPos/setSize, transition grip drags via the GEOMETRY key) all
+    // funnel through here, so this is what lets the controller mark the diagram as modified and
+    // record undo history for those edits. The change guard avoids spurious dirtying when a
+    // setter is called with an identical value (e.g. a redundant relayout).
+    auto it = mMetadata.find(key);
+    const bool changed = (it == mMetadata.end()) || (it.value() != value);
+
     mMetadata[key] = value;
+
+    if (changed) {
+        emit modelDataChanged(sharedFromThis().toWeakRef());
+    }
 }
 
 QVariant StateMachineEntity::getMetadata(const MetadataKey key) const {

@@ -802,7 +802,11 @@ void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity>
         mView->refreshDuplicateNameWarnings();
     }
 
-    projectModified();
+    // Rebuilding the view from the model (load/paste/undo/redo) writes computed geometry back
+    // into the model; that is not a user edit, so it must not mark the project modified.
+    if (false == mRefreshingView) {
+        projectModified();
+    }
 }
 
 void ProjectController::createElement(const QString& elementTypeId,
@@ -918,6 +922,13 @@ bool ProjectController::canRedo() const {
 
 void ProjectController::refreshViewFromModel() {
     qDebug() << Q_FUNC_INFO;
+
+    // View construction writes computed geometry (setPos/setSize/GEOMETRY) back into the model.
+    // Suppress the modified flag for the duration so a freshly loaded/rebuilt diagram is not
+    // reported as edited.
+    const bool previousRefreshingView = mRefreshingView;
+    mRefreshingView = true;
+
     if (mView && mModel) {
         auto root = mModel->root();
 
@@ -956,4 +967,6 @@ void ProjectController::refreshViewFromModel() {
         // REQ-103f7: recompute duplicate-name warnings after a full rebuild (e.g. load).
         mView->refreshDuplicateNameWarnings();
     }
+
+    mRefreshingView = previousRefreshingView;
 }

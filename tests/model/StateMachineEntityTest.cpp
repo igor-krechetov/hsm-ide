@@ -1,11 +1,10 @@
+#include <QSignalSpy>
 #include <QtTest>
 
-#include <QSignalSpy>
-
-#include "model/private/EntityIdGenerator.hpp"
 #include "model/ModelElementsFactory.hpp"
 #include "model/elements/RegularState.hpp"
 #include "model/elements/StateMachineEntity.hpp"
+#include "model/private/EntityIdGenerator.hpp"
 
 class DummyEntity : public model::StateMachineEntity {
 public:
@@ -37,6 +36,7 @@ class StateMachineEntityTest : public QObject {
 
 private slots:
     void MetadataAndGeometryAccessors();
+    void SetMetadataEmitsModelDataChangedOnlyOnChange();
     void ChildSignalsPropagate();
     void ChildSignalsDontPropagateAfterUnregister();
     void ConstructorWithRestoredIdAssignsCorrectly();
@@ -63,10 +63,40 @@ void StateMachineEntityTest::MetadataAndGeometryAccessors() {
 }
 
 /**
- * @brief Verify child-added signal propagation through parent registration.
+ * @brief setMetadata emits modelDataChanged when (and only when) the value changes.
  *
- * Use-case: Model emits notifications when nested entities are attached.
+ * Use-case: moving/resizing an element or dragging a transition grip updates geometry via
+ * setPos/setSize/setMetadata; that change must notify the controller so the diagram is marked
+ * modified and undo history is recorded. A no-op write (identical value) must not emit, to
+ * avoid spuriously dirtying the diagram.
  */
+void StateMachineEntityTest::SetMetadataEmitsModelDataChangedOnlyOnChange() {
+    auto entity = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
+    QSignalSpy spy(entity.data(), &model::StateMachineEntity::modelDataChanged);
+
+    // First write of a key: value changes from unset -> set, must emit.
+    entity->setMetadata(model::StateMachineEntity::MetadataKey::POSITION_X, 10.0);
+    QCOMPARE(spy.count(), 1);
+
+    // Writing the same value again: no change, must NOT emit.
+    entity->setMetadata(model::StateMachineEntity::MetadataKey::POSITION_X, 10.0);
+    QCOMPARE(spy.count(), 1);
+
+    // Writing a different value: must emit again.
+    entity->setMetadata(model::StateMachineEntity::MetadataKey::POSITION_X, 20.0);
+    QCOMPARE(spy.count(), 2);
+
+    // setPos funnels through setMetadata for X and Y; a real move emits (at least once).
+    spy.clear();
+    entity->setPos(QPointF(100.0, 200.0));
+    QVERIFY2(spy.count() >= 1, "setPos with a new position must emit modelDataChanged");
+
+    // Re-applying the same position must not emit.
+    spy.clear();
+    entity->setPos(QPointF(100.0, 200.0));
+    QCOMPARE(spy.count(), 0);
+}
+
 void StateMachineEntityTest::ChildSignalsPropagate() {
     auto parent = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
     auto child = QSharedPointer<DummyEntity>::create(model::StateMachineEntity::Type::State);
@@ -133,8 +163,8 @@ void StateMachineEntityTest::SetIdChangesEntityId() {
  */
 void StateMachineEntityTest::RenamingStateDoesNotChangeId() {
     model::EntityIdGenerator gen;
-    auto state = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                     .dynamicCast<model::RegularState>();
+    auto state =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     state->setName("OriginalName");
     const model::EntityID_t idBefore = state->id();
 
@@ -150,14 +180,14 @@ void StateMachineEntityTest::RenamingStateDoesNotChangeId() {
  */
 void StateMachineEntityTest::ReparentingPreservesId() {
     model::EntityIdGenerator gen;
-    auto parentA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                       .dynamicCast<model::RegularState>();
+    auto parentA =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     parentA->setName("ParentA");
-    auto parentB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                       .dynamicCast<model::RegularState>();
+    auto parentB =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     parentB->setName("ParentB");
-    auto child = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
-                     .dynamicCast<model::RegularState>();
+    auto child =
+        model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen).dynamicCast<model::RegularState>();
     child->setName("Child");
 
     parentA->addChildState(child);

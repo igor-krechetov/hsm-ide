@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+
+## [0.21.0] - 2026-10-13
+### Fix
+- Improved elements geometry to align with the grid
+- Importing transitions geometry from QtCreator made files.
+- Improved rendering logic for transition end points.
+- Fixed diagram not being marked as modified on element position change.
+- Stop emitting a spurious "unparseable child element: script" warning for transitions with a `<script>` callback
+
 ## [0.20.0] - 2026-10-15
 ### New
 - Drag-and-drop of external files into the workspace or editor

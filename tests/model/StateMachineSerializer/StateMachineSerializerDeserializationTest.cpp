@@ -375,6 +375,13 @@ void StateMachineSerializerDeserializationTest::DeserializeTransitionScript() {
     });
 
     QVERIFY(foundScriptTransition);
+
+    // A transition <script> is a valid child (it becomes the transition's callback action), so
+    // parsing it must NOT produce a "Skipped unparseable child element: script" warning.
+    for (const model::ParseErrorCollector::Problem& problem : serializer.parseReport().problems()) {
+        QVERIFY2(false == problem.message.contains("script", Qt::CaseInsensitive),
+                 qPrintable(QString("unexpected parse report entry for a valid transition script: %1").arg(problem.message)));
+    }
 }
 
 /**

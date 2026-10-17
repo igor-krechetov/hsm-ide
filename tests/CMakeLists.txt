@@ -21,6 +21,7 @@ set(TEST_OBJECTS
     model/StateMachineSerializer/HsmLayoutSerializerTest.cpp
     model/StateMachineSerializer/FormatRoundTripIntegrationTest.cpp
     model/StateMachineSerializer/QtGeometryDeserializationTest.cpp
+    model/StateMachineSerializer/QtGeometryPreservationTest.cpp
     model/StateMachineSerializer/PasteUnwrappedScxmlTest.cpp
 
     model/elements/RegularStateTest.cpp
@@ -39,6 +40,13 @@ set(TEST_OBJECTS
     view/HsmElementDragTest.cpp
     view/AutoGroupItemCursorTest.cpp
     view/HsmTransitionGripVisibilityTest.cpp
+    view/HsmTransitionAnchorPreservationTest.cpp
+    view/HsmTransitionAnchorTest.cpp
+    view/HsmTransitionPerpendicularEndpointTest.cpp
+    view/HsmTransitionBoundingRectTest.cpp
+    view/ElementGridAlignmentPropertyTest.cpp
+    view/ElementGridAlignmentIntegrationTest.cpp
+    view/HsmElementDefaultSizeTest.cpp
     view/UnsavedChangesGuardTest.cpp
     view/WorkspaceViewCollisionPropertyTest.cpp
     view/WorkspaceViewDropPropertyTest.cpp

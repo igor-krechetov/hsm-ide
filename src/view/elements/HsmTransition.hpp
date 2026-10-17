@@ -22,6 +22,13 @@ class HsmTransition : public HsmElement {
 
 public:
     static constexpr qreal SELECTION_DISTANCE = 2.0;
+    static constexpr qreal ARROW_SIZE = 10.0;
+    // Stacking order: a transition normally sits at DEFAULT_Z. While its grips are shown (hover,
+    // selection or connecting) the whole transition is raised to ACTIVE_Z so its grips - and the
+    // grips' child stacking - render above neighbouring transitions and their labels, which makes
+    // closely packed transitions grabbable. ACTIVE_Z stays below a dragged element (z=100).
+    static constexpr qreal DEFAULT_Z = 5.0;
+    static constexpr qreal ACTIVE_Z = 50.0;
     static constexpr qreal SELFTRANSITION_X_OFFSET = 10.0;
     static constexpr qreal SELFTRANSITION_Y_OFFSET = 15.0;
     static constexpr qreal SELFTRANSITION_LENGTH = 40.0;
@@ -63,6 +70,13 @@ protected:
 
     QPointF findStartingPointFromPoint(const QRectF& rectFrom, const QPointF& pointTo);
     QPointF findStartingPointFromRect(const QRectF& rectFrom, const QRectF& rectTo);
+    QPointF findPerpendicularEdgePoint(const QRectF& rect, const QPointF& neighbourPoint);
+
+    // When two elements face each other with overlapping edges and the transition has no
+    // intermediate grips, a straight perpendicular segment can join them. Returns true and sets
+    // outFrom/outTo to the centers of the overlapping edge spans; returns false when no such
+    // straight perpendicular connection exists (the rects are diagonal or overlapping).
+    bool findStraightPerpendicularConnection(const QRectF& rectFrom, const QRectF& rectTo, QPointF& outFrom, QPointF& outTo);
     int findGripIndex(const ElementGripItem* grip);
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;

@@ -262,13 +262,11 @@ void HsmElement::updateBoundingRect(const QRectF& newRect) {
 
     if (newRect.isNull()) {
         qDebug() << Q_FUNC_INFO << "RECT is NULL" << this;
-        const qreal penWidth = ThemeManager::instance().theme().node.selectedBorderPen.widthF();
-
-        // mOuterRect = QRectF(-mSize.width() / 2 - penWidth / 2,
-        //                     -mSize.height() / 2 - penWidth / 2,
-        //                     mSize.width() + penWidth,
-        //                     mSize.height() + penWidth);
-        mOuterRect = QRectF(0, 0, mSize.width() + penWidth * 2, mSize.height() + penWidth * 2);
+        // The outer rect equals the (grid-multiple) logical size so a snapped origin
+        // puts all four edges on grid lines. The border is drawn inset by the styles
+        // (HsmRectangularElement::cOuterBorderAdjustment / HsmRoundElement::radius())
+        // rather than inflating the geometry by the pen width.
+        mOuterRect = QRectF(0, 0, mSize.width(), mSize.height());
     } else {
         mOuterRect = newRect;
         mSize = mOuterRect.size();

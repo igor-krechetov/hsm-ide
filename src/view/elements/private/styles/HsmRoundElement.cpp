@@ -3,12 +3,12 @@
 #include <QPainter>
 
 #include "view/theme/ThemeManager.hpp"
+#include "view/theme/ThemeUtils.hpp"
 
 namespace view {
 
-// TODO: size of round elements should be a multiple of the grid size
 HsmRoundElement::HsmRoundElement(const HsmElementType elementType)
-    : HsmConnectableElement(elementType, QSizeF(40, 40)) {}
+    : HsmConnectableElement(elementType, QSizeF(theme::snapToGrid(40), theme::snapToGrid(40))) {}
 
 void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     const auto& theme = ThemeManager::instance().theme();
@@ -33,9 +33,12 @@ void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 }
 
 qreal HsmRoundElement::radius() const {
-    // Calculate the diameter of the circle based on the rectangle size
-    // 1px to account for edge size
-    return qMin(mOuterRect.width(), mOuterRect.height()) / 2.0 - 1;
+    // The outer rect is a grid multiple and is NOT inflated by the border pen, so the
+    // circle must be inset by half the border pen width to keep the whole stroke inside
+    // mOuterRect (otherwise the stroke, centered on the edge, would be clipped).
+    const qreal penWidth = ThemeManager::instance().theme().node.selectedBorderPen.widthF();
+
+    return qMin(mOuterRect.width(), mOuterRect.height()) / 2.0 - penWidth / 2.0;
 }
 
 QPointF HsmRoundElement::center() const {
