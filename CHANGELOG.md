@@ -2,6 +2,11 @@
 All notable changes to project will be documented in this file.
 
 
+## [0.21.1] - 2026-10-18
+### Fix
+- Fixed a transition's endpoints jumping away from its states when a composite state was resized by dragging an origin-moving border (any edge except the bottom-right); the connection now stays anchored to its states throughout the resize, including fast drags.
+- Fixed a transition being rendered twice (a duplicate, orphaned line left on the diagram) when its graphics item was created; adding a transition now produces a single connection.
+
 ## [0.21.0] - 2026-10-13
 ### Fix
 - Improved elements geometry to align with the grid

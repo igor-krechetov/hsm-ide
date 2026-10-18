@@ -1,0 +1,110 @@
+# ============================================================================
+# scenarios.yaml - declarative UI screenshot definitions for hsm-ide
+# ============================================================================
+#
+# This file is the ONLY thing you edit to add, remove, or change a screenshot.
+# The driver (driver.py) reads it, drives the UNMODIFIED hsm_ide binary under a
+# headless X server, and captures each screenshot. No C++ or driver code needs
+# to change to add a new image.
+#
+# ----------------------------------------------------------------------------
+# SCHEMA
+# ----------------------------------------------------------------------------
+# Top-level key:
+#   screenshots:            list of scenario entries (order is preserved)
+#
+# Each scenario entry:
+#   name:         (required) output basename; the image is written to
+#                 doc/_images/hsm-ide/<name>.png
+#   description:  (optional) free-text note describing what the shot shows
+#   project:      (optional) path to a .scxml file, relative to the repo root.
+#                 When set, the driver opens it through the UI (Ctrl+O, types
+#                 the absolute path, Enter) because the binary takes no file
+#                 CLI argument. Omit for an empty/new-document screenshot.
+#   steps:        (optional) ordered list of actions performed after the
+#                 project (if any) is open. See STEP KINDS below.
+#   capture:      (optional) how to capture. Defaults to {window: true}.
+#                 See CAPTURE KINDS below.
+#
+# ----------------------------------------------------------------------------
+# STEP KINDS (one key per list item; easy to extend in driver.py's dispatch)
+# ----------------------------------------------------------------------------
+#   - shortcut: "ctrl+shift+e"   # an xdotool key chord (keyboard shortcut)
+#   - key:      "alt+f"          # an xdotool key chord (identical mechanism;
+#                                #   use whichever name reads clearer)
+#   - wait:     1.0              # sleep this many seconds (let the UI settle)
+#   - type:     "some text"      # type literal text via xdotool type
+#
+# ----------------------------------------------------------------------------
+# CAPTURE KINDS
+# ----------------------------------------------------------------------------
+#   window: true                 # capture the whole hsm_ide application window
+#
+# ----------------------------------------------------------------------------
+# HOW TO ADD A SCREENSHOT (pure data change, no code)
+# ----------------------------------------------------------------------------
+#   1. (optional) drop a new .scxml under doc/ and point `project` at it.
+#   2. add one list entry below with a unique `name`, the `steps` you want,
+#      and an optional `capture`.
+#   3. run `just screenshots` (or `python3 doc/screenshots/driver.py`).
+#
+# Useful hsm-ide shortcuts (from doc/manual/manual.rst):
+#   Ctrl+N new    Ctrl+O open    Ctrl+S save    Ctrl+A select all
+#   Ctrl+Shift+E Design panel    Ctrl+Shift+B Workspace panel
+#   Ctrl+Shift+D Debug panel     Ctrl+0 reset zoom    Ctrl+Shift+0 fit to view
+#   Alt+F File menu              Alt+V View menu
+# ============================================================================
+
+screenshots:
+  - name: overview
+    description: >
+      Main window with the sample thermostat HSM open, the Design panel
+      visible, zoomed to fit the whole diagram.
+    project: doc/sample.scxml
+    steps:
+      - shortcut: "ctrl+shift+e"   # show the Design / HSM Elements panel
+      - wait: 0.5
+      - shortcut: "ctrl+shift+0"   # fit the whole diagram to the view
+      - wait: 0.8
+    capture:
+      window: true
+
+  - name: file-menu
+    description: >
+      The File menu opened over the sample thermostat HSM, showing the
+      New / Open / Save / Close actions.
+    project: doc/sample.scxml
+    steps:
+      - wait: 0.3
+      - key: "alt+f"              # open the File menu
+      - wait: 0.6
+    capture:
+      window: true
+
+  - name: editing
+    description: >
+      Editing view: the thermostat HSM on the canvas with the Design panel
+      open and every element selected to show the editable structure.
+    project: doc/sample.scxml
+    steps:
+      - shortcut: "ctrl+shift+e"   # show the Design panel
+      - wait: 0.5
+      - shortcut: "ctrl+shift+0"   # fit to view
+      - wait: 0.5
+      - shortcut: "ctrl+a"         # select all elements on the canvas
+      - wait: 0.6
+    capture:
+      window: true
+
+  - name: view-navigation
+    description: >
+      The View menu opened over the sample thermostat HSM, showing the zoom
+      and fit-to-view navigation actions.
+    project: doc/sample.scxml
+    steps:
+      - shortcut: "ctrl+shift+0"   # fit to view first so the diagram is framed
+      - wait: 0.4
+      - key: "alt+v"              # open the View menu
+      - wait: 0.6
+    capture:
+      window: true

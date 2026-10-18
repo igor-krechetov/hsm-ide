@@ -50,6 +50,7 @@ one_test testname: build
 test_usecase testname usecase:
     {{BUILD_DIR}}/tests/{{testname}} {{usecase}} -maxwarnings 100000
 
+# =========================================================
 # REQUIREMENTS
 
 # Validate the TRLC requirements only (fast, CI-friendly).
@@ -67,3 +68,25 @@ req_build:
     trlc requirements/
     # Render the single-page requirements document.
     python3 scripts/requirements/render_html.py "$OUT/hsm_ide_requirements.html"
+
+# =========================================================
+# DOCUMENTATION
+# Generate the documentation UI screenshots by driving the built hsm_ide
+# binary headlessly (see doc/screenshots/README.md for prerequisites:
+# xvfb, xdotool, imagemagick, pyyaml).
+gen_screenshots: build
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    export PATH=$PATH:~/Qt/6.8.3/gcc_64/bin
+    export LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+    export HSM_IDE_BUILD_DIR={{BUILD_DIR}}
+    python3 doc/screenshots/driver.py
+
+# Generate a single documentation screenshot by scenario name.
+gen_screenshot name: build
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    export PATH=$PATH:~/Qt/6.8.3/gcc_64/bin
+    export LD_LIBRARY_PATH=~/Qt/6.8.3/gcc_64/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+    export HSM_IDE_BUILD_DIR={{BUILD_DIR}}
+    python3 doc/screenshots/driver.py --only {{name}}

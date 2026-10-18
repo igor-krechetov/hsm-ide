@@ -280,14 +280,60 @@ bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPoin
             if (newOuterRect.width() < mMinWidth || newOuterRect.height() < mMinHeight) {
                 canResize = false;
             } else {
+                // The parent origin move and every direct-child compensation must be atomic
+                // with respect to transition recomputation. A child-to-child transition wires
+                // each endpoint state's geometryChanged signal DIRECTLY to recalculateLine()
+                // (HsmTransition::connectElements()), so any geometryChanged emitted while the
+                // frames are only half-updated makes recalculateLine() re-derive the endpoints
+                // from mapRectFromItem(mFromElement/mToElement, ...) against inconsistent
+                // coordinate frames and land them in the wrong place.
+                //
+                // There are TWO sources of such premature emissions, both suppressed below:
+                //   1. The parent origin move itself. setPos(pos() + newPositionDelta) triggers
+                //      HsmElement::itemChange(ItemPositionHasChanged), which notifies geometry
+                //      on the parent AND on every direct child - while the children still hold
+                //      their old local positions, so their scene positions have shifted with the
+                //      parent and are momentarily wrong. This is the emission that actually
+                //      corrupted the stored GEOMETRY (the compensation loop below had not run
+                //      yet).
+                //   2. Each per-child setPos in the compensation loop, which would otherwise
+                //      fire recalculateLine() in the MIDDLE of the loop (parent moved, some
+                //      children shifted, others not).
+                //
+                // Mirror the normalizeElementRect() precedent: toggle ItemSendsGeometryChanges
+                // off (saving/restoring the prior flags) around every pure coordinate transform
+                // so none of them emits geometryChanged. Then, after the parent has moved and
+                // all children are compensated and every frame is consistent, re-notify each
+                // child once so recalculateLine() runs exactly against fully-settled frames and
+                // writes the correct mLinePath/GEOMETRY.
+                const auto savedParentFlags = flags();
+                setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
                 setPos(pos() + newPositionDelta);
+                setFlags(savedParentFlags);
+
                 updateBoundingRect(newOuterRect);
 
                 updateGripsPosition(updateGrips);
 
-                // Update position of child items
-                qDebug() << "----- Update position of child items: " << newPositionDelta;
-                forEachHsmChildElement([&](HsmElement* child) { child->setPos(child->pos() - newPositionDelta); }, 1);
+                // Update position of child items (suppressing per-child notifications).
+                forEachHsmChildElement(
+                    [&](HsmElement* child) {
+                        const auto savedFlags = child->flags();
+                        child->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+                        child->setPos(child->pos() - newPositionDelta);
+                        child->setFlags(savedFlags);
+                    },
+                    1);
+
+                // All frames are now consistent: recompute affected transitions once.
+                // notifyGeometryChanged() is protected and cannot be invoked on a sibling
+                // HsmElement* from here, so emit the same geometryChanged signal the suppressed
+                // moves would have, now that every frame has settled. A child-to-child
+                // transition reacts to its endpoint states' geometryChanged (wired directly to
+                // recalculateLine() in HsmTransition::connectElements()), so a single post-move
+                // emission per child recomputes it against consistent frames and writes the
+                // correct mLinePath/GEOMETRY.
+                forEachHsmChildElement([&](HsmElement* child) { emit child->geometryChanged(child); }, 1);
                 update();
                 notifyGeometryChanged();
             }
