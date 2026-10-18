@@ -225,10 +225,25 @@ view::HsmTransition* HsmGraphicsView::createHsmTransition(const QSharedPointer<m
     QPointer<view::HsmElement> toElement = findHsmElement(toElementId);
 
     if (nullptr != fromElement && nullptr != toElement) {
+        // Defense in depth: if a graphics item already exists for this transition id,
+        // return it instead of creating a second item and orphaning the first on the scene.
+        QPointer<view::HsmTransition> existingTransition = findHsmTransition(transition->id());
+
+        if (false == existingTransition.isNull()) {
+            qDebug() << "transition already exists in view, returning existing item";
+            return existingTransition.data();
+        }
+
         transitionElement = new view::HsmTransition();
+        // Register BEFORE init()/connectElements(): initializing the transition writes
+        // computed geometry back into the model, which synchronously re-enters the
+        // controller's modelDataChanged create path for this same id. Registering first
+        // makes findHsmTransition(id) succeed during that re-entry, so the guard there
+        // (and the idempotency guard above) short-circuit instead of creating a second,
+        // orphaned graphics item.
+        mElements[transition->id()] = QPointer(transitionElement);
         transitionElement->init(transition);
         transitionElement->connectElements(fromElement, toElement);
-        mElements[transition->id()] = QPointer(transitionElement);
         qDebug() << "transition added to view";
     } else {
         qWarning() << "Cant find elements with ID " << fromElementId << " or " << toElementId;

@@ -37,10 +37,12 @@ set(TEST_OBJECTS
 
     view/HsmGraphicsViewTest.cpp
     view/HsmGraphicsViewPropertyTest.cpp
+    view/HsmTransitionDuplicateRenderingPropertyTest.cpp
     view/HsmElementDragTest.cpp
     view/AutoGroupItemCursorTest.cpp
     view/HsmTransitionGripVisibilityTest.cpp
     view/HsmTransitionAnchorPreservationTest.cpp
+    view/HsmTransitionRegripOnResizePropertyTest.cpp
     view/HsmTransitionAnchorTest.cpp
     view/HsmTransitionPerpendicularEndpointTest.cpp
     view/HsmTransitionBoundingRectTest.cpp

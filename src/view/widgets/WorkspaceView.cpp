@@ -353,7 +353,7 @@ void WorkspaceView::copyDroppedFileIntoFolder(const QString& sourcePath, const Q
         prompt.setIcon(QMessageBox::Question);
         prompt.setWindowTitle(tr("File Exists"));
         prompt.setText(tr("A file named '%1' already exists in the target folder.").arg(destName));
-        
+
         QPushButton* overwriteButton = prompt.addButton(tr("Overwrite"), QMessageBox::AcceptRole);
         QPushButton* renameButton = prompt.addButton(tr("Rename"), QMessageBox::ActionRole);
         QPushButton* cancelButton = prompt.addButton(QMessageBox::Cancel);

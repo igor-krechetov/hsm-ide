@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:hsm="https://hsm-ide.dev/scxml" name="thermostat">
+    <state id="Off" hsm:uid="2">
+        <onentry>
+            <script>showIdleScreen</script>
+        </onentry>
+        <transition event="power_on" type="external" target="Active" hsm:uid="3"/>
+        <transition event="shutdown" type="external" target="ShutDown" hsm:uid="4"/>
+    </state>
+    <state id="Active" hsm:uid="5">
+        <onentry>
+            <script>onActivate</script>
+        </onentry>
+        <onexit>
+            <script>onDeactivate</script>
+        </onexit>
+        <initial hsm:uid="6">
+            <transition type="external" target="Idle" hsm:uid="7"/>
+        </initial>
+        <transition event="power_off" type="external" target="Off" hsm:uid="8"/>
+        <state id="Idle" hsm:uid="9">
+            <transition event="tick" type="external" target="Heating" cond="isBelowTarget is true" hsm:uid="10"/>
+            <transition event="tick" type="external" target="Cooling" cond="isAboveTarget is true" hsm:uid="11"/>
+        </state>
+        <state id="Heating" hsm:uid="12">
+            <onentry>
+                <script>startHeater</script>
+            </onentry>
+            <onexit>
+                <script>stopHeater</script>
+            </onexit>
+            <invoke srcexpr="monitorHeating"/>
+            <transition event="tick" type="external" target="Idle" cond="isAtTarget is true" hsm:uid="13"/>
+        </state>
+        <state id="Cooling" hsm:uid="14">
+            <onentry>
+                <script>startCooler</script>
+            </onentry>
+            <onexit>
+                <script>stopCooler</script>
+            </onexit>
+            <invoke srcexpr="monitorCooling"/>
+            <transition event="tick" type="external" target="Idle" cond="isAtTarget is true" hsm:uid="15"/>
+        </state>
+    </state>
+    <final id="ShutDown" hsm:uid="16"/>
+    <initial hsm:uid="17">
+        <transition type="external" target="Off" hsm:uid="18"/>
+    </initial>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="2" x="-60.00" y="-340.00" width="200.00" height="105.00"/>
+            <hsm:transition uid="3">
+                <hsm:points geometry="-20.00,-200.00"/>
+            </hsm:transition>
+            <hsm:transition uid="4"/>
+            <hsm:state uid="5" x="-320.00" y="-140.00" width="700.00" height="680.00"/>
+            <hsm:state uid="6" x="120.00" y="100.00" width="40.00" height="40.00"/>
+            <hsm:transition uid="7"/>
+            <hsm:transition uid="8">
+                <hsm:points geometry="100.00,-200.00"/>
+            </hsm:transition>
+            <hsm:state uid="9" x="40.00" y="180.00" width="200.00" height="140.00"/>
+            <hsm:transition uid="10">
+                <hsm:points geometry="360.00,300.00"/>
+            </hsm:transition>
+            <hsm:transition uid="11">
+                <hsm:points geometry="100.00,360.00"/>
+            </hsm:transition>
+            <hsm:state uid="12" x="480.00" y="180.00" width="200.00" height="140.00"/>
+            <hsm:transition uid="13"/>
+            <hsm:state uid="14" x="40.00" y="480.00" width="300.00" height="168.00"/>
+            <hsm:transition uid="15">
+                <hsm:points geometry="200.00,440.00"/>
+            </hsm:transition>
+            <hsm:state uid="16" x="-320.00" y="-320.00" width="40.00" height="40.00"/>
+            <hsm:state uid="17" x="20.00" y="-460.00" width="40.00" height="40.00"/>
+            <hsm:transition uid="18"/>
+        </hsm:layout>
+    </hsm:editor>
+</scxml>

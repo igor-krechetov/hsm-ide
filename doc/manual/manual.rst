@@ -24,8 +24,6 @@ switched between several views, and a menu bar and toolbar for actions.
    :align: center
    :alt: HSM-IDE main window overview
 
-   *(screenshot pending)* Main window: menu bar, toolbar, editing canvas, and side panel.
-
 The side panel can be switched between three views:
 
 -  **Workspace** (``Ctrl+Shift+B``) -- browse the files and HSMs of the current workspace.
@@ -63,8 +61,6 @@ HSM files
    :align: center
    :alt: HSM-IDE File menu
 
-   *(screenshot pending)* The File menu with workspace and HSM file operations.
-
 
 Creating and editing a state machine
 =====================================
@@ -87,8 +83,6 @@ context menu.
    :align: center
    :alt: Editing a state machine in HSM-IDE
 
-   *(screenshot pending)* Editing states and transitions on the canvas.
-
 For details on how hsmcpp-specific behavior (state callbacks, timer actions, conditional
 transitions, conditional entry points) is expressed, see :ref:`code-generation-editors`.
 
@@ -106,9 +100,6 @@ The **View** menu controls the canvas display:
 .. figure:: ../_images/hsm-ide/view-navigation.png
    :align: center
    :alt: Canvas navigation controls
-
-   *(screenshot pending)* Grid and zoom controls in the View menu and toolbar.
-
 
 Keyboard shortcuts
 ===================

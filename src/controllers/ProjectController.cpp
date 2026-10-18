@@ -676,13 +676,16 @@ void ProjectController::handleModelEntityAdded(QSharedPointer<model::StateMachin
                 qDebug() << ptrTransition->source() << ptrTransition->target();
 
                 if (ptrTransition->source() && ptrTransition->target()) {
-                    view::HsmTransition* newViewTransition =
-                        mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
+                    // if transition has both source and destination and it doesnt exist yet - create it
+                    if (mView->findHsmTransition(ptrTransition->id()).isNull() == true) {
+                        view::HsmTransition* newViewTransition =
+                            mView->createHsmTransition(ptrTransition, ptrTransition->sourceId(), ptrTransition->targetId());
 
-                    tryConnectSignal(newViewTransition,
-                                     "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
-                                     this,
-                                     "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                        tryConnectSignal(newViewTransition,
+                                         "transitionReconnected(model::EntityID_t,model::EntityID_t,model::EntityID_t)",
+                                         this,
+                                         "reconnectElements(model::EntityID_t,model::EntityID_t,model::EntityID_t)");
+                    }
                 }
             } else {
                 qCritical() << "expected Transition entity, but couldnt cast to model::Transition";

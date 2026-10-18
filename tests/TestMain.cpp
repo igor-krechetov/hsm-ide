@@ -51,6 +51,8 @@ int runHsmTransitionPerpendicularEndpointTest(int argc, char** argv) __attribute
 int runHsmTransitionBoundingRectTest(int argc, char** argv) __attribute__((weak));
 int runElementGridAlignmentPropertyTest(int argc, char** argv) __attribute__((weak));
 int runElementGridAlignmentIntegrationTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionDuplicateRenderingPropertyTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionRegripOnResizePropertyTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
     qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
@@ -114,6 +116,8 @@ int main(int argc, char** argv) {
         runHsmTransitionBoundingRectTest,
         runElementGridAlignmentPropertyTest,
         runElementGridAlignmentIntegrationTest,
+        runHsmTransitionDuplicateRenderingPropertyTest,
+        runHsmTransitionRegripOnResizePropertyTest,
     };
 
     for (const auto test : tests) {
