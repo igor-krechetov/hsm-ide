@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="FinalOnExitMachine">
+    <state id="S1"/>
+    <final id="Done" event="finished">
+        <onexit>
+            <script>cleanupCb</script>
+        </onexit>
+    </final>
+</scxml>

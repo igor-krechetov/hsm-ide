@@ -1,26 +1,16 @@
 #include "FinalState.hpp"
 
-#include "actions/ModelActionFactory.hpp"
 #include "private/IModelVisitor.hpp"
 
 namespace model {
 
 FinalState::FinalState(const QString& name)
-    : State(name, StateType::FINAL)
-    , mOnStateChangedAction(ModelActionFactory::createModelAction(ModelAction::NONE)) {}
+    : StateWithActions(name, StateType::FINAL) {}
 
 void FinalState::accept(class IModelVisitor* visitor) {
     if (visitor) {
         visitor->visitFinalState(this);
     }
-}
-
-QSharedPointer<IModelAction> FinalState::onStateChangedAction() const {
-    return mOnStateChangedAction;
-}
-
-bool FinalState::hasOnStateChangedAction() const {
-    return (mOnStateChangedAction && mOnStateChangedAction->type() != ModelAction::NONE);
 }
 
 const QString& FinalState::event() const {
@@ -34,48 +24,45 @@ void FinalState::setEvent(const QString& event) {
     }
 }
 
-void FinalState::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
-    mOnStateChangedAction = (action ? action : ModelActionFactory::createModelAction(ModelAction::NONE));
-    emit modelDataChanged(sharedFromThis().toWeakRef());
-}
-
-void FinalState::setOnStateChangedAction(const QString& actionData) {
-    setOnStateChangedAction(ModelActionFactory::createModelActionFromData(actionData, ModelAction::CALLBACK));
-}
-
 QStringList FinalState::properties() const {
-    return State::properties() + QStringList{"onStateChangedAction"};
+    // A top-level final state never exits, so onExiting is hidden from the property system.
+    return State::properties() + QStringList{"event", "onStateChangedAction", "onEnteringAction"};
 }
 
 bool FinalState::setProperty(const QString& key, const QVariant& value) {
     bool handled = true;
 
-    if (key == "onStateChangedAction") {
-        if (value.canConvert<QSharedPointer<IModelAction>>()) {
-            setOnStateChangedAction(value.value<QSharedPointer<IModelAction>>());
-        } else {
-            setOnStateChangedAction(value.toString());
-        }
+    if (key == "event") {
+        setEvent(value.toString());
+    } else if (key == "onExitingAction") {
+        // onExiting is hidden for a final state: treat it as an unknown key (no-op).
+        handled = false;
     } else {
-        handled = State::setProperty(key, value);
+        handled = StateWithActions::setProperty(key, value);
     }
 
     return handled;
 }
 
 QVariant FinalState::getProperty(const QString& key) const {
-    if (key == "onStateChangedAction") {
-        return QVariant::fromValue(mOnStateChangedAction);
+    QVariant res;
+
+    if (key == "event") {
+        res = mEvent;
+    } else if (key == "onExitingAction") {
+        // onExiting is hidden for a final state: return the same default as an unknown key.
+    } else {
+        res = StateWithActions::getProperty(key);
     }
 
-    return State::getProperty(key);
+    return res;
 }
 
 void FinalState::copyEntityData(const StateMachineEntity& other) {
-    State::copyEntityData(other);
+    StateWithActions::copyEntityData(other);
+
     if (const FinalState* fOther = dynamic_cast<const FinalState*>(&other)) {
-        mOnStateChangedAction =
-            ModelActionFactory::createModelActionFromData(fOther->onStateChangedAction()->serialize(), ModelAction::NONE);
+        mEvent = fOther->mEvent;
     }
 }
 

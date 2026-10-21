@@ -2,6 +2,12 @@
 All notable changes to project will be documented in this file.
 
 
+## [0.22.0] - 2026-10-21
+### New
+- Load the `<onentry>` and `<invoke>` actions declared on a top-level final state when importing an SCXML file; previously these actions were silently discarded and lost on the next save
+### Fix
+- Preserve a state's callback action when copying or duplicating it; a plain callback name is no longer dropped during the copy
+
 ## [0.21.1] - 2026-10-18
 ### Fix
 - Fixed a transition's endpoints jumping away from its states when a composite state was resized by dragging an origin-moving border (any edge except the bottom-right); the connection now stays anchored to its states throughout the resize, including fast drags.

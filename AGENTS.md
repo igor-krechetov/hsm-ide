@@ -2,6 +2,9 @@
 ## Purpose of the Repository
 The hsm-ide repository is an Integrated Development Environment designed for creating and working with hierarchical state machines (HSMs) using the hsmcpp library. The primary goal is to provide a graphical interface for designing and debugging state machines with support for all standard HSM elements.
 
+## Workflow
+Always create a new git worktree based on main branch before starting new work.
+
 
 ## Coding style
 - Refer to 'agents/coding-style.md' for rules regarding coding style

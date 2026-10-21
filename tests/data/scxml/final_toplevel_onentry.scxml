@@ -1,0 +1,8 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="FinalOnEntryMachine">
+    <state id="S1"/>
+    <final id="Done" event="finished">
+        <onentry>
+            <script>cb1</script>
+        </onentry>
+    </final>
+</scxml>
