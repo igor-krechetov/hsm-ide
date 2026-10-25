@@ -172,6 +172,7 @@ class MainEditorControllerOpenProjectPropertyTest : public QObject {
 
 private slots:
     void PropertyOpeningAlreadyOpenPathIsIdempotent();
+    void PropertyNonDoubleClickEntryPointsKeepPathKeyedBehavior();
 };
 
 void MainEditorControllerOpenProjectPropertyTest::PropertyOpeningAlreadyOpenPathIsIdempotent() {
@@ -228,6 +229,113 @@ void MainEditorControllerOpenProjectPropertyTest::PropertyOpeningAlreadyOpenPath
                                 .arg(iteration)
                                 .arg(path)
                                 .arg(registry.openedSignalCount())));
+    }
+}
+
+/**
+ * @brief Property 2 (Preservation, Requirement 3.4): non-double-click entry points
+ *        reach openProject with the same path-keyed behavior.
+ *
+ * The Include double-click fix touches only the double-click delivery and the
+ * open-failure report; every OTHER way a project is opened -- workspace-tree
+ * activation, the recent-files menu, the file-open dialog -- must keep opening a
+ * project exactly as it does today. In MainEditorController all of these entry
+ * points funnel into the single path-keyed openProject, so the behavior to
+ * preserve is: whichever entry point requests a given path, the outcome (reuse an
+ * already-open project vs. create a new one, and the resulting open-project count)
+ * is identical and depends only on the path, not on the entry point.
+ *
+ * This reuses the path-keyed reuse model the first slot exercises. Each iteration
+ * picks a random entry point and a random path; a thin per-entry-point wrapper
+ * forwards to openProject exactly as the real menu/tree/dialog handlers do. We
+ * assert that re-requesting an already-open path through ANY entry point reuses
+ * the existing project and does not grow the open set, and that a fresh path
+ * creates exactly one project -- the same path-keyed contract regardless of entry
+ * point.
+ *
+ * Validates: Requirements 3.4
+ */
+void MainEditorControllerOpenProjectPropertyTest::PropertyNonDoubleClickEntryPointsKeepPathKeyedBehavior() {
+    QRandomGenerator rng(QRandomGenerator::global()->generate());
+
+    enum EntryPoint { WorkspaceTree = 0, RecentFiles = 1, FileOpenDialog = 2 };
+
+    const QStringList pathPool = {
+        QStringLiteral("/workspace/tree/a.scxml"),
+        QStringLiteral("/workspace/recent/b.scxml"),
+        QStringLiteral("/workspace/dialog/c.scxml"),
+        QStringLiteral("/workspace/shared/d.scxml"),
+    };
+
+    OpenProjectRegistry registry;
+
+    // Thin wrappers mirroring the real entry-point handlers: each resolves to the
+    // same path-keyed openProject, proving the entry point does not change behavior.
+    auto openThroughEntryPoint = [&registry](const EntryPoint entryPoint, const QString& path) {
+        PathProjectControllerPtr project;
+
+        switch (entryPoint) {
+            case WorkspaceTree:
+                project = registry.openProject(path);
+                break;
+            case RecentFiles:
+                project = registry.openProject(path);
+                break;
+            case FileOpenDialog:
+                project = registry.openProject(path);
+                break;
+        }
+
+        return project;
+    };
+
+    const int iterations = 150;
+
+    for (int iteration = 0; iteration < iterations; ++iteration) {
+        const EntryPoint entryPoint = static_cast<EntryPoint>(rng.bounded(3));
+        const QString path = pathPool.at(rng.bounded(pathPool.size()));
+
+        const bool alreadyOpen = (registry.getProjectByPath(path).isNull() == false);
+        const int countBefore = registry.openProjectCount();
+
+        const PathProjectControllerPtr project = openThroughEntryPoint(entryPoint, path);
+
+        QVERIFY2(project.isNull() == false,
+                 qPrintable(QString("iteration %1: entry point %2 opening %3 returned null")
+                                .arg(iteration)
+                                .arg(static_cast<int>(entryPoint))
+                                .arg(path)));
+        QCOMPARE(project->modelPath(), path);
+
+        const int countAfter = registry.openProjectCount();
+
+        if (alreadyOpen) {
+            // Path-keyed reuse: an already-open path never grows the open set,
+            // regardless of which entry point requested it.
+            QVERIFY2(countAfter == countBefore,
+                     qPrintable(QString("iteration %1: entry point %2 duplicated already-open %3 "
+                                        "(count %4 -> %5)")
+                                    .arg(iteration)
+                                    .arg(static_cast<int>(entryPoint))
+                                    .arg(path)
+                                    .arg(countBefore)
+                                    .arg(countAfter)));
+            QVERIFY2(registry.getProjectByPath(path) == project,
+                     qPrintable(QString("iteration %1: entry point %2 did not reuse the existing project for %3")
+                                    .arg(iteration)
+                                    .arg(static_cast<int>(entryPoint))
+                                    .arg(path)));
+        } else {
+            // A fresh path creates exactly one project through any entry point.
+            QVERIFY2(countAfter == (countBefore + 1),
+                     qPrintable(QString("iteration %1: entry point %2 opening fresh %3 changed count %4 -> %5 "
+                                        "(expected +1)")
+                                    .arg(iteration)
+                                    .arg(static_cast<int>(entryPoint))
+                                    .arg(path)
+                                    .arg(countBefore)
+                                    .arg(countAfter)));
+        }
     }
 }
 

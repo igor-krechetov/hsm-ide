@@ -19,6 +19,7 @@ class QXmlStreamReader;
 namespace model {
 class StateMachineModel;
 class StateMachineEntity;
+class StateWithActions;
 class RegularState;
 class EntryPoint;
 class ExitPoint;
@@ -89,6 +90,8 @@ private:
     void serializeActionListElement(const ModelActionList& actions, const QString& wrapper, const QString& childTag);
 
     bool parseAllChildEntities(const QSharedPointer<StateMachineEntity>& parent);
+
+    void parseStateActionChildren(QSharedPointer<StateWithActions>& entity, bool supportExit, bool supportInvoke);
 
     // Parses the element currently at the reader cursor as a child of @p parent. Returns the
     // created entity, or nullptr for elements that do not map to an entity. @p outHandled (when

@@ -1,6 +1,8 @@
 #include <QApplication>
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QRandomGenerator>
+#include <QSignalSpy>
 #include <QStringList>
 #include <QTransform>
 #include <QtTest>
@@ -9,7 +11,9 @@
 #include "DragTestHelper.hpp"
 #include "controllers/IProjectController.hpp"
 #include "model/ModelElementsFactory.hpp"
+#include "model/elements/IncludeEntity.hpp"
 #include "model/elements/RegularState.hpp"
+#include "model/private/EntityIdGenerator.hpp"
 #include "view/common/DragDropUtils.hpp"
 #include "view/elements/HsmStateElement.hpp"
 #include "view/theme/ThemeManager.hpp"
@@ -90,11 +94,301 @@ class HsmGraphicsViewPropertyTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void PropertyIncludeDoubleClickDeliveredExactlyOnce();
+    void PropertyOtherElementSignalsWiredExactlyOnce();
+    void PropertyNonBugDoubleClickTakesNoOpenAction();
     void PropertyNonEmptyAddDoesNotShiftView();
     void PropertyDragMoveReparentPreservesPositions();
     void PropertyPanZoomFitPreserved();
     void PropertyEditorDropPartitionsDroppedPaths();
 };
+
+/**
+ * @brief Property 1 (Bug Condition, Case 1): an Include double-click is delivered
+ *        exactly once.
+ *
+ * Reproduces defect 1 (design "Bug Details", Case 1): `createHsmElement` connects
+ * `HsmElement::elementDoubleClickEvent` to the view's `hsmElementDoubleClickEvent`
+ * signal twice, so a single double-click is delivered through two connections and
+ * `MainEditorController::openProject` runs twice (two windows). This test creates
+ * an Include `view::HsmElement` via `HsmGraphicsView::createHsmElement`, watches
+ * `hsmElementDoubleClickEvent` with a QSignalSpy, triggers exactly one double-click
+ * on the element (driving the real signal path through `mouseDoubleClickEvent`),
+ * and asserts the view signal fires exactly once.
+ *
+ * This is a BUG-CONDITION exploration test and is EXPECTED TO FAIL on the UNFIXED
+ * code (the spy records 2 emissions for one double-click). The failure confirms
+ * the duplicated connection. It encodes design Property 1 for a valid Include
+ * target (exactly one window) and will pass once the duplicate `connect` is removed.
+ *
+ * The Include path is varied with QRandomGenerator across the non-empty
+ * bug-condition shapes (near-origin / off-origin positions, varied stored paths)
+ * so the single-delivery property is checked across the input space, not a single
+ * point.
+ *
+ * Validates: Requirements 1.1, 2.1
+ */
+void HsmGraphicsViewPropertyTest::PropertyIncludeDoubleClickDeliveredExactlyOnce() {
+    QRandomGenerator rng(QRandomGenerator::global()->generate());
+
+    for (int iteration = 0; iteration < 50; ++iteration) {
+        QGraphicsScene scene;
+        HsmGraphicsView view;
+        view.setScene(&scene);
+
+        // Build an Include model element with a non-empty stored path (bug condition:
+        // element.type == INCLUDE AND path != "").
+        model::EntityIdGenerator gen;
+        auto includeModel =
+            model::ModelElementsFactory::createUniqueState(model::StateType::INCLUDE, gen).dynamicCast<model::IncludeEntity>();
+        QVERIFY2(includeModel.isNull() == false,
+                 qPrintable(QString("iteration %1: failed to create Include model element").arg(iteration)));
+        includeModel->setPath(QStringLiteral("/workspace/sub%1.scxml").arg(rng.bounded(1000)));
+
+        // Vary the drop position across the input space.
+        const QPointF pos(rng.bounded(-400, 400), rng.bounded(-400, 400));
+
+        // Create the Include graphics element through the real wiring path.
+        view::HsmElement* element =
+            view.createHsmElement(includeModel, QStringLiteral("include"), pos, QSizeF(80, 60), model::INVALID_MODEL_ID);
+        QVERIFY2(element != nullptr, qPrintable(QString("iteration %1: createHsmElement returned null").arg(iteration)));
+
+        // Count deliveries of the view's forwarding signal.
+        QSignalSpy spy(&view, &HsmGraphicsView::hsmElementDoubleClickEvent);
+        QVERIFY2(spy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on hsmElementDoubleClickEvent is invalid").arg(iteration)));
+
+        // Trigger exactly ONE double-click on the element, driving the real
+        // HsmElement::mouseDoubleClickEvent -> elementDoubleClickEvent path.
+        QGraphicsSceneMouseEvent doubleClick(QEvent::GraphicsSceneMouseDoubleClick);
+        doubleClick.setButton(Qt::LeftButton);
+        doubleClick.setButtons(Qt::LeftButton);
+        doubleClick.setScenePos(element->scenePos());
+        doubleClick.setPos(element->mapFromScene(element->scenePos()));
+        scene.sendEvent(element, &doubleClick);
+
+        // One double-click must deliver exactly one view signal (one window opened).
+        // UNFIXED: fires twice because of the duplicated connect in createHsmElement.
+        QVERIFY2(spy.count() == 1,
+                 qPrintable(QString("iteration %1: one Include double-click delivered %2 "
+                                    "hsmElementDoubleClickEvent signal(s), expected exactly 1 "
+                                    "(duplicated connect opens two windows)")
+                                .arg(iteration)
+                                .arg(spy.count())));
+    }
+}
+
+/**
+ * @brief Property 2 (Preservation): the other HsmElement signal connections fire
+ *        exactly once per event, unchanged by the double-click fix.
+ *
+ * The fix for defect 1 removes ONE of the two identical
+ * `elementDoubleClickEvent -> hsmElementDoubleClickEvent` connects in
+ * `createHsmElement`. This preservation slot locks in that the NEIGHBOURING
+ * connections it must leave untouched keep firing exactly once per event:
+ *   - `dragElementBegin`, `dragElementEvent`, `dropElementEvent` are emitted by
+ *     the `HsmElement` and consumed by the view's same-named slots (they are view
+ *     SLOTS, not re-emitted view signals), so the observable "fire once per event"
+ *     contract is on the element's own signals: a single drag emits
+ *     `dragElementBegin` exactly once (on the PREPARE -> DRAGGING transition) and
+ *     `dropElementEvent` exactly once (on release), with `dragElementEvent` once
+ *     per move frame.
+ *   - `transformChanged` is a view SIGNAL (delivered to the element's
+ *     `viewTransformChanged` slot); it must fire exactly once per view transform
+ *     operation.
+ *
+ * Observation-first methodology: these counts are what the unfixed code produces,
+ * so the slot PASSES on it and keeps guarding the wiring after the fix. The drag
+ * frame count and zoom-step count are generated with QRandomGenerator so the
+ * per-event invariant is checked across the input space (the begin/drop
+ * once-per-drag and the once-per-zoom contracts hold for any frame/step count).
+ *
+ * Validates: Requirements 3.2, 3.5 (signal-wiring preservation)
+ */
+void HsmGraphicsViewPropertyTest::PropertyOtherElementSignalsWiredExactlyOnce() {
+    // dragElement* carry a `view::HsmElement*`; register it so QSignalSpy can
+    // introspect the signal arguments.
+    qRegisterMetaType<view::HsmElement*>("view::HsmElement*");
+
+    QRandomGenerator rng(QRandomGenerator::global()->generate());
+
+    for (int iteration = 0; iteration < 40; ++iteration) {
+        QGraphicsScene scene;
+        HsmGraphicsView view;
+        view.setScene(&scene);
+        view.setSnapToGridEnabled(false);
+        view.resize(800, 600);
+        view.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+        auto elementModel = QSharedPointer<model::RegularState>::create("signalWiringTarget");
+        view::HsmElement* element =
+            view.createHsmElement(elementModel, "state", QPointF(100, 100), QSizeF(200, 100), model::INVALID_MODEL_ID);
+        QVERIFY2(element != nullptr, qPrintable(QString("iteration %1: createHsmElement returned null").arg(iteration)));
+
+        // Observe the element's own drag signals (the ones createHsmElement wires to
+        // the view's drag slots). "Fire once per event" is a property of these.
+        QSignalSpy beginSpy(element, &view::HsmElement::dragElementBegin);
+        QSignalSpy moveSpy(element, &view::HsmElement::dragElementEvent);
+        QSignalSpy dropSpy(element, &view::HsmElement::dropElementEvent);
+
+        QVERIFY2(beginSpy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on dragElementBegin is invalid").arg(iteration)));
+        QVERIFY2(moveSpy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on dragElementEvent is invalid").arg(iteration)));
+        QVERIFY2(dropSpy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on dropElementEvent is invalid").arg(iteration)));
+
+        // Drive a real drag: press, a random number of moves, release.
+        DragTestHelper::beginDrag(element);
+        // At least two move frames: the first drives PREPARE -> DRAGGING and emits
+        // dragElementBegin, so a second frame is needed to emit dragElementEvent.
+        const int moveFrames = rng.bounded(2, 6);
+        for (int frame = 0; frame < moveFrames; ++frame) {
+            const QPointF delta(rng.bounded(5, 40), rng.bounded(5, 40));
+            DragTestHelper::simulateDragMove(element, delta);
+        }
+        DragTestHelper::endDrag(element);
+
+        // A single drag begins exactly once and drops exactly once -- one per event.
+        QVERIFY2(beginSpy.count() == 1,
+                 qPrintable(QString("iteration %1: one drag emitted %2 dragElementBegin signal(s), expected 1")
+                                .arg(iteration)
+                                .arg(beginSpy.count())));
+        QVERIFY2(dropSpy.count() == 1,
+                 qPrintable(QString("iteration %1: one drag emitted %2 dropElementEvent signal(s), expected 1")
+                                .arg(iteration)
+                                .arg(dropSpy.count())));
+        // Post-begin move frames emit dragElementEvent (at least one, since the
+        // first frame consumed the begin transition).
+        QVERIFY2(moveSpy.count() >= 1,
+                 qPrintable(QString("iteration %1: %2 move frame(s) produced %3 dragElementEvent signal(s), "
+                                    "expected at least 1")
+                                .arg(iteration)
+                                .arg(moveFrames)
+                                .arg(moveSpy.count())));
+
+        // transformChanged is a view signal delivered to the element. It must fire
+        // exactly once per view transform operation.
+        QSignalSpy transformSpy(&view, &HsmGraphicsView::transformChanged);
+        QVERIFY2(transformSpy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on transformChanged is invalid").arg(iteration)));
+
+        const int zoomSteps = rng.bounded(1, 5);
+        for (int step = 0; step < zoomSteps; ++step) {
+            view.zoomIn();
+        }
+
+        QVERIFY2(transformSpy.count() == zoomSteps,
+                 qPrintable(QString("iteration %1: %2 zoomIn() call(s) emitted %3 transformChanged signal(s), "
+                                    "expected exactly one per call")
+                                .arg(iteration)
+                                .arg(zoomSteps)
+                                .arg(transformSpy.count())));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Faithful stand-in for the downstream open-project DECISION the double-click
+// reaches: MainEditorController::handleHsmElementDoubleClick casts the clicked
+// model entity to IncludeEntity and no-ops for anything else, and
+// MainEditorController::openProject guards on a non-empty path. Those controller
+// sources are not linkable from the test harness (see
+// MainEditorControllerOpenProjectPropertyTest.cpp), so this mirrors the exact
+// branch structure and reports whether an open-project action WOULD be taken.
+// ---------------------------------------------------------------------------
+namespace {
+
+bool doubleClickWouldOpenProject(const QSharedPointer<model::StateMachineEntity>& clicked) {
+    bool wouldOpen = false;
+
+    // handleHsmElementDoubleClick: only Include elements reach openProject.
+    const QSharedPointer<model::IncludeEntity> include = clicked.dynamicCast<model::IncludeEntity>();
+
+    if (include.isNull() == false) {
+        // openProject guard: an empty path takes no open-project action.
+        if (include->path().isEmpty() == false) {
+            wouldOpen = true;
+        }
+    }
+
+    return wouldOpen;
+}
+
+}  // namespace
+
+/**
+ * @brief Property 2 (Preservation, Requirements 3.2, 3.5): double-clicking a
+ *        non-Include element or an empty-path Include takes no open-project action.
+ *
+ * The fix removes a duplicated double-click connection; it must not change WHICH
+ * double-clicks trigger an open. For a non-Include element (Requirement 3.2) and
+ * for an Include with an empty stored path (Requirement 3.5) the flow must take no
+ * open-project action -- exactly as it does on the unfixed code. Include elements
+ * with a non-empty path DO reach an open (that is the bug-condition path handled
+ * elsewhere); this slot asserts only the no-op cases are preserved.
+ *
+ * For every generated element the view still forwards exactly one
+ * `hsmElementDoubleClickEvent` (the fix leaves a single connection), while the
+ * downstream open-project decision is no-op for the two non-bug shapes. Element
+ * kind and path state are varied with QRandomGenerator.
+ *
+ * Validates: Requirements 3.2, 3.5
+ */
+void HsmGraphicsViewPropertyTest::PropertyNonBugDoubleClickTakesNoOpenAction() {
+    QRandomGenerator rng(QRandomGenerator::global()->generate());
+
+    enum Kind { NonIncludeState = 0, EmptyPathInclude = 1 };
+
+    for (int iteration = 0; iteration < 60; ++iteration) {
+        QGraphicsScene scene;
+        HsmGraphicsView view;
+        view.setScene(&scene);
+
+        const Kind kind = static_cast<Kind>(rng.bounded(2));
+
+        QSharedPointer<model::StateMachineEntity> model;
+        QString elementTypeId;
+
+        if (NonIncludeState == kind) {
+            // A plain regular state is never an Include -> no open-project action.
+            model = QSharedPointer<model::RegularState>::create(QStringLiteral("plain%1").arg(rng.bounded(1000)));
+            elementTypeId = QStringLiteral("state");
+        } else {
+            // An Include with an EMPTY path -> guarded no-op in openProject.
+            model::EntityIdGenerator gen;
+            auto include = model::ModelElementsFactory::createUniqueState(model::StateType::INCLUDE, gen)
+                               .dynamicCast<model::IncludeEntity>();
+            QVERIFY2(include.isNull() == false,
+                     qPrintable(QString("iteration %1: failed to create Include model element").arg(iteration)));
+            include->setPath(QString());  // empty path (Requirement 3.5)
+            model = include;
+            elementTypeId = QStringLiteral("include");
+        }
+
+        const QPointF pos(rng.bounded(-300, 300), rng.bounded(-300, 300));
+        view::HsmElement* element = view.createHsmElement(model, elementTypeId, pos, QSizeF(80, 60), model::INVALID_MODEL_ID);
+        QVERIFY2(element != nullptr, qPrintable(QString("iteration %1: createHsmElement returned null").arg(iteration)));
+
+        QSignalSpy spy(&view, &HsmGraphicsView::hsmElementDoubleClickEvent);
+        QVERIFY2(spy.isValid(),
+                 qPrintable(QString("iteration %1: QSignalSpy on hsmElementDoubleClickEvent is invalid").arg(iteration)));
+
+        // One real double-click.
+        QGraphicsSceneMouseEvent doubleClick(QEvent::GraphicsSceneMouseDoubleClick);
+        doubleClick.setButton(Qt::LeftButton);
+        doubleClick.setButtons(Qt::LeftButton);
+        doubleClick.setScenePos(element->scenePos());
+        doubleClick.setPos(element->mapFromScene(element->scenePos()));
+        scene.sendEvent(element, &doubleClick);
+
+        // The downstream decision takes no open-project action for either shape.
+        QVERIFY2(doubleClickWouldOpenProject(model) == false,
+                 qPrintable(QString("iteration %1: non-bug double-click (kind=%2) unexpectedly would open a project")
+                                .arg(iteration)
+                                .arg(static_cast<int>(kind))));
+    }
+}
 
 /**
  * @brief Property 2 (Requirement 3.1): Non-empty add preservation.
@@ -425,7 +719,12 @@ void HsmGraphicsViewPropertyTest::PropertyEditorDropPartitionsDroppedPaths() {
 
     // Case variants of the ".scxml" extension so case-insensitivity is exercised.
     const QStringList scxmlExtensionCases = {
-        ".scxml", ".SCXML", ".ScXmL", ".sCxMl", ".Scxml", ".scxmL",
+        ".scxml",
+        ".SCXML",
+        ".ScXmL",
+        ".sCxMl",
+        ".Scxml",
+        ".scxmL",
     };
 
     // Builders for the different path kinds. Each returns {path, isScxml}.

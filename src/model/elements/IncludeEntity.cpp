@@ -16,10 +16,17 @@ IncludeEntity::IncludeEntity(const QString& name)
 
 void IncludeEntity::promoteFrom(const QSharedPointer<RegularState>& state) {
     if (nullptr != state) {
+        // Adopt the promoted-from state's id. The enclosing <state> carries the hsm:uid
+        // (the <xi:include> element itself has none), so the IncludeEntity must keep that
+        // id - otherwise the id generated while parsing <xi:include> would replace it and
+        // the <hsm:editor> layout entry (keyed by the state's uid) would reference an
+        // unknown uid on load.
+        setId(state->id());
+
         mName = state->name();
 
         mOnStateChangedAction =
-            ModelActionFactory::createModelActionFromData(state->onStateChangedAction()->serialize(), ModelAction::NONE);
+            ModelActionFactory::createModelActionFromData(state->onStateChangedAction()->serialize(), ModelAction::CALLBACK);
         setOnEnteringActions(state->onEnteringActions());
         setOnExitingActions(state->onExitingActions());
         mChildren = state->childrenEntities();
