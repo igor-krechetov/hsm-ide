@@ -16,6 +16,7 @@ set(TEST_OBJECTS
     model/StateHierarchyRulesTest.cpp
     model/StateMachineSerializer/StateMachineSerializerSerializationTest.cpp
     model/StateMachineSerializer/StateMachineSerializerDeserializationTest.cpp
+    model/StateMachineSerializer/AllElementsScxml2genJointTest.cpp
     model/StateMachineSerializer/SerializerPropertyTest.cpp
     model/StateMachineSerializer/FormatDetectionTest.cpp
     model/StateMachineSerializer/HsmUidSerializationTest.cpp
@@ -95,5 +96,7 @@ foreach(testObject ${TEST_OBJECTS})
 
     target_compile_definitions(${testName} PRIVATE
         HSM_IDE_TEST_SCXML_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/tests/data/scxml"
+        HSM_IDE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        HSM_IDE_SCXML2GEN_SCRIPT="${CMAKE_SOURCE_DIR}/thirdparty/hsmcpp/tools/scxml2gen/scxml2gen.py"
     )
 endforeach()
