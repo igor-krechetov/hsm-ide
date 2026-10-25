@@ -41,6 +41,8 @@ private slots:
     void TopLevelFinalRoundTripOmitsOnExit();
     void DeserializeAllElementsFinalOnEntry();
     void DeserializeIncludeEntity();
+    void IncludeEntityPreservesHsmUidForLayout();
+    void IncludeEntityPreservesInvokeCallback();
     void DeserializeMalformedXml();
     void DeserializeStateWithoutId();
     void ValidateStructure();
@@ -517,6 +519,91 @@ void StateMachineSerializerDeserializationTest::DeserializeIncludeEntity() {
 }
 
 /**
+ * @brief Regression: a state that both carries an hsm:uid and contains an <xi:include>
+ *        must keep that uid after being promoted to an IncludeEntity.
+ *
+ * Bug: the enclosing <state> owns the hsm:uid (the <xi:include> element has none). When the
+ * state was promoted to an IncludeEntity the promotion dropped the original id and the entity
+ * kept a freshly generated id instead, so the <hsm:editor> layout entry keyed by the state's
+ * uid could no longer be matched ("layout references unknown uid").
+ *
+ * @startuml
+ * state NeighborState
+ * NeighborState : xi:include href=transitions.scxml
+ * @enduml
+ */
+void StateMachineSerializerDeserializationTest::IncludeEntityPreservesHsmUidForLayout() {
+    const QString scxml = QStringLiteral(
+        "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" "
+        "xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:hsm=\"https://hsm-ide.dev/scxml\" name=\"IncludeLayout\">"
+        "  <state id=\"NeighborState\" hsm:uid=\"33\">"
+        "    <xi:include href=\"transitions.scxml\" parse=\"xml\"/>"
+        "  </state>"
+        "  <hsm:editor>"
+        "    <hsm:layout>"
+        "      <hsm:state uid=\"33\" x=\"10.00\" y=\"20.00\" width=\"240.00\" height=\"140.00\"/>"
+        "    </hsm:layout>"
+        "  </hsm:editor>"
+        "</scxml>");
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto include = model->root()->findChildStateByName("NeighborState").dynamicCast<model::IncludeEntity>();
+    QVERIFY(include);
+
+    // The IncludeEntity must keep the enclosing state's uid so layout can be matched.
+    QCOMPARE(include->id(), static_cast<model::EntityID_t>(33));
+
+    // The layout entry (keyed by uid 33) must have been applied to the include node.
+    QCOMPARE(include->getPos(), QPointF(10.00, 20.00));
+    QCOMPARE(include->getSize(), QSizeF(240.00, 140.00));
+
+    // No "unknown uid" layout warning should have been produced.
+    const model::ParseErrorCollector& report = serializer.parseReport();
+
+    for (const auto& problem : report.problems()) {
+        QVERIFY2(!problem.message.contains("unknown uid"), qPrintable(problem.message));
+    }
+}
+
+/**
+ * @brief Regression: a state that carries an <invoke> and contains an <xi:include> must keep
+ *        its state-changed (invoke) callback after being promoted to an IncludeEntity.
+ *
+ * Bug: IncludeEntity::promoteFrom rebuilt the state-changed action with type ModelAction::NONE,
+ * so hasOnStateChangedAction() became false and the <invoke> was silently dropped on save.
+ *
+ * @startuml
+ * state NeighborState
+ * NeighborState : invoke srcexpr=callbackName
+ * NeighborState : xi:include href=transitions.scxml
+ * @enduml
+ */
+void StateMachineSerializerDeserializationTest::IncludeEntityPreservesInvokeCallback() {
+    const QString scxml = QStringLiteral(
+        "<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" "
+        "xmlns:xi=\"http://www.w3.org/2001/XInclude\" xmlns:hsm=\"https://hsm-ide.dev/scxml\" name=\"IncludeInvoke\">"
+        "  <state id=\"NeighborState\" hsm:uid=\"33\">"
+        "    <invoke srcexpr=\"callbackName\"/>"
+        "    <xi:include href=\"transitions.scxml\" parse=\"xml\"/>"
+        "  </state>"
+        "</scxml>");
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+
+    QVERIFY(model);
+    auto include = model->root()->findChildStateByName("NeighborState").dynamicCast<model::IncludeEntity>();
+    QVERIFY(include);
+
+    // The invoke callback must survive promotion to IncludeEntity (not downgraded to NONE).
+    QVERIFY(include->hasOnStateChangedAction());
+    QCOMPARE(include->onStateChangedAction()->serialize(), QStringLiteral("callbackName"));
+}
+
+/**
  * @brief Validate malformed SCXML handling for XML syntax errors.
  *
  * Use-case: Ensure parser behavior is deterministic when SCXML is not well-formed XML.
@@ -911,7 +998,6 @@ void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalOnExitUn
     QVERIFY(done);
     QVERIFY(!done->hasOnEnteringAction());
     QVERIFY(!done->hasOnStateChangedAction());
-    QCOMPARE(QString("finished"), done->event());
 }
 
 /**
@@ -929,7 +1015,6 @@ void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalActionFr
     QVERIFY(done);
     QVERIFY(!done->hasOnEnteringAction());
     QVERIFY(!done->hasOnStateChangedAction());
-    QCOMPARE(QString("finished"), done->event());
 }
 
 /**

@@ -13,17 +13,11 @@ public:
 
     void accept(class IModelVisitor* visitor) override;
 
-    const QString& event() const;
-    void setEvent(const QString& event);
-
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
     QStringList properties() const override;
 
-    void copyEntityData(const StateMachineEntity& other) override;
-
-private:
-    QString mEvent;
+    // void copyEntityData(const StateMachineEntity& other) override;
 };
 
 };  // namespace model

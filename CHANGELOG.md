@@ -2,6 +2,13 @@
 All notable changes to project will be documented in this file.
 
 
+## [0.22.1] - 2026-10-25
+### Fix
+- Correctly resolve an include element's path
+- Fix layout deserialisation for xi:include elements
+- Handle xi:include with invalid path
+- Drop the `event` attribute from top-level final states
+
 ## [0.22.0] - 2026-10-21
 ### New
 - Load the `<onentry>` and `<invoke>` actions declared on a top-level final state when importing an SCXML file; previously these actions were silently discarded and lost on the next save

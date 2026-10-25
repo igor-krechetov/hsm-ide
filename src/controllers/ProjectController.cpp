@@ -143,6 +143,8 @@ bool ProjectController::importModel(const QString& path) {
         emit projectModelChanged(this);
     } else {
         qCritical() << "Failed to open file for reading: " << path;
+        mLastImportReport.clear();
+        mLastImportReport.addError(tr("Failed to open file for reading: %1").arg(path));
     }
 
     return res;

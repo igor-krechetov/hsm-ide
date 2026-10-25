@@ -1,6 +1,31 @@
 #include "ModelUtils.hpp"
 
+#include <QDir>
+#include <QFileInfo>
+
 namespace model {
+
+QString resolveIncludePath(const QString& includingFilePath, const QString& includePath) {
+    QString resolved;
+
+    if (includePath.isEmpty()) {
+        // Nothing to resolve.
+        resolved = includePath;
+    } else if (QDir::isAbsolutePath(includePath)) {
+        // Absolute include path passes through unchanged (mirrors os.path.join with an
+        // absolute second argument).
+        resolved = QDir::cleanPath(includePath);
+    } else if (includingFilePath.isEmpty()) {
+        // No including file to resolve against (e.g. untitled project): leave as-is.
+        resolved = includePath;
+    } else {
+        // Relative include path resolves against the directory of the including file.
+        const QString includingDir = QFileInfo(includingFilePath).absolutePath();
+        resolved = QFileInfo(QDir(includingDir), includePath).absoluteFilePath();
+    }
+
+    return resolved;
+}
 
 QString sanitiseIdentifier(const QString& input) {
     // remove all characters to make "input" compliant with C++ identifier name rules

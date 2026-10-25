@@ -1,5 +1,7 @@
 #include "MainEditorController.hpp"
 
+#include <qlogging.h>
+
 #include <QApplication>
 #include <QMap>
 #include <QString>
@@ -78,6 +80,7 @@ ProjectControllerPtr MainEditorController::createProject() {
 }
 
 ProjectControllerPtr MainEditorController::openProject(const QString& projectPath) {
+    qDebug() << "MainEditorController::openProject: " << projectPath;
     ProjectControllerPtr project = getProjectByPath(projectPath);
 
     if (project.isNull()) {
@@ -92,7 +95,9 @@ ProjectControllerPtr MainEditorController::openProject(const QString& projectPat
                 emit projectImportFinished(projectPath, project->lastImportReport());
 
                 if (false == imported) {
+                    qDebug() << "failed to load " << projectPath;
                     // do not open project if we failed to load the model
+                    emit projectClosed(project);
                     project.reset();
                 } else {
                     emit hsmProjectOpened(projectPath);
@@ -220,7 +225,10 @@ void MainEditorController::handleHsmElementDoubleClick(QWeakPointer<model::State
     auto ptrInclude = model::hsmDynamicCast<model::IncludeEntity>(entity.toStrongRef(), model::StateType::INCLUDE);
 
     if (ptrInclude) {
-        openProject(ptrInclude->path());
+        // Resolve the include's path relative to the including project's file directory,
+        // matching the reference scxml2gen semantics, before opening it.
+        const QString includingFilePath = mCurrentProject ? mCurrentProject->modelPath() : QString();
+        openProject(model::resolveIncludePath(includingFilePath, ptrInclude->path()));
     }
 }
 

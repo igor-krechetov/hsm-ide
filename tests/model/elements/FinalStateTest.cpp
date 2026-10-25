@@ -71,14 +71,12 @@ void FinalStateTest::EnteringActionPropertyRoundTrip() {
 
 void FinalStateTest::CopyEntityDataClonesActions() {
     auto source = QSharedPointer<model::FinalState>::create("Done");
-    source->setEvent("finished");
     source->setOnEnteringAction(QString("enterCb"));
     source->setOnStateChangedAction(QString("notifyCb"));
 
     auto copy = QSharedPointer<model::FinalState>::create("Copy");
     copy->copyEntityData(*source);
 
-    QCOMPARE(QString("finished"), copy->event());
     QCOMPARE(1, copy->onEnteringActions().size());
     QCOMPARE(QString("enterCb"), copy->onEnteringActions().at(0)->serialize());
     QCOMPARE(QString("notifyCb"), copy->onStateChangedAction()->serialize());

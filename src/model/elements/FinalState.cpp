@@ -13,28 +13,26 @@ void FinalState::accept(class IModelVisitor* visitor) {
     }
 }
 
-const QString& FinalState::event() const {
-    return mEvent;
-}
+// const QString& FinalState::event() const {
+//     return mEvent;
+// }
 
-void FinalState::setEvent(const QString& event) {
-    if (mEvent != event) {
-        mEvent = event;
-        emit modelDataChanged(sharedFromThis().toWeakRef());
-    }
-}
+// void FinalState::setEvent(const QString& event) {
+//     if (mEvent != event) {
+//         mEvent = event;
+//         emit modelDataChanged(sharedFromThis().toWeakRef());
+//     }
+// }
 
 QStringList FinalState::properties() const {
     // A top-level final state never exits, so onExiting is hidden from the property system.
-    return State::properties() + QStringList{"event", "onStateChangedAction", "onEnteringAction"};
+    return State::properties() + QStringList{"onStateChangedAction", "onEnteringAction"};
 }
 
 bool FinalState::setProperty(const QString& key, const QVariant& value) {
     bool handled = true;
 
-    if (key == "event") {
-        setEvent(value.toString());
-    } else if (key == "onExitingAction") {
+    if (key == "onExitingAction") {
         // onExiting is hidden for a final state: treat it as an unknown key (no-op).
         handled = false;
     } else {
@@ -47,9 +45,7 @@ bool FinalState::setProperty(const QString& key, const QVariant& value) {
 QVariant FinalState::getProperty(const QString& key) const {
     QVariant res;
 
-    if (key == "event") {
-        res = mEvent;
-    } else if (key == "onExitingAction") {
+    if (key == "onExitingAction") {
         // onExiting is hidden for a final state: return the same default as an unknown key.
     } else {
         res = StateWithActions::getProperty(key);
@@ -58,12 +54,8 @@ QVariant FinalState::getProperty(const QString& key) const {
     return res;
 }
 
-void FinalState::copyEntityData(const StateMachineEntity& other) {
-    StateWithActions::copyEntityData(other);
-
-    if (const FinalState* fOther = dynamic_cast<const FinalState*>(&other)) {
-        mEvent = fOther->mEvent;
-    }
-}
+// void FinalState::copyEntityData(const StateMachineEntity& other) {
+//     StateWithActions::copyEntityData(other);
+// }
 
 };  // namespace model

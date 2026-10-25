@@ -9,6 +9,7 @@ set(TEST_OBJECTS
     model/StateMachineEntityTest.cpp
     
     model/ModelActionsTest.cpp
+    model/ModelUtilsIncludePathTest.cpp
     model/ModelElementsFactoryTest.cpp
     model/StateMachineModelTest.cpp
     model/ParseErrorCollectorTest.cpp
@@ -56,6 +57,7 @@ set(TEST_OBJECTS
     view/DragDropUtilsPropertyTest.cpp
 
     controllers/MainEditorControllerOpenProjectPropertyTest.cpp
+    controllers/ProjectImportReportPropertyTest.cpp
 )
 
 foreach(testObject ${TEST_OBJECTS})

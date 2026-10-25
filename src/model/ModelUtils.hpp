@@ -39,6 +39,18 @@ QSharedPointer<T> hsmDynamicCast(QSharedPointer<StateMachineEntity> entity) {
 // Normalize literal for usage in code generation
 QString sanitiseIdentifier(const QString& input);
 
+// Resolve an <include> element's referenced file path the same way the 
+// scxml2gen tool does:
+//   - an absolute include path is returned unchanged (cleaned);
+//   - a relative include path is resolved against the directory of the including
+//     SCXML/project file (not the process current working directory);
+//   - an empty include path is returned unchanged;
+//   - an empty including-file path leaves a relative include unchanged (nothing to
+//     resolve against), so behavior is no worse than before.
+// Nested includes chain naturally: each opened project supplies its own path as the
+// base for its own includes.
+QString resolveIncludePath(const QString& includingFilePath, const QString& includePath);
+
 // Reassign a fresh id from the given id generator to every entity in the subtree
 // rooted at `root` (the root state, its descendant states, and all transitions), so an
 // imported/pasted subtree can be merged into a model without colliding with existing

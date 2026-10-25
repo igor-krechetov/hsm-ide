@@ -430,11 +430,6 @@ void StateMachineSerializer::visitFinalState(const FinalState* finalState) {
 
         AttributeWriter attrWriter(*mXmlWriter);
         mActiveStrategy->writeEntityAttributes(attrWriter, finalState);
-
-        if (finalState->event().isEmpty() == false) {
-            mXmlWriter->writeAttribute("event", finalState->event());
-        }
-
         mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, finalState);
 
         // A top-level <final> supports only <onentry> and <invoke> (no <onexit>), so we do
@@ -717,6 +712,37 @@ QSharedPointer<StateMachineEntity> StateMachineSerializer::parseChildEntity(cons
     return entity;
 }
 
+void StateMachineSerializer::parseStateActionChildren(QSharedPointer<StateWithActions>& entity,
+                                                      bool supportExit,
+                                                      bool supportInvoke) {
+    QXmlStreamReader::TokenType token = mXmlReader->readNext();
+
+    while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
+        if (QXmlStreamReader::StartElement == token) {
+            qDebug() << __LINE__ << "Found" << mXmlReader->name();
+            if (mXmlReader->name() == QStringView(u"onentry")) {
+                entity->setOnEnteringActions(parseOnEntry());
+            } else if (supportExit && (mXmlReader->name() == QStringView(u"onexit"))) {
+                entity->setOnExitingActions(parseOnExit());
+            } else if (supportInvoke && (mXmlReader->name() == QStringView(u"invoke"))) {
+                entity->setOnStateChangedAction(parseInvoke());
+            } else {
+                // TODO: handle errors if can't parse child entities
+                QSharedPointer<StateMachineEntity> newParent;
+                parseChildEntity(entity, &newParent);
+
+                if (newParent) {
+                    // A child <xi:include> promotes the state to an IncludeEntity; rebind so
+                    // subsequent children and the returned entity point at the promoted one.
+                    entity = newParent.dynamicCast<model::StateWithActions>();
+                }
+            }
+        }
+
+        token = mXmlReader->readNext();
+    }
+}
+
 QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
     qDebug() << Q_FUNC_INFO;
     QSharedPointer<RegularState> entity;
@@ -733,31 +759,10 @@ QSharedPointer<RegularState> StateMachineSerializer::parseRegularState() {
             model::ModelElementsFactory::createStateWithId(model::StateType::REGULAR, uid).dynamicCast<model::RegularState>();
         entity->setName(stateId);
 
-        QXmlStreamReader::TokenType token = mXmlReader->readNext();
-
-        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
-            if (QXmlStreamReader::StartElement == token) {
-                qDebug() << __LINE__ << "Found" << mXmlReader->name();
-                if (mXmlReader->name() == QStringView(u"onentry")) {
-                    entity->setOnEnteringActions(parseOnEntry());
-                } else if (mXmlReader->name() == QStringView(u"onexit")) {
-                    entity->setOnExitingActions(parseOnExit());
-                } else if (mXmlReader->name() == QStringView(u"invoke")) {
-                    entity->setOnStateChangedAction(parseInvoke());
-                } else {
-                    // TODO: handle errors if can't parse child entities
-                    QSharedPointer<StateMachineEntity> newParent;
-                    QSharedPointer<StateMachineEntity> childEntity = parseChildEntity(entity, &newParent);
-
-                    if (newParent) {
-                        // TODO: better casting
-                        entity = newParent.dynamicCast<model::RegularState>();
-                    }
-                }
-            }
-
-            token = mXmlReader->readNext();
-        }
+        QSharedPointer<StateWithActions> actionEntity = entity;
+        parseStateActionChildren(actionEntity, true, true);
+        // needed because of the potential promition to <xi:include>
+        entity = actionEntity.dynamicCast<model::RegularState>();
     } else {
         handleParseError("State element without id attribute");
     }
@@ -796,24 +801,8 @@ QSharedPointer<ExitPoint> StateMachineSerializer::parseExitPoint() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        QXmlStreamReader::TokenType token = mXmlReader->readNext();
-
-        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
-            if (QXmlStreamReader::StartElement == token) {
-                if (mXmlReader->name() == QStringView(u"onentry")) {
-                    entity->setOnEnteringActions(parseOnEntry());
-                } else if (mXmlReader->name() == QStringView(u"onexit")) {
-                    entity->setOnExitingActions(parseOnExit());
-                } else if (mXmlReader->name() == QStringView(u"invoke")) {
-                    entity->setOnStateChangedAction(parseInvoke());
-                } else {
-                    // TODO: handle errors if can't parse child entities
-                    parseChildEntity(entity);
-                }
-            }
-
-            token = mXmlReader->readNext();
-        }
+        QSharedPointer<StateWithActions> actionEntity = entity;
+        parseStateActionChildren(actionEntity, /*supportExit=*/true, /*supportInvoke=*/true);
     }
 
     return entity;
@@ -825,34 +814,18 @@ QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
 
     if ((mXmlReader->tokenType() == QXmlStreamReader::StartElement) && (mXmlReader->name() == QStringView(u"final"))) {
         const QString stateId = mXmlReader->attributes().value("id").toString();
-        const QString eventAttr = tryGetElementAttribute("event");
 
         entity = QSharedPointer<FinalState>::create(stateId);
-        entity->setEvent(eventAttr);
 
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
         // A top-level <final> terminates the state machine, so it has no exit action:
-        // only <onentry> and <invoke> are dispatched here. An <onexit> (or any other
-        // unsupported child) falls through to parseChildEntity, preserving the existing
-        // unsupported-child handling and parse-report warning path.
-        QXmlStreamReader::TokenType token = mXmlReader->readNext();
-
-        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
-            if (QXmlStreamReader::StartElement == token) {
-                if (mXmlReader->name() == QStringView(u"onentry")) {
-                    entity->setOnEnteringActions(parseOnEntry());
-                } else if (mXmlReader->name() == QStringView(u"invoke")) {
-                    entity->setOnStateChangedAction(parseInvoke());
-                } else {
-                    // Any other child (including an unsupported <onexit>) is handled as before.
-                    parseChildEntity(entity);
-                }
-            }
-
-            token = mXmlReader->readNext();
-        }
+        // only <onentry> and <invoke> are dispatched here (matching visitFinalState on the
+        // write side). An <onexit> (or any other unsupported child) falls through to
+        // parseChildEntity, preserving the existing unsupported-child warning path.
+        QSharedPointer<StateWithActions> actionEntity = entity;
+        parseStateActionChildren(actionEntity, /*supportExit=*/false, /*supportInvoke=*/true);
     }
 
     return entity;

@@ -16,6 +16,7 @@ int runEntryPointTest(int argc, char** argv) __attribute__((weak));
 int runExitPointTest(int argc, char** argv) __attribute__((weak));
 int runTransitionTest(int argc, char** argv) __attribute__((weak));
 int runModelActionsTest(int argc, char** argv) __attribute__((weak));
+int runModelUtilsIncludePathTest(int argc, char** argv) __attribute__((weak));
 int runMultipleActionsTest(int argc, char** argv) __attribute__((weak));
 int runIncludeEntityTest(int argc, char** argv) __attribute__((weak));
 int runModelRootStateTest(int argc, char** argv) __attribute__((weak));
@@ -43,6 +44,7 @@ int runWorkspaceViewCollisionPropertyTest(int argc, char** argv) __attribute__((
 int runWorkspaceViewDropPropertyTest(int argc, char** argv) __attribute__((weak));
 int runWorkspaceViewCopyDecisionTest(int argc, char** argv) __attribute__((weak));
 int runMainEditorControllerOpenProjectPropertyTest(int argc, char** argv) __attribute__((weak));
+int runProjectImportReportPropertyTest(int argc, char** argv) __attribute__((weak));
 int runDragDropUtilsPropertyTest(int argc, char** argv) __attribute__((weak));
 int runHsmElementDefaultSizeTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionAnchorPreservationTest(int argc, char** argv) __attribute__((weak));
@@ -81,6 +83,7 @@ int main(int argc, char** argv) {
         runExitPointTest,
         runTransitionTest,
         runModelActionsTest,
+        runModelUtilsIncludePathTest,
         runMultipleActionsTest,
         runIncludeEntityTest,
         runModelRootStateTest,
@@ -108,6 +111,7 @@ int main(int argc, char** argv) {
         runWorkspaceViewDropPropertyTest,
         runWorkspaceViewCopyDecisionTest,
         runMainEditorControllerOpenProjectPropertyTest,
+        runProjectImportReportPropertyTest,
         runDragDropUtilsPropertyTest,
         runHsmElementDefaultSizeTest,
         runHsmTransitionAnchorPreservationTest,
