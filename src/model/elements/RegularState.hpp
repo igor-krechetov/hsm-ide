@@ -3,54 +3,19 @@
 
 #include <QSet>
 
-#include "State.hpp"
 #include "Transition.hpp"
 #include "actions/IModelAction.hpp"
+#include "private/StateWithActions.hpp"
 
 namespace model {
 
-class RegularState : public State {
+class RegularState : public StateWithActions {
 public:
     explicit RegularState(const QString& name);
     virtual ~RegularState();
     RegularState& operator=(const RegularState& other);
 
     void accept(class IModelVisitor* visitor) override;
-
-    // Getters
-    QSharedPointer<IModelAction> onStateChangedAction() const;
-    const ModelActionList& onEnteringActions() const;
-    const ModelActionList& onExitingActions() const;
-
-    // Backward-compatible single-action getters (first action, or a NONE action if empty)
-    QSharedPointer<IModelAction> onEnteringAction() const;
-    QSharedPointer<IModelAction> onExitingAction() const;
-
-    // Setters
-    void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
-
-    // Multi-action list mutators (onEntering / onExiting)
-    void setOnEnteringActions(const ModelActionList& actions);
-    void setOnExitingActions(const ModelActionList& actions);
-    void addOnEnteringAction(const QSharedPointer<IModelAction>& action);
-    void addOnExitingAction(const QSharedPointer<IModelAction>& action);
-    void insertOnEnteringAction(const int index, const QSharedPointer<IModelAction>& action);
-    void insertOnExitingAction(const int index, const QSharedPointer<IModelAction>& action);
-    void removeOnEnteringAction(const int index);
-    void removeOnExitingAction(const int index);
-    void moveOnEnteringAction(const int from, const int to);
-    void moveOnExitingAction(const int from, const int to);
-
-    bool hasOnStateChangedAction() const;
-    bool hasOnEnteringAction() const;
-    bool hasOnExitingAction() const;
-
-    void setOnStateChangedAction(const QString& actionData);
-    // Backward-compatible single-action setters (reset the list to one action)
-    void setOnEnteringAction(const QSharedPointer<IModelAction>& action);
-    void setOnExitingAction(const QSharedPointer<IModelAction>& action);
-    void setOnEnteringAction(const QString& actionData);
-    void setOnExitingAction(const QString& actionData);
 
     bool addChild(const QSharedPointer<StateMachineEntity>& child) override;
     void addChildState(const QSharedPointer<State>& child);
@@ -70,10 +35,6 @@ public:
     QSharedPointer<RegularState> findRegularState(const EntityID_t id) const;
     QSharedPointer<Transition> findTransition(const EntityID_t id) const;
 
-    QStringList properties() const override;
-    bool setProperty(const QString& key, const QVariant& value) override;
-    QVariant getProperty(const QString& key) const override;
-
     bool forEachChildElement(
         std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
         const int depth = DEPTH_INFINITE,
@@ -87,10 +48,6 @@ private:
                                                 const QSet<EntityID_t>& stateIds);
 
 protected:
-    QSharedPointer<IModelAction> mOnStateChangedAction;
-    ModelActionList mOnEnteringActions;
-    ModelActionList mOnExitingActions;
-
     QList<QSharedPointer<StateMachineEntity>> mChildren;
 };
 

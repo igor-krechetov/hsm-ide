@@ -1,0 +1,10 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="FinalOnEntryOrderMachine">
+    <state id="S1"/>
+    <final id="Done" event="finished">
+        <onentry>
+            <script>a</script>
+            <script>b</script>
+        </onentry>
+        <invoke srcexpr="notifyCb"/>
+    </final>
+</scxml>

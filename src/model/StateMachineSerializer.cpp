@@ -436,7 +436,13 @@ void StateMachineSerializer::visitFinalState(const FinalState* finalState) {
         }
 
         mActiveStrategy->writeEntityChildMetadata(*mXmlWriter, finalState);
-        SCXML_SERIALIZE_ACTION(finalState, hasOnStateChangedAction, onStateChangedAction, "onentry", "script");
+
+        // A top-level <final> supports only <onentry> and <invoke> (no <onexit>), so we do
+        // NOT use SCXML_SERIALIZE_STATE_ACTIONS (which would also emit <onexit>). <onentry>
+        // comes from the entering-action list and the state-changed action serializes as
+        // <invoke srcexpr=...>, keeping parse and serialize symmetric for a top-level final.
+        serializeActionListElement(finalState->onEnteringActions(), QStringLiteral("onentry"), QStringLiteral("script"));
+        SCXML_SERIALIZE_ACTION_ATTR(finalState, hasOnStateChangedAction, onStateChangedAction, "invoke", "srcexpr");
 
         mXmlWriter->writeEndElement();  // final
     }
@@ -827,8 +833,26 @@ QSharedPointer<FinalState> StateMachineSerializer::parseFinalState() {
         EntityID_t uid = mActiveStrategy->resolveEntityId(*mXmlReader, mModel);
         entity->setId(uid);
 
-        // Child parse problems are recorded into the parse report by parseAllChildEntities.
-        parseAllChildEntities(entity);
+        // A top-level <final> terminates the state machine, so it has no exit action:
+        // only <onentry> and <invoke> are dispatched here. An <onexit> (or any other
+        // unsupported child) falls through to parseChildEntity, preserving the existing
+        // unsupported-child handling and parse-report warning path.
+        QXmlStreamReader::TokenType token = mXmlReader->readNext();
+
+        while (!mXmlReader->atEnd() && !mXmlReader->hasError() && (QXmlStreamReader::EndElement != token)) {
+            if (QXmlStreamReader::StartElement == token) {
+                if (mXmlReader->name() == QStringView(u"onentry")) {
+                    entity->setOnEnteringActions(parseOnEntry());
+                } else if (mXmlReader->name() == QStringView(u"invoke")) {
+                    entity->setOnStateChangedAction(parseInvoke());
+                } else {
+                    // Any other child (including an unsupported <onexit>) is handled as before.
+                    parseChildEntity(entity);
+                }
+            }
+
+            token = mXmlReader->readNext();
+        }
     }
 
     return entity;

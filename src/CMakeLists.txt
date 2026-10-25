@@ -51,6 +51,8 @@ set(MODEL_SOURCES
     model/elements/StateMachineEntity.cpp
     model/elements/Transition.cpp
 
+    model/elements/private/StateWithActions.cpp
+
     model/private/EntityIdGenerator.cpp
 
     model/private/serializer/HsmLayoutSerializer.cpp

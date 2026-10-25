@@ -12,6 +12,8 @@ private slots:
     void CallbackPropertiesRoundTrip();
     void ChildAndTransitionSearch();
     void DeleteStateRemovesIncomingAndOutgoingTransitions();
+    void CopyEntityDataPreservesCallback();
+    void AssignmentOperatorPreservesCallback();
 };
 
 void RegularStateTest::CallbackPropertiesRoundTrip() {
@@ -115,6 +117,42 @@ void RegularStateTest::DeleteStateRemovesIncomingAndOutgoingTransitions() {
     QCOMPARE(QSharedPointer<model::State>(), root->findState(stateH->id()));
     QCOMPARE(QSharedPointer<model::Transition>(), root->findTransition(transitionTop->id()));
     QCOMPARE(QSharedPointer<model::Transition>(), root->findTransition(transitionSubstate->id()));
+}
+
+void RegularStateTest::CopyEntityDataPreservesCallback() {
+    model::EntityIdGenerator gen;
+    auto source = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                      .dynamicCast<model::RegularState>();
+    source->setName("S");
+    // A plain callback name matches no action prefix, so copy must fall back to CALLBACK (not NONE)
+    // to preserve the name.
+    source->setOnStateChangedAction(QString("notifyCb"));
+    source->setOnEnteringAction(QString("enterCb"));
+    source->setOnExitingAction(QString("exitCb"));
+
+    auto copy = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, gen)
+                    .dynamicCast<model::RegularState>();
+    copy->copyEntityData(*source);
+
+    QVERIFY(copy->hasOnStateChangedAction());
+    QCOMPARE(QString("notifyCb"), copy->onStateChangedAction()->serialize());
+    QCOMPARE(QString("enterCb"), copy->onEnteringAction()->serialize());
+    QCOMPARE(QString("exitCb"), copy->onExitingAction()->serialize());
+}
+
+void RegularStateTest::AssignmentOperatorPreservesCallback() {
+    auto source = QSharedPointer<model::RegularState>::create("Src");
+    source->setOnStateChangedAction(QString("notifyCb"));
+    source->setOnEnteringAction(QString("enterCb"));
+    source->setOnExitingAction(QString("exitCb"));
+
+    auto dst = QSharedPointer<model::RegularState>::create("Dst");
+    *dst = *source;
+
+    QVERIFY(dst->hasOnStateChangedAction());
+    QCOMPARE(QString("notifyCb"), dst->onStateChangedAction()->serialize());
+    QCOMPARE(QString("enterCb"), dst->onEnteringAction()->serialize());
+    QCOMPARE(QString("exitCb"), dst->onExitingAction()->serialize());
 }
 
 int runRegularStateTest(int argc, char** argv) {

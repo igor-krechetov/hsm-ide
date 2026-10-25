@@ -9,6 +9,7 @@ class ExitPointTest : public QObject {
 private slots:
     void EventAndCallbackProperties();
     void MultipleEntryExitActions();
+    void CopyEntityDataPreservesCallback();
 };
 
 void ExitPointTest::EventAndCallbackProperties() {
@@ -41,6 +42,25 @@ void ExitPointTest::MultipleEntryExitActions() {
     // onStateChanged remains single-action
     QVERIFY(exit->setProperty("onStateChangedAction", "stateCb"));
     QCOMPARE(QString("stateCb"), exit->onStateChangedAction()->serialize());
+}
+
+void ExitPointTest::CopyEntityDataPreservesCallback() {
+    auto source = QSharedPointer<model::ExitPoint>::create("XP");
+    source->setEvent("done");
+    // A plain callback name matches no action prefix, so copy must fall back to CALLBACK (not NONE)
+    // to preserve the name.
+    source->setOnStateChangedAction(QString("notifyCb"));
+    source->setOnEnteringAction(QString("inCb"));
+    source->setOnExitingAction(QString("outCb"));
+
+    auto copy = QSharedPointer<model::ExitPoint>::create("Copy");
+    copy->copyEntityData(*source);
+
+    QVERIFY(copy->hasOnStateChangedAction());
+    QCOMPARE(QString("notifyCb"), copy->onStateChangedAction()->serialize());
+    QCOMPARE(QString("done"), copy->event());
+    QCOMPARE(QString("inCb"), copy->onEnteringAction()->serialize());
+    QCOMPARE(QString("outCb"), copy->onExitingAction()->serialize());
 }
 
 int runExitPointTest(int argc, char** argv) {

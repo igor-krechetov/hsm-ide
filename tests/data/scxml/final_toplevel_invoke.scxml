@@ -1,0 +1,6 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="FinalInvokeMachine">
+    <state id="S1"/>
+    <final id="Done" event="finished">
+        <invoke srcexpr="cb3"/>
+    </final>
+</scxml>

@@ -32,6 +32,14 @@ private slots:
     void DeserializeTransitionScript();
     void DeserializeEntryPointTransitions();
     void DeserializeExitPointAndTargetingTransition();
+    // Top-level <final> action-block parsing (bugfix: final-state-onentry-parsing)
+    void DeserializeTopLevelFinalOnEntry();
+    void DeserializeTopLevelFinalInvoke();
+    void DeserializeTopLevelFinalOnEntryPreservesOrder();
+    void DeserializeTopLevelFinalOnExitUnsupported();
+    void DeserializeTopLevelFinalActionFree();
+    void TopLevelFinalRoundTripOmitsOnExit();
+    void DeserializeAllElementsFinalOnEntry();
     void DeserializeIncludeEntity();
     void DeserializeMalformedXml();
     void DeserializeStateWithoutId();
@@ -813,6 +821,163 @@ void StateMachineSerializerDeserializationTest::MixedInvalidFileReportsAllCatego
     QVERIFY(countMatching(report, "Unrecognized or invalid top-level element") >= 1);
     QCOMPARE(countMatching(report, "State element without id attribute"), 1);
     QVERIFY(countMatching(report, "non-numeric coordinate/dimension") >= 1);
+}
+
+namespace {
+
+// Serialize an action list into a plain QStringList of callback names, in order.
+QStringList enteringActionNames(const QSharedPointer<model::FinalState>& finalState) {
+    QStringList names;
+
+    for (const auto& action : finalState->onEnteringActions()) {
+        names.append(action->serialize());
+    }
+
+    return names;
+}
+
+QSharedPointer<model::FinalState> topLevelFinal(const QSharedPointer<model::StateMachineModel>& model,
+                                                const QString& name) {
+    return model->root()->findChildStateByName(name).dynamicCast<model::FinalState>();
+}
+
+}  // namespace
+
+/**
+ * @brief A top-level <final> with <onentry> loads its entering action (bug condition).
+ *
+ * Validates Property 1 (Requirement 2.1): the discarded <onentry> is now loaded.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalOnEntry() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_onentry.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto done = topLevelFinal(model, "Done");
+    QVERIFY(done);
+    QCOMPARE(QStringList{"cb1"}, enteringActionNames(done));
+}
+
+/**
+ * @brief A top-level <final> with <invoke> loads its state-changed action (Requirement 2.2).
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalInvoke() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_invoke.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto done = topLevelFinal(model, "Done");
+    QVERIFY(done);
+    QVERIFY(done->hasOnStateChangedAction());
+    QCOMPARE(QString("cb3"), done->onStateChangedAction()->serialize());
+}
+
+/**
+ * @brief Multiple <onentry> scripts on a top-level <final> load in document order (Requirement 2.1).
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalOnEntryPreservesOrder() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_onentry_order.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto done = topLevelFinal(model, "Done");
+    QVERIFY(done);
+    QCOMPARE((QStringList{"a", "b"}), enteringActionNames(done));
+    QVERIFY(done->hasOnStateChangedAction());
+    QCOMPARE(QString("notifyCb"), done->onStateChangedAction()->serialize());
+}
+
+/**
+ * @brief A top-level <final> with only <onexit> loads no actions - <onexit> is unsupported (Requirement 3.1).
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalOnExitUnsupported() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_onexit_unsupported.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto done = topLevelFinal(model, "Done");
+    QVERIFY(done);
+    QVERIFY(!done->hasOnEnteringAction());
+    QVERIFY(!done->hasOnStateChangedAction());
+    QCOMPARE(QString("finished"), done->event());
+}
+
+/**
+ * @brief An action-free top-level <final> loads with id and event only (Requirement 3.4).
+ */
+void StateMachineSerializerDeserializationTest::DeserializeTopLevelFinalActionFree() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_actionfree.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto done = topLevelFinal(model, "Done");
+    QVERIFY(done);
+    QVERIFY(!done->hasOnEnteringAction());
+    QVERIFY(!done->hasOnStateChangedAction());
+    QCOMPARE(QString("finished"), done->event());
+}
+
+/**
+ * @brief load -> save -> load of a top-level <final> preserves <onentry>/<invoke> and emits no <onexit> (Requirement 3.6).
+ */
+void StateMachineSerializerDeserializationTest::TopLevelFinalRoundTripOmitsOnExit() {
+    const QString scxml = test::loadScxmlFixture("final_toplevel_onentry_order.scxml");
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    const QString saved = serializer.serializeToScxml(model, model::SerializationFormat::HSM, true, true);
+    QVERIFY(!saved.contains("<onexit"));
+    QVERIFY(saved.contains("<onentry"));
+    QVERIFY(saved.contains("srcexpr=\"notifyCb\""));
+
+    auto reloaded = serializer.deserializeFromScxml(saved);
+    QVERIFY(reloaded);
+    auto done = topLevelFinal(reloaded, "Done");
+    QVERIFY(done);
+    QCOMPARE((QStringList{"a", "b"}), enteringActionNames(done));
+    QVERIFY(done->hasOnStateChangedAction());
+    QCOMPARE(QString("notifyCb"), done->onStateChangedAction()->serialize());
+}
+
+/**
+ * @brief Integration: all_elements.scxml top-level final FinalState1 now carries its <onentry> action.
+ */
+void StateMachineSerializerDeserializationTest::DeserializeAllElementsFinalOnEntry() {
+    QFile file(QStringLiteral("tests/data/manual_tests/all_elements.scxml"));
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QSKIP("all_elements.scxml manual fixture not reachable from this working directory");
+    }
+
+    const QString scxml = QString::fromUtf8(file.readAll());
+    file.close();
+    QVERIFY(!scxml.isEmpty());
+
+    model::StateMachineSerializer serializer;
+    auto model = serializer.deserializeFromScxml(scxml);
+    QVERIFY(model);
+
+    auto finalState1 = topLevelFinal(model, "FinalState1");
+    QVERIFY(finalState1);
+    QCOMPARE(QStringList{"callbackName"}, enteringActionNames(finalState1));
 }
 
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) {

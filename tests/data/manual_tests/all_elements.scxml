@@ -1,41 +1,124 @@
 <?xml version="1.0"?>
-<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="Untitled">
-    <state id="State_1">
-        <qt:editorinfo geometry="-187.00;-193.00;0;0;538.00;352.00"/>
-        <initial>
-            <qt:editorinfo geometry="222.00;50.00;0;0;42.00;42.00"/>
-            <transition event="NEW_EVENT" type="external" target="State_40"/>
-            <transition event="NEW_EVENT" type="external" target="State_7"/>
+<scxml encoding="UTF-8" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:hsm="https://hsm-ide.dev/scxml" name="all_elements">
+    <state id="ParentState" hsm:uid="2">
+        <initial hsm:uid="3">
+            <transition event="NEW_EVENT" type="external" target="Child1" hsm:uid="4"/>
+            <transition event="NEW_EVENT" type="external" target="Child2" hsm:uid="5"/>
         </initial>
-        <transition event="NEW_EVENT" type="external" target="State_23"/>
-        <final id="State_35">
-            <qt:editorinfo geometry="108.00;290.00;0;0;42.00;42.00"/>
+        <transition event="NEW_EVENT" type="external" target="NeigborState" hsm:uid="6"/>
+        <final id="ExitPoint_Event" hsm:uid="7" event="EVENT3"/>
+        <state id="Child1" hsm:uid="8">
+            <onentry>
+                <script>onEntering</script>
+                <script>start_timer(NEW_TIMER, 1000, false)</script>
+            </onentry>
+            <onexit>
+                <script>onExit</script>
+                <script>stop_timer(NEW_TIMER)</script>
+                <script>transition(NEW_EVENT, 123, 456)</script>
+            </onexit>
+            <invoke srcexpr="onChanged"/>
+            <transition event="NEW_EVENT" type="external" target="ExitPoint_Event" hsm:uid="9">
+                <script>onTransition</script>
+            </transition>
+            <transition event="NEW_EVENT" type="external" target="ExitPoint_Default" hsm:uid="32"/>
+        </state>
+        <history id="HistoryShallow" type="shallow" hsm:uid="10"/>
+        <state id="Child2" hsm:uid="11">
+            <state id="Child2_1" hsm:uid="20">
+                <onentry>
+                    <script>restart_timer(NEW_TIMER)</script>
+                </onentry>
+                <transition event="NEW_EVENT" type="external" target="Child2_2" hsm:uid="23"/>
+            </state>
+            <state id="Child2_2" hsm:uid="22">
+                <invoke srcexpr="callbackName"/>
+                <transition event="NEW_EVENT" type="internal" target="Child2_2" cond="condition1 is false" hsm:uid="29">
+                    <script>callbackName</script>
+                </transition>
+                <transition event="NEW_EVENT" type="external" target="Child2_2" cond="condition2 is true" hsm:uid="30">
+                    <script>start_timer(NEW_TIMER, 1000, true)</script>
+                </transition>
+            </state>
+            <initial hsm:uid="24">
+                <transition type="external" target="Child2_1" hsm:uid="25"/>
+            </initial>
+            <transition event="NEW_EVENT" type="external" target="Child1" hsm:uid="27"/>
+        </state>
+        <history id="HistoryDeep" type="deep" hsm:uid="19"/>
+        <final id="ExitPoint_Default" hsm:uid="31">
+            <onentry>
+                <script>callbackName</script>
+                <script>start_timer(NEW_TIMER, 1000, false)</script>
+            </onentry>
+            <onexit>
+                <script>callbackName</script>
+                <script>stop_timer(NEW_TIMER)</script>
+            </onexit>
+            <invoke srcexpr="callbackName"/>
         </final>
-        <state id="State_40">
-            <qt:editorinfo geometry="31.00;134.00;0;0;202.00;120.00"/>
-            <transition event="NEW_EVENT" type="external" target="State_35"/>
-        </state>
-        <history id="State_59" type="shallow">
-            <qt:editorinfo geometry="350.00;50.00;0;0;42.00;42.00"/>
-        </history>
-        <state id="State_7">
-            <qt:editorinfo geometry="256.00;138.00;0;0;200.00;111.00"/>
-        </state>
     </state>
-    <state id="State_23">
-        <transition event="NEW_EVENT" type="external" target="State_31"/>
-        <transition event="NEW_EVENT" type="external" target="State_59">
-            <qt:editorinfo localGeometry="600.31;-122.17"/>
+    <state id="NeigborState" hsm:uid="28">
+        <onentry>
+            <script>callbackName</script>
+        </onentry>
+        <onexit>
+            <script>callbackName</script>
+        </onexit>
+        <invoke srcexpr="callbackName"/>
+        <transition event="NEW_EVENT" type="external" target="FinalState1" hsm:uid="13"/>
+        <transition event="NEW_EVENT" type="external" target="HistoryShallow" hsm:uid="14"/>
+        <transition event="NEW_EVENT" type="external" target="HistoryDeep" cond="condition1 is true" hsm:uid="26">
+            <script>onTransition</script>
         </transition>
-        <xi:include href="" parse="xml">
-            <qt:editorinfo geometry="480.00;-89.00;0;0;242.00;142.00"/>
-        </xi:include>
+        <xi:include href="transitions.scxml" parse="xml"/>
     </state>
-    <initial>
-        <qt:editorinfo geometry="8.00;-278.00;0;0;42.00;42.00"/>
-        <transition event="NEW_EVENT" type="external" target="State_1"/>
+    <initial hsm:uid="16">
+        <transition type="external" target="ParentState" hsm:uid="17"/>
     </initial>
-    <final id="State_31">
-        <qt:editorinfo geometry="579.00;123.00;0;0;42.00;42.00"/>
+    <final id="FinalState1" hsm:uid="18">
+        <onentry>
+            <script>callbackName</script>
+        </onentry>
     </final>
+    <hsm:editor>
+        <hsm:layout>
+            <hsm:state uid="2" x="-640.00" y="-160.00" width="1180.00" height="700.00"/>
+            <hsm:state uid="3" x="280.00" y="100.00" width="40.00" height="40.00"/>
+            <hsm:transition uid="4">
+                <hsm:points geometry="140.00,180.00"/>
+            </hsm:transition>
+            <hsm:transition uid="5">
+                <hsm:points geometry="440.00,180.00"/>
+            </hsm:transition>
+            <hsm:transition uid="6"/>
+            <hsm:state uid="7" x="100.00" y="560.00" width="40.00" height="40.00"/>
+            <hsm:state uid="8" x="40.00" y="240.00" width="282.00" height="224.00"/>
+            <hsm:transition uid="9"/>
+            <hsm:transition uid="32"/>
+            <hsm:state uid="10" x="1080.00" y="140.00" width="40.00" height="40.00"/>
+            <hsm:state uid="11" x="380.00" y="240.00" width="680.00" height="435.00"/>
+            <hsm:state uid="20" x="160.00" y="100.00" width="220.00" height="122.00"/>
+            <hsm:transition uid="23"/>
+            <hsm:state uid="22" x="160.00" y="280.00" width="620.00" height="150.00"/>
+            <hsm:transition uid="29"/>
+            <hsm:transition uid="30"/>
+            <hsm:state uid="24" x="60.00" y="120.00" width="40.00" height="40.00"/>
+            <hsm:transition uid="25"/>
+            <hsm:transition uid="27"/>
+            <hsm:state uid="19" x="1080.00" y="80.00" width="40.00" height="40.00"/>
+            <hsm:state uid="31" x="260.00" y="560.00" width="40.00" height="40.00"/>
+            <hsm:state uid="28" x="800.00" y="100.00" width="240.00" height="140.00"/>
+            <hsm:transition uid="13"/>
+            <hsm:transition uid="14">
+                <hsm:points geometry="820.00,0.00"/>
+            </hsm:transition>
+            <hsm:transition uid="26">
+                <hsm:points geometry="920.00,-60.00"/>
+            </hsm:transition>
+            <hsm:state uid="16" x="120.00" y="-280.00" width="40.00" height="40.00"/>
+            <hsm:transition uid="17"/>
+            <hsm:state uid="18" x="900.00" y="360.00" width="40.00" height="40.00"/>
+        </hsm:layout>
+    </hsm:editor>
 </scxml>

@@ -9,8 +9,7 @@
 namespace model {
 
 RegularState::RegularState(const QString& name)
-    : State(name, StateType::REGULAR)
-    , mOnStateChangedAction(ModelActionFactory::createModelAction(ModelAction::NONE)) {}
+    : StateWithActions(name, StateType::REGULAR) {}
 
 RegularState::~RegularState() {
     qDebug() << "DELETE RegularState:" << this;
@@ -21,7 +20,7 @@ RegularState& RegularState::operator=(const RegularState& other) {
     if (this != &other) {
         State::operator=(other);
         mOnStateChangedAction =
-            ModelActionFactory::createModelActionFromData(other.onStateChangedAction()->serialize(), ModelAction::NONE);
+            ModelActionFactory::createModelActionFromData(other.onStateChangedAction()->serialize(), ModelAction::CALLBACK);
         mOnEnteringActions = ModelActionUtils::cloneActionList(other.onEnteringActions());
         mOnExitingActions = ModelActionUtils::cloneActionList(other.onExitingActions());
     }
@@ -33,105 +32,6 @@ void RegularState::accept(class IModelVisitor* visitor) {
     if (visitor) {
         visitor->visitRegularState(this);
     }
-}
-
-QSharedPointer<IModelAction> RegularState::onStateChangedAction() const {
-    return mOnStateChangedAction;
-}
-
-const ModelActionList& RegularState::onEnteringActions() const {
-    return mOnEnteringActions;
-}
-
-const ModelActionList& RegularState::onExitingActions() const {
-    return mOnExitingActions;
-}
-
-QSharedPointer<IModelAction> RegularState::onEnteringAction() const {
-    return (mOnEnteringActions.isEmpty() ? ModelActionFactory::createModelAction(ModelAction::NONE)
-                                         : mOnEnteringActions.first());
-}
-
-QSharedPointer<IModelAction> RegularState::onExitingAction() const {
-    return (mOnExitingActions.isEmpty() ? ModelActionFactory::createModelAction(ModelAction::NONE) : mOnExitingActions.first());
-}
-
-void RegularState::setOnStateChangedAction(const QSharedPointer<IModelAction>& action) {
-    mOnStateChangedAction = (action ? action : ModelActionFactory::createModelAction(ModelAction::NONE));
-
-    emit modelDataChanged(sharedFromThis().toWeakRef());
-}
-
-void RegularState::setOnEnteringActions(const ModelActionList& actions) {
-    setActions(mOnEnteringActions, actions);
-}
-
-void RegularState::setOnExitingActions(const ModelActionList& actions) {
-    setActions(mOnExitingActions, actions);
-}
-
-void RegularState::addOnEnteringAction(const QSharedPointer<IModelAction>& action) {
-    addAction(mOnEnteringActions, action);
-}
-
-void RegularState::addOnExitingAction(const QSharedPointer<IModelAction>& action) {
-    addAction(mOnExitingActions, action);
-}
-
-void RegularState::insertOnEnteringAction(const int index, const QSharedPointer<IModelAction>& action) {
-    insertAction(mOnEnteringActions, index, action);
-}
-
-void RegularState::insertOnExitingAction(const int index, const QSharedPointer<IModelAction>& action) {
-    insertAction(mOnExitingActions, index, action);
-}
-
-void RegularState::removeOnEnteringAction(const int index) {
-    removeAction(mOnEnteringActions, index);
-}
-
-void RegularState::removeOnExitingAction(const int index) {
-    removeAction(mOnExitingActions, index);
-}
-
-void RegularState::moveOnEnteringAction(const int from, const int to) {
-    moveAction(mOnEnteringActions, from, to);
-}
-
-void RegularState::moveOnExitingAction(const int from, const int to) {
-    moveAction(mOnExitingActions, from, to);
-}
-
-bool RegularState::hasOnStateChangedAction() const {
-    return (mOnStateChangedAction && mOnStateChangedAction->type() != ModelAction::NONE);
-}
-
-bool RegularState::hasOnEnteringAction() const {
-    return (mOnEnteringActions.isEmpty() == false);
-}
-
-bool RegularState::hasOnExitingAction() const {
-    return (mOnExitingActions.isEmpty() == false);
-}
-
-void RegularState::setOnStateChangedAction(const QString& actionData) {
-    setOnStateChangedAction(ModelActionFactory::createModelActionFromData(actionData, ModelAction::CALLBACK));
-}
-
-void RegularState::setOnEnteringAction(const QSharedPointer<IModelAction>& action) {
-    setActions(mOnEnteringActions, ModelActionUtils::singleActionList(action));
-}
-
-void RegularState::setOnExitingAction(const QSharedPointer<IModelAction>& action) {
-    setActions(mOnExitingActions, ModelActionUtils::singleActionList(action));
-}
-
-void RegularState::setOnEnteringAction(const QString& actionData) {
-    setOnEnteringAction(ModelActionFactory::createModelActionFromData(actionData, ModelAction::CALLBACK));
-}
-
-void RegularState::setOnExitingAction(const QString& actionData) {
-    setOnExitingAction(ModelActionFactory::createModelActionFromData(actionData, ModelAction::CALLBACK));
 }
 
 bool RegularState::addChild(const QSharedPointer<StateMachineEntity>& child) {
@@ -318,58 +218,6 @@ QSharedPointer<Transition> RegularState::findTransition(const EntityID_t id) con
     return res;
 }
 
-QStringList RegularState::properties() const {
-    return State::properties() + QStringList{"onStateChangedAction", "onEnteringAction", "onExitingAction"};
-}
-
-bool RegularState::setProperty(const QString& key, const QVariant& value) {
-    bool handled = true;
-
-    if (key == "onStateChangedAction") {
-        if (value.canConvert<QSharedPointer<IModelAction>>()) {
-            setOnStateChangedAction(value.value<QSharedPointer<IModelAction>>());
-        } else {
-            setOnStateChangedAction(value.toString());
-        }
-    } else if (key == "onEnteringAction") {
-        if (value.canConvert<ModelActionList>()) {
-            setOnEnteringActions(value.value<ModelActionList>());
-        } else if (value.canConvert<QSharedPointer<IModelAction>>()) {
-            setOnEnteringAction(value.value<QSharedPointer<IModelAction>>());
-        } else {
-            setOnEnteringAction(value.toString());
-        }
-    } else if (key == "onExitingAction") {
-        if (value.canConvert<ModelActionList>()) {
-            setOnExitingActions(value.value<ModelActionList>());
-        } else if (value.canConvert<QSharedPointer<IModelAction>>()) {
-            setOnExitingAction(value.value<QSharedPointer<IModelAction>>());
-        } else {
-            setOnExitingAction(value.toString());
-        }
-    } else {
-        handled = State::setProperty(key, value);
-    }
-
-    return handled;
-}
-
-QVariant RegularState::getProperty(const QString& key) const {
-    QVariant res;
-
-    if (key == "onStateChangedAction") {
-        res = QVariant::fromValue(mOnStateChangedAction);
-    } else if (key == "onEnteringAction") {
-        res = QVariant::fromValue(mOnEnteringActions);
-    } else if (key == "onExitingAction") {
-        res = QVariant::fromValue(mOnExitingActions);
-    } else {
-        res = State::getProperty(key);
-    }
-
-    return res;
-}
-
 bool RegularState::forEachChildElement(
     std::function<bool(QSharedPointer<StateMachineEntity>, QSharedPointer<StateMachineEntity>)> callback,
     const int depth,
@@ -403,16 +251,9 @@ bool RegularState::forEachChildElement(
 }
 
 void RegularState::copyEntityData(const StateMachineEntity& other) {
-    State::copyEntityData(other);
+    StateWithActions::copyEntityData(other);
 
-    if (const RegularState* rOther = dynamic_cast<const RegularState*>(&other)) {
-        mOnStateChangedAction =
-            ModelActionFactory::createModelActionFromData(rOther->onStateChangedAction()->serialize(), ModelAction::NONE);
-        mOnEnteringActions = ModelActionUtils::cloneActionList(rOther->onEnteringActions());
-        mOnExitingActions = ModelActionUtils::cloneActionList(rOther->onExitingActions());
-
-        // mChildren is not copied as it represents owned children, not shallow data
-    }
+    // mChildren is not copied as it represents owned children, not shallow data
 }
 
 // =================================================================================================================

@@ -1,26 +1,20 @@
 #ifndef FINALSTATE_HPP
 #define FINALSTATE_HPP
 
-#include "State.hpp"
 #include "actions/IModelAction.hpp"
+#include "private/StateWithActions.hpp"
 
 namespace model {
 
-class FinalState : public State {
+class FinalState : public StateWithActions {
 public:
     explicit FinalState(const QString& name);
     virtual ~FinalState() = default;
 
     void accept(class IModelVisitor* visitor) override;
 
-    QSharedPointer<IModelAction> onStateChangedAction() const;
-    bool hasOnStateChangedAction() const;
-
     const QString& event() const;
     void setEvent(const QString& event);
-
-    void setOnStateChangedAction(const QSharedPointer<IModelAction>& action);
-    void setOnStateChangedAction(const QString& actionData);
 
     bool setProperty(const QString& key, const QVariant& value) override;
     QVariant getProperty(const QString& key) const override;
@@ -30,7 +24,6 @@ public:
 
 private:
     QString mEvent;
-    QSharedPointer<IModelAction> mOnStateChangedAction;
 };
 
 };  // namespace model
