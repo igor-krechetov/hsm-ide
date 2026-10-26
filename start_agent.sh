@@ -1,1 +1,0 @@
-uvx --python 3.12 --from openhands-ai openhands serve

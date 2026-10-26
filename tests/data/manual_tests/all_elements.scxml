@@ -37,7 +37,8 @@
                     <script>callbackName</script>
                 </transition>
                 <transition event="NEW_EVENT" type="external" target="Child2_2" cond="condition2 is true" hsm:uid="30">
-                    <script>start_timer(NEW_TIMER, 1000, true)</script>
+                    <!-- currently not supported by hsmcpp -->
+                    <!-- <script>start_timer(NEW_TIMER, 1000, true)</script> -->
                 </transition>
             </state>
             <initial hsm:uid="24">

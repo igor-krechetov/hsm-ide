@@ -26,6 +26,7 @@ int runParseErrorCollectorTest(int argc, char** argv) __attribute__((weak));
 int runStateHierarchyRulesTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerSerializationTest(int argc, char** argv) __attribute__((weak));
 int runStateMachineSerializerDeserializationTest(int argc, char** argv) __attribute__((weak));
+int runAllElementsScxml2genJointTest(int argc, char** argv) __attribute__((weak));
 int runFormatDetectionTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewPropertyTest(int argc, char** argv) __attribute__((weak));
@@ -93,6 +94,7 @@ int main(int argc, char** argv) {
         runStateHierarchyRulesTest,
         runStateMachineSerializerSerializationTest,
         runStateMachineSerializerDeserializationTest,
+        runAllElementsScxml2genJointTest,
         runFormatDetectionTest,
         runHsmGraphicsViewTest,
         runHsmGraphicsViewPropertyTest,
