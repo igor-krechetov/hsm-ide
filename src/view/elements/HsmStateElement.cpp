@@ -5,6 +5,7 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
 #include <QPainter>
+#include <QScopedValueRollback>
 #include <QSignalBlocker>
 #include <QTextDocument>
 #include <cmath>
@@ -174,6 +175,24 @@ void HsmStateElement::removeChildItem(HsmElement* child) {
 }
 
 void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
+    // Suppress bodySection movement for the WHOLE duration of a drag-driven resize.
+    // resizeElement() updates the model size, which emits modelDataChanged and
+    // re-enters onModelDataChanged() -> layoutSections() SYNCHRONOUSLY. That
+    // re-entrant relayout (and any cascading resizeParentToFitChildItem) must not
+    // move the bodySection while the child is being actively dragged: moving it
+    // shifts the dragged child's parent coordinate system between mouse events,
+    // which corrupts Qt's delta-based drag tracking and makes the child (and the
+    // parent's auto-resize) accelerate / run away.
+    // A single scoped flag spanning the whole method keeps every nested relayout on
+    // the suppressed path; the body is placed correctly afterwards by
+    // normalizeElementRect(). Previously the flag was toggled around individual
+    // calls, leaving the signal-driven relayout unguarded.
+    const bool childIsDragging = child->isInDragState();
+    QScopedValueRollback<bool> suppressGuard(mSuppressBodySectionMovement);
+    if (childIsDragging) {
+        mSuppressBodySectionMovement = true;
+    }
+
     if (isDirectChild(child) == true) {
         // Get child bounding rectangle in parent coordinates
         QRectF childRect = child->mapRectToParent(child->elementRect());
@@ -204,26 +223,12 @@ void HsmStateElement::resizeToFitChildItem(HsmElement* child) {
                 parentNewRect.adjust(0, 0, 0, dh + cChildPadding);
             }
 
-            // Suppress bodySection movement only when the triggering child is being
-            // actively dragged. This prevents the acceleration bug where bodySection
-            // shift corrupts the scene-space snap on subsequent mouse events.
-            // For cascading resizes (parent expanding within grandparent), bodySection
-            // movement is allowed since it doesn't affect the dragged element's mapping.
-            const bool childIsDragging = child->isInDragState();
-            if (childIsDragging) {
-                mSuppressBodySectionMovement = true;
-            }
             resizeElement(parentNewRect);
             resizeParentToFitChildItem();
-            mSuppressBodySectionMovement = false;
         }
     }
 
-    if (child->isInDragState()) {
-        mSuppressBodySectionMovement = true;
-    }
     layoutSections();
-    mSuppressBodySectionMovement = false;
 }
 
 void HsmStateElement::normalizeElementRect() {
@@ -363,7 +368,17 @@ void HsmStateElement::layoutSections() {
         const qreal oldBodyX = mBodySection->pos().x();
         const qreal newBodyX = rect.left();
 
-        if (!mSuppressBodySectionMovement) {
+        // Never move the bodySection while a child is being actively dragged. This must
+        // be a LIVE check (not only the transient mSuppressBodySectionMovement flag): a
+        // single resize emits modelDataChanged several times, each re-entering
+        // onModelDataChanged() -> layoutSections() SYNCHRONOUSLY, and some of those
+        // re-entries run after the transient flag was rolled back. Moving the body then
+        // shifts the dragged child's parent coordinate system between mouse events,
+        // corrupting Qt's delta-based drag tracking and causing the parent auto-resize /
+        // child to run away.
+        const bool suppressBodyMovement = mSuppressBodySectionMovement || isChildBeingDragged();
+
+        if (!suppressBodyMovement) {
             mBodySection->setPos(newBodyX, 0);
             mBodySection->setRect(0, y, w, rect.bottom() - y);
 
@@ -417,6 +432,24 @@ void HsmStateElement::layoutSelfTransitions() {
 
 int HsmStateElement::getSelfTransitionsCount() const {
     return (nullptr != mSelfTransitionsSection ? mSelfTransitionsSection->childItems().size() : 0);
+}
+
+bool HsmStateElement::isChildBeingDragged() const {
+    if (nullptr == mBodySection) {
+        return false;
+    }
+
+    for (QGraphicsItem* item : mBodySection->childItems()) {
+        if (IS_HSM_ELEMENT_TYPE(item->type())) {
+            if (auto* element = qgraphicsitem_cast<HsmElement*>(item)) {
+                if (element->isInDragState()) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 bool HsmStateElement::isInitialized() const {
