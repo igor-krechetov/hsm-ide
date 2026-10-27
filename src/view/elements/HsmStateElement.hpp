@@ -56,6 +56,13 @@ protected:
 
     int getSelfTransitionsCount() const;
 
+    // True while a direct child element of this state is being actively dragged.
+    // Used to suppress bodySection movement during such a drag, regardless of which
+    // (possibly re-entrant / signal-driven) relayout path is executing -- moving the
+    // body shifts the dragged child's parent coordinate system mid-drag and corrupts
+    // Qt's delta-based drag tracking.
+    bool isChildBeingDragged() const;
+
 protected slots:
     void onStateNameChanged();
     void onStateNameEditFinished();

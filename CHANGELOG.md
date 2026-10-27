@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.22.2] - 2026-10-27
+### Fix
+- Regression in resizing parent by moving the child element to the left (caused by 0.21.0)
 
 ## [0.22.1] - 2026-10-25
 ### Fix

@@ -145,6 +145,7 @@ private slots:
     void twoLevelChildDragNoDrift();
     void twoLevelChildDragSnapToGridInternal();
     void twoLevelChildDragSnapToGridResizing();
+    void bodyNotMovedByRelayoutDuringChildDrag();
     void threeLevelChildDragNoDrift();
     void threeLevelDragLeftThenUp();
     void reparentChildFromOneParentToAnother();
@@ -723,6 +724,100 @@ void HsmElementDragTest::twoLevelChildDragSnapToGridResizing() {
     jump = newScenePos.x() - prevScenePos.x();
 
     QVERIFY2(qFuzzyCompare(jump, 0.0), qPrintable(QString("Snap jump %1 != 0.0 at step 2").arg(jump)));
+
+    DragTestHelper::endDrag(child);
+}
+
+// ---------------------------------------------------------------------------
+// 2.9b — Regression: relayout during an active child drag must NOT move the
+//        bodySection (runaway auto-resize / acceleration bug).
+//
+// Root cause (GUI logs hsm-ide-01..04): a single resize of a parent state
+// emits model::StateMachineEntity::modelDataChanged several times. Each
+// emission synchronously re-enters HsmStateElement::onModelDataChanged() ->
+// layoutSections(). While a child is being dragged, moving the parent's
+// bodySection shifts the dragged child's parent coordinate system BETWEEN
+// mouse events, corrupting Qt's delta-based drag tracking and causing the
+// parent auto-resize (and the child) to run away.
+//
+// The fix makes bodySection-movement suppression a LIVE structural check
+// (isChildBeingDragged()) inside layoutSections(), not just a transient flag
+// that a re-entrant/deferred modelDataChanged signal can outlive.
+//
+// This test manufactures the exact leak precondition deterministically:
+//   1. a child in DragState::DRAGGING,
+//   2. bodySection.x() != outerRect.left() (the COMPENSATE precondition),
+//   3. a relayout fired through the real model -> onModelDataChanged path.
+// With the fix it must observe NO body movement and NO child drift; without
+// the fix the relayout re-snaps the body to outerRect.left() and shifts the
+// dragged child (COMPENSATE), which this test detects and fails on.
+// ---------------------------------------------------------------------------
+void HsmElementDragTest::bodyNotMovedByRelayoutDuringChildDrag() {
+    QGraphicsScene scene;
+    HsmGraphicsView view;
+    view.setScene(&scene);
+    // Snap-independent: logs 03/04 showed the residual leak with snap both on
+    // and off, so the invariant is checked without snapping.
+    view.setSnapToGridEnabled(false);
+
+    auto parentModel = QSharedPointer<model::RegularState>::create("parent");
+    auto childModel = QSharedPointer<model::RegularState>::create("child");
+
+    auto* parent = static_cast<view::HsmStateElement*>(
+        view.createHsmElement(parentModel, "state", QPointF(0, 0), QSizeF(400, 220), model::INVALID_MODEL_ID));
+    view::HsmElement* child =
+        view.createHsmElement(childModel, "state", QPointF(0, 60), QSizeF(80, 40), parentModel->id());
+
+    // The bodySection is the child's parent QGraphicsItem.
+    QGraphicsItem* bodySection = child->parentItem();
+    QVERIFY(bodySection != nullptr);
+
+    auto* resizableParent = dynamic_cast<view::HsmResizableElement*>(parent);
+    QVERIFY(resizableParent != nullptr);
+
+    // --- 1. Put the child into DragState::DRAGGING ---
+    DragTestHelper::beginDrag(child);
+    DragTestHelper::simulateDragMove(child, QPointF(-1, 0));  // PREPARE -> DRAGGING
+    QVERIFY2(child->isInDragState(), "Precondition failed: child must be in DragState::DRAGGING");
+
+    // --- 2. Manufacture the COMPENSATE precondition: outerRect.left() negative
+    //        while the bodySection stays at X=0. We set both explicitly so the
+    //        divergence exists regardless of whether the fix is present (so the
+    //        test is a genuine fail-without-fix guard, not a tautology). ---
+    resizableParent->resizeElement(QRectF(-80, 0, 480, 220));
+    bodySection->setPos(0, bodySection->pos().y());  // force body at X=0
+
+    const qreal outerLeft = parent->elementRect().left();
+    QVERIFY2(outerLeft < -1e-6,
+             qPrintable(QString("Precondition failed: outerRect.left() expected negative, got %1").arg(outerLeft)));
+    QVERIFY2(std::abs(bodySection->pos().x() - outerLeft) > 1.0,
+             qPrintable(QString("Precondition failed: need bodyX (%1) != outerRect.left() (%2)")
+                            .arg(bodySection->pos().x())
+                            .arg(outerLeft)));
+
+    const qreal bodyXBefore = bodySection->pos().x();
+    const QPointF childScenePosBefore = child->scenePos();
+
+    // --- 3. Fire a relayout via the REAL model path: setName -> modelDataChanged
+    //        -> HsmStateElement::onModelDataChanged() -> layoutSections().
+    //        This is the exact re-entrant path that leaked in the GUI logs. ---
+    parentModel->setName("parentRenamed");
+
+    // --- Assertions: the body must not have been repositioned to outerRect.left()
+    //     and the dragged child must not have drifted. ---
+    QVERIFY2(qFuzzyCompare(bodySection->pos().x(), bodyXBefore),
+             qPrintable(QString("bodySection X moved during child drag: was %1, now %2 (relayout moved the body — "
+                                "this is the runaway-resize regression)")
+                            .arg(bodyXBefore)
+                            .arg(bodySection->pos().x())));
+
+    QVERIFY2(qFuzzyCompare(child->scenePos().x(), childScenePosBefore.x()) &&
+                 qFuzzyCompare(child->scenePos().y(), childScenePosBefore.y()),
+             qPrintable(QString("Dragged child drifted during relayout: was (%1, %2), now (%3, %4)")
+                            .arg(childScenePosBefore.x())
+                            .arg(childScenePosBefore.y())
+                            .arg(child->scenePos().x())
+                            .arg(child->scenePos().y())));
 
     DragTestHelper::endDrag(child);
 }
