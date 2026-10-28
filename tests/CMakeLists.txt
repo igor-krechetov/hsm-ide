@@ -51,6 +51,7 @@ set(TEST_OBJECTS
     view/ElementGridAlignmentPropertyTest.cpp
     view/ElementGridAlignmentIntegrationTest.cpp
     view/HsmElementDefaultSizeTest.cpp
+    view/HsmResizableElementChildOnEdgeTest.cpp
     view/UnsavedChangesGuardTest.cpp
     view/WorkspaceViewCollisionPropertyTest.cpp
     view/WorkspaceViewDropPropertyTest.cpp

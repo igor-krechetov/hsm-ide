@@ -271,10 +271,15 @@ bool HsmResizableElement::onGripMoved(ElementGripItem* selectedGrip, const QPoin
 
     qDebug() << "--------- newOuterRect=" << newOuterRect << ", childrenSize=" << childrenSize;
 
+    // A child whose edge sits EXACTLY on the parent edge (flush layout) is valid and
+    // must not block a resize - most importantly it must never block GROWING the
+    // parent, which can only enlarge the interior. Use inclusive comparisons
+    // (>= / <=) so a touching edge counts as "fits"; only a child that would be
+    // CLIPPED (strictly outside) rejects the resize.
     if (childrenSize.isNull() ||
-        (newOuterRect.width() > childrenSize.width() && newOuterRect.height() > childrenSize.height() &&
-         childrenSize.bottom() < newOuterRect.bottom() && childrenSize.right() < newOuterRect.right() &&
-         childrenSize.top() > newOuterRect.top() && childrenSize.left() > newOuterRect.left())) {
+        (newOuterRect.width() >= childrenSize.width() && newOuterRect.height() >= childrenSize.height() &&
+         childrenSize.bottom() <= newOuterRect.bottom() && childrenSize.right() <= newOuterRect.right() &&
+         childrenSize.top() >= newOuterRect.top() && childrenSize.left() >= newOuterRect.left())) {
         if ((newOuterRect.height() > 0) && (newOuterRect.width() > 0)) {
             // Prevent resizing below min size
             if (newOuterRect.width() < mMinWidth || newOuterRect.height() < mMinHeight) {
