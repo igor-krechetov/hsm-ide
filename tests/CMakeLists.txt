@@ -47,6 +47,7 @@ set(TEST_OBJECTS
     view/HsmTransitionRegripOnResizePropertyTest.cpp
     view/HsmTransitionAnchorTest.cpp
     view/HsmTransitionPerpendicularEndpointTest.cpp
+    view/HsmTransitionValidityTest.cpp
     view/HsmTransitionBoundingRectTest.cpp
     view/ElementGridAlignmentPropertyTest.cpp
     view/ElementGridAlignmentIntegrationTest.cpp

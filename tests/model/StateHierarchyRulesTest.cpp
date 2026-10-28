@@ -1,6 +1,7 @@
 #include <QtTest>
 
 #include "model/StateHierarchyRules.hpp"
+#include "model/elements/HistoryState.hpp"
 #include "model/elements/InitialState.hpp"
 #include "model/elements/ModelRootState.hpp"
 #include "model/elements/RegularState.hpp"
@@ -13,6 +14,7 @@ private slots:
     void ParentChildRules();
     void TransitionParentRules();
     void SingleInitialStateRule();
+    void TransitionValidityRule();
 };
 
 void StateHierarchyRulesTest::TopLevelRules() {
@@ -78,6 +80,46 @@ void StateHierarchyRulesTest::SingleInitialStateRule() {
 
     // A regular state is still allowed alongside the existing initial state.
     QCOMPARE(model::StateHierarchyRules::canAddEntityToParent(root, regular), true);
+}
+
+/**
+ * @brief Transition validity: valid only between siblings (same parent / same level),
+ *        except history targets which must come from a different level.
+ */
+void StateHierarchyRulesTest::TransitionValidityRule() {
+    using model::StateHierarchyRules;
+
+    auto parentA = QSharedPointer<model::RegularState>::create("A");
+    auto parentB = QSharedPointer<model::RegularState>::create("B");
+
+    // Target entities: a regular (non-history) target and a history target. The rule inspects
+    // the target to decide whether the history exception applies.
+    QSharedPointer<model::StateMachineEntity> regularTarget = QSharedPointer<model::RegularState>::create("T");
+    QSharedPointer<model::StateMachineEntity> historyTarget =
+        QSharedPointer<model::HistoryState>::create("H", model::HistoryType::SHALLOW);
+
+    // --- Non-history target: valid only when the endpoints share a parent. ---
+    // Same parent (same level) -> valid.
+    QCOMPARE(StateHierarchyRules::isTransitionValid(parentA, parentA, regularTarget), true);
+    // Different parents -> invalid.
+    QCOMPARE(StateHierarchyRules::isTransitionValid(parentA, parentB, regularTarget), false);
+    // Two different QSharedPointer instances wrapping the SAME entity count as the same parent.
+    QSharedPointer<model::StateMachineEntity> parentAAlias = parentA;
+    QCOMPARE(StateHierarchyRules::isTransitionValid(parentA, parentAAlias, regularTarget), true);
+
+    // Top-level endpoints (both null parents) are on the same level -> valid.
+    QSharedPointer<model::StateMachineEntity> noParent;
+    QCOMPARE(StateHierarchyRules::isTransitionValid(noParent, noParent, regularTarget), true);
+    // One top-level, one nested -> different level -> invalid.
+    QCOMPARE(StateHierarchyRules::isTransitionValid(noParent, parentA, regularTarget), false);
+
+    // --- History target inverts the rule. ---
+    // From a different level (different parent) into history -> valid (expected shape).
+    QCOMPARE(StateHierarchyRules::isTransitionValid(parentA, parentB, historyTarget), true);
+    // From within the same parent into history -> invalid.
+    QCOMPARE(StateHierarchyRules::isTransitionValid(parentA, parentA, historyTarget), false);
+    // Top-level source into a nested history target (different level) -> valid.
+    QCOMPARE(StateHierarchyRules::isTransitionValid(noParent, parentA, historyTarget), true);
 }
 
 int runStateHierarchyRulesTest(int argc, char** argv) {

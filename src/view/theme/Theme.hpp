@@ -31,6 +31,7 @@ struct NodeStyle {
 struct TransitionStyle {
     QPen pen;
     QPen selectedPen;
+    QPen invalidPen;  // pen used when a transition is structurally invalid (wrong hierarchy level)
     QPen debugSelectionPen;
 };
 

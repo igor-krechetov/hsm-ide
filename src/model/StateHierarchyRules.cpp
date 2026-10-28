@@ -1,5 +1,6 @@
 #include "StateHierarchyRules.hpp"
 
+#include "ModelUtils.hpp"
 #include "elements/ModelRootState.hpp"
 
 namespace model {
@@ -101,6 +102,19 @@ bool StateHierarchyRules::canAddEntityToParent(const QSharedPointer<StateMachine
     }
 
     return allowed;
+}
+
+bool StateHierarchyRules::isTransitionValid(const QSharedPointer<StateMachineEntity>& sourceParent,
+                                            const QSharedPointer<StateMachineEntity>& targetParent,
+                                            const QSharedPointer<StateMachineEntity>& target) {
+    // Identity by underlying entity: equal when both wrap the same instance (incl. both null).
+    const bool sameParent = (sourceParent.data() == targetParent.data());
+    // Detect a history target by casting it to a State of HISTORY type (null otherwise).
+    const bool targetIsHistory = (nullptr != hsmDynamicCast<State>(target, StateType::HISTORY));
+
+    // History target inverts the rule: it must come from a different level (parent);
+    // every other target must stay within the same parent (same level).
+    return targetIsHistory ? (false == sameParent) : sameParent;
 }
 
 };  // namespace model
