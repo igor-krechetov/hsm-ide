@@ -51,6 +51,11 @@ public:
 
     inline bool isSelfTransition() const;
 
+    // Returns true when this transition is structurally valid, i.e. its endpoints live on the
+    // same hierarchy level (same parent) - or, for a transition into a history state, on
+    // different levels. An invalid transition is drawn in red. See StateHierarchyRules.
+    bool isValid() const;
+
     QPointer<HsmElement> connectionCandidate() const;
 
 signals:
@@ -107,6 +112,10 @@ public slots:
 private:
     void setAllGripsVisibility(const bool visible);
 
+    // Recomputes mIsValid from the current source/target endpoints and their parents,
+    // requesting a repaint when the result changes.
+    void updateValidity();
+
 private:
     QPointer<HsmElement> mFromElement;
     QPointer<HsmElement> mToElement;
@@ -116,6 +125,7 @@ private:
 
     bool mConnecting = false;
     QPointer<HsmElement> mPrevConnectedElement;
+    bool mIsValid = true;
 
     QPointer<ElementGripItem> mSrcGrip;
     QPointer<ElementGripItem> mDestGrip;

@@ -51,6 +51,7 @@ int runHsmElementDefaultSizeTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionAnchorPreservationTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionAnchorTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionPerpendicularEndpointTest(int argc, char** argv) __attribute__((weak));
+int runHsmTransitionValidityTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionBoundingRectTest(int argc, char** argv) __attribute__((weak));
 int runElementGridAlignmentPropertyTest(int argc, char** argv) __attribute__((weak));
 int runElementGridAlignmentIntegrationTest(int argc, char** argv) __attribute__((weak));
@@ -120,6 +121,7 @@ int main(int argc, char** argv) {
         runHsmTransitionAnchorPreservationTest,
         runHsmTransitionAnchorTest,
         runHsmTransitionPerpendicularEndpointTest,
+        runHsmTransitionValidityTest,
         runHsmTransitionBoundingRectTest,
         runElementGridAlignmentPropertyTest,
         runElementGridAlignmentIntegrationTest,

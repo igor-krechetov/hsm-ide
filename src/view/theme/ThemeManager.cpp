@@ -36,6 +36,9 @@ view::theme::Theme ThemeManager::createDefaultTheme() {
 
     defaultTheme.transition.pen = QPen(QColor("#1A1A1A"), 1.0, Qt::SolidLine);
     defaultTheme.transition.selectedPen = QPen(QColor("#1A1A1A"), 1.0, Qt::DashLine);
+    // Invalid transitions must read clearly against the light-blue/green canvas: a bold,
+    // fully-saturated red that is distinctly heavier than the 1.0px default transition pen.
+    defaultTheme.transition.invalidPen = QPen(QColor("#CC0000"), 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     defaultTheme.transition.debugSelectionPen = QPen(QColor("red"));
 
     defaultTheme.grid.majorLinePen = QPen(Qt::lightGray, 1.0, Qt::DashLine);

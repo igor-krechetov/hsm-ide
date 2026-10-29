@@ -13,6 +13,7 @@
 #include <cmath>
 
 #include "HsmStateElement.hpp"
+#include "model/StateHierarchyRules.hpp"
 #include "model/elements/Transition.hpp"
 #include "private/AutoGroupItem.hpp"
 #include "private/ElementGripItem.hpp"
@@ -160,9 +161,17 @@ void HsmTransition::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     const auto& theme = ThemeManager::instance().theme();
 
     if (false == isSelected()) {
-        painter->setPen(theme.transition.pen);
+        painter->setPen(mIsValid ? theme.transition.pen : theme.transition.invalidPen);
     } else {
-        painter->setPen(theme.transition.selectedPen);
+        // Keep the selection dash pattern but recolour it red while the transition is invalid.
+        if (mIsValid) {
+            painter->setPen(theme.transition.selectedPen);
+        } else {
+            QPen selectedInvalidPen = theme.transition.selectedPen;
+            selectedInvalidPen.setColor(theme.transition.invalidPen.color());
+            selectedInvalidPen.setWidthF(theme.transition.invalidPen.widthF());
+            painter->setPen(selectedInvalidPen);
+        }
     }
 
     // Draw the transition path
@@ -316,6 +325,44 @@ void HsmTransition::disconnectElements() {
 
 QPointer<HsmElement> HsmTransition::connectionCandidate() const {
     return mLastConnectionTarget;
+}
+
+bool HsmTransition::isValid() const {
+    return mIsValid;
+}
+
+void HsmTransition::updateValidity() {
+    bool valid = true;
+
+    // Only a fully connected transition (both endpoints resolved) can be judged. While a
+    // transition is being drawn/dragged (one endpoint still floating) we treat it as valid so
+    // it isn't flashed red mid-gesture.
+    if ((nullptr != mFromElement) && (nullptr != mToElement)) {
+        const HsmElement* const fromParent = mFromElement->hsmParentItem();
+        const HsmElement* const toParent = mToElement->hsmParentItem();
+
+        // Resolve the model parents for an identity comparison in the hierarchy rule, plus
+        // the target entity itself (the rule inspects it to detect a history target).
+        // A null view parent (top-level element) maps to a null model parent, which the
+        // rule compares as "same parent" only against another null.
+        QSharedPointer<model::StateMachineEntity> sourceParentEntity;
+        QSharedPointer<model::StateMachineEntity> targetParentEntity;
+        QSharedPointer<model::StateMachineEntity> targetEntity = mToElement->modelElementPtr().lock();
+
+        if (nullptr != fromParent) {
+            sourceParentEntity = fromParent->modelElementPtr().lock();
+        }
+        if (nullptr != toParent) {
+            targetParentEntity = toParent->modelElementPtr().lock();
+        }
+
+        valid = model::StateHierarchyRules::isTransitionValid(sourceParentEntity, targetParentEntity, targetEntity);
+    }
+
+    if (valid != mIsValid) {
+        mIsValid = valid;
+        update();  // repaint with the new pen colour
+    }
 }
 
 QPointF HsmTransition::findStartingPointFromPoint(const QRectF& rectFrom, const QPointF& pointTo) {
@@ -708,6 +755,7 @@ void HsmTransition::recalculateLine() {
 
     updateBoundingRect();
     recalculateLabelPosition();
+    updateValidity();
 }
 
 void HsmTransition::recalculateLabelPosition() {

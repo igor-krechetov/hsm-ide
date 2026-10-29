@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.23.0] - 2026-10-28
+### New
+- Highlight structurally invalid transitions.
+
 ## [0.22.3] - 2026-10-28
 ### Fix
 - A child element flush against the parent's edge no longer makes the parent impossible to resize
