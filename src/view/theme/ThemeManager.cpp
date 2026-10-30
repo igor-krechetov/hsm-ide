@@ -29,6 +29,7 @@ view::theme::Theme ThemeManager::createDefaultTheme() {
     defaultTheme.node.textColor = QColor("#1A1A1A");
     defaultTheme.node.duplicateWarningColor = QColor("#C0392B");
     defaultTheme.node.invalidStateBackgroundBrush = QBrush(QColor("#FBE3E1"));
+    defaultTheme.node.overlapWarningPen = defaultTheme.node.duplicateWarningColor;
     defaultTheme.node.editingBackgroundBrush = QBrush(QColor(255, 255, 200));
     defaultTheme.node.labelFont.setBold(true);
     defaultTheme.node.historyFont.setBold(true);

@@ -39,6 +39,7 @@ set(TEST_OBJECTS
 
     view/HsmGraphicsViewTest.cpp
     view/HsmGraphicsViewPropertyTest.cpp
+    view/HsmGraphicsViewOverlapWarningTest.cpp
     view/HsmTransitionDuplicateRenderingPropertyTest.cpp
     view/HsmElementDragTest.cpp
     view/AutoGroupItemCursorTest.cpp

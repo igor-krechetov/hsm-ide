@@ -87,6 +87,13 @@ public:
     virtual bool isResizable() const;
     // HsmElement* connectableElementAt(const QPointF& pos) const;
 
+    // Show/clear a non-blocking layout warning when this element visually overlaps a
+    // container it is NOT a child of (e.g. after a multi-element drag leaves an element
+    // on top of another state without reparenting). Display-only; computed by
+    // HsmGraphicsView and does not change placement/model. Returns whether the flag changed.
+    void setOverlapWarning(const bool overlapping);
+    bool hasOverlapWarning() const;
+
     // true if element is allowed to be a top level element in the scene
     virtual bool canBeTopLevel() const;
     // todo: merge with acceptsElement
@@ -163,6 +170,9 @@ private:
     bool mHightlight = false;
     QPointF mDragCursorScenePos;
     qreal mOriginalZValue = 0;
+    // true when this element visually overlaps a container it is not a child of (drives a
+    // non-blocking layout warning: dashed warning border + tooltip). Display-only.
+    bool mHasOverlapWarning = false;
 };
 
 inline QPointer<HsmElement> HsmElement::hsmParentItem() const {

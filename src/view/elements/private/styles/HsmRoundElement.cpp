@@ -15,7 +15,9 @@ void HsmRoundElement::paint(QPainter* painter, const QStyleOptionGraphicsItem* o
 
     painter->setRenderHint(QPainter::Antialiasing, true);
 
-    if (isHighligted() == true) {
+    if (hasOverlapWarning() == true) {
+        painter->setPen(theme.node.overlapWarningPen);
+    } else if (isHighligted() == true) {
         painter->setPen(theme.node.highlightBorderPen);
     } else if (isSelected() == true) {
         painter->setPen(theme.node.selectedBorderPen);

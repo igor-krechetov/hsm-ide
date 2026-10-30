@@ -32,7 +32,9 @@ void HsmRectangularElement::paintRectangularBody(QPainter* painter, const QBrush
     painter->setBrush(backgroundBrush);
 
     // Draw the rounded rectangle with fully rounded corners
-    if (isHighligted() == true) {
+    if (hasOverlapWarning() == true) {
+        painter->setPen(theme.node.overlapWarningPen);
+    } else if (isHighligted() == true) {
         painter->setPen(theme.node.highlightBorderPen);
     } else if (isSelected() == true) {
         painter->setPen(theme.node.selectedBorderPen);

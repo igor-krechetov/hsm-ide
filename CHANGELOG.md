@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.24.0] - 2026-10-30
+### New
+- Highlight overlapping elements.
+
 ## [0.23.0] - 2026-10-28
 ### New
 - Highlight structurally invalid transitions.
