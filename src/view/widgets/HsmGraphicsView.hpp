@@ -55,9 +55,10 @@ public:
                                              const model::EntityID_t toElementId);
     void deleteHsmElement(const model::EntityID_t modelElementId);
     void clearAllHsmElements();
-    // REQ-103f7: recompute duplicate-name warnings across all state elements (full scan).
-    // Called on coarse model changes (add / delete / rename / load).
-    void refreshDuplicateNameWarnings();
+
+    // Validate elements layout for visual inconsistencies
+    void refreshViewWarnings();
+    
     void moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId);
 
     void reconnectHsmTransition(const model::EntityID_t transitionId,
@@ -93,6 +94,13 @@ public:
 
     static QPointF alignPointToGrid(const QPointF& scenePos);
 
+    // Pure predicate behind refreshOverlapWarnings(), exposed static for unit testing.
+    // Returns true when an element with scene rect `elementRect` should be flagged as
+    // overlapping a container whose droppable body is `otherBodyRect`. `related` must be
+    // true when the two elements have a legitimate parent/child/containment relationship
+    // (in which case overlap is expected and never a violation).
+    static bool isOverlapViolation(const QRectF& elementRect, const QRectF& otherBodyRect, const bool related);
+
 signals:
     void hsmElementDoubleClickEvent(QWeakPointer<model::StateMachineEntity> entity);
     void transformChanged();
@@ -102,6 +110,14 @@ signals:
 #endif
 
 protected:
+    // REQ-103f7: recompute duplicate-name warnings across all state elements (full scan).
+    // Called on coarse model changes (add / delete / rename / load).
+    void refreshDuplicateNameWarnings();
+    // Recompute non-blocking overlap warnings across all state elements (full scan): flag any
+    // element whose body visually overlaps a container it is not a child of. Display-only;
+    // does not change placement. Called on the same coarse model/layout changes as above.
+    void refreshOverlapWarnings();
+
     void drawBackground(QPainter* painter, const QRectF& rect) override;
     void focusOutEvent(QFocusEvent* event) override;
 

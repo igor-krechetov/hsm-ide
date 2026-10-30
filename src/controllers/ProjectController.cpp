@@ -747,7 +747,7 @@ void ProjectController::modelEntityAdded(QWeakPointer<model::StateMachineEntity>
         projectModified();
 
         if (mView && (false == mIgnoreAddedModelEntities)) {
-            mView->refreshDuplicateNameWarnings();
+            mView->refreshViewWarnings();
         }
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";
@@ -767,7 +767,7 @@ void ProjectController::modelEntityDeleted(QWeakPointer<model::StateMachineEntit
         projectModified();
 
         if (mView) {
-            mView->refreshDuplicateNameWarnings();
+            mView->refreshViewWarnings();
         }
     } else {
         qCritical() << "StateMachineEntity doesnt exist!";
@@ -804,7 +804,7 @@ void ProjectController::modelDataChanged(QWeakPointer<model::StateMachineEntity>
     // Skipped during a batch (e.g. paste); refreshViewFromModel refreshes once at the end.
     if (mView && (false == mIgnoreAddedModelEntities) && ptrEntity &&
         (ptrEntity->type() == model::StateMachineEntity::Type::State)) {
-        mView->refreshDuplicateNameWarnings();
+        mView->refreshViewWarnings();
     }
 
     // Rebuilding the view from the model (load/paste/undo/redo) writes computed geometry back
@@ -970,7 +970,7 @@ void ProjectController::refreshViewFromModel() {
         mHsmStructureViewModel->onModelChanged();
 
         // REQ-103f7: recompute duplicate-name warnings after a full rebuild (e.g. load).
-        mView->refreshDuplicateNameWarnings();
+        mView->refreshViewWarnings();
     }
 
     mRefreshingView = previousRefreshingView;

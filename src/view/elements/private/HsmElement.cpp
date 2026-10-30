@@ -126,6 +126,26 @@ bool HsmElement::isResizable() const {
     return false;
 }
 
+void HsmElement::setOverlapWarning(const bool overlapping) {
+    if (mHasOverlapWarning != overlapping) {
+        mHasOverlapWarning = overlapping;
+
+        if (overlapping) {
+            setToolTip(
+                tr("This element overlaps a state it is not part of. "
+                    "Move it so it does not overlap, or drop it inside to nest it."));
+        } else {
+            setToolTip(QString());
+        }
+
+        update();
+    }
+}
+
+bool HsmElement::hasOverlapWarning() const {
+    return mHasOverlapWarning;
+}
+
 // HsmElement* HsmElement::connectableElementAt(const QPointF& pos) const {
 //     HsmElement* element = nullptr;
 
