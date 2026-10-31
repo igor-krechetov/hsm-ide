@@ -288,6 +288,11 @@ void HsmGraphicsView::clearAllHsmElements() {
     mElements.clear();
 }
 
+void HsmGraphicsView::refreshViewWarnings() {
+    refreshDuplicateNameWarnings();
+    refreshOverlapWarnings();
+}
+
 void HsmGraphicsView::refreshDuplicateNameWarnings() {
     // Full scan: count state names across all elements, then flag any element whose
     // name is shared. Cheap for realistic HSM sizes; can be cached later if needed.
@@ -313,6 +318,55 @@ void HsmGraphicsView::refreshDuplicateNameWarnings() {
             const bool duplicated = state && (state->name().isEmpty() == false) && (nameCounts.value(state->name()) > 1);
 
             stateElement->setDuplicateNameWarning(duplicated);
+        }
+    }
+}
+
+bool HsmGraphicsView::isOverlapViolation(const QRectF& elementRect, const QRectF& otherBodyRect, const bool related) {
+    // A legitimate parent/child/containment relationship makes overlap expected, never a
+    // violation. Otherwise the element is misplaced when it visually intrudes into the
+    // other container's droppable body.
+    if (related) {
+        return false;
+    }
+
+    return otherBodyRect.isValid() && elementRect.intersects(otherBodyRect);
+}
+
+void HsmGraphicsView::refreshOverlapWarnings() {
+    // Full scan: an element is "misplaced" when its body visually overlaps a container that
+    // is NOT its model parent and does NOT actually contain it as a child. This flags both
+    // the single-element silent-top-level case and the multi-drag case where a non-accepted
+    // element is left sitting on top of another state. Display-only: placement is untouched.
+    //
+    // Cheap for realistic HSM sizes (O(n^2) over on-canvas states); mirrors the duplicate-name
+    // full-scan and can be spatially indexed later if needed.
+
+    for (view::HsmElement* element : mElements) {
+        if (element->elementType() != view::HsmElementType::TRANSITION) {
+            bool overlaps = false;
+            const QRectF elementRect = element->sceneBoundingRect();
+            const QPointer<view::HsmElement> elementParent = element->hsmParentItem();
+
+            for (view::HsmElement* other : mElements) {
+                if ((other != element) && (other->elementType() != view::HsmElementType::TRANSITION)) {
+                    // A container the element legitimately belongs to is never a violation:
+                    //  - it is the element's own parent, or
+                    //  - the element is (directly/indirectly) nested inside it, or
+                    //  - the element is itself an ancestor/container of 'other' (parent overlapping
+                    //    its own child is expected).
+                    const bool related = ((elementParent == other) || other->containsChild(element) || element->containsChild(other));
+
+                    // Compare against the droppable interior (body) of the other container: overlapping
+                    // only the header/title area is not "inside" it.
+                    if (isOverlapViolation(elementRect, other->sceneBoundingRect(), related)) {
+                        overlaps = true;
+                        break;
+                    }
+                }
+            }
+
+            element->setOverlapWarning(overlaps);
         }
     }
 }
@@ -542,6 +596,11 @@ bool HsmGraphicsView::handleElementDropEvent(view::HsmElement* element, const QP
     mDraggedChildElements.clear();
 
     QGuiApplication::restoreOverrideCursor();
+
+    // A drag/drop just finished: recompute layout overlap warnings. Covers pure repositions
+    // (same parent, no structural model change) which the controller's model-change triggers
+    // would otherwise miss.
+    refreshOverlapWarnings();
 
     // TODO: implement
     return true;

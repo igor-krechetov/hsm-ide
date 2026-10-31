@@ -30,6 +30,7 @@ int runAllElementsScxml2genJointTest(int argc, char** argv) __attribute__((weak)
 int runFormatDetectionTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewTest(int argc, char** argv) __attribute__((weak));
 int runHsmGraphicsViewPropertyTest(int argc, char** argv) __attribute__((weak));
+int runHsmGraphicsViewOverlapWarningTest(int argc, char** argv) __attribute__((weak));
 int runHsmElementDragTest(int argc, char** argv) __attribute__((weak));
 int runAutoGroupItemCursorTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionGripVisibilityTest(int argc, char** argv) __attribute__((weak));
@@ -100,6 +101,7 @@ int main(int argc, char** argv) {
         runFormatDetectionTest,
         runHsmGraphicsViewTest,
         runHsmGraphicsViewPropertyTest,
+        runHsmGraphicsViewOverlapWarningTest,
         runHsmElementDragTest,
         runAutoGroupItemCursorTest,
         runHsmTransitionGripVisibilityTest,
