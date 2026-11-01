@@ -133,7 +133,7 @@ void HsmElement::setOverlapWarning(const bool overlapping) {
         if (overlapping) {
             setToolTip(
                 tr("This element overlaps a state it is not part of. "
-                    "Move it so it does not overlap, or drop it inside to nest it."));
+                   "Move it so it does not overlap, or drop it inside to nest it."));
         } else {
             setToolTip(QString());
         }

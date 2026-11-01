@@ -37,7 +37,10 @@ public:
     MainEditorController();
     virtual ~MainEditorController();
 
-    int start();
+    // Starts the editor event loop. When initialPath is non-empty it is opened on startup:
+    // a file is opened as a single SCXML project, a directory is opened as a workspace.
+    // Empty starts an empty document.
+    int start(const QString& initialPath = QString());
 
     // Methods to manage multiple projects
     ProjectControllerPtr createProject();

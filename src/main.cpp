@@ -1,5 +1,7 @@
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 #include <QLocale>
 #include <QMessageLogContext>
@@ -92,6 +94,21 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    QCommandLineParser parser;
+    parser.setApplicationDescription(
+        QCoreApplication::translate("main", "HSM IDE - visual editor for hierarchical state machines."));
+    parser.addHelpOption();
+    parser.addPositionalArgument(QCoreApplication::translate("main", "path"),
+                                 QCoreApplication::translate("main", "SCXML file to open, or a folder to open as a workspace."),
+                                 QCoreApplication::translate("main", "[path]"));
+    parser.process(a);
+
+    QString initialPath;
+    const QStringList positionalArgs = parser.positionalArguments();
+    if (positionalArgs.isEmpty() == false) {
+        initialPath = QDir::current().absoluteFilePath(positionalArgs.first());
+    }
+
     MainEditorController controller;
-    return controller.start();
+    return controller.start(initialPath);
 }

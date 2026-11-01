@@ -39,7 +39,7 @@ QSharedPointer<T> hsmDynamicCast(QSharedPointer<StateMachineEntity> entity) {
 // Normalize literal for usage in code generation
 QString sanitiseIdentifier(const QString& input);
 
-// Resolve an <include> element's referenced file path the same way the 
+// Resolve an <include> element's referenced file path the same way the
 // scxml2gen tool does:
 //   - an absolute include path is returned unchanged (cleaned);
 //   - a relative include path is resolved against the directory of the including

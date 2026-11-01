@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.25.0] - 2026-11-01
+### New
+- Add ability to start hsm-ide with a file of workspace path
+
 ## [0.24.0] - 2026-10-30
 ### New
 - Highlight overlapping elements.

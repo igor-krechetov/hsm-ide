@@ -61,7 +61,7 @@ Useful options:
 | `--build-dir DIR`   | override the hsm-ide build directory                         |
 | `--scenarios PATH`  | use a different scenarios file                               |
 | `--out-dir DIR`     | override the output directory                                |
-| `--resolution WxHxD`| Xvfb resolution (default `1600x1000x24`)                     |
+| `--resolution WxHxD`| Xvfb resolution (default `1024x720x24`)                      |
 | `--keep-going`      | continue to the next scenario if one fails                   |
 
 ## Output
@@ -109,10 +109,12 @@ schema and a list of useful hsm-ide shortcuts.
 
 ## How it works (notes)
 
-- **No CLI file argument.** `src/main.cpp` hands `argc`/`argv` to `QApplication`
-  and then calls `MainEditorController::start()` with no arguments, so the
-  binary cannot open a file from the command line. The driver therefore opens
-  projects through the UI: `Ctrl+O`, type the absolute path, `Enter`.
+- **CLI file argument.** `src/main.cpp` parses an optional positional SCXML
+  path with `QCommandLineParser` and passes it to
+  `MainEditorController::start(path)`, which opens the file on startup
+  (`hsm_ide <scxml path>`). The driver uses this to open each scenario's
+  project directly, so no Open dialog is involved and the Design panel keeps
+  its default-open state.
 - **Window identity.** The window is located by its WM_CLASS `hsm_ide` (from
   `src/view/ui/main.ui`), falling back to the title `HSM IDE`. Matching by class
   is more stable if the title later gains a filename suffix.

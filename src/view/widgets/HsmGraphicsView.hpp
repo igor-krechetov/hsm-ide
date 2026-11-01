@@ -58,7 +58,7 @@ public:
 
     // Validate elements layout for visual inconsistencies
     void refreshViewWarnings();
-    
+
     void moveHsmElement(const model::EntityID_t elementId, const model::EntityID_t newParentId);
 
     void reconnectHsmTransition(const model::EntityID_t transitionId,

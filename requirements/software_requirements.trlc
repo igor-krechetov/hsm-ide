@@ -1580,6 +1580,36 @@ section "REQ-200: UI/UX Requirements" {
       status = Status.Done
     }
   }
+
+  section "REQ-209: Command line arguments" {
+
+    Software_Requirement REQ_209 {
+      uid = "REQ-209"
+      title = "Command line arguments"
+      description = "The application accepts an optional path argument on the command line and opens it on startup, and provides standard --help/--version information."
+      status = Status.Done
+      details = '''
+- Invocation form: `hsm_ide [path]` where `path` is an optional positional argument
+- When no path is given, the application starts with an empty project as before
+- The path is resolved relative to the current working directory into an absolute path before use
+- `--help` lists the usage and the positional argument; `--version` reports the application version
+'''
+    }
+
+    Software_Requirement REQ_209a {
+      uid = "REQ-209a"
+      title = "Open a file argument as a single project"
+      description = "When the command line path points to a file, the application opens that file as a single SCXML project on startup, falling back to an empty project if the file cannot be loaded."
+      status = Status.Done
+    }
+
+    Software_Requirement REQ_209b {
+      uid = "REQ-209b"
+      title = "Open a folder argument as a workspace"
+      description = "When the command line path points to a directory, the application opens that directory as a workspace on startup and records it among the recent workspaces."
+      status = Status.Done
+    }
+  }
 }
 
 section "REQ-300: Import/Export" {
