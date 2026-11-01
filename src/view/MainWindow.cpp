@@ -153,11 +153,6 @@ void MainWindow::handleOpenWorkspace() {
 
     if (rootDir.isEmpty() == false) {
         openWorkspace(rootDir);
-
-        if (mSettingsController) {
-            mSettingsController->addRecentWorkspace(rootDir);
-            updateRecentWorkspacesMenu();
-        }
     }
 }
 
@@ -670,8 +665,19 @@ void MainWindow::onModelTreeSelectionChanged(const QModelIndex& current, const Q
 
 void MainWindow::openWorkspace(const QString& rootDir) {
     Q_ASSERT(ui->workspaceTree != nullptr);
-    ui->workspaceTree->setWorkspaceRoot(rootDir);
-    ui->workspaceTree->setShowEmptyFolders(ui->btnShowEmptyFolders->isChecked());
+    const QFileInfo info(rootDir);
+
+    if (info.exists() && info.isDir()) {
+        ui->workspaceTree->setWorkspaceRoot(rootDir);
+        ui->workspaceTree->setShowEmptyFolders(ui->btnShowEmptyFolders->isChecked());
+
+        if (mSettingsController) {
+            mSettingsController->addRecentWorkspace(rootDir);
+            updateRecentWorkspacesMenu();
+        }
+    } else {
+        qDebug() << "openWorkspace: not a directory, ignoring:" << rootDir;
+    }
 }
 
 void MainWindow::updateMenuItemsRecent(QMenu* menu,
@@ -744,8 +750,6 @@ void MainWindow::updateRecentWorkspacesMenu() {
             }
 
             openWorkspace(path);
-            mSettingsController->addRecentWorkspace(path);
-            updateRecentWorkspacesMenu();
         },
         [this]() {
             mSettingsController->clearRecentWorkspaces();

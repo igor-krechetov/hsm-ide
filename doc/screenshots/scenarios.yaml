@@ -18,9 +18,9 @@
 #                 doc/_images/hsm-ide/<name>.png
 #   description:  (optional) free-text note describing what the shot shows
 #   project:      (optional) path to a .scxml file, relative to the repo root.
-#                 When set, the driver opens it through the UI (Ctrl+O, types
-#                 the absolute path, Enter) because the binary takes no file
-#                 CLI argument. Omit for an empty/new-document screenshot.
+#                 When set, the driver passes it to the binary as a command-line
+#                 argument (`hsm_ide <scxml path>`), so it opens on startup with
+#                 no Open dialog. Omit for an empty/new-document screenshot.
 #   steps:        (optional) ordered list of actions performed after the
 #                 project (if any) is open. See STEP KINDS below.
 #   capture:      (optional) how to capture. Defaults to {window: true}.
@@ -62,8 +62,9 @@ screenshots:
       visible, zoomed to fit the whole diagram.
     project: doc/sample.scxml
     steps:
-      - shortcut: "ctrl+shift+e"   # show the Design / HSM Elements panel
-      - wait: 0.5
+      # The Design / HSM Elements panel is shown by default on startup, so no
+      # Ctrl+Shift+E is sent here (that shortcut TOGGLES the panel and would
+      # hide the already-open panel).
       - shortcut: "ctrl+shift+0"   # fit the whole diagram to the view
       - wait: 0.8
     capture:
@@ -87,8 +88,7 @@ screenshots:
       open and every element selected to show the editable structure.
     project: doc/sample.scxml
     steps:
-      - shortcut: "ctrl+shift+e"   # show the Design panel
-      - wait: 0.5
+      # Design panel is open by default (see note on the overview scenario).
       - shortcut: "ctrl+shift+0"   # fit to view
       - wait: 0.5
       - shortcut: "ctrl+a"         # select all elements on the canvas

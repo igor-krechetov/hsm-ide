@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Automated UI screenshot driver for hsm-ide.
 
-This script drives the UNMODIFIED ``hsm_ide`` binary from the outside to
-produce documentation screenshots. It launches the application under a headless
-X server (Xvfb), opens a sample state machine through the UI, performs a short,
-declarative list of keyboard actions, and captures the application window.
+This script drives the ``hsm_ide`` binary from the outside to produce
+documentation screenshots. It launches the application under a headless
+X server (Xvfb), opens a sample state machine by passing its path on the
+command line, performs a short, declarative list of keyboard actions, and
+captures the application window.
 
 Nothing about the screenshots is hardcoded in C++ or in this script: the list
 of screenshots lives entirely in ``scenarios.yaml`` next to this file. Adding a
@@ -15,10 +16,11 @@ Prerequisites (Linux):
     system packages:  sudo apt-get install -y xvfb xdotool imagemagick
     python package:   pip install pyyaml
 
-The hsm_ide binary does NOT accept a file path on the command line (see
-src/main.cpp: ``MainEditorController::start()`` is called with no arguments and
-no QCommandLineParser/arguments() usage exists). Therefore projects are opened
-through the UI: Ctrl+O, type the absolute path, Enter.
+The hsm_ide binary accepts an optional SCXML file path as a positional
+command-line argument (see src/main.cpp: ``QCommandLineParser`` parses it and
+``MainEditorController::start(path)`` opens it on startup). The driver passes
+the scenario's project path directly, so no UI Open dialog is involved and the
+Design panel keeps its default-open state.
 
 The application window is located by WM_CLASS ``hsm_ide`` (from
 src/view/ui/main.ui ``<class>hsm_ide</class>``), falling back to the window
@@ -35,7 +37,7 @@ Options:
     --scenarios PATH       path to scenarios.yaml (default: next to this file)
     --out-dir DIR          output directory for PNGs
                            (default: <repo>/doc/_images/hsm-ide)
-    --resolution WxHxD     Xvfb resolution (default: 1600x1000x24)
+    --resolution WxHxD     Xvfb resolution (default: 1024x720x24)
     --keep-going          continue to the next scenario if one fails
                            (default: stop on first failure)
 """
@@ -76,13 +78,8 @@ WINDOW_WAIT_TIMEOUT = 20.0     # max time to wait for the app window to appear
 WINDOW_POLL_INTERVAL = 0.3     # how often to poll for the window
 WINDOW_SETTLE_DELAY = 1.0      # extra settle time once the window is found
 XVFB_WAIT_TIMEOUT = 10.0       # max time to wait for Xvfb to come up
-OPEN_DIALOG_TIMEOUT = 15.0     # max time to wait for the Open dialog open/close
 OPEN_LOAD_DELAY = 1.5          # settle after loading a project (scene render)
 APP_EXIT_TIMEOUT = 8.0         # max time to wait for the app to exit
-
-# Title of the modal file-open dialog (from the app's Open HSM action). Used to
-# synchronize project opening instead of relying on fixed sleeps.
-OPEN_DIALOG_TITLE = "Open SCXML File"
 
 
 class DriverError(RuntimeError):
@@ -153,7 +150,7 @@ WINDOW_MANAGERS = (
 class HeadlessDisplay:
     """Manage an Xvfb instance (and a window manager) with cleanup on exit."""
 
-    def __init__(self, resolution="1600x1000x24"):
+    def __init__(self, resolution="1024x720x24"):
         self.resolution = resolution
         parts = resolution.split("x")
         self.width = int(parts[0])
@@ -247,9 +244,15 @@ class HsmIdeApp:
         self.proc = None
         self.window_id = None
 
-    def launch(self):
+    def launch(self, project_path: str | None = None):
+        argv = [str(self.binary)]
+        if project_path:
+            # The binary opens an SCXML file passed as a positional argument
+            # (see src/main.cpp QCommandLineParser), so no UI Ctrl+O flow is
+            # needed and the Design panel keeps its default-open state.
+            argv.append(project_path)
         self.proc = subprocess.Popen(
-            [str(self.binary)],
+            argv,
             env=self.env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -309,50 +312,6 @@ class HsmIdeApp:
     def type_text(self, text: str):
         self.focus()
         _run(["xdotool", "type", "--clearmodifiers", "--", text], env=self.env)
-
-    def _find_dialog(self):
-        """Return the Open-dialog window id if present, else None."""
-        result = _run(
-            ["xdotool", "search", "--name", OPEN_DIALOG_TITLE],
-            env=self.env, check=False, capture=True,
-        )
-        ids = [w for w in result.stdout.split() if w.strip()]
-        return ids[-1] if ids else None
-
-    def _wait_for_dialog(self, present, timeout):
-        """Poll until the Open dialog is present/absent as requested."""
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            found = self._find_dialog() is not None
-            if found == present:
-                return True
-            time.sleep(0.2)
-        return False
-
-    def open_project(self, abs_path: str):
-        """Open a project through the UI (binary takes no file CLI arg).
-
-        Synchronizes on the modal Open dialog rather than fixed sleeps: wait
-        for the dialog to appear, type the path + Enter, then wait for the
-        dialog to close (which means the file was accepted and loaded). This
-        avoids flaky captures of the still-empty window on a slow launch.
-        """
-        self.send_key("ctrl+o")
-        if not self._wait_for_dialog(present=True, timeout=OPEN_DIALOG_TIMEOUT):
-            raise DriverError(
-                f"Open dialog ('{OPEN_DIALOG_TITLE}') did not appear within "
-                f"{OPEN_DIALOG_TIMEOUT}s"
-            )
-        time.sleep(0.4)  # let the dialog's path field take focus
-        _run(["xdotool", "type", "--clearmodifiers", "--", abs_path], env=self.env)
-        time.sleep(0.3)
-        _run(["xdotool", "key", "--clearmodifiers", "Return"], env=self.env)
-        if not self._wait_for_dialog(present=False, timeout=OPEN_DIALOG_TIMEOUT):
-            raise DriverError(
-                "Open dialog did not close after confirming the path "
-                f"({abs_path}); the file may not have loaded"
-            )
-        time.sleep(OPEN_LOAD_DELAY)  # let the scene render after load
 
     def capture(self, out_path: Path):
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -417,18 +376,24 @@ def run_scenario(scenario: dict, binary: Path, display: HeadlessDisplay,
 
     app = HsmIdeApp(binary, display.env())
     try:
-        app.launch()
-        window_id, match_desc = app.wait_for_window()
-        print(f"  window matched via {match_desc} -> id {window_id}")
-        app.maximize(display.width, display.height)
-
+        # Resolve the project (if any) before launch so it can be passed on the
+        # command line; the binary opens it directly (no UI Ctrl+O flow).
+        abs_project = None
         project = scenario.get("project")
         if project:
             abs_project = (REPO_ROOT / project).resolve()
             if not abs_project.is_file():
                 raise DriverError(f"project file not found: {abs_project}")
-            print(f"  opening project via UI: {abs_project}")
-            app.open_project(str(abs_project))
+            print(f"  opening project via CLI arg: {abs_project}")
+
+        app.launch(str(abs_project) if abs_project else None)
+        window_id, match_desc = app.wait_for_window()
+        print(f"  window matched via {match_desc} -> id {window_id}")
+        app.maximize(display.width, display.height)
+
+        if abs_project:
+            # Give the scene time to render the loaded machine.
+            time.sleep(OPEN_LOAD_DELAY)
 
         for step in scenario.get("steps", []) or []:
             execute_step(app, step)
@@ -489,8 +454,8 @@ def parse_args(argv):
                         help="path to scenarios.yaml")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR),
                         help="output directory for PNGs")
-    parser.add_argument("--resolution", default="1600x1000x24",
-                        help="Xvfb resolution WxHxDepth (default 1600x1000x24)")
+    parser.add_argument("--resolution", default="1024x720x24",
+                        help="Xvfb resolution WxHxDepth (default 1024x720x24)")
     parser.add_argument("--keep-going", action="store_true",
                         help="continue on scenario failure instead of stopping")
     return parser.parse_args(argv)

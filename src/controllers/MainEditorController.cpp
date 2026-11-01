@@ -3,6 +3,7 @@
 #include <qlogging.h>
 
 #include <QApplication>
+#include <QFileInfo>
 #include <QMap>
 #include <QString>
 #include <QUuid>
@@ -56,12 +57,22 @@ MainEditorController::~MainEditorController() {
     mCurrentProject.clear();
 }
 
-int MainEditorController::start() {
+int MainEditorController::start(const QString& initialPath) {
     mMainWindow.setWindowIcon(QIcon(":/icons/hsm_ide.png"));
     mMainWindow.show();
 
-    // Create initial empty project
-    createProject();
+    const QFileInfo initialInfo(initialPath);
+
+    if ((initialPath.isEmpty() == false) && initialInfo.isDir()) {
+        createProject();
+        mMainWindow.openWorkspace(initialInfo.absoluteFilePath());
+    } else if (initialPath.isEmpty() == false) {
+        if (openProject(initialPath).isNull()) {
+            createProject();
+        }
+    } else {
+        createProject();
+    }
 
     return QApplication::exec();
 }

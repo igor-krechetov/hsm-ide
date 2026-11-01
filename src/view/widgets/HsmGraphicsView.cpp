@@ -355,7 +355,8 @@ void HsmGraphicsView::refreshOverlapWarnings() {
                     //  - the element is (directly/indirectly) nested inside it, or
                     //  - the element is itself an ancestor/container of 'other' (parent overlapping
                     //    its own child is expected).
-                    const bool related = ((elementParent == other) || other->containsChild(element) || element->containsChild(other));
+                    const bool related =
+                        ((elementParent == other) || other->containsChild(element) || element->containsChild(other));
 
                     // Compare against the droppable interior (body) of the other container: overlapping
                     // only the header/title area is not "inside" it.

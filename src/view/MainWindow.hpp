@@ -40,6 +40,8 @@ public:
     MainWindow(MainEditorController* parent);
     virtual ~MainWindow();
 
+    void openWorkspace(const QString& rootDir);
+
 protected:
     void closeEvent(QCloseEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -101,7 +103,6 @@ private slots:
 #endif
 
 private:
-    void openWorkspace(const QString& rootDir);
     void updateMenuItemsRecent(QMenu* menu,
                                const QStringList& items,
                                const std::function<void(const QString&)>& callbackOpen,
