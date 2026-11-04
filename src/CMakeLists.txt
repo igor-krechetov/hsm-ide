@@ -4,7 +4,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTool
 ###################################
 # Debug settings
 set(DEBUG_RENDERING False)
-set(DEBUG_OUTPUT_FILE False)
+set(DEBUG_OUTPUT_FILE True)
 set(DEBUG_OUTPUT_CONSOLE True)
 
 if(DEBUG_RENDERING)

@@ -30,7 +30,14 @@ void HsmMetadataSerializer::notifyExitState(const StateMachineEntity* /*entity*/
 }
 
 void HsmMetadataSerializer::writeEntityAttributes(AttributeWriter& writer, const StateMachineEntity* entity) {
-    if (mIgnoreUid == false) {
+    // Never emit an invalid uid. A caller may hand us an entity whose id was never assigned
+    // (INVALID_MODEL_ID); writing "4294967295" would force the parser to regenerate a replacement
+    // id on read, and those replacements collide with the valid uids of sibling entities -
+    // desynchronizing the body from the uid-keyed <hsm:editor>/<hsm:layout> section and scrambling
+    // which entity each geometry entry resolves to. Omitting the attribute lets the reader assign a
+    // fresh non-colliding id cleanly (the layout for an id-less entity carries no stored geometry
+    // anyway, since geometry is keyed by the same id).
+    if ((mIgnoreUid == false) && (entity->id() != INVALID_MODEL_ID)) {
         writer.writeAttribute(scxml::HSM_UID_ATTR, QString::number(entity->id()));
     }
 }

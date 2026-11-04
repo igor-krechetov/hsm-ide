@@ -19,6 +19,7 @@ private slots:
     void GenerateUniqueName();
     void ReassignImportedIdsGivesUniqueIds();
     void ReassignImportedIdsPreservesTransitionLinks();
+    void CopiedTransitionsGetValidIds();
 };
 
 /**
@@ -259,6 +260,92 @@ void StateMachineModelTest::ReassignImportedIdsPreservesTransitionLinks() {
     QList<model::EntityID_t> ids = {parent->id(), childA->id(), childB->id(), transition->id()};
     const QSet<model::EntityID_t> uniqueIds(ids.begin(), ids.end());
     QCOMPARE(uniqueIds.size(), ids.size());
+}
+
+/**
+ * @brief Regression for the reported bug: Undo after copy wiped ALL transitions in the project.
+ *
+ * ModificationHistoryController snapshots and restores the model with StateMachineModel::operator=
+ * (makeSnapshot does *snapshot = *mModel; restoreSnapshot does *mModel = *snapshot). The copy's
+ * transition-clone pass created each transition WITHOUT assigning an id (copyEntityData deliberately
+ * does not copy the id), so every restored transition carried INVALID_MODEL_ID. On the view rebuild
+ * that follows an undo, handleModelEntityAdded immediately disconnects any transition whose id is
+ * invalid - so every transition in the project disappeared. States survived because pass 1 mints a
+ * fresh id for each state via cloneStateEntity.
+ *
+ * This test drives the exact snapshot/restore round-trip (two operator= copies, as undo does) on a
+ * model with nested states plus several transitions (cross-level, entry, and a self-transition) and
+ * asserts every transition survives with a valid, unique id after the round-trip.
+ */
+void StateMachineModelTest::CopiedTransitionsGetValidIds() {
+    auto sourceModel = QSharedPointer<model::StateMachineModel>::create("Source");
+    auto root = sourceModel->root();
+
+    auto parent = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, sourceModel->idGenerator())
+                      .dynamicCast<model::RegularState>();
+    auto childA = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, sourceModel->idGenerator())
+                      .dynamicCast<model::RegularState>();
+    auto childB = model::ModelElementsFactory::createUniqueState(model::StateType::REGULAR, sourceModel->idGenerator())
+                      .dynamicCast<model::RegularState>();
+    QVERIFY(parent);
+    QVERIFY(childA);
+    QVERIFY(childB);
+    root->addChildState(parent);
+    parent->addChildState(childA);
+    parent->addChildState(childB);
+
+    // A mix of transitions: cross-sibling, and a self-transition (the kind most sensitive to teardown).
+    QVERIFY(model::ModelElementsFactory::createUniqueTransition(childA, childB, sourceModel->idGenerator()));
+    QVERIFY(model::ModelElementsFactory::createUniqueTransition(childB, childB, sourceModel->idGenerator()));
+    QVERIFY(model::ModelElementsFactory::createUniqueTransition(parent, childA, sourceModel->idGenerator()));
+
+    const auto countTransitions = [](const QSharedPointer<model::StateMachineModel>& model) {
+        int count = 0;
+        model->root()->forEachChildElement(
+            [&count](QSharedPointer<model::StateMachineEntity> /*parent*/, QSharedPointer<model::StateMachineEntity> entity) {
+                if (entity && (entity->type() == model::StateMachineEntity::Type::Transition)) {
+                    ++count;
+                }
+                return true;
+            },
+            model::StateMachineEntity::DEPTH_INFINITE,
+            false);
+        return count;
+    };
+
+    const int sourceTransitionCount = countTransitions(sourceModel);
+    QCOMPARE(sourceTransitionCount, 3);
+
+    // Mimic ModificationHistoryController: snapshot (copy out) then restore (copy back).
+    auto snapshot = QSharedPointer<model::StateMachineModel>::create(sourceModel->name());
+    *snapshot = *sourceModel;
+
+    auto restored = QSharedPointer<model::StateMachineModel>::create("Restored");
+    *restored = *snapshot;
+
+    // All transitions must survive the round-trip...
+    QCOMPARE(countTransitions(snapshot), sourceTransitionCount);
+    QCOMPARE(countTransitions(restored), sourceTransitionCount);
+
+    // ...and every one of them must carry a VALID, UNIQUE id (an INVALID_MODEL_ID transition is what
+    // the view tears down, making transitions vanish on undo).
+    QSet<model::EntityID_t> transitionIds;
+    bool anyInvalidId = false;
+    restored->root()->forEachChildElement(
+        [&transitionIds, &anyInvalidId](QSharedPointer<model::StateMachineEntity> /*parent*/,
+                                        QSharedPointer<model::StateMachineEntity> entity) {
+            if (entity && (entity->type() == model::StateMachineEntity::Type::Transition)) {
+                if (entity->id() == model::INVALID_MODEL_ID) {
+                    anyInvalidId = true;
+                }
+                transitionIds.insert(entity->id());
+            }
+            return true;
+        },
+        model::StateMachineEntity::DEPTH_INFINITE,
+        false);
+    QVERIFY2(!anyInvalidId, "a restored transition has an invalid id - it would be torn down on undo");
+    QCOMPARE(transitionIds.size(), sourceTransitionCount);
 }
 
 int runStateMachineModelTest(int argc, char** argv) {

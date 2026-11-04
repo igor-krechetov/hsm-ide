@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.25.1] - 2026-11-03
+### Fix
+- text overlap in About dialog
+- crash on copy-pasting element from opened scxml
+- copy-paste of multiple elements results in loss of geometry information
+- all transtions would disaper after doing undo operation
+
 ## [0.25.0] - 2026-11-01
 ### New
 - Add ability to start hsm-ide with a file of workspace path
