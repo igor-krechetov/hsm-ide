@@ -109,6 +109,14 @@ StateMachineModel& StateMachineModel::operator=(const StateMachineModel& other) 
                 auto newDst = copiedStates.value(sourceTransition->target().data());
                 auto newTransition = QSharedPointer<Transition>::create(newSrc, newDst, sourceTransition->event());
 
+                // Assign a fresh id (pass 1 does the same for states via cloneStateEntity). Without
+                // this the clone keeps INVALID_MODEL_ID, since copyEntityData() intentionally does not
+                // copy the id. Every snapshot/undo restore (restoreSnapshot does *mModel = *snapshot)
+                // would then rebuild the view with id-less transitions, which handleModelEntityAdded
+                // immediately disconnects - so all transitions vanish on undo. Transitions are
+                // referenced by object pointer (src/dst), not by id across the copy, so a fresh id is
+                // safe and need not match the source's.
+                newTransition->setId(mIdGenerator.generateNextId());
                 newTransition->copyEntityData(*sourceTransition);
                 newSrc->addChild(newTransition);
             }

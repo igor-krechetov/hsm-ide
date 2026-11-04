@@ -45,7 +45,7 @@ chmod +x hsm-ide-*.AppImage
 ```
 
 ## Windows
-Download the installer from the [Releases page](https://github.com/igor-krechetov/hsm-ide/releases) and run it.
+Download the portable package from the [Releases page](https://github.com/igor-krechetov/hsm-ide/releases) and run it.
 
 # Building from source
 

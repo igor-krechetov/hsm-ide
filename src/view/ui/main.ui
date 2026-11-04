@@ -150,9 +150,6 @@
       <string>Active Side Panel</string>
      </property>
     </widget>
-   <property name="title">
-    <string>&amp;View</string>
-   </property>
     <addaction name="actionShowGrid"/>
     <addaction name="actionSnapToGrid"/>
     <addaction name="separator"/>
@@ -708,7 +705,7 @@
   </action>
   <action name="actionShowOnlineHelp">
    <property name="text">
-    <string>Project Wiki</string>
+    <string>Online Documentation</string>
    </property>
   </action>
   <action name="actionKeyboardShortcuts">

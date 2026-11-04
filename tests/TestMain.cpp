@@ -59,6 +59,7 @@ int runElementGridAlignmentIntegrationTest(int argc, char** argv) __attribute__(
 int runHsmTransitionDuplicateRenderingPropertyTest(int argc, char** argv) __attribute__((weak));
 int runHsmTransitionRegripOnResizePropertyTest(int argc, char** argv) __attribute__((weak));
 int runHsmResizableElementChildOnEdgeTest(int argc, char** argv) __attribute__((weak));
+int runHsmStateElementSelfTransitionTeardownTest(int argc, char** argv) __attribute__((weak));
 
 int main(int argc, char** argv) {
     qputenv("QT_LOGGING_RULES", "*.debug=true;*.warning=false;");
@@ -130,6 +131,7 @@ int main(int argc, char** argv) {
         runHsmTransitionDuplicateRenderingPropertyTest,
         runHsmTransitionRegripOnResizePropertyTest,
         runHsmResizableElementChildOnEdgeTest,
+        runHsmStateElementSelfTransitionTeardownTest,
     };
 
     for (const auto test : tests) {

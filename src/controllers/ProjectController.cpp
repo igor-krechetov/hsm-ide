@@ -279,8 +279,9 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
 
             if (sourceState && sourceStateCopy) {
                 sourceState->forEachChildElement(
-                    [&sourceStateId, &sourceStateCopy, &stateCopies](QSharedPointer<model::StateMachineEntity> parent,
-                                                                     QSharedPointer<model::StateMachineEntity> entity) {
+                    [&sourceStateId, &sourceStateCopy, &stateCopies, &tempModel](
+                        QSharedPointer<model::StateMachineEntity> parent,
+                        QSharedPointer<model::StateMachineEntity> entity) {
                         bool continueTraversal = true;
 
                         if (parent && entity && (parent->id() == sourceStateId) &&
@@ -297,6 +298,13 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
                                     QSharedPointer<model::Transition>::create(sourceStateCopy,
                                                                               targetStateCopy,
                                                                               sourceTransition->event());
+                                // Assign a fresh unique id from tempModel's generator. Without this the
+                                // clone keeps INVALID_MODEL_ID, so the clipboard serializes hsm:uid for
+                                // every transition as 4294967295. On paste those invalid uids force the
+                                // parser to regenerate ids, and those regenerated ids collide with the
+                                // state uids, desynchronizing the body from the uid-keyed <hsm:layout>
+                                // section - which then applies geometry to the wrong entities.
+                                transitionCopy->setId(tempModel->idGenerator().generateNextId());
                                 transitionCopy->copyEntityData(*sourceTransition);
                                 transitionCopy->setSource(sourceStateCopy);
                                 transitionCopy->setTarget(targetStateCopy);
@@ -312,7 +320,14 @@ QString ProjectController::serializeElementsToScxml(const QList<model::EntityID_
         }
 
         model::StateMachineSerializer serializer;
-        serializedData = serializer.serializeToScxml(tempModel, model::SerializationFormat::HSM, false, true).trimmed();
+        // NOTE: addScxmlTag=true so endSerialization() emits the <hsm:editor>/<hsm:layout> section -
+        //       in the HSM format all geometry (state position/size, transition routing) lives there and
+        //       is written ONLY for a full document. A bare fragment (addScxmlTag=false) carries no layout
+        //       at all, which is why pasted elements lost their geometry. ignoreUid=false keeps hsm:uid on
+        //       the body states so the layout entries (keyed by uid) resolve back to them on paste; the
+        //       pasted subtree is re-minted by reassignImportedIds() at insertion time, so these clipboard
+        //       uids never reach the live model.
+        serializedData = serializer.serializeToScxml(tempModel, model::SerializationFormat::HSM, true, false).trimmed();
     }
 
     return serializedData;
@@ -330,7 +345,14 @@ bool ProjectController::pasteScxmlElements(const QString& scxmlContent,
         model::StateMachineSerializer serializer;
         const QString wrapperId = "__hsmide_clipboard_wrapper__";
 
-        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, wrapperId, importModel, true)) {
+        // NOTE: deserialize into the throwaway importModel WITH uids preserved (ignoreUid=false).
+        //       The <hsm:editor>/<hsm:layout> section resolves geometry by entity uid, so the body
+        //       uids and layout uids must stay matched for positions/sizes to be applied. importModel
+        //       is never inserted into mModel, so its ids cannot collide with the live model; the real
+        //       collision guard is reassignImportedIds() below, which re-mints every imported entity's
+        //       id from mModel's generator at insertion time (and preserves geometry metadata, which is
+        //       stored on the entity independently of its id).
+        if (serializer.deserializeFromUnwrapperScxml(scxmlContent, wrapperId, importModel, false)) {
             importModel->dump();  // TODO: debug
 
             const auto targetParent = resolvePasteTargetParent(selectedElementIDs);

@@ -25,6 +25,14 @@ HsmStateElement::HsmStateElement()
 HsmStateElement::HsmStateElement(const QSizeF& size)
     : HsmRectangularElement(HsmElementType::STATE, size) {}
 
+HsmStateElement::~HsmStateElement() {
+    // Mark destruction BEFORE the base QGraphicsObject destructor tears down the child
+    // section items. Destroying a self-transition child emits QObject::destroyed, whose
+    // connected slot (see addChildItem) calls layoutSections() on this still-partially-
+    // alive object; the guard in layoutSections() uses this flag to bail out safely.
+    mDestroying = true;
+}
+
 void HsmStateElement::init(const QSharedPointer<model::StateMachineEntity>& modelEntity) {
     HsmRectangularElement::init(modelEntity);
 
@@ -324,6 +332,13 @@ void HsmStateElement::onSubstatesChanged(const bool substates) {
 }
 
 void HsmStateElement::layoutSections() {
+    // Never relayout while being destroyed: section items may already be freed (see
+    // mDestroying / destructor). A self-transition child's QObject::destroyed signal can
+    // re-enter here during the parent-child teardown.
+    if (mDestroying) {
+        return;
+    }
+
     if (isInitialized()) {
         const QRectF rect = mOuterRect;
         const qreal w = rect.width();

@@ -19,7 +19,7 @@ class HsmStateElement : public HsmRectangularElement {
 public:
     HsmStateElement();
     explicit HsmStateElement(const QSizeF& size);
-    virtual ~HsmStateElement() = default;
+    ~HsmStateElement() override;
 
     void init(const QSharedPointer<model::StateMachineEntity>& modelEntity) override;
 
@@ -91,6 +91,12 @@ private:
     bool mSuppressBodySectionMovement = false;
     // REQ-103f7: true when this state's name is duplicated elsewhere (drives label color + tooltip)
     bool mHasDuplicateName = false;
+    // True once destruction has begun. QGraphicsObject tears children down via the
+    // parent-child mechanism, and destroying a self-transition child fires its
+    // QObject::destroyed signal, whose connected slot calls layoutSections() on THIS
+    // object. By then some section items (mBodySection / mSelfTransitionsSection) may
+    // already be freed, so layoutSections() must bail out instead of dereferencing them.
+    bool mDestroying = false;
 };
 
 };  // namespace view

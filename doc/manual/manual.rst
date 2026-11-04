@@ -284,5 +284,5 @@ Getting help
 
 The **Help** menu provides:
 
--  **Project Wiki** -- open the online documentation and project wiki.
+-  **Online Documentation** -- open the online documentation for hsm-ide and hsmcpp.
 -  **About** -- version and license information.
